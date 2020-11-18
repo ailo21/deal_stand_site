@@ -1,0 +1,7 @@
+ds_note.test:
+  path: '/ds-note/test'
+  defaults:
+    _title: 'Test'
+    _controller: '\Drupal\ds_note\Controller\TestController::build'
+  requirements:
+    _permission: 'access content'
