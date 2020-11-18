@@ -1,0 +1,4 @@
+administer ds_rest configuration:
+  title: 'Administer ds_rest configuration'
+  description: 'Optional description.'
+  restrict access: true

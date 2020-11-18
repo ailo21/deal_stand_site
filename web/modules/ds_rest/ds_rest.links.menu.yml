@@ -1,0 +1,6 @@
+ds_rest.settings_form:
+  title: ds_rest
+  description: Configure ds_rest.
+  parent: system.admin_config_system
+  route_name: ds_rest.settings_form
+  weight: 10

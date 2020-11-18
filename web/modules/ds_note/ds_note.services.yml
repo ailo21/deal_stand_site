@@ -1,0 +1,6 @@
+services:
+  ds_note.event_subscriber:
+    class: Drupal\ds_note\EventSubscriber\DsNoteSubscriber
+    arguments: ['@messenger']
+    tags:
+      - { name: event_subscriber }

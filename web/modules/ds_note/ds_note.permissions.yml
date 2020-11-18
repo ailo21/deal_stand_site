@@ -1,0 +1,4 @@
+administer ds_note configuration:
+  title: 'Administer ds_note configuration'
+  description: 'Optional description.'
+  restrict access: true

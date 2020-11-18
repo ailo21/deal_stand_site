@@ -1,0 +1,7 @@
+ds_rest.settings_form:
+  path: '/admin/config/system/ds-rest'
+  defaults:
+    _title: 'ds_rest settings'
+    _form: 'Drupal\ds_rest\Form\SettingsForm'
+  requirements:
+    _permission: 'administer ds_rest configuration'
