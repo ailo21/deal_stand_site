@@ -1,104 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="BranchesTreeState">
+    <expand>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </expand>
+    <select />
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="a4c497ea-f1ac-4a75-8bf1-262f975a388c" name="Default Changelist" comment="WIP">
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/modules/contrib/restui/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/modules/contrib/restui/LICENSE.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/modules/contrib/restui/README.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/modules/contrib/restui/restui.info.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/modules/contrib/restui/restui.links.menu.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/modules/contrib/restui/restui.module" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/modules/contrib/restui/restui.post_update.php" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/modules/contrib/restui/restui.routing.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/modules/contrib/restui/src/Controller/RestUIController.php" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/modules/contrib/restui/src/Form/RestUIForm.php" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/modules/contrib/restui/templates/restui-resource-info.html.twig" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/modules/contrib/restui/tests/src/FunctionalJavascript/RestUITest.php" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/modules/ds_note/ds_note.routing.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/modules/ds_note/src/Controller/TestController.php" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/modules/ds_rest/src/Plugin/rest/resource/NotesResource.php" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/css/css_--QmuRhinlIYeYG1giTBEb_2aJ5hR-LHygtJHD0tNBM.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/css/css_--QmuRhinlIYeYG1giTBEb_2aJ5hR-LHygtJHD0tNBM.css.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/css/css_AO8CMmjAGsv7PU3O1Q8jJYtfiSWrZl5KEkI0T0rga6o.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/css/css_AO8CMmjAGsv7PU3O1Q8jJYtfiSWrZl5KEkI0T0rga6o.css.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/css/css_DB-3erXaUrgKJbkhEJSY3MF-5JCBfZKa8ntqdEmdy-4.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/css/css_DB-3erXaUrgKJbkhEJSY3MF-5JCBfZKa8ntqdEmdy-4.css.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/css/css_EI2evlPK_jsigVMPc1aQNHL9LNZ1g-e8dakKzqA_qXo.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/css/css_EI2evlPK_jsigVMPc1aQNHL9LNZ1g-e8dakKzqA_qXo.css.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/css/css_GN6jhf1aCc2ThLa52xdNiUynESujEaqZHSKmqqq9lgc.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/css/css_GN6jhf1aCc2ThLa52xdNiUynESujEaqZHSKmqqq9lgc.css.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/css/css_PfQp6sv5jWzDpPA0k5blLswLUCvRFir_X8CUb9EvTFg.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/css/css_PfQp6sv5jWzDpPA0k5blLswLUCvRFir_X8CUb9EvTFg.css.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/css/css_SUJEnAuZRmA0zdPA3nsNMyjnwwt7Jv895-vAIy_JdSg.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/css/css_SUJEnAuZRmA0zdPA3nsNMyjnwwt7Jv895-vAIy_JdSg.css.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/css/css_U7Qtv1-YtPq0uDUa0vXhvOEmq5QNuFdHedBEaC6LWyg.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/css/css_U7Qtv1-YtPq0uDUa0vXhvOEmq5QNuFdHedBEaC6LWyg.css.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/css/css_UZg9wPXyDfVVD_q1L38ptp673_0zvrwAZ5Cthmmbv_M.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/css/css_UZg9wPXyDfVVD_q1L38ptp673_0zvrwAZ5Cthmmbv_M.css.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/css/css_V2UWiF_WiBirv0quSzvUKg2TqkH2I4eaZ1a5_Wx4y8o.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/css/css_V2UWiF_WiBirv0quSzvUKg2TqkH2I4eaZ1a5_Wx4y8o.css.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/css/css_bVXCC7clb9F05JN-ZX91TJL1CbvhoWR6mI8MkzjY4J0.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/css/css_bVXCC7clb9F05JN-ZX91TJL1CbvhoWR6mI8MkzjY4J0.css.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/css/css_c0K-btKh8Avo3vedgWOoDZfOH0fcTSYpcJGZH-Dgo-I.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/css/css_c0K-btKh8Avo3vedgWOoDZfOH0fcTSYpcJGZH-Dgo-I.css.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/css/css_fDyBeftToQojqbyKeELmGd1M6dztkZ1nNDcUxxkfl2o.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/css/css_fDyBeftToQojqbyKeELmGd1M6dztkZ1nNDcUxxkfl2o.css.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/css/css_hern9aJEQESfku6ZAvKvwN00JUJ6dgQbt2fw94tlf60.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/css/css_hern9aJEQESfku6ZAvKvwN00JUJ6dgQbt2fw94tlf60.css.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/css/css_mZghJTxqR4KnJ9LnzpExL_MJbu5oV-f9V-kalkNh58k.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/css/css_mZghJTxqR4KnJ9LnzpExL_MJbu5oV-f9V-kalkNh58k.css.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/css/css_uU_hbBVA1iFOwVZ6ku3uHh-WvDKRDDtOVIsbukE3DLI.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/css/css_uU_hbBVA1iFOwVZ6ku3uHh-WvDKRDDtOVIsbukE3DLI.css.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/css/css_v2r3az11IlJCcR8PlIqKwNbXEDEpKuqNL8yCJ4y5WwA.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/css/css_v2r3az11IlJCcR8PlIqKwNbXEDEpKuqNL8yCJ4y5WwA.css.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_55L3moGAyudkFUYt9duDgFmYxqGbUbsfhA08QgX0H2k.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_55L3moGAyudkFUYt9duDgFmYxqGbUbsfhA08QgX0H2k.js.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_7iX-GL3lBjFu9T4oClJ1fXVN9Q1c7ZZOBnxPmoiOdkk.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_7iX-GL3lBjFu9T4oClJ1fXVN9Q1c7ZZOBnxPmoiOdkk.js.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_9PXvSjjSzD_d8CzB4B_yqmb_kMGMrBH-58JI1gb-tnM.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_9PXvSjjSzD_d8CzB4B_yqmb_kMGMrBH-58JI1gb-tnM.js.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_9by54oo7GQ7mvSlWR7CnoPwDv-gzEZpuszzuHeYe3dU.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_9by54oo7GQ7mvSlWR7CnoPwDv-gzEZpuszzuHeYe3dU.js.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_C4q0BKTuTb672Z4aWcy0dwxtTjyfiMiRm3yGICsD2cI.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_C4q0BKTuTb672Z4aWcy0dwxtTjyfiMiRm3yGICsD2cI.js.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_Ez6JOlmQPR2M4Px7-1URBBbedqhwRIh0betF7VUqvnk.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_Ez6JOlmQPR2M4Px7-1URBBbedqhwRIh0betF7VUqvnk.js.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_FRvWReAnb2Z3yS6GrclAfKE2m-dUYpFKd0x_VCMpjNo.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_FRvWReAnb2Z3yS6GrclAfKE2m-dUYpFKd0x_VCMpjNo.js.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_FsNacqFkuwf0ZvglJCJBtW_SjRslBZ-DMqi5tfxlEHg.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_FsNacqFkuwf0ZvglJCJBtW_SjRslBZ-DMqi5tfxlEHg.js.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_Nl14y2-2f5jP7_5WM1qdtWvdxxz10ipuqDVVG5jo7PM.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_Nl14y2-2f5jP7_5WM1qdtWvdxxz10ipuqDVVG5jo7PM.js.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_RioulnYDYkRJMFkzIZpkAOggmByyLSnCVE1L-dEto5M.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_RioulnYDYkRJMFkzIZpkAOggmByyLSnCVE1L-dEto5M.js.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_UMKyhfruyG2H2e2V4ULKvZXd27wJWDdvE9_6xlBp4js.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_UMKyhfruyG2H2e2V4ULKvZXd27wJWDdvE9_6xlBp4js.js.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_VKZqK8gT_qaV8DkCTsDfawVpVWDhnG8RebWdMA-If7I.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_VKZqK8gT_qaV8DkCTsDfawVpVWDhnG8RebWdMA-If7I.js.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_kOdeXLca8YE8OEmhLHFQUJC71UC2vay0FKl_q2UkilM.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_kOdeXLca8YE8OEmhLHFQUJC71UC2vay0FKl_q2UkilM.js.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_oF2yJeCzeT6vhPFZJpTfAXQIPi4mf1SspHlESWhcqfo.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_oF2yJeCzeT6vhPFZJpTfAXQIPi4mf1SspHlESWhcqfo.js.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_ptwL4s2m9tCAqLtE1Pf4y3XT2KSBAqrxGD5r90uDcZI.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_ptwL4s2m9tCAqLtE1Pf4y3XT2KSBAqrxGD5r90uDcZI.js.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_qs3yjISRie5XV3da_71t_X8aOzszQzCZEpIlBT4Ah3A.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_qs3yjISRie5XV3da_71t_X8aOzszQzCZEpIlBT4Ah3A.js.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_sc7e_mcfTUvnqCTJqc6VUdIsxFOhqBsYU2hp8JU-bZM.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_sc7e_mcfTUvnqCTJqc6VUdIsxFOhqBsYU2hp8JU-bZM.js.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_t-QlMZS-mWyR0i-SV3o6bKj3eT8rqRyAVt79UHJzirY.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_t-QlMZS-mWyR0i-SV3o6bKj3eT8rqRyAVt79UHJzirY.js.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_xf_C3bSc5lGSEaz5agEwDc4jXE3JPpVUB9_Y0HbPK5I.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_xf_C3bSc5lGSEaz5agEwDc4jXE3JPpVUB9_Y0HbPK5I.js.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_yvpxIyVjiNYsndAJavEnhms55Lj9_0EC3TiJrqoSSQQ.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/js/js_yvpxIyVjiNYsndAJavEnhms55Lj9_0EC3TiJrqoSSQQ.js.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/files/translations/restui-8.x-1.18.ru.po" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/sites/default/settings.local.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/web/modules/ds_note/src/Entity/DSNode.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/deal_stand.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/deal_stand.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/php.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/php.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/composer.json" beforeDir="false" afterPath="$PROJECT_DIR$/composer.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/composer.lock" beforeDir="false" afterPath="$PROJECT_DIR$/composer.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/composer/autoload_classmap.php" beforeDir="false" afterPath="$PROJECT_DIR$/vendor/composer/autoload_classmap.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/composer/autoload_files.php" beforeDir="false" afterPath="$PROJECT_DIR$/vendor/composer/autoload_files.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/composer/autoload_psr4.php" beforeDir="false" afterPath="$PROJECT_DIR$/vendor/composer/autoload_psr4.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/composer/autoload_static.php" beforeDir="false" afterPath="$PROJECT_DIR$/vendor/composer/autoload_static.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/vendor/composer/installed.json" beforeDir="false" afterPath="$PROJECT_DIR$/vendor/composer/installed.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/modules/ds_note/ds_note.module" beforeDir="false" afterPath="$PROJECT_DIR$/web/modules/ds_note/ds_note.module" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/modules/ds_note/src/Controller/TestController.php" beforeDir="false" afterPath="$PROJECT_DIR$/web/modules/ds_note/src/Controller/TestController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/modules/ds_rest/src/Plugin/rest/resource/NotesResource.php" beforeDir="false" afterPath="$PROJECT_DIR$/web/modules/ds_rest/src/Plugin/rest/resource/NotesResource.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/web/sites/default/files/php/twig/.htaccess" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/web/sites/default/files/php/twig/5fb4fb16be5d9___string_template__6a2704_74gz3RJgXmk3UYZmK_79QGqpF/.htaccess" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/web/sites/default/files/php/twig/5fb4fb16be5d9___string_template__6a2704_74gz3RJgXmk3UYZmK_79QGqpF/2rkj6_GMh6rLylaVNxh5A29gY9GvcWs5XG-WPC4iJIE.php" beforeDir="false" />
@@ -332,7 +267,6 @@
       <change beforePath="$PROJECT_DIR$/web/sites/default/files/php/twig/5fb4fb16be5d9_views-view.html.twig_BK6Ovc-kOOxZ8oJ3VaP6vETfz/mTOcx0LaEHr-JdVTA0DQfnM1nLPORUFd4frZxEG7kiU.php" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/web/sites/default/files/php/twig/5fb4fb16be5d9_views-view.html.twig_JMr2cpeZaEx5Gfpci_GWu2lD9/.htaccess" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/web/sites/default/files/php/twig/5fb4fb16be5d9_views-view.html.twig_JMr2cpeZaEx5Gfpci_GWu2lD9/fherv3koFNpqBPISW-awZw2MYADtc5zTaJXRLxxawuA.php" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/sites/default/settings.php" beforeDir="false" afterPath="$PROJECT_DIR$/web/sites/default/settings.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/web/sites/development.services.yml" beforeDir="false" afterPath="$PROJECT_DIR$/web/sites/development.services.yml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -346,6 +280,9 @@
   </component>
   <component name="DrupalConfiguration" enabled="true" version="8">
     <drupalPath>D:\OpenServer\OpenServer\domains\deal_stand\web</drupalPath>
+  </component>
+  <component name="Git.Pull.Settings">
+    <option name="BRANCH" value="dev" />
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -436,6 +373,12 @@
       <path value="$PROJECT_DIR$/vendor/drush/drush" />
       <path value="$PROJECT_DIR$/vendor/dflydev/dot-access-data" />
       <path value="$PROJECT_DIR$/vendor/psy/psysh" />
+      <path value="$PROJECT_DIR$/vendor/doctrine/inflector" />
+      <path value="$PROJECT_DIR$/vendor/doctrine/persistence" />
+      <path value="$PROJECT_DIR$/vendor/doctrine/cache" />
+      <path value="$PROJECT_DIR$/vendor/doctrine/event-manager" />
+      <path value="$PROJECT_DIR$/vendor/doctrine/collections" />
+      <path value="$PROJECT_DIR$/vendor/doctrine/common" />
     </include_path>
   </component>
   <component name="ProjectId" id="1kSVVnPXyWhMuCtrgQGB0WCKLsp" />
@@ -445,7 +388,12 @@
   </component>
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
-    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="WebServerToolWindowFactoryState" value="true" />
+    <property name="WebServerToolWindowPanel.toolwindow.highlight.mappings" value="true" />
+    <property name="WebServerToolWindowPanel.toolwindow.highlight.symlinks" value="true" />
+    <property name="WebServerToolWindowPanel.toolwindow.show.date" value="false" />
+    <property name="WebServerToolWindowPanel.toolwindow.show.permissions" value="false" />
+    <property name="WebServerToolWindowPanel.toolwindow.show.size" value="false" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.stylelint" value="true" />
@@ -475,33 +423,72 @@
       <updated>1605694005919</updated>
       <workItem from="1605694007000" duration="5377000" />
       <workItem from="1605723171364" duration="6553000" />
+      <workItem from="1605851535690" duration="14000" />
+      <workItem from="1605901284521" duration="6265000" />
+      <workItem from="1605966732711" duration="8268000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="WIP" />
     <option name="LAST_COMMIT_MESSAGE" value="WIP" />
   </component>
   <component name="WindowStateProjectService">
+    <state x="361" y="71" key="#Deployment" timestamp="1605968443460">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state x="361" y="71" key="#Deployment/0.0.1536.824@0.0.1536.824" timestamp="1605968443460" />
+    <state x="345" y="58" key="#SSH_Configurations" timestamp="1605968169385">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state x="345" y="58" key="#SSH_Configurations/0.0.1536.824@0.0.1536.824" timestamp="1605968169385" />
     <state x="303" y="0" key="CommitChangelistDialog2" timestamp="1605729470318">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
     <state x="303" y="0" key="CommitChangelistDialog2/0.0.1536.824@0.0.1536.824" timestamp="1605729470318" />
-    <state x="548" y="153" key="FileChooserDialogImpl" timestamp="1605728266783">
+    <state x="93" y="93" width="1350" height="638" key="DiffContextDialog" timestamp="1605731363995">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
-    <state x="548" y="153" key="FileChooserDialogImpl/0.0.1536.824@0.0.1536.824" timestamp="1605728266783" />
+    <state x="93" y="93" width="1350" height="638" key="DiffContextDialog/0.0.1536.824@0.0.1536.824" timestamp="1605731363995" />
+    <state x="548" y="153" key="FileChooserDialogImpl" timestamp="1605851547787">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state x="548" y="153" key="FileChooserDialogImpl/0.0.1536.824@0.0.1536.824" timestamp="1605851547787" />
+    <state x="1042" y="317" key="NewPhpFileDialog" timestamp="1605734314410">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state x="1042" y="317" key="NewPhpFileDialog/0.0.1536.824@0.0.1536.824" timestamp="1605734314410" />
     <state x="277" y="57" key="SettingsEditor" timestamp="1605694079300">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
     <state x="277" y="57" key="SettingsEditor/0.0.1536.824@0.0.1536.824" timestamp="1605694079300" />
-    <state x="938" y="290" width="584" height="534" key="find.popup" timestamp="1605729610231">
+    <state x="624" y="311" key="WebDeployment.AddServerDialog.v.1" timestamp="1605968129981">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
-    <state x="938" y="290" width="584" height="534" key="find.popup/0.0.1536.824@0.0.1536.824" timestamp="1605729610231" />
+    <state x="624" y="311" key="WebDeployment.AddServerDialog.v.1/0.0.1536.824@0.0.1536.824" timestamp="1605968129981" />
+    <state x="613" y="229" width="584" height="534" key="find.popup" timestamp="1605733478347">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state x="613" y="229" width="584" height="534" key="find.popup/0.0.1536.824@0.0.1536.824" timestamp="1605733478347" />
+    <state x="592" y="143" key="ftp.server.browser" timestamp="1605968191107">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state x="592" y="143" key="ftp.server.browser/0.0.1536.824@0.0.1536.824" timestamp="1605968191107" />
     <state x="491" y="324" key="vcs.readOnlyHandler.ReadOnlyStatusDialog" timestamp="1605728101439">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
