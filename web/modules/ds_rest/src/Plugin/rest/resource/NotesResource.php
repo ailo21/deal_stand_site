@@ -5,6 +5,7 @@ namespace Drupal\ds_rest\Plugin\rest\resource;
 use Drupal\Component\Plugin\DependentPluginInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Routing\BcRoute;
+use Drupal\ds_note\Entity\DSNode;
 use Drupal\rest\ModifiedResourceResponse;
 use Drupal\rest\Plugin\ResourceBase;
 use Drupal\rest\ResourceResponse;
@@ -96,11 +97,10 @@ class NotesResource extends ResourceBase implements DependentPluginInterface {
    * @throws \Symfony\Component\HttpKernel\Exception\HttpException
    */
   public function get($id) {
-//    return new ResourceResponse($this->loadRecord($id));
+    //    return new ResourceResponse($this->loadRecord($id));
     $response = [
       'items' => [],
-      'next_page' => FALSE,
-      'prev_page' => FALSE,
+      'count' => 0,
     ];
 
     $request = \Drupal::request();
@@ -109,27 +109,12 @@ class NotesResource extends ResourceBase implements DependentPluginInterface {
     $limit = $request_query->get('limit') ?: $this->limit;
     $page = $request_query->get('page') ?: 0;
 
-    // Find out how many articles do we have.
-    $query = \Drupal::entityQuery('node')->condition('type', 'article');
-    $articles_count = $query->count()->execute();
-    $position = $limit * ($page + 1);
-    if ($articles_count > $position) {
-      $next_page_query = $request_query_array;
-      $next_page_query['page'] = $page + 1;
-      $response['next_page'] = Url::createFromRequest($request)
-        ->setOption('query', $next_page_query)
-        ->toString(TRUE)
-        ->getGeneratedUrl();
-    }
+    // Find out how many notes do we have.
+    $query = \Drupal::entityQuery('node')->condition('type', 'note');
+    $note_count = $query->count()->execute();
 
-    if ($page > 0) {
-      $prev_page_query = $request_query_array;
-      $prev_page_query['page'] = $page - 1;
-      $response['prev_page'] = Url::createFromRequest($request)
-        ->setOption('query', $prev_page_query)
-        ->toString(TRUE)
-        ->getGeneratedUrl();
-    }
+    $response['count'] = $note_count;
+
 
     // Find articles.
     $query = \Drupal::entityQuery('node')
@@ -137,9 +122,8 @@ class NotesResource extends ResourceBase implements DependentPluginInterface {
       ->sort('created', 'DESC')
       ->pager($limit);
     $result = $query->execute();
-    $notes = \Drupal::entityTypeManager()
-      ->getStorage('node')
-      ->loadMultiple($result);
+
+    $notes = DSNode::loadMultiple($result);
 
 
     $formatter = \Drupal::service('date.formatter');
@@ -149,9 +133,10 @@ class NotesResource extends ResourceBase implements DependentPluginInterface {
       $response['items'][] = [
         'label' => $note->label(),
         'id' => $note->id(),
-        'created' => $formatter->format($note->getCreatedTime(), 'points_separated') ,
-        'price'=>$note->get('field_price')->getValue()[0]['value']
-//        'description'=>$note->get('body')->getValue()[0]['value']
+        'created' => $formatter->format($note->getCreatedTime(), 'points_separated'),
+        'price' => $note->get('field_price')->getValue()[0]['value'],
+        'image' => $note->getFirstUrlWithStyle()
+        //        'description'=>$note->get('body')->getValue()[0]['value']
       ];
     }
 
@@ -308,7 +293,8 @@ class NotesResource extends ResourceBase implements DependentPluginInterface {
    * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
    */
   protected function loadRecord($id) {
-    $record = $this->dbConnection->query('SELECT * FROM {ds_rest_notes} WHERE id = :id', [':id' => $id])->fetchAssoc();
+    $record = $this->dbConnection->query('SELECT * FROM {ds_rest_notes} WHERE id = :id', [':id' => $id])
+      ->fetchAssoc();
     if (!$record) {
       throw new NotFoundHttpException('The record was not found.');
     }

@@ -3,6 +3,7 @@
 namespace Drupal\ds_note\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\ds_note\Entity\DSNode;
 use Drupal\node\Entity\Node;
 
 /**
@@ -15,12 +16,13 @@ class TestController extends ControllerBase {
    */
   public function build() {
 
-    $data = Node::load(1);
-//
-    var_dump($data);
+    $data = DSNode::load(1);
+////
+//    dump($data);
+    ksm($data->getFirstUrlWithStyle());
     $build['content'] = [
       '#type' => 'item',
-      '#markup' => $this->t('It works!'),
+      '#markup' => $this->t('It works!__'),
     ];
 
     return $build;

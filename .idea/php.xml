@@ -82,6 +82,12 @@
       <path value="$PROJECT_DIR$/vendor/drush/drush" />
       <path value="$PROJECT_DIR$/vendor/dflydev/dot-access-data" />
       <path value="$PROJECT_DIR$/vendor/psy/psysh" />
+      <path value="$PROJECT_DIR$/vendor/doctrine/inflector" />
+      <path value="$PROJECT_DIR$/vendor/doctrine/persistence" />
+      <path value="$PROJECT_DIR$/vendor/doctrine/cache" />
+      <path value="$PROJECT_DIR$/vendor/doctrine/event-manager" />
+      <path value="$PROJECT_DIR$/vendor/doctrine/collections" />
+      <path value="$PROJECT_DIR$/vendor/doctrine/common" />
     </include_path>
   </component>
 </project>

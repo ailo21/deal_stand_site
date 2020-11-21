@@ -8,3 +8,12 @@
  * This file is no longer required in Drupal 8.
  * @see https://www.drupal.org/node/2217931
  */
+
+/**
+ * Implements hook_entity_type_build().
+ */
+function ds_note_entity_type_build(array &$entity_types) {
+  if (isset($entity_types['node'])) {
+    $entity_types['node']->setClass('Drupal\ds_note\Entity\DSNode');
+  }
+}
