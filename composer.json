@@ -21,6 +21,7 @@
         "drupal/core-project-message": "^9",
         "drupal/core-recommended": "^9",
         "drupal/devel": "^4.0",
+        "drupal/kint": "^2.1",
         "drupal/restui": "^1.18",
         "drush/drush": "^10.3"
     },
@@ -85,5 +86,8 @@
                 "      composer remove drupal/core-project-message"
             ]
         }
+    },
+    "require-dev": {
+        "kint-php/kint": "^3.3"
     }
 }
