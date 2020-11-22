@@ -1,0 +1,25 @@
+uuid: fe17f127-acb5-49aa-aac3-62bd1d081c64
+langcode: ru
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_price
+    - node.type.note
+id: node.note.field_price
+field_name: field_price
+entity_type: node
+bundle: note
+label: Цена
+description: ''
+required: false
+translatable: false
+default_value:
+  -
+    value: !!float 0
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: руб.
+field_type: float

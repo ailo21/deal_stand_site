@@ -1,0 +1,18 @@
+uuid: bebd6b65-1465-4aaf-a235-81966ad2655d
+langcode: ru
+status: true
+dependencies:
+  module:
+    - ds_rest
+    - serialization
+    - user
+id: ds_rest_notes
+plugin_id: ds_rest_notes
+granularity: resource
+configuration:
+  methods:
+    - GET
+  formats:
+    - json
+  authentication:
+    - cookie

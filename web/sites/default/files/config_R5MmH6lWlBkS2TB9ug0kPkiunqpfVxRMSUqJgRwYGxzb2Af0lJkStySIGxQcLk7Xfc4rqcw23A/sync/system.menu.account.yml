@@ -1,0 +1,10 @@
+uuid: a7078d6a-0e50-40e5-9726-94961ce6ed57
+langcode: ru
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: M_Bh81osDyUQ4wV0GgU_NdBNqkzM87sLxjaCdFj9mnw
+id: account
+label: 'Меню учётной записи пользователя'
+description: 'Ссылки, относящиеся к учётной записи активного пользователя'
+locked: true

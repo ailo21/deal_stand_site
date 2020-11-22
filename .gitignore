@@ -17,13 +17,15 @@
 # custom module, theme, etc., are not ignored unless you purposely do so.
 /vendor/
 /.idea
+.idea
 
 # Ignore configuration files that may contain sensitive information.
 /web/sites/*/settings*.php
 /web/sites/*/services*.yml
 
 # Ignore paths that contain user-generated content.
-/web/sites/*/files
+/web/sites/*/files/*
+!/web/sites/*/files/config_R5MmH6lWlBkS2TB9ug0kPkiunqpfVxRMSUqJgRwYGxzb2Af0lJkStySIGxQcLk7Xfc4rqcw23A
 /web/sites/*/private
 
 # Ignore SimpleTest multi-site environment.

@@ -1,0 +1,15 @@
+uuid: 08b77936-9d6c-4753-a05c-0c43ade9da46
+langcode: ru
+status: true
+dependencies: {  }
+name: api_list_img_style
+label: 'Картинка в списках'
+effects:
+  0768af10-5bce-4f95-be8d-c4386d9ba79b:
+    uuid: 0768af10-5bce-4f95-be8d-c4386d9ba79b
+    id: image_scale_and_crop
+    weight: 1
+    data:
+      width: 380
+      height: 380
+      anchor: center-center

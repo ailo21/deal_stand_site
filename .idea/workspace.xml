@@ -20,8 +20,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a4c497ea-f1ac-4a75-8bf1-262f975a388c" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/modules/ds_note/src/Entity/DSNode.php" beforeDir="false" afterPath="$PROJECT_DIR$/web/modules/ds_note/src/Entity/DSNode.php" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -148,7 +148,7 @@
     <property name="WebServerToolWindowPanel.toolwindow.show.date" value="false" />
     <property name="WebServerToolWindowPanel.toolwindow.show.permissions" value="false" />
     <property name="WebServerToolWindowPanel.toolwindow.show.size" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../../../learn/ReactNative/FirstProject" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.stylelint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
@@ -181,6 +181,7 @@
       <workItem from="1605851535690" duration="14000" />
       <workItem from="1605901284521" duration="6265000" />
       <workItem from="1605966732711" duration="42655000" />
+      <workItem from="1606051210037" duration="1724000" />
     </task>
     <task id="LOCAL-00001" summary="WIP">
       <created>1605976361895</created>
@@ -203,7 +204,14 @@
       <option name="project" value="LOCAL" />
       <updated>1606049504670</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="gitignore change">
+      <created>1606051676231</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1606051676231</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -240,10 +248,10 @@
       <screen x="0" y="0" width="1536" height="824" />
     </state>
     <state x="130" y="214" key="#com.intellij.fileTypes.FileTypeChooser/0.0.1536.824@0.0.1536.824" timestamp="1606035273243" />
-    <state x="303" y="0" key="CommitChangelistDialog2" timestamp="1606049503572">
+    <state x="129" y="0" key="CommitChangelistDialog2" timestamp="1606051674135">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
-    <state x="303" y="0" key="CommitChangelistDialog2/0.0.1536.824@0.0.1536.824" timestamp="1606049503572" />
+    <state x="129" y="0" key="CommitChangelistDialog2/0.0.1536.824@0.0.1536.824" timestamp="1606051674135" />
     <state x="93" y="93" width="1350" height="638" key="DiffContextDialog" timestamp="1605731363995">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
@@ -260,10 +268,10 @@
       <screen x="0" y="0" width="1536" height="824" />
     </state>
     <state x="277" y="57" key="SettingsEditor/0.0.1536.824@0.0.1536.824" timestamp="1605694079300" />
-    <state x="361" y="145" key="Vcs.Push.Dialog.v2" timestamp="1606049510942">
+    <state x="361" y="145" key="Vcs.Push.Dialog.v2" timestamp="1606053595160">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
-    <state x="361" y="145" key="Vcs.Push.Dialog.v2/0.0.1536.824@0.0.1536.824" timestamp="1606049510942" />
+    <state x="361" y="145" key="Vcs.Push.Dialog.v2/0.0.1536.824@0.0.1536.824" timestamp="1606053595160" />
     <state x="624" y="311" key="WebDeployment.AddServerDialog.v.1" timestamp="1605968129981">
       <screen x="0" y="0" width="1536" height="824" />
     </state>

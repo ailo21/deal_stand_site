@@ -1,0 +1,35 @@
+uuid: aa26ab46-008c-4260-92e6-1c03f1c06d4e
+langcode: ru
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.teaser
+    - field.field.node.note.body
+    - field.field.node.note.field_images
+    - field.field.node.note.field_price
+    - node.type.note
+  module:
+    - text
+    - user
+id: node.note.teaser
+targetEntityType: node
+bundle: note
+mode: teaser
+content:
+  body:
+    label: hidden
+    type: text_summary_or_trimmed
+    weight: 101
+    settings:
+      trim_length: 600
+    third_party_settings: {  }
+    region: content
+  links:
+    weight: 100
+    settings: {  }
+    third_party_settings: {  }
+    region: content
+hidden:
+  field_images: true
+  field_price: true
+  langcode: true
