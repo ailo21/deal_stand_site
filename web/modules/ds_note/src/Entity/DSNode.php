@@ -15,7 +15,7 @@ class DSNode extends BaseNode{
    *
    * @return \Drupal\Core\GeneratedUrl|string|null
    */
-  public function getFirstUrlWithStyle($image_style = 'thumbnail') {
+  public function getFirstUrlWithStyle($image_style = 'api_list_img_style') {
     $url = NULL;
     if($image = $this->getFirstImageEntity()){
       $url = ImageStyle::load($image_style)->buildUrl($image->getFileUri());
@@ -24,7 +24,6 @@ class DSNode extends BaseNode{
     if(!$url){
       $url = Url::fromUserInput('/themes/custom/ds/images/no_photo_news.png')->toString();
     }
-
     return $url;
   }
 
