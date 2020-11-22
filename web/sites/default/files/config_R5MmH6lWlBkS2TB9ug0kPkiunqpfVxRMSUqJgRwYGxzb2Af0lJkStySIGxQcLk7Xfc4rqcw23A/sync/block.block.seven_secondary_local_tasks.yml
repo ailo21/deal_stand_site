@@ -1,0 +1,22 @@
+uuid: ddda3f7d-dbf9-490b-9845-e1e6867d5b77
+langcode: ru
+status: true
+dependencies:
+  theme:
+    - seven
+_core:
+  default_config_hash: QeZBeCilQfeET3GeW6ZtJkEiwROADTZktFgKWwPieD4
+id: seven_secondary_local_tasks
+theme: seven
+region: pre_content
+weight: 0
+provider: null
+plugin: local_tasks_block
+settings:
+  id: local_tasks_block
+  label: 'Дополнительные вкладки'
+  provider: core
+  label_display: '0'
+  primary: false
+  secondary: true
+visibility: {  }

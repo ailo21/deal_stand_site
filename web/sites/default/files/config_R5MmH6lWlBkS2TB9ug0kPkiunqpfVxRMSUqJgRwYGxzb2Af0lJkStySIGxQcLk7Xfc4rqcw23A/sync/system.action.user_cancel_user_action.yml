@@ -1,0 +1,13 @@
+uuid: 22edb183-eff6-4107-8561-df6ded7ba72e
+langcode: ru
+status: true
+dependencies:
+  module:
+    - user
+_core:
+  default_config_hash: nvrL9bFilzBvm2bjO9rQnFDpBA7dBBUjShSSt6NS-DU
+id: user_cancel_user_action
+label: 'Удалить выбранные учётные записи пользователей'
+type: user
+plugin: user_cancel_user_action
+configuration: {  }

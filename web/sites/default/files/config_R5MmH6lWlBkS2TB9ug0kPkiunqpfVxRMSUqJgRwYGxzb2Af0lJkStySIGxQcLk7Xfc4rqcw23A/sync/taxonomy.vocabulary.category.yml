@@ -1,0 +1,8 @@
+uuid: 12e8dc96-ec83-455c-b73e-fce917b66839
+langcode: ru
+status: true
+dependencies: {  }
+name: Категории
+vid: category
+description: 'Древовидный список категорий заметок'
+weight: 0

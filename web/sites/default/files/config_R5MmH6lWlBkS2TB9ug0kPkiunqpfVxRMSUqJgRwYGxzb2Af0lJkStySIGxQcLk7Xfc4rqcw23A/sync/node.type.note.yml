@@ -1,0 +1,18 @@
+uuid: d13e9919-5b68-4f37-9137-0f2118294b96
+langcode: ru
+status: true
+dependencies:
+  module:
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    available_menus:
+      - main
+    parent: 'main:'
+name: Заметка
+type: note
+description: ''
+help: ''
+new_revision: true
+preview_mode: 1
+display_submitted: true

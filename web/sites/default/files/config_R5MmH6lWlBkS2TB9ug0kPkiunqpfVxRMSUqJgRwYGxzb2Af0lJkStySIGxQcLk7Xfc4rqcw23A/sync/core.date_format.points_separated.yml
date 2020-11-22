@@ -1,0 +1,8 @@
+uuid: c8b79f4a-2518-4f3a-b5ba-a7859b02ea49
+langcode: ru
+status: true
+dependencies: {  }
+id: points_separated
+label: 'Через точки'
+locked: false
+pattern: d.m.Y

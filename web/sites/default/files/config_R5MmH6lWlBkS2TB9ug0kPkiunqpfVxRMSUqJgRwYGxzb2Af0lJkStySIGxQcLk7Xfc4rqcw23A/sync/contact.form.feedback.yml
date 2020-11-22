@@ -1,0 +1,14 @@
+uuid: 194db525-b26e-415a-b4cc-9b08c4e04a08
+langcode: ru
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: vymHlgJy26BuI5GGj9-IXjwR3dRC5C0tij4BpWJnoqw
+id: feedback
+label: 'Обратная связь с сайтом'
+recipients:
+  - alex92ailo@gmail.com
+reply: ''
+weight: 0
+message: 'Ваше сообщение отправлено.'
+redirect: ''

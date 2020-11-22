@@ -1,0 +1,23 @@
+uuid: 542bb34a-414a-416b-88df-5bc216289a7e
+langcode: ru
+status: true
+dependencies:
+  config:
+    - field.storage.node.body
+    - node.type.note
+  module:
+    - text
+id: node.note.body
+field_name: body
+entity_type: node
+bundle: note
+label: Body
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  display_summary: true
+  required_summary: false
+field_type: text_with_summary

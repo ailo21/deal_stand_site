@@ -23,7 +23,8 @@
 /web/sites/*/services*.yml
 
 # Ignore paths that contain user-generated content.
-/web/sites/*/files
+/web/sites/*/files/*
+!/web/sites/*/files/config_R5MmH6lWlBkS2TB9ug0kPkiunqpfVxRMSUqJgRwYGxzb2Af0lJkStySIGxQcLk7Xfc4rqcw23A
 /web/sites/*/private
 
 # Ignore SimpleTest multi-site environment.
