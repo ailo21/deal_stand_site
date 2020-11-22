@@ -41,4 +41,19 @@ class DSNode extends BaseNode{
     return NULL;
   }
 
+  public function getImagesListEntity($image_style = 'api_list_img_style'){
+    $data=[];
+    foreach ($this->field_images as $file_field){
+      /** @var \Drupal\file\Entity\File $image */
+      $image = $file_field->entity;
+      $url = ImageStyle::load($image_style)->buildUrl($image->getFileUri());
+      $data[]=[
+        'uri'=>$url
+      ];
+    }
+
+    return $data;
+
+  }
+
 }

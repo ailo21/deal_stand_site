@@ -135,7 +135,9 @@ class NotesResource extends ResourceBase implements DependentPluginInterface {
         'id' => $note->id(),
         'created' => $formatter->format($note->getCreatedTime(), 'points_separated'),
         'price' => $note->get('field_price')->getValue()[0]['value'],
-        'image' =>['uri'=>$note->getFirstUrlWithStyle()]
+        'image' =>['uri'=>$note->getFirstUrlWithStyle()],
+        'text'=>$note->get('body')->getValue()[0]['value'],
+        'images'=>$note->getImagesListEntity()
         //        'description'=>$note->get('body')->getValue()[0]['value']
       ];
     }
