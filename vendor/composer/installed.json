@@ -1944,17 +1944,17 @@
     },
     {
         "name": "drupal/core",
-        "version": "9.0.7",
-        "version_normalized": "9.0.7.0",
+        "version": "9.0.8",
+        "version_normalized": "9.0.8.0",
         "source": {
             "type": "git",
             "url": "https://github.com/drupal/core.git",
-            "reference": "5159f7e335ba2484075b2460b10780fed583d74c"
+            "reference": "67ec8d625bb29c4323bc34c680887bf4af0187e1"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/drupal/core/zipball/5159f7e335ba2484075b2460b10780fed583d74c",
-            "reference": "5159f7e335ba2484075b2460b10780fed583d74c",
+            "url": "https://api.github.com/repos/drupal/core/zipball/67ec8d625bb29c4323bc34c680887bf4af0187e1",
+            "reference": "67ec8d625bb29c4323bc34c680887bf4af0187e1",
             "shasum": ""
         },
         "require": {
@@ -2116,6 +2116,7 @@
             "drupal/workflows": "self.version",
             "drupal/workspaces": "self.version"
         },
+        "time": "2020-11-17T22:05:11+00:00",
         "type": "drupal-core",
         "extra": {
             "drupal-scaffold": {
@@ -2181,14 +2182,7 @@
                 "lib/Drupal/Core/Site/Settings.php"
             ]
         },
-        "scripts": {
-            "pre-autoload-dump": [
-                "Drupal\\Core\\Composer\\Composer::preAutoloadDump"
-            ],
-            "post-autoload-dump": [
-                "Drupal\\Core\\Composer\\Composer::ensureHtaccess"
-            ]
-        },
+        "notification-url": "https://packagist.org/downloads/",
         "license": [
             "GPL-2.0-or-later"
         ],
@@ -2196,8 +2190,8 @@
     },
     {
         "name": "drupal/core-composer-scaffold",
-        "version": "9.0.7",
-        "version_normalized": "9.0.7.0",
+        "version": "9.0.8",
+        "version_normalized": "9.0.8.0",
         "source": {
             "type": "git",
             "url": "https://github.com/drupal/core-composer-scaffold.git",
@@ -2219,6 +2213,7 @@
         "require-dev": {
             "composer/composer": "^1.8@stable"
         },
+        "time": "2020-08-07T22:30:24+00:00",
         "type": "composer-plugin",
         "extra": {
             "class": "Drupal\\Composer\\Plugin\\Scaffold\\Plugin",
@@ -2232,6 +2227,7 @@
                 "Drupal\\Composer\\Plugin\\Scaffold\\": ""
             }
         },
+        "notification-url": "https://packagist.org/downloads/",
         "license": [
             "GPL-2.0-or-later"
         ],
@@ -2243,8 +2239,8 @@
     },
     {
         "name": "drupal/core-project-message",
-        "version": "9.0.7",
-        "version_normalized": "9.0.7.0",
+        "version": "9.0.8",
+        "version_normalized": "9.0.8.0",
         "source": {
             "type": "git",
             "url": "https://github.com/drupal/core-project-message.git",
@@ -2260,6 +2256,7 @@
             "composer-plugin-api": "^1.1 || ^2",
             "php": ">=7.3.0"
         },
+        "time": "2020-08-02T22:04:44+00:00",
         "type": "composer-plugin",
         "extra": {
             "class": "Drupal\\Composer\\Plugin\\ProjectMessage\\MessagePlugin"
@@ -2270,6 +2267,7 @@
                 "Drupal\\Composer\\Plugin\\ProjectMessage\\": "."
             }
         },
+        "notification-url": "https://packagist.org/downloads/",
         "license": [
             "GPL-2.0-or-later"
         ],
@@ -2281,17 +2279,17 @@
     },
     {
         "name": "drupal/core-recommended",
-        "version": "9.0.7",
-        "version_normalized": "9.0.7.0",
+        "version": "9.0.8",
+        "version_normalized": "9.0.8.0",
         "source": {
             "type": "git",
             "url": "https://github.com/drupal/core-recommended.git",
-            "reference": "a5584a633d3d75b1d300f94b00853aa9754e3ddb"
+            "reference": "26190ab57104b47d7c2a48a08b739abba4e31025"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/drupal/core-recommended/zipball/a5584a633d3d75b1d300f94b00853aa9754e3ddb",
-            "reference": "a5584a633d3d75b1d300f94b00853aa9754e3ddb",
+            "url": "https://api.github.com/repos/drupal/core-recommended/zipball/26190ab57104b47d7c2a48a08b739abba4e31025",
+            "reference": "26190ab57104b47d7c2a48a08b739abba4e31025",
             "shasum": ""
         },
         "require": {
@@ -2300,7 +2298,7 @@
             "doctrine/annotations": "1.10.3",
             "doctrine/lexer": "1.2.1",
             "doctrine/reflection": "1.2.1",
-            "drupal/core": "9.0.7",
+            "drupal/core": "9.0.8",
             "egulias/email-validator": "2.1.17",
             "guzzlehttp/guzzle": "6.5.4",
             "guzzlehttp/promises": "v1.3.1",
@@ -2354,7 +2352,9 @@
         "conflict": {
             "webflo/drupal-core-strict": "*"
         },
+        "time": "2020-11-17T22:05:11+00:00",
         "type": "metapackage",
+        "notification-url": "https://packagist.org/downloads/",
         "license": [
             "GPL-2.0-or-later"
         ],
@@ -3044,6 +3044,78 @@
             "stream",
             "uri",
             "url"
+        ]
+    },
+    {
+        "name": "kint-php/kint",
+        "version": "3.3",
+        "version_normalized": "3.3.0.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/kint-php/kint.git",
+            "reference": "335ac1bcaf04d87df70d8aa51e8887ba2c6d203b"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/kint-php/kint/zipball/335ac1bcaf04d87df70d8aa51e8887ba2c6d203b",
+            "reference": "335ac1bcaf04d87df70d8aa51e8887ba2c6d203b",
+            "shasum": ""
+        },
+        "require": {
+            "php": ">=5.3.6"
+        },
+        "require-dev": {
+            "friendsofphp/php-cs-fixer": "^2.0",
+            "phpunit/phpunit": "^4.0",
+            "seld/phar-utils": "^1.0",
+            "symfony/finder": "^2.0 || ^3.0 || ^4.0",
+            "vimeo/psalm": "^3.0"
+        },
+        "suggest": {
+            "ext-ctype": "Simple data type tests",
+            "ext-iconv": "Provides fallback detection for ambiguous legacy string encodings such as the Windows and ISO 8859 code pages",
+            "ext-mbstring": "Provides string encoding detection",
+            "kint-php/kint-js": "Provides a simplified dump to console.log()",
+            "kint-php/kint-twig": "Provides d() and s() functions in twig templates",
+            "symfony/polyfill-ctype": "Replacement for ext-ctype if missing",
+            "symfony/polyfill-iconv": "Replacement for ext-iconv if missing",
+            "symfony/polyfill-mbstring": "Replacement for ext-mbstring if missing"
+        },
+        "time": "2019-10-17T18:05:24+00:00",
+        "type": "library",
+        "installation-source": "dist",
+        "autoload": {
+            "files": [
+                "init.php"
+            ],
+            "psr-4": {
+                "Kint\\": "src/"
+            }
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "MIT"
+        ],
+        "authors": [
+            {
+                "name": "Jonathan Vollebregt",
+                "homepage": "https://github.com/jnvsor"
+            },
+            {
+                "name": "Rokas Šleinius",
+                "homepage": "https://github.com/raveren"
+            },
+            {
+                "name": "Contributors",
+                "homepage": "https://github.com/kint-php/kint/graphs/contributors"
+            }
+        ],
+        "description": "Kint - debugging tool for PHP developers",
+        "homepage": "https://kint-php.github.io/kint/",
+        "keywords": [
+            "debug",
+            "kint",
+            "php"
         ]
     },
     {
