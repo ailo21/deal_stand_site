@@ -18,8 +18,9 @@ class TestController extends ControllerBase {
 
     $data = DSNode::load(1);
 ////
-//    dump($data);
-    ksm($data->getFirstUrlWithStyle());
+    ksm($data->get('body')->getValue()[0]['value']);
+//    ksm($data->getFirstUrlWithStyle());
+//    ksm($data->body);
     $build['content'] = [
       '#type' => 'item',
       '#markup' => $this->t('It works!__'),
