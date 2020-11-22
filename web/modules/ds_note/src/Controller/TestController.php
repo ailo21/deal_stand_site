@@ -18,6 +18,8 @@ class TestController extends ControllerBase {
   public function build() {
 
     $data = DSNode::load(1);
+    ksm($data, $data->getEntityType());
+   ;
 ////
 //    ksm($data->get('body')->getValue()[0]['value']);
 //    ksm($data->getFirstUrlWithStyle());
