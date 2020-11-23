@@ -9,6 +9,8 @@
  * @see https://www.drupal.org/node/2217931
  */
 
+use Drupal\Core\Form\FormStateInterface;
+
 /**
  * Implements hook_entity_type_build().
  */
@@ -16,4 +18,39 @@ function ds_note_entity_type_build(array &$entity_types) {
   if (isset($entity_types['node'])) {
     $entity_types['node']->setClass('Drupal\ds_note\Entity\DSNode');
   }
+}
+
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * @param $form
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ * @param $form_id
+ */
+function ds_note_form_node_note_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+
+  //убираем лог с редакцией из формы
+  unset($form['revision_log']);
+}
+
+
+/**
+ * Implements hook_preprocess_HOOK().
+ *
+ * @param $variables
+ */
+function ds_note_preprocess_page_title(&$variables) {
+  $route = Drupal::routeMatch();
+  $route_name = $route->getRouteName();
+
+  $type = $route->getParameter('node_type');
+  if($type){
+    $enty_type = $type->getOriginalId();
+    if ($route_name == 'node.add' && $enty_type == 'note') {
+      $variables['title'] = 'Добавить объявление';
+    }
+  }
+
+
 }

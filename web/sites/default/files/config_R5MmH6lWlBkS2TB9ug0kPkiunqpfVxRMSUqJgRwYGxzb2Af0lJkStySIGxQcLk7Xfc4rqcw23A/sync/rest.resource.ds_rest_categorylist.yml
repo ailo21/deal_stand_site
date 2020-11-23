@@ -1,0 +1,18 @@
+uuid: 30ce59fa-9cd6-412f-88a0-5080fd9e83f3
+langcode: ru
+status: true
+dependencies:
+  module:
+    - ds_rest
+    - serialization
+    - user
+id: ds_rest_categorylist
+plugin_id: ds_rest_categorylist
+granularity: resource
+configuration:
+  methods:
+    - GET
+  formats:
+    - json
+  authentication:
+    - cookie

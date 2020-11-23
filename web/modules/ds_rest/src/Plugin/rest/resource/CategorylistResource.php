@@ -2,6 +2,7 @@
 
 namespace Drupal\ds_rest\Plugin\rest\resource;
 
+use Drupal;
 use Drupal\Component\Plugin\DependentPluginInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Routing\BcRoute;
@@ -20,7 +21,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  *   id = "ds_rest_categorylist",
  *   label = @Translation("CategoryList"),
  *   uri_paths = {
- *     "canonical" = "/api/ds-rest-categorylist/{id}",
+ *     "canonical" = "/api/ds-rest-categorylist",
  *     "https://www.drupal.org/link-relations/create" = "/api/ds-rest-categorylist"
  *   }
  * )
@@ -90,8 +91,8 @@ class CategorylistResource extends ResourceBase implements DependentPluginInterf
    *
    * @throws \Symfony\Component\HttpKernel\Exception\HttpException
    */
-  public function get($id) {
-    $manager = \Drupal::entityTypeManager()->getStorage('taxonomy_term');
+  public function get() {
+    $manager = Drupal::entityTypeManager()->getStorage('taxonomy_term');
 
     $tree = $manager->loadTree('category', 0, 1, TRUE);
     $result = [];
