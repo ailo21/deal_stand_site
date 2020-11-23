@@ -2,6 +2,7 @@
 
 namespace Drupal\ds_rest\Plugin\rest\resource;
 
+use Drupal;
 use Drupal\Component\Plugin\DependentPluginInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Routing\BcRoute;
@@ -21,7 +22,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  *   id = "ds_rest_notes",
  *   label = @Translation("Notes"),
  *   uri_paths = {
- *     "canonical" = "/api/ds-rest-notes/{id}",
+ *     "canonical" = "/api/ds-rest-notes",
  *     "https://www.drupal.org/link-relations/create" = "/api/ds-rest-notes"
  *   }
  * )
@@ -96,28 +97,28 @@ class NotesResource extends ResourceBase implements DependentPluginInterface {
    *
    * @throws \Symfony\Component\HttpKernel\Exception\HttpException
    */
-  public function get($id) {
+  public function get() {
     //    return new ResourceResponse($this->loadRecord($id));
     $response = [
       'items' => [],
       'count' => 0,
     ];
 
-    $request = \Drupal::request();
+    $request = Drupal::request();
     $request_query = $request->query;
     $request_query_array = $request_query->all();
     $limit = $request_query->get('limit') ?: $this->limit;
     $page = $request_query->get('page') ?: 0;
 
     // Find out how many notes do we have.
-    $query = \Drupal::entityQuery('node')->condition('type', 'note');
+    $query = Drupal::entityQuery('node')->condition('type', 'note');
     $note_count = $query->count()->execute();
 
     $response['count'] = $note_count;
 
 
     // Find articles.
-    $query = \Drupal::entityQuery('node')
+    $query = Drupal::entityQuery('node')
       ->condition('type', 'note')
       ->sort('created', 'DESC')
       ->pager($limit);
@@ -126,7 +127,7 @@ class NotesResource extends ResourceBase implements DependentPluginInterface {
     $notes = DSNode::loadMultiple($result);
 
 
-    $formatter = \Drupal::service('date.formatter');
+    $formatter = Drupal::service('date.formatter');
 
     /** @var \Drupal\node\Entity\Node $note */
     foreach ($notes as $note) {

@@ -16,12 +16,14 @@
     ],
     "require": {
         "composer/installers": "^1.9",
+        "cweagans/composer-patches": "^1.7",
         "drupal/admin_toolbar": "^2.4",
         "drupal/core-composer-scaffold": "^9",
         "drupal/core-project-message": "^9",
         "drupal/core-recommended": "^9",
         "drupal/devel": "^4.0",
         "drupal/restui": "^1.18",
+        "drupal/taxonomy_manager": "^2.0",
         "drush/drush": "^10.3"
     },
     "conflict": {
@@ -63,6 +65,11 @@
             "web/themes/custom/{$name}": [
                 "type:drupal-custom-theme"
             ]
+        },
+        "patches": {
+            "drupal/devel": {
+                "fix kint": "pathes/kint.patch"
+            }
         },
         "drupal-core-project-message": {
             "include-keys": [

@@ -13,6 +13,7 @@ permissions:
   - 'access content'
   - 'access site-wide contact form'
   - 'restful delete ds_rest_notes'
+  - 'restful get ds_rest_categorylist'
   - 'restful get ds_rest_notes'
   - 'restful post ds_rest_notes'
   - 'search content'
