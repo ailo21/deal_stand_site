@@ -5,6 +5,8 @@ namespace Drupal\Tests\Core\Batch;
 use Drupal\Core\Batch\BatchBuilder;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Tests\UnitTestCase;
+use Exception;
+use InvalidArgumentException;
 
 /**
  * Tests for the batch builder class.
@@ -172,7 +174,7 @@ class BatchBuilderTest extends UnitTestCase {
       ->setQueue('BatchName', '\Drupal\Core\Queue\Batch')
       ->toArray();
 
-    $this->assertArrayEquals([
+    $this->assertEquals([
       'name' => 'BatchName',
       'class' => '\Drupal\Core\Queue\Batch',
     ], $batch['queue'], 'Batch queue has been set.');
@@ -185,7 +187,7 @@ class BatchBuilderTest extends UnitTestCase {
    */
   public function testQueueExists() {
     $batch_builder = (new BatchBuilder());
-    $this->expectException(\InvalidArgumentException::class);
+    $this->expectException(InvalidArgumentException::class);
     $this->expectExceptionMessage('Class \ThisIsNotAClass does not exist.');
     $batch_builder->setQueue('BatchName', '\ThisIsNotAClass');
   }
@@ -197,9 +199,9 @@ class BatchBuilderTest extends UnitTestCase {
    */
   public function testQueueImplements() {
     $batch_builder = (new BatchBuilder());
-    $this->expectException(\InvalidArgumentException::class);
+    $this->expectException(InvalidArgumentException::class);
     $this->expectExceptionMessage('Class Exception does not implement \Drupal\Core\Queue\QueueInterface.');
-    $batch_builder->setQueue('BatchName', \Exception::class);
+    $batch_builder->setQueue('BatchName', Exception::class);
   }
 
   /**

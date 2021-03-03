@@ -2,6 +2,7 @@
 
 namespace Drupal\devel_generate\Plugin\DevelGenerate;
 
+use Drupal;
 use Drupal\content_translation\ContentTranslationManagerInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityStorageInterface;
@@ -13,6 +14,7 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\devel_generate\DevelGenerateBase;
 use Drupal\taxonomy\TermInterface;
 use Drush\Utils\StringUtils;
+use Exception;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -277,7 +279,7 @@ class TermDevelGenerate extends DevelGenerateBase implements ContainerFactoryPlu
       // Initialise the nested array for this vocabulary.
       $all_parents[$vid] = ['top_level' => [], 'lower_levels' => []];
       for ($depth = 1; $depth < $max_depth; $depth++) {
-        $query = \Drupal::entityQuery('taxonomy_term')->condition('vid', $vid);
+        $query = Drupal::entityQuery('taxonomy_term')->condition('vid', $vid);
         if ($depth == 1) {
           // For the top level the parent id must be zero.
           $query->condition('parent', 0);
@@ -317,7 +319,7 @@ class TermDevelGenerate extends DevelGenerateBase implements ContainerFactoryPlu
     if (empty($vocabs)) {
       // There are no available parents at the required depth in any vocabulary
       // so we cannot create any new terms.
-      throw new \Exception(sprintf('Invalid minimum depth %s because there are no terms in any vocabulary at depth %s', $min_depth, $min_depth - 1));
+      throw new Exception(sprintf('Invalid minimum depth %s because there are no terms in any vocabulary at depth %s', $min_depth, $min_depth - 1));
     }
 
     // Only delete terms from the vocabularies we can create new terms in.
@@ -374,7 +376,7 @@ class TermDevelGenerate extends DevelGenerateBase implements ContainerFactoryPlu
       $info['terms']++;
       @$info[$vid][$depth]['total']++;
       // List only the first 10 new terms at each vocab/level.
-      if (@count($info[$vid][$depth]['terms']) < 10) {
+      if (!isset($info[$vid][$depth]['terms']) || count($info[$vid][$depth]['terms']) < 10) {
         $info[$vid][$depth]['terms'][] = $term->label();
       }
 
@@ -435,24 +437,24 @@ class TermDevelGenerate extends DevelGenerateBase implements ContainerFactoryPlu
 
     $bundles = StringUtils::csvToarray($options['bundles']);
     if (count($bundles) < 1) {
-      throw new \Exception(dt('Please provide a vocabulary machine name (--bundles).'));
+      throw new Exception(dt('Please provide a vocabulary machine name (--bundles).'));
     }
     foreach ($bundles as $bundle) {
       // Verify that each bundle is a valid vocabulary id.
       if (!$this->vocabularyStorage->load($bundle)) {
-        throw new \Exception(dt('Invalid vocabulary machine name: @name', ['@name' => $bundle]));
+        throw new Exception(dt('Invalid vocabulary machine name: @name', ['@name' => $bundle]));
       }
     }
 
     $number = array_shift($args) ?: $defaultSettings['num'];
     if (!$this->isNumber($number)) {
-      throw new \Exception(dt('Invalid number of terms: @num', ['@num' => $number]));
+      throw new Exception(dt('Invalid number of terms: @num', ['@num' => $number]));
     }
 
     $minimum_depth = $options['min-depth'] ?? $defaultSettings['minimum_depth'];
     $maximum_depth = $options['max-depth'] ?? $defaultSettings['maximum_depth'];
     if ($minimum_depth < 1 || $minimum_depth > 20 || $maximum_depth < 1 || $maximum_depth > 20 || $minimum_depth > $maximum_depth) {
-      throw new \Exception(dt('The depth values must be in the range 1 to 20 and min-depth cannot be larger than max-depth (values given: min-depth @min, max-depth @max)', ['@min' => $minimum_depth, '@max' => $maximum_depth]));
+      throw new Exception(dt('The depth values must be in the range 1 to 20 and min-depth cannot be larger than max-depth (values given: min-depth @min, max-depth @max)', ['@min' => $minimum_depth, '@max' => $maximum_depth]));
     }
 
     $values = [

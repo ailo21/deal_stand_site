@@ -5,6 +5,7 @@ namespace Drupal\Core\Command;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Database\SchemaObjectExistsException;
+use RuntimeException;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -12,7 +13,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * Provides a command to import the current database from a script.
  *
- * This script runs on databases exported using using one of the database dump
+ * This script runs on databases exported using one of the database dump
  * commands and imports it into the current database connection.
  *
  * @see \Drupal\Core\Command\DbImportApplication
@@ -63,7 +64,7 @@ class DbImportCommand extends DbCommandBase {
       require $script;
     }
     catch (SchemaObjectExistsException $e) {
-      throw new \RuntimeException('An existing Drupal installation exists at this location. Try removing all tables or changing the database prefix in your settings.php file.');
+      throw new RuntimeException('An existing Drupal installation exists at this location. Try removing all tables or changing the database prefix in your settings.php file.');
     }
     Database::setActiveConnection($old_key);
   }

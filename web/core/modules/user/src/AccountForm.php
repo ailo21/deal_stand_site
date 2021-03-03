@@ -2,6 +2,7 @@
 
 namespace Drupal\user;
 
+use Drupal;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Entity\EntityConstraintViolationListInterface;
@@ -65,10 +66,10 @@ abstract class AccountForm extends ContentEntityForm implements TrustedCallbackI
     /** @var \Drupal\user\UserInterface $account */
     $account = $this->entity;
     $user = $this->currentUser();
-    $config = \Drupal::config('user.settings');
+    $config = Drupal::config('user.settings');
     $form['#cache']['tags'] = $config->getCacheTags();
 
-    $language_interface = \Drupal::languageManager()->getCurrentLanguage();
+    $language_interface = Drupal::languageManager()->getCurrentLanguage();
 
     // Check for new account.
     $register = $account->isAnonymous();
@@ -130,7 +131,7 @@ abstract class AccountForm extends ContentEntityForm implements TrustedCallbackI
       // To skip the current password field, the user must have logged in via a
       // one-time link and have the token in the URL. Store this in $form_state
       // so it persists even on subsequent Ajax requests.
-      if (!$form_state->get('user_pass_reset') && ($token = $this->getRequest()->get('pass-reset-token'))) {
+      if (!$form_state->get('user_pass_reset') && ($token = $this->getRequest()->query->get('pass-reset-token'))) {
         $session_key = 'pass_reset_' . $account->id();
         $user_pass_reset = isset($_SESSION[$session_key]) && hash_equals($_SESSION[$session_key], $token);
         $form_state->set('user_pass_reset', $user_pass_reset);
@@ -278,7 +279,7 @@ abstract class AccountForm extends ContentEntityForm implements TrustedCallbackI
       $form['#entity_builders']['sync_user_langcode'] = '::syncUserLangcode';
     }
 
-    $system_date_config = \Drupal::config('system.date');
+    $system_date_config = Drupal::config('system.date');
     $form['timezone'] = [
       '#type' => 'details',
       '#title' => t('Locale settings'),
@@ -416,7 +417,7 @@ abstract class AccountForm extends ContentEntityForm implements TrustedCallbackI
       'preferred_admin_langcode',
     ];
     foreach ($violations->getByFields($field_names) as $violation) {
-      list($field_name) = explode('.', $violation->getPropertyPath(), 2);
+      [$field_name] = explode('.', $violation->getPropertyPath(), 2);
       $form_state->setErrorByName($field_name, $violation->getMessage());
     }
     parent::flagViolations($violations, $form, $form_state);

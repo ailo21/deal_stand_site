@@ -2,6 +2,7 @@
 
 namespace Drupal\taxonomy\Plugin\views\field;
 
+use Drupal;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
@@ -118,7 +119,7 @@ class TaxonomyIndexTid extends PrerenderList {
   }
 
   /**
-   * Add this term to the query
+   * Add this term to the query.
    */
   public function query() {
     $this->addAdditionalFields();
@@ -139,11 +140,11 @@ class TaxonomyIndexTid extends PrerenderList {
       if (empty($this->options['limit'])) {
         $vocabs = [];
       }
-      $result = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->getNodeTerms($nids, $vocabs);
+      $result = Drupal::entityTypeManager()->getStorage('taxonomy_term')->getNodeTerms($nids, $vocabs);
 
       foreach ($result as $node_nid => $data) {
         foreach ($data as $tid => $term) {
-          $this->items[$node_nid][$tid]['name'] = \Drupal::service('entity.repository')->getTranslationFromContext($term)->label();
+          $this->items[$node_nid][$tid]['name'] = Drupal::service('entity.repository')->getTranslationFromContext($term)->label();
           $this->items[$node_nid][$tid]['tid'] = $tid;
           $this->items[$node_nid][$tid]['vocabulary_vid'] = $term->bundle();
           $this->items[$node_nid][$tid]['vocabulary'] = $vocabularies[$term->bundle()]->label();

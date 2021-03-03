@@ -6,6 +6,7 @@ use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\DatabaseException;
 use Drupal\Core\Database\IntegrityConstraintViolationException;
+use Exception;
 
 /**
  * Defines the database lock backend. This is the default backend in Drupal.
@@ -88,7 +89,7 @@ class DatabaseLockBackend extends LockBackendAbstract {
           // the offending row from the database table in case it has expired.
           $retry = $retry ? FALSE : $this->lockMayBeAvailable($name);
         }
-        catch (\Exception $e) {
+        catch (Exception $e) {
           // Create the semaphore table if it does not exist and retry.
           if ($this->ensureTableExists()) {
             // Retry only once.
@@ -112,9 +113,9 @@ class DatabaseLockBackend extends LockBackendAbstract {
     $name = $this->normalizeName($name);
 
     try {
-      $lock = $this->database->query('SELECT expire, value FROM {semaphore} WHERE name = :name', [':name' => $name])->fetchAssoc();
+      $lock = $this->database->query('SELECT [expire], [value] FROM {semaphore} WHERE [name] = :name', [':name' => $name])->fetchAssoc();
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       $this->catchException($e);
       // If the table does not exist yet then the lock may be available.
       $lock = FALSE;
@@ -150,7 +151,7 @@ class DatabaseLockBackend extends LockBackendAbstract {
         ->condition('value', $this->getLockId())
         ->execute();
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       $this->catchException($e);
     }
   }
@@ -204,7 +205,7 @@ class DatabaseLockBackend extends LockBackendAbstract {
    *
    * @throws \Exception
    */
-  protected function catchException(\Exception $e) {
+  protected function catchException(Exception $e) {
     if ($this->database->schema()->tableExists(static::TABLE_NAME)) {
       throw $e;
     }

@@ -3,13 +3,18 @@
 namespace Drupal\Core\Database\Driver\mysql;
 
 use Drupal\Core\Database\DatabaseAccessDeniedException;
+use Drupal\Core\Database\IntegrityConstraintViolationException;
 use Drupal\Core\Database\DatabaseExceptionWrapper;
-
+use Drupal\Core\Database\StatementWrapper;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Database\DatabaseNotFoundException;
 use Drupal\Core\Database\DatabaseException;
 use Drupal\Core\Database\Connection as DatabaseConnection;
 use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Database\TransactionNoActiveException;
+use Exception;
+use PDO;
+use PDOException;
 
 /**
  * @addtogroup database
@@ -47,11 +52,30 @@ class Connection extends DatabaseConnection {
   const SQLSTATE_SYNTAX_ERROR = 42000;
 
   /**
+   * {@inheritdoc}
+   */
+  protected $statementClass = NULL;
+
+  /**
+   * {@inheritdoc}
+   */
+  protected $statementWrapperClass = StatementWrapper::class;
+
+  /**
    * Flag to indicate if the cleanup function in __destruct() should run.
    *
    * @var bool
    */
   protected $needsCleanup = FALSE;
+
+  /**
+   * Stores the server version after it has been retrieved from the database.
+   *
+   * @var string
+   *
+   * @see \Drupal\Core\Database\Driver\mysql\Connection::version
+   */
+  private $serverVersion;
 
   /**
    * The minimal possible value for the max_allowed_packet setting of MySQL.
@@ -67,21 +91,6 @@ class Connection extends DatabaseConnection {
    * {@inheritdoc}
    */
   protected $identifierQuotes = ['"', '"'];
-
-  /**
-   * Constructs a Connection object.
-   */
-  public function __construct(\PDO $connection, array $connection_options = []) {
-    parent::__construct($connection, $connection_options);
-
-    // This driver defaults to transaction support, except if explicitly passed FALSE.
-    $this->transactionSupport = !isset($connection_options['transactions']) || ($connection_options['transactions'] !== FALSE);
-
-    // MySQL never supports transactional DDL.
-    $this->transactionalDDLSupport = FALSE;
-
-    $this->connectionOptions = $connection_options;
-  }
 
   /**
    * {@inheritdoc}
@@ -100,6 +109,24 @@ class Connection extends DatabaseConnection {
       }
       throw $e;
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function handleQueryException(PDOException $e, $query, array $args = [], $options = []) {
+    // In case of attempted INSERT of a record with an undefined column and no
+    // default value indicated in schema, MySql returns a 1364 error code.
+    // Throw an IntegrityConstraintViolationException here like the other
+    // drivers do, to avoid the parent class to throw a generic
+    // DatabaseExceptionWrapper instead.
+    if (!empty($e->errorInfo[1]) && $e->errorInfo[1] === 1364) {
+      $query_string = ($query instanceof StatementInterface) ? $query->getQueryString() : $query;
+      $message = $e->getMessage() . ": " . $query_string . "; " . print_r($args, TRUE);
+      throw new IntegrityConstraintViolationException($message, is_int($e->getCode()) ? $e->getCode() : 0, $e);
+    }
+
+    parent::handleQueryException($e, $query, $args, $options);
   }
 
   /**
@@ -133,23 +160,23 @@ class Connection extends DatabaseConnection {
       'pdo' => [],
     ];
     $connection_options['pdo'] += [
-      \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+      PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
       // So we don't have to mess around with cursors and unbuffered queries by default.
-      \PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => TRUE,
+      PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => TRUE,
       // Make sure MySQL returns all matched rows on update queries including
       // rows that actually didn't have to be updated because the values didn't
       // change. This matches common behavior among other database systems.
-      \PDO::MYSQL_ATTR_FOUND_ROWS => TRUE,
+      PDO::MYSQL_ATTR_FOUND_ROWS => TRUE,
       // Because MySQL's prepared statements skip the query cache, because it's dumb.
-      \PDO::ATTR_EMULATE_PREPARES => TRUE,
+      PDO::ATTR_EMULATE_PREPARES => TRUE,
       // Limit SQL to a single statement like mysqli.
-      \PDO::MYSQL_ATTR_MULTI_STATEMENTS => FALSE,
+      PDO::MYSQL_ATTR_MULTI_STATEMENTS => FALSE,
     ];
 
     try {
-      $pdo = new \PDO($dsn, $connection_options['username'], $connection_options['password'], $connection_options['pdo']);
+      $pdo = new PDO($dsn, $connection_options['username'], $connection_options['password'], $connection_options['pdo']);
     }
-    catch (\PDOException $e) {
+    catch (PDOException $e) {
       if ($e->getCode() == static::DATABASE_NOT_FOUND) {
         throw new DatabaseNotFoundException($e->getMessage(), $e->getCode(), $e);
       }
@@ -182,15 +209,8 @@ class Connection extends DatabaseConnection {
       'init_commands' => [],
     ];
 
-    $sql_mode = 'ANSI,STRICT_TRANS_TABLES,STRICT_ALL_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,ONLY_FULL_GROUP_BY';
-    // NO_AUTO_CREATE_USER is removed in MySQL 8.0.11
-    // https://dev.mysql.com/doc/relnotes/mysql/8.0/en/news-8-0-11.html#mysqld-8-0-11-deprecation-removal
-    $version_server = $pdo->getAttribute(\PDO::ATTR_SERVER_VERSION);
-    if (version_compare($version_server, '8.0.11', '<')) {
-      $sql_mode .= ',NO_AUTO_CREATE_USER';
-    }
     $connection_options['init_commands'] += [
-      'sql_mode' => "SET sql_mode = '$sql_mode'",
+      'sql_mode' => "SET sql_mode = 'ANSI,STRICT_TRANS_TABLES,STRICT_ALL_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,ONLY_FULL_GROUP_BY'",
     ];
 
     // Execute initial commands.
@@ -221,6 +241,7 @@ class Connection extends DatabaseConnection {
     if ($this->needsCleanup) {
       $this->nextIdDelete();
     }
+    parent::__destruct();
   }
 
   public function queryRange($query, $from, $count, array $args = [], array $options = []) {
@@ -281,7 +302,10 @@ class Connection extends DatabaseConnection {
    *   The PDO server version.
    */
   protected function getServerVersion(): string {
-    return $this->connection->getAttribute(\PDO::ATTR_SERVER_VERSION);
+    if (!$this->serverVersion) {
+      $this->serverVersion = $this->connection->query('SELECT VERSION()')->fetchColumn();
+    }
+    return $this->serverVersion;
   }
 
   public function databaseType() {
@@ -305,7 +329,7 @@ class Connection extends DatabaseConnection {
       $this->connection->exec("CREATE DATABASE $database");
       $this->connection->exec("USE $database");
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       throw new DatabaseNotFoundException($e->getMessage());
     }
   }
@@ -400,6 +424,64 @@ class Connection extends DatabaseConnection {
         }
       }
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function rollBack($savepoint_name = 'drupal_transaction') {
+    // MySQL will automatically commit transactions when tables are altered or
+    // created (DDL transactions are not supported). Prevent triggering an
+    // exception to ensure that the error that has caused the rollback is
+    // properly reported.
+    if (!$this->connection->inTransaction()) {
+      // On PHP 7 $this->connection->inTransaction() will return TRUE and
+      // $this->connection->rollback() does not throw an exception; the
+      // following code is unreachable.
+
+      // If \Drupal\Core\Database\Connection::rollBack() would throw an
+      // exception then continue to throw an exception.
+      if (!$this->inTransaction()) {
+        throw new TransactionNoActiveException();
+      }
+      // A previous rollback to an earlier savepoint may mean that the savepoint
+      // in question has already been accidentally committed.
+      if (!isset($this->transactionLayers[$savepoint_name])) {
+        throw new TransactionNoActiveException();
+      }
+
+      trigger_error('Rollback attempted when there is no active transaction. This can cause data integrity issues.', E_USER_WARNING);
+      return;
+    }
+    return parent::rollBack($savepoint_name);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function doCommit() {
+    // MySQL will automatically commit transactions when tables are altered or
+    // created (DDL transactions are not supported). Prevent triggering an
+    // exception in this case as all statements have been committed.
+    if ($this->connection->inTransaction()) {
+      // On PHP 7 $this->connection->inTransaction() will return TRUE and
+      // $this->connection->commit() does not throw an exception.
+      $success = parent::doCommit();
+    }
+    else {
+      // Process the post-root (non-nested) transaction commit callbacks. The
+      // following code is copied from
+      // \Drupal\Core\Database\Connection::doCommit()
+      $success = TRUE;
+      if (!empty($this->rootTransactionEndCallbacks)) {
+        $callbacks = $this->rootTransactionEndCallbacks;
+        $this->rootTransactionEndCallbacks = [];
+        foreach ($callbacks as $callback) {
+          call_user_func($callback, $success);
+        }
+      }
+    }
+    return $success;
   }
 
 }

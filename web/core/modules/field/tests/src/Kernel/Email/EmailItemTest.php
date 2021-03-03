@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\field\Kernel\Email;
 
+use Drupal;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FieldItemInterface;
 use Drupal\entity_test\Entity\EntityTest;
@@ -32,7 +33,7 @@ class EmailItemTest extends FieldKernelTestBase {
     ])->save();
 
     // Create a form display for the default form mode.
-    \Drupal::service('entity_display.repository')
+    Drupal::service('entity_display.repository')
       ->getFormDisplay('entity_test', 'entity_test')
       ->setComponent('field_email', [
         'type' => 'email_default',
@@ -56,18 +57,18 @@ class EmailItemTest extends FieldKernelTestBase {
     $entity = EntityTest::load($id);
     $this->assertInstanceOf(FieldItemListInterface::class, $entity->field_email);
     $this->assertInstanceOf(FieldItemInterface::class, $entity->field_email[0]);
-    $this->assertEqual($entity->field_email->value, $value);
-    $this->assertEqual($entity->field_email[0]->value, $value);
+    $this->assertEqual($value, $entity->field_email->value);
+    $this->assertEqual($value, $entity->field_email[0]->value);
 
     // Verify changing the email value.
     $new_value = $this->randomMachineName();
     $entity->field_email->value = $new_value;
-    $this->assertEqual($entity->field_email->value, $new_value);
+    $this->assertEqual($new_value, $entity->field_email->value);
 
     // Read changed entity and assert changed values.
     $entity->save();
     $entity = EntityTest::load($id);
-    $this->assertEqual($entity->field_email->value, $new_value);
+    $this->assertEqual($new_value, $entity->field_email->value);
 
     // Test sample item generation.
     $entity = EntityTest::create();

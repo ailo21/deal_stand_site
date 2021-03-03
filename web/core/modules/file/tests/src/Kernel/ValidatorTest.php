@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\file\Kernel;
 
+use Drupal;
 use Drupal\file\Entity\File;
 
 /**
@@ -31,7 +32,7 @@ class ValidatorTest extends FileManagedUnitTestBase {
     $this->image = File::create();
     $this->image->setFileUri('core/misc/druplicon.png');
     /** @var \Drupal\Core\File\FileSystemInterface $file_system */
-    $file_system = \Drupal::service('file_system');
+    $file_system = Drupal::service('file_system');
     $this->image->setFilename($file_system->basename($this->image->getFileUri()));
 
     $this->nonImage = File::create();
@@ -97,8 +98,9 @@ class ValidatorTest extends FileManagedUnitTestBase {
       $this->assertCount(0, $errors, 'No errors should be reported when an oversized image can be scaled down.');
 
       $image = $this->container->get('image.factory')->get($this->image->getFileUri());
-      $this->assertTrue($image->getWidth() <= 10, 'Image scaled to correct width.', 'File');
-      $this->assertTrue($image->getHeight() <= 5, 'Image scaled to correct height.', 'File');
+      // Verify that the image was scaled to the correct width and height.
+      $this->assertLessThanOrEqual(10, $image->getWidth());
+      $this->assertLessThanOrEqual(5, $image->getHeight());
 
       // Once again, now with negative width and height to force an error.
       copy('core/misc/druplicon.png', 'temporary://druplicon.png');
@@ -106,7 +108,7 @@ class ValidatorTest extends FileManagedUnitTestBase {
       $errors = file_validate_image_resolution($this->image, '-10x-5');
       $this->assertCount(1, $errors, 'An error reported for an oversized image that can not be scaled down.');
 
-      \Drupal::service('file_system')->unlink('temporary://druplicon.png');
+      Drupal::service('file_system')->unlink('temporary://druplicon.png');
     }
     else {
       // TODO: should check that the error is returned if no toolkit is available.
@@ -124,7 +126,7 @@ class ValidatorTest extends FileManagedUnitTestBase {
 
     // Add a filename with an allowed length and test it.
     $file->setFilename(str_repeat('x', 240));
-    $this->assertEqual(strlen($file->getFilename()), 240);
+    $this->assertEqual(240, strlen($file->getFilename()));
     $errors = file_validate_name_length($file);
     $this->assertCount(0, $errors, 'No errors reported for 240 length filename.');
 

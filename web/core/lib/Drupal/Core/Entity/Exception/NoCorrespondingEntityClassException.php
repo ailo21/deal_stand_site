@@ -2,6 +2,8 @@
 
 namespace Drupal\Core\Entity\Exception;
 
+use Exception;
+
 /**
  * Exception thrown if an entity type is not represented by a class.
  *
@@ -9,10 +11,10 @@ namespace Drupal\Core\Entity\Exception;
  *
  * @see \Drupal\Core\Entity\Entity::getEntityTypeFromStaticClass()
  */
-class NoCorrespondingEntityClassException extends \Exception {
+class NoCorrespondingEntityClassException extends Exception {
 
   /**
-   * Constructs an NoCorrespondingEntityClassException.
+   * Constructs a NoCorrespondingEntityClassException.
    *
    * @param string $class
    *   The class which does not correspond to an entity type.

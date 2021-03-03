@@ -2,6 +2,7 @@
 
 namespace Drupal\FunctionalJavascriptTests\Ajax;
 
+use Drupal;
 use Drupal\ajax_test\Controller\AjaxTestController;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
@@ -33,7 +34,7 @@ class DialogTest extends WebDriverTestBase {
 
     // Set up variables for this test.
     $dialog_renderable = AjaxTestController::dialogContents();
-    $dialog_contents = \Drupal::service('renderer')->renderRoot($dialog_renderable);
+    $dialog_contents = Drupal::service('renderer')->renderRoot($dialog_renderable);
 
     // Check that requesting a modal dialog without JS goes to a page.
     $this->drupalGet('ajax-test/dialog-contents');
@@ -46,7 +47,7 @@ class DialogTest extends WebDriverTestBase {
     // expected.
     $this->getSession()->getPage()->clickLink('Link 1 (modal)');
 
-    // Clicking the link triggers a AJAX request/response.
+    // Clicking the link triggers an AJAX request/response.
     // Opens a Dialog panel.
     $link1_dialog_div = $this->assertSession()->waitForElementVisible('css', 'div.ui-dialog');
     $this->assertNotNull($link1_dialog_div, 'Link was used to open a dialog ( modal )');
@@ -162,7 +163,7 @@ class DialogTest extends WebDriverTestBase {
     $moved_to_buttonpane_buttons = $this->getSession()->getPage()->findAll('css', '.ui-dialog-buttonpane button');
     $this->assertCount(2, $moved_to_buttonpane_buttons);
     foreach ($moved_to_buttonpane_buttons as $key => $button) {
-      $this->assertEqual($button->getText(), $hidden_button_text[$key]);
+      $this->assertEqual($hidden_button_text[$key], $button->getText());
     }
 
     // Reset: close the form.

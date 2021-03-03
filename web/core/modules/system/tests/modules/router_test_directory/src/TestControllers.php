@@ -2,10 +2,12 @@
 
 namespace Drupal\router_test;
 
+use Drupal;
 use Drupal\Core\Cache\CacheableResponse;
 use Drupal\Core\ParamConverter\ParamNotConvertedException;
 use Drupal\user\UserInterface;
-use Symfony\Cmf\Component\Routing\RouteObjectInterface;
+use Drupal\Core\Routing\RouteObjectInterface;
+use Exception;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Laminas\Diactoros\Response\HtmlResponse;
@@ -54,7 +56,7 @@ class TestControllers {
   public function test9($uid) {
     $text = 'Route not matched.';
     try {
-      $match = \Drupal::service('router.no_access_checks')->match('/user/' . $uid);
+      $match = Drupal::service('router.no_access_checks')->match('/user/' . $uid);
       if (isset($match['user']) && $match['user'] instanceof UserInterface) {
         $text = sprintf('User route "%s" was matched.', $match[RouteObjectInterface::ROUTE_NAME]);
       }
@@ -98,7 +100,7 @@ class TestControllers {
 
   public function test24() {
     $this->removeExceptionLogger();
-    throw new \Exception('Escaped content: <p> <br> <h3>');
+    throw new Exception('Escaped content: <p> <br> <h3>');
   }
 
   public function test25() {
@@ -106,7 +108,7 @@ class TestControllers {
       '#cache' => [
         'url',
       ],
-      '#markup' => \Drupal::requestStack()->getCurrentRequest()->getUri(),
+      '#markup' => Drupal::requestStack()->getCurrentRequest()->getUri(),
     ];
   }
 
@@ -126,7 +128,7 @@ class TestControllers {
    *   Always thrown.
    */
   protected function throwException($message) {
-    throw new \Exception($message);
+    throw new Exception($message);
   }
 
   protected function removeExceptionLogger() {
@@ -134,8 +136,8 @@ class TestControllers {
     // throw an exception to check if it is properly escaped when rendered as a
     // backtrace. The exception logger does a call to error_log() which is not
     // handled by the Simpletest error handler and would cause a test failure.
-    $event_dispatcher = \Drupal::service('event_dispatcher');
-    $exception_logger = \Drupal::service('exception.logger');
+    $event_dispatcher = Drupal::service('event_dispatcher');
+    $exception_logger = Drupal::service('exception.logger');
     $event_dispatcher->removeSubscriber($exception_logger);
   }
 

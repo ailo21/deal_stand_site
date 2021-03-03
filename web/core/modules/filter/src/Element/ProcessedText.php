@@ -2,6 +2,7 @@
 
 namespace Drupal\filter\Element;
 
+use Drupal;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Render\BubbleableMetadata;
@@ -21,7 +22,7 @@ class ProcessedText extends RenderElement {
    * {@inheritdoc}
    */
   public function getInfo() {
-    $class = get_class($this);
+    $class = static::class;
     return [
       '#text' => '',
       '#format' => NULL,
@@ -146,7 +147,7 @@ class ProcessedText extends RenderElement {
    *   The logger for this channel.
    */
   protected static function logger($channel) {
-    return \Drupal::logger($channel);
+    return Drupal::logger($channel);
   }
 
   /**
@@ -155,7 +156,7 @@ class ProcessedText extends RenderElement {
    * @return \Drupal\Core\Config\ConfigFactoryInterface
    */
   protected static function configFactory() {
-    return \Drupal::configFactory();
+    return Drupal::configFactory();
   }
 
 }

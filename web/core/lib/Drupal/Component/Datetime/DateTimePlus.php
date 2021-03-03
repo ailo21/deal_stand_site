@@ -2,7 +2,14 @@
 
 namespace Drupal\Component\Datetime;
 
+use BadMethodCallException;
+use DateInterval;
+use DateTime;
+use DateTimeZone;
 use Drupal\Component\Utility\ToStringTrait;
+use Exception;
+use InvalidArgumentException;
+use UnexpectedValueException;
 
 /**
  * Wraps DateTime().
@@ -24,18 +31,18 @@ use Drupal\Component\Utility\ToStringTrait;
  * to abort processing. The calling script can decide what to do about
  * errors using hasErrors() and getErrors().
  *
- * @method $this add(\DateInterval $interval)
+ * @method $this add(DateInterval $interval)
  * @method static array getLastErrors()
  * @method $this modify(string $modify)
  * @method $this setDate(int $year, int $month, int $day)
  * @method $this setISODate(int $year, int $week, int $day = 1)
  * @method $this setTime(int $hour, int $minute, int $second = 0, int $microseconds = 0)
  * @method $this setTimestamp(int $unixtimestamp)
- * @method $this setTimezone(\DateTimeZone $timezone)
- * @method $this sub(\DateInterval $interval)
+ * @method $this setTimezone(DateTimeZone $timezone)
+ * @method $this sub(DateInterval $interval)
  * @method int getOffset()
  * @method int getTimestamp()
- * @method \DateTimeZone getTimezone()
+ * @method DateTimeZone getTimezone()
  */
 class DateTimePlus {
 
@@ -135,7 +142,7 @@ class DateTimePlus {
    * @return static
    *   A new DateTimePlus object.
    */
-  public static function createFromDateTime(\DateTime $datetime, $settings = []) {
+  public static function createFromDateTime(DateTime $datetime, $settings = []) {
     return new static($datetime->format(static::FORMAT), $datetime->getTimezone(), $settings);
   }
 
@@ -171,7 +178,7 @@ class DateTimePlus {
       return new static($iso_date, $timezone, $settings);
     }
     else {
-      throw new \InvalidArgumentException('The array contains invalid values.');
+      throw new InvalidArgumentException('The array contains invalid values.');
     }
   }
 
@@ -198,7 +205,7 @@ class DateTimePlus {
    */
   public static function createFromTimestamp($timestamp, $timezone = NULL, $settings = []) {
     if (!is_numeric($timestamp)) {
-      throw new \InvalidArgumentException('The timestamp must be numeric.');
+      throw new InvalidArgumentException('The timestamp must be numeric.');
     }
     $datetime = new static('', $timezone, $settings);
     $datetime->setTimestamp($timestamp);
@@ -248,9 +255,9 @@ class DateTimePlus {
     // invalid it doesn't return an exception.
     $datetimeplus = new static('', $timezone, $settings);
 
-    $date = \DateTime::createFromFormat($format, $time, $datetimeplus->getTimezone());
-    if (!$date instanceof \DateTime) {
-      throw new \InvalidArgumentException('The date cannot be created from a format.');
+    $date = DateTime::createFromFormat($format, $time, $datetimeplus->getTimezone());
+    if (!$date instanceof DateTime) {
+      throw new InvalidArgumentException('The date cannot be created from a format.');
     }
     else {
       // Functions that parse date is forgiving, it might create a date that
@@ -261,14 +268,14 @@ class DateTimePlus {
       if ($date instanceof DateTimePlus) {
         $test_time = $date->format($format, $settings);
       }
-      elseif ($date instanceof \DateTime) {
+      elseif ($date instanceof DateTime) {
         $test_time = $date->format($format);
       }
       $datetimeplus->setTimestamp($date->getTimestamp());
       $datetimeplus->setTimezone($date->getTimezone());
 
       if ($settings['validate_format'] && $test_time != $time) {
-        throw new \UnexpectedValueException('The created date does not match the input value.');
+        throw new UnexpectedValueException('The created date does not match the input value.');
       }
     }
     return $datetimeplus;
@@ -312,10 +319,10 @@ class DateTimePlus {
       }
 
       if (empty($this->errors)) {
-        $this->dateTimeObject = new \DateTime($prepared_time, $prepared_timezone);
+        $this->dateTimeObject = new DateTime($prepared_time, $prepared_timezone);
       }
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       $this->errors[] = $e->getMessage();
     }
 
@@ -357,10 +364,10 @@ class DateTimePlus {
   public function __call($method, array $args) {
     // @todo consider using assert() as per https://www.drupal.org/node/2451793.
     if (!isset($this->dateTimeObject)) {
-      throw new \Exception('DateTime object not set.');
+      throw new Exception('DateTime object not set.');
     }
     if (!method_exists($this->dateTimeObject, $method)) {
-      throw new \BadMethodCallException(sprintf('Call to undefined method %s::%s()', get_class($this), $method));
+      throw new BadMethodCallException(sprintf('Call to undefined method %s::%s()', static::class, $method));
     }
 
     $result = call_user_func_array([$this->dateTimeObject, $method], $args);
@@ -386,8 +393,8 @@ class DateTimePlus {
     if ($datetime2 instanceof DateTimePlus) {
       $datetime2 = $datetime2->dateTimeObject;
     }
-    if (!($datetime2 instanceof \DateTime)) {
-      throw new \BadMethodCallException(sprintf('Method %s expects parameter 1 to be a \DateTime or \Drupal\Component\Datetime\DateTimePlus object', __METHOD__));
+    if (!($datetime2 instanceof DateTime)) {
+      throw new BadMethodCallException(sprintf('Method %s expects parameter 1 to be a \DateTime or \Drupal\Component\Datetime\DateTimePlus object', __METHOD__));
     }
     return $this->dateTimeObject->diff($datetime2, $absolute);
   }
@@ -399,7 +406,7 @@ class DateTimePlus {
    */
   public static function __callStatic($method, $args) {
     if (!method_exists('\DateTime', $method)) {
-      throw new \BadMethodCallException(sprintf('Call to undefined method %s::%s()', get_called_class(), $method));
+      throw new BadMethodCallException(sprintf('Call to undefined method %s::%s()', static::class, $method));
     }
     return call_user_func_array(['\DateTime', $method], $args);
   }
@@ -445,21 +452,21 @@ class DateTimePlus {
    */
   protected function prepareTimezone($timezone) {
     // If the input timezone is a valid timezone object, use it.
-    if ($timezone instanceof \DateTimezone) {
+    if ($timezone instanceof DateTimezone) {
       $timezone_adjusted = $timezone;
     }
 
     // Allow string timezone input, and create a timezone from it.
     elseif (!empty($timezone) && is_string($timezone)) {
-      $timezone_adjusted = new \DateTimeZone($timezone);
+      $timezone_adjusted = new DateTimeZone($timezone);
     }
 
     // Default to the system timezone when not explicitly provided.
     // If the system timezone is missing, use 'UTC'.
-    if (empty($timezone_adjusted) || !$timezone_adjusted instanceof \DateTimezone) {
+    if (empty($timezone_adjusted) || !$timezone_adjusted instanceof DateTimezone) {
       $system_timezone = date_default_timezone_get();
       $timezone_name = !empty($system_timezone) ? $system_timezone : 'UTC';
-      $timezone_adjusted = new \DateTimeZone($timezone_name);
+      $timezone_adjusted = new DateTimeZone($timezone_name);
     }
 
     // We are finally certain that we have a usable timezone.
@@ -493,7 +500,7 @@ class DateTimePlus {
    * @see http://php.net/manual/time.getlasterrors.php
    */
   public function checkErrors() {
-    $errors = \DateTime::getLastErrors();
+    $errors = DateTime::getLastErrors();
     if (!empty($errors['errors'])) {
       $this->errors = array_merge($this->errors, $errors['errors']);
     }
@@ -583,7 +590,7 @@ class DateTimePlus {
    */
   public static function prepareArray($array, $force_valid_date = FALSE) {
     if ($force_valid_date) {
-      $now = new \DateTime();
+      $now = new DateTime();
       $array += [
         'year'   => $now->format('Y'),
         'month'  => 1,
@@ -697,11 +704,11 @@ class DateTimePlus {
       // disturbing the value stored in the object.
       $dateTimeObject = clone $this->dateTimeObject;
       if (isset($settings['timezone'])) {
-        $dateTimeObject->setTimezone(new \DateTimeZone($settings['timezone']));
+        $dateTimeObject->setTimezone(new DateTimeZone($settings['timezone']));
       }
       $value = $dateTimeObject->format($format);
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       $this->errors[] = $e->getMessage();
     }
 

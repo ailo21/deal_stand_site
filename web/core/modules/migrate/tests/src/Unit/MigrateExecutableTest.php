@@ -8,6 +8,7 @@ use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\Plugin\MigrateIdMapInterface;
 use Drupal\migrate\MigrateException;
 use Drupal\migrate\Row;
+use Exception;
 
 /**
  * @coversDefaultClass \Drupal\migrate\MigrateExecutable
@@ -65,7 +66,7 @@ class MigrateExecutableTest extends MigrateTestCase {
     $source = $this->createMock('Drupal\migrate\Plugin\MigrateSourceInterface');
     $source->expects($this->once())
       ->method('rewind')
-      ->will($this->throwException(new \Exception($exception_message)));
+      ->will($this->throwException(new Exception($exception_message)));
     // The exception message contains the line number where it is thrown. Save
     // it for the testing the exception message.
     $line = (__LINE__) - 3;
@@ -357,7 +358,7 @@ class MigrateExecutableTest extends MigrateTestCase {
     $destination->expects($this->once())
       ->method('import')
       ->with($row, ['test'])
-      ->will($this->throwException(new \Exception($exception_message)));
+      ->will($this->throwException(new Exception($exception_message)));
 
     $this->migration
       ->method('getDestinationPlugin')
@@ -408,7 +409,7 @@ class MigrateExecutableTest extends MigrateTestCase {
     foreach ($expected as $key => $value) {
       $this->assertSame($row->getDestinationProperty($key), $value);
     }
-    $this->assertSame(count($row->getDestination()), count($expected));
+    $this->assertSame(count($expected), count($row->getDestination()));
   }
 
   /**
@@ -478,7 +479,7 @@ class MigrateExecutableTest extends MigrateTestCase {
    *   The mocked migration source.
    */
   protected function getMockSource() {
-    $iterator = $this->createMock('\Iterator');
+    $this->createMock('\Iterator');
 
     $class = 'Drupal\migrate\Plugin\migrate\source\SourcePluginBase';
     $source = $this->getMockBuilder($class)

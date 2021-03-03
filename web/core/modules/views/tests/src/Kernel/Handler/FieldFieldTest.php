@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\views\Kernel\Handler;
 
+use Drupal;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\entity_test\Entity\EntityTestRev;
@@ -76,7 +77,7 @@ class FieldFieldTest extends ViewsKernelTestBase {
     $this->installEntitySchema('entity_test');
     $this->installEntitySchema('entity_test_rev');
 
-    ViewTestData::createTestViews(get_class($this), ['views_test_config']);
+    ViewTestData::createTestViews(static::class, ['views_test_config']);
 
     // Bypass any field access.
     $this->adminUser = User::create(['name' => $this->randomString()]);
@@ -208,7 +209,7 @@ class FieldFieldTest extends ViewsKernelTestBase {
     ]);
     $entity->save();
 
-    \Drupal::state()->set('entity_test.views_data', [
+    Drupal::state()->set('entity_test.views_data', [
       'entity_test' => [
         'id' => [
           'field' => [
@@ -260,7 +261,7 @@ class FieldFieldTest extends ViewsKernelTestBase {
     $this->assertEqual('1', $executable->getStyle()->getField(0, 'id'));
     $this->assertEqual('3', $executable->getStyle()->getField(0, 'field_test'));
     $this->assertEqual('2', $executable->getStyle()->getField(1, 'id'));
-    // @todo Switch this assertion to assertIdentical('', ...) when
+    // @todo Switch this assertion to assertSame('', ...) when
     //   https://www.drupal.org/node/2488006 gets fixed.
     $this->assertEqual('0', $executable->getStyle()->getField(1, 'field_test'));
     $this->assertEqual('3', $executable->getStyle()->getField(2, 'id'));
@@ -377,7 +378,7 @@ class FieldFieldTest extends ViewsKernelTestBase {
   public function testComplexRender() {
     $executable = Views::getView('test_field_field_complex_test');
     $executable->execute();
-    $date_formatter = \Drupal::service('date.formatter');
+    $date_formatter = Drupal::service('date.formatter');
 
     $this->assertEqual($this->testUsers[0]->getTimeZone(), $executable->getStyle()->getField(0, 'timezone'));
     $this->assertEqual("1, 3", $executable->getStyle()->getField(0, 'field_test_multiple'));
@@ -557,7 +558,7 @@ class FieldFieldTest extends ViewsKernelTestBase {
   }
 
   /**
-   * Tests \Drupal\views\Plugin\views\field\EntityField::getValue
+   * Tests \Drupal\views\Plugin\views\field\EntityField::getValue.
    */
   public function testGetValueMethod() {
     $bundle = 'test_bundle';

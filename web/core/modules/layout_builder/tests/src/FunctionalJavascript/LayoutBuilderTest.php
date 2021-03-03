@@ -2,11 +2,13 @@
 
 namespace Drupal\Tests\layout_builder\FunctionalJavascript;
 
+use Drupal;
 use Drupal\block_content\Entity\BlockContent;
 use Drupal\block_content\Entity\BlockContentType;
 use Drupal\Core\Url;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\Tests\contextual\FunctionalJavascript\ContextualLinkClickTrait;
+use Exception;
 
 /**
  * Tests the Layout Builder UI.
@@ -160,7 +162,7 @@ class LayoutBuilderTest extends WebDriverTestBase {
     $this->assertNotEmpty($assert_session->waitForElementVisible('named', ['link', 'Two column']));
 
     $this->clickLink('Two column');
-    $assert_session->assertWaitOnAjaxRequest();
+    $assert_session->waitForElementVisible('named', ['button', 'Add section']);
     $page->pressButton('Add section');
     $assert_session->assertWaitOnAjaxRequest();
 
@@ -263,7 +265,7 @@ class LayoutBuilderTest extends WebDriverTestBase {
   public function testConfigurableLayoutSections() {
     $layout_url = 'node/1/layout';
 
-    \Drupal::entityTypeManager()
+    Drupal::entityTypeManager()
       ->getStorage('entity_view_display')
       ->create([
         'targetEntityType' => 'node',
@@ -293,7 +295,7 @@ class LayoutBuilderTest extends WebDriverTestBase {
     // Add another section.
     $assert_session->linkExists('Add section');
     $this->clickLink('Add section');
-    $assert_session->assertWaitOnAjaxRequest();
+    $assert_session->waitForElementVisible('named', ['link', 'Layout plugin (with settings)']);
     $assert_session->elementExists('css', '#drupal-off-canvas');
 
     $assert_session->linkExists('Layout plugin (with settings)');
@@ -301,11 +303,25 @@ class LayoutBuilderTest extends WebDriverTestBase {
     $this->assertOffCanvasFormAfterWait('layout_builder_configure_section');
     $assert_session->fieldExists('layout_settings[setting_1]');
     $page->pressButton('Add section');
-    $assert_session->assertWaitOnAjaxRequest();
 
     $assert_session->assertNoElementAfterWait('css', '#drupal-off-canvas');
     $assert_session->pageTextContains('Default');
     $assert_session->linkExists('Add block');
+
+    // Ensure validation error is displayed for ConfigureSectionForm.
+    $assert_session->linkExists('Add section');
+    $this->clickLink('Add section');
+    $assert_session->waitForElementVisible('named', ['link', 'Layout plugin (with settings)']);
+    $this->clickLink('Layout plugin (with settings)');
+    $this->assertOffCanvasFormAfterWait('layout_builder_configure_section');
+    $page->fillField('layout_settings[setting_1]', 'Test Validation Error Message');
+    $page->pressButton('Add section');
+    $assert_session->waitForElement('css', '.messages--error');
+    $assert_session->pageTextContains('Validation Error Message');
+    $page->fillField('layout_settings[setting_1]', 'Setting 1 Value');
+    $page->pressButton('Add section');
+    $assert_session->assertNoElementAfterWait('css', '#drupal-off-canvas');
+    $assert_session->pageTextContains('Setting 1 Value');
 
     // Configure the existing section.
     $assert_session->linkExists('Configure Section 1');
@@ -313,7 +329,6 @@ class LayoutBuilderTest extends WebDriverTestBase {
     $this->assertOffCanvasFormAfterWait('layout_builder_configure_section');
     $page->fillField('layout_settings[setting_1]', 'Test setting value');
     $page->pressButton('Update');
-    $assert_session->assertWaitOnAjaxRequest();
     $assert_session->assertNoElementAfterWait('css', '#drupal-off-canvas');
     $assert_session->pageTextContains('Test setting value');
     $this->assertPageNotReloaded();
@@ -325,7 +340,7 @@ class LayoutBuilderTest extends WebDriverTestBase {
   public function testLayoutNoDialog() {
     $layout_url = 'node/1/layout';
 
-    \Drupal::entityTypeManager()
+    Drupal::entityTypeManager()
       ->getStorage('entity_view_display')
       ->create([
         'targetEntityType' => 'node',
@@ -394,7 +409,7 @@ class LayoutBuilderTest extends WebDriverTestBase {
       return $page->find('css', "$selector .contextual-links");
     });
     if (count($page->findAll('css', "$selector .contextual-links")) > 1) {
-      throw new \Exception('More than one contextual links found by selector');
+      throw new Exception('More than one contextual links found by selector');
     }
 
     if ($force_visible && $page->find('css', "$selector .contextual .trigger.visually-hidden")) {

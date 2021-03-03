@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\taxonomy\Functional;
 
+use Drupal;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\taxonomy\Entity\Vocabulary;
@@ -44,7 +45,7 @@ class EarlyDateTest extends TaxonomyTestBase {
     ];
     $this->createEntityReferenceField('node', 'article', $field_name, 'Tags', 'taxonomy_term', 'default', $handler_settings, FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
 
-    \Drupal::service('entity_display.repository')
+    Drupal::service('entity_display.repository')
       ->getFormDisplay('node', 'article')
       ->setComponent($field_name, [
         'type' => 'entity_reference_autocomplete_tags',
@@ -70,10 +71,10 @@ class EarlyDateTest extends TaxonomyTestBase {
     $edit['created[0][value][time]'] = $date->format('H:i:s');
     $edit['body[0][value]'] = $this->randomMachineName();
     $edit['field_tags[target_id]'] = $this->randomMachineName();
-    $this->drupalPostForm('node/add/article', $edit, t('Save'));
+    $this->drupalPostForm('node/add/article', $edit, 'Save');
     // Checks that the node has been saved.
     $node = $this->drupalGetNodeByTitle($edit['title[0][value]']);
-    $this->assertEqual($node->getCreatedTime(), $date->getTimestamp(), 'Legacy node was saved with the right date.');
+    $this->assertEqual($date->getTimestamp(), $node->getCreatedTime(), 'Legacy node was saved with the right date.');
   }
 
 }

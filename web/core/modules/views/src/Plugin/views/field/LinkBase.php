@@ -2,6 +2,7 @@
 
 namespace Drupal\views\Plugin\views\field;
 
+use Drupal;
 use Drupal\Core\Access\AccessManagerInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -110,7 +111,7 @@ abstract class LinkBase extends FieldPluginBase {
    */
   protected function currentUser() {
     if (!$this->currentUser) {
-      $this->currentUser = \Drupal::currentUser();
+      $this->currentUser = Drupal::currentUser();
     }
     return $this->currentUser;
   }
@@ -195,7 +196,7 @@ abstract class LinkBase extends FieldPluginBase {
   abstract protected function getUrlInfo(ResultRow $row);
 
   /**
-   * Prepares the link to view a entity.
+   * Prepares the link to view an entity.
    *
    * @param \Drupal\views\ResultRow $row
    *   A view result row.

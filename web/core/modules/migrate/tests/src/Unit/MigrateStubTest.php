@@ -3,6 +3,7 @@
 namespace Drupal\Tests\migrate\Unit;
 
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
+use Drupal\Tests\UnitTestCase;
 use Drupal\migrate\MigrateStub;
 use Drupal\migrate\Plugin\MigrateDestinationInterface;
 use Drupal\migrate\Plugin\MigrateIdMapInterface;
@@ -10,7 +11,7 @@ use Drupal\migrate\Plugin\MigrateSourceInterface;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\Plugin\MigrationPluginManagerInterface;
 use Drupal\migrate\Row;
-use PHPUnit\Framework\TestCase;
+use LogicException;
 use Prophecy\Argument;
 
 /**
@@ -20,7 +21,7 @@ use Prophecy\Argument;
  *
  * @coversDefaultClass \Drupal\migrate\MigrateStub
  */
-class MigrateStubTest extends TestCase {
+class MigrateStubTest extends UnitTestCase {
 
   /**
    * The plugin manager prophecy.
@@ -72,6 +73,7 @@ class MigrateStubTest extends TestCase {
   public function testExceptionOnPluginNotFound() {
     $this->migrationPluginManager->createInstances(['test_migration'])->willReturn([]);
     $this->expectException(PluginNotFoundException::class);
+    $this->expectExceptionMessage("Plugin ID 'test_migration' was not found.");
     $stub = new MigrateStub($this->migrationPluginManager->reveal());
     $stub->createStub('test_migration', [1]);
   }
@@ -84,7 +86,7 @@ class MigrateStubTest extends TestCase {
       'test_migration:d1' => $this->prophesize(MigrationInterface::class)->reveal(),
       'test_migration:d2' => $this->prophesize(MigrationInterface::class)->reveal(),
     ]);
-    $this->expectException(\LogicException::class);
+    $this->expectException(LogicException::class);
     $this->expectExceptionMessage('Cannot stub derivable migration "test_migration".  You must specify the id of a specific derivative to stub.');
     $stub = new MigrateStub($this->migrationPluginManager->reveal());
     $stub->createStub('test_migration', [1]);

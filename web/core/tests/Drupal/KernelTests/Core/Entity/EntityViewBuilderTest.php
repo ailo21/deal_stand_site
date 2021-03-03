@@ -2,6 +2,7 @@
 
 namespace Drupal\KernelTests\Core\Entity;
 
+use Drupal;
 use Drupal\Core\Entity\EntityViewBuilder;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Cache\Cache;
@@ -42,11 +43,11 @@ class EntityViewBuilderTest extends EntityKernelTestBase {
   public function testEntityViewBuilderCache() {
     /** @var \Drupal\Core\Render\RendererInterface $renderer */
     $renderer = $this->container->get('renderer');
-    $cache_contexts_manager = \Drupal::service("cache_contexts_manager");
-    $cache = \Drupal::cache();
+    $cache_contexts_manager = Drupal::service("cache_contexts_manager");
+    $cache = Drupal::cache();
 
     // Force a request via GET so we can get drupal_render() cache working.
-    $request = \Drupal::request();
+    $request = Drupal::request();
     $request_method = $request->server->get('REQUEST_METHOD');
     $request->setMethod('GET');
 
@@ -55,7 +56,8 @@ class EntityViewBuilderTest extends EntityKernelTestBase {
     // Test that new entities (before they are saved for the first time) do not
     // generate a cache entry.
     $build = $this->container->get('entity_type.manager')->getViewBuilder('entity_test')->view($entity_test, 'full');
-    $this->assertTrue(isset($build['#cache']) && array_keys($build['#cache']) == ['tags', 'contexts', 'max-age'], 'The render array element of new (unsaved) entities is not cached, but does have cache tags set.');
+    $this->assertNotEmpty($build['#cache']);
+    $this->assertEquals(['tags', 'contexts', 'max-age'], array_keys($build['#cache']), 'The render array element of new (unsaved) entities is not cached, but does have cache tags set.');
 
     // Get a fully built entity view render array.
     $entity_test->save();
@@ -96,16 +98,16 @@ class EntityViewBuilderTest extends EntityKernelTestBase {
   public function testEntityViewBuilderCacheWithReferences() {
     /** @var \Drupal\Core\Render\RendererInterface $renderer */
     $renderer = $this->container->get('renderer');
-    $cache_contexts_manager = \Drupal::service("cache_contexts_manager");
+    $cache_contexts_manager = Drupal::service("cache_contexts_manager");
 
     // Force a request via GET so we can get drupal_render() cache working.
-    $request = \Drupal::request();
+    $request = Drupal::request();
     $request_method = $request->server->get('REQUEST_METHOD');
     $request->setMethod('GET');
 
     // Create an entity reference field and an entity that will be referenced.
     $this->createEntityReferenceField('entity_test', 'entity_test', 'reference_field', 'Reference', 'entity_test');
-    \Drupal::service('entity_display.repository')
+    Drupal::service('entity_display.repository')
       ->getViewDisplay('entity_test', 'entity_test', 'full')
       ->setComponent('reference_field', [
         'type' => 'entity_reference_entity_view',
@@ -166,18 +168,21 @@ class EntityViewBuilderTest extends EntityKernelTestBase {
     // Test a view mode in default conditions: render caching is enabled for
     // the entity type and the view mode.
     $build = $this->container->get('entity_type.manager')->getViewBuilder('entity_test')->view($entity_test, 'full');
-    $this->assertTrue(isset($build['#cache']) && array_keys($build['#cache']) == ['tags', 'contexts', 'max-age', 'keys', 'bin'], 'A view mode with render cache enabled has the correct output (cache tags, keys, contexts, max-age and bin).');
+    $this->assertNotEmpty($build['#cache']);
+    $this->assertEquals(['tags', 'contexts', 'max-age', 'keys', 'bin'], array_keys($build['#cache']), 'A view mode with render cache enabled has the correct output (cache tags, keys, contexts, max-age and bin).');
 
     // Test that a view mode can opt out of render caching.
     $build = $this->container->get('entity_type.manager')->getViewBuilder('entity_test')->view($entity_test, 'test');
-    $this->assertTrue(isset($build['#cache']) && array_keys($build['#cache']) == ['tags', 'contexts', 'max-age'], 'A view mode with render cache disabled has the correct output (only cache tags, contexts and max-age).');
+    $this->assertNotEmpty($build['#cache']);
+    $this->assertEquals(['tags', 'contexts', 'max-age'], array_keys($build['#cache']), 'A view mode with render cache disabled has the correct output (only cache tags, contexts and max-age).');
 
     // Test that an entity type can opt out of render caching completely.
     $this->installEntitySchema('entity_test_label');
     $entity_test_no_cache = $this->createTestEntity('entity_test_label');
     $entity_test_no_cache->save();
     $build = $this->container->get('entity_type.manager')->getViewBuilder('entity_test_label')->view($entity_test_no_cache, 'full');
-    $this->assertTrue(isset($build['#cache']) && array_keys($build['#cache']) == ['tags', 'contexts', 'max-age'], 'An entity type can opt out of render caching regardless of view mode configuration, but always has cache tags, contexts and max-age set.');
+    $this->assertNotEmpty($build['#cache']);
+    $this->assertEquals(['tags', 'contexts', 'max-age'], array_keys($build['#cache']), 'An entity type can opt out of render caching regardless of view mode configuration, but always has cache tags, contexts and max-age set.');
   }
 
   /**
@@ -188,7 +193,7 @@ class EntityViewBuilderTest extends EntityKernelTestBase {
     $renderer = $this->container->get('renderer');
 
     // Set a weight for the label component.
-    \Drupal::service('entity_display.repository')
+    Drupal::service('entity_display.repository')
       ->getViewDisplay('entity_test', 'entity_test', 'full')
       ->setComponent('label', ['weight' => 20])
       ->save();
@@ -199,7 +204,7 @@ class EntityViewBuilderTest extends EntityKernelTestBase {
     $renderer->renderRoot($view);
 
     // Check that the weight is respected.
-    $this->assertEqual($view['label']['#weight'], 20, 'The weight of a display component is respected.');
+    $this->assertEqual(20, $view['label']['#weight'], 'The weight of a display component is respected.');
   }
 
   /**
@@ -295,9 +300,9 @@ class EntityViewBuilderTest extends EntityKernelTestBase {
 
     // Change the default language to Spanish and render the reference
     // field again. It should display the contents of the Spanish translation.
-    \Drupal::service('language.default')->set($es);
-    \Drupal::languageManager()->reset();
-    \Drupal::languageManager()->getCurrentLanguage();
+    Drupal::service('language.default')->set($es);
+    Drupal::languageManager()->reset();
+    Drupal::languageManager()->getCurrentLanguage();
     $reference_field_array_spanish = $view_builder->viewField($reference_field, 'full');
     $rendered_reference_field_spanish = $renderer->renderRoot($reference_field_array_spanish);
     $this->assertStringContainsString('Text in Spanish', (string) $rendered_reference_field_spanish);
@@ -326,7 +331,7 @@ class EntityViewBuilderTest extends EntityKernelTestBase {
   public function testNoTemplate() {
     // Ensure that an entity type without explicit view builder uses the
     // default.
-    $entity_type_manager = \Drupal::entityTypeManager();
+    $entity_type_manager = Drupal::entityTypeManager();
     $entity_type = $entity_type_manager->getDefinition('entity_test_base_field_display');
     $this->assertTrue($entity_type->hasViewBuilderClass());
     $this->assertEquals(EntityViewBuilder::class, $entity_type->getViewBuilderClass());

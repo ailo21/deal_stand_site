@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\content_translation\Functional;
 
+use Drupal;
+
 /**
  * Tests the Content Translation metadata fields handling.
  *
@@ -42,7 +44,7 @@ class ContentTranslationMetadataFieldsTest extends ContentTranslationTestBase {
    */
   public function testSkipUntranslatable() {
     $this->drupalLogin($this->translator);
-    $fields = \Drupal::service('entity_field.manager')->getFieldDefinitions($this->entityTypeId, $this->bundle);
+    $fields = Drupal::service('entity_field.manager')->getFieldDefinitions($this->entityTypeId, $this->bundle);
 
     // Turn off translatability for the metadata fields on the current bundle.
     $metadata_fields = ['created', 'changed', 'uid', 'status'];
@@ -56,7 +58,7 @@ class ContentTranslationMetadataFieldsTest extends ContentTranslationTestBase {
     // Create a new test entity with original values in the default language.
     $default_langcode = $this->langcodes[0];
     $entity_id = $this->createEntity(['title' => $this->randomString()], $default_langcode);
-    $storage = \Drupal::entityTypeManager()->getStorage($this->entityTypeId);
+    $storage = Drupal::entityTypeManager()->getStorage($this->entityTypeId);
     $storage->resetCache();
     $entity = $storage->load($entity_id);
 
@@ -98,7 +100,7 @@ class ContentTranslationMetadataFieldsTest extends ContentTranslationTestBase {
    */
   public function testSetTranslatable() {
     $this->drupalLogin($this->translator);
-    $fields = \Drupal::service('entity_field.manager')->getFieldDefinitions($this->entityTypeId, $this->bundle);
+    $fields = Drupal::service('entity_field.manager')->getFieldDefinitions($this->entityTypeId, $this->bundle);
 
     // Turn off translatability for the metadata fields on the current bundle.
     $metadata_fields = ['created', 'changed', 'uid', 'status'];
@@ -112,7 +114,7 @@ class ContentTranslationMetadataFieldsTest extends ContentTranslationTestBase {
     // Create a new test entity with original values in the default language.
     $default_langcode = $this->langcodes[0];
     $entity_id = $this->createEntity(['title' => $this->randomString(), 'status' => FALSE], $default_langcode);
-    $storage = \Drupal::entityTypeManager()->getStorage($this->entityTypeId);
+    $storage = Drupal::entityTypeManager()->getStorage($this->entityTypeId);
     $storage->resetCache();
     $entity = $storage->load($entity_id);
 
@@ -133,10 +135,10 @@ class ContentTranslationMetadataFieldsTest extends ContentTranslationTestBase {
     $metadata_target_translation->setPublished(TRUE);
     $metadata_target_translation->setAuthor($this->editor);
 
-    $this->assertNotEqual($metadata_source_translation->getCreatedTime(), $metadata_target_translation->getCreatedTime(), 'Metadata created field correctly different on both translations.');
-    $this->assertNotEqual($metadata_source_translation->getChangedTime(), $metadata_target_translation->getChangedTime(), 'Metadata changed field correctly different on both translations.');
-    $this->assertNotEqual($metadata_source_translation->isPublished(), $metadata_target_translation->isPublished(), 'Metadata published field correctly different on both translations.');
-    $this->assertNotEqual($metadata_source_translation->getAuthor()->id(), $metadata_target_translation->getAuthor()->id(), 'Metadata author field correctly different on both translations.');
+    $this->assertNotEquals($metadata_source_translation->getCreatedTime(), $metadata_target_translation->getCreatedTime(), 'Metadata created field correctly different on both translations.');
+    $this->assertNotEquals($metadata_source_translation->getChangedTime(), $metadata_target_translation->getChangedTime(), 'Metadata changed field correctly different on both translations.');
+    $this->assertNotEquals($metadata_source_translation->isPublished(), $metadata_target_translation->isPublished(), 'Metadata published field correctly different on both translations.');
+    $this->assertNotEquals($metadata_source_translation->getAuthor()->id(), $metadata_target_translation->getAuthor()->id(), 'Metadata author field correctly different on both translations.');
   }
 
 }

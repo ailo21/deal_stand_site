@@ -12,6 +12,8 @@ use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\Plugin\migrate\id_map\Sql;
 use Drupal\migrate\Plugin\MigrateIdMapInterface;
 use Drupal\migrate\Plugin\RequirementsInterface;
+use IteratorIterator;
+use PDO;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -226,7 +228,7 @@ abstract class SqlBase extends SourcePluginBase implements ContainerFactoryPlugi
    * Wrapper for database select.
    */
   protected function select($table, $alias = NULL, array $options = []) {
-    $options['fetch'] = \PDO::FETCH_ASSOC;
+    $options['fetch'] = PDO::FETCH_ASSOC;
     return $this->getDatabase()->select($table, $alias, $options);
   }
 
@@ -352,8 +354,8 @@ abstract class SqlBase extends SourcePluginBase implements ContainerFactoryPlugi
       $this->query->range($this->batch * $this->batchSize, $this->batchSize);
     }
     $statement = $this->query->execute();
-    $statement->setFetchMode(\PDO::FETCH_ASSOC);
-    return new \IteratorIterator($statement);
+    $statement->setFetchMode(PDO::FETCH_ASSOC);
+    return new IteratorIterator($statement);
   }
 
   /**
@@ -459,6 +461,13 @@ abstract class SqlBase extends SourcePluginBase implements ContainerFactoryPlugi
       }
     }
     return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __sleep() {
+    return array_diff(parent::__sleep(), ['database']);
   }
 
 }

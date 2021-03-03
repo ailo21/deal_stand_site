@@ -20,6 +20,7 @@ use Drupal\media\MediaTypeInterface;
 use Drupal\media_library\Ajax\UpdateSelectionCommand;
 use Drupal\media_library\MediaLibraryUiBuilder;
 use Drupal\media_library\OpenerResolverInterface;
+use InvalidArgumentException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -63,7 +64,7 @@ abstract class AddFormBase extends FormBase implements BaseFormIdInterface, Trus
   protected $openerResolver;
 
   /**
-   * Constructs a AddFormBase object.
+   * Constructs an AddFormBase object.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
@@ -119,7 +120,7 @@ abstract class AddFormBase extends FormBase implements BaseFormIdInterface, Trus
     $this->mediaType = $this->entityTypeManager->getStorage('media_type')->load($selected_type_id);
 
     if (!$this->mediaType) {
-      throw new \InvalidArgumentException("The '$selected_type_id' media type does not exist.");
+      throw new InvalidArgumentException("The '$selected_type_id' media type does not exist.");
     }
 
     return $this->mediaType;
@@ -738,7 +739,7 @@ abstract class AddFormBase extends FormBase implements BaseFormIdInterface, Trus
    *   The current form state.
    *
    * @return array|\Drupal\Core\Ajax\AjaxResponse
-   *   The form array when there are form errors or a AJAX response to select
+   *   The form array when there are form errors or an AJAX response to select
    *   the created items in the media library.
    */
   public function updateWidget(array &$form, FormStateInterface $form_state) {
@@ -775,7 +776,7 @@ abstract class AddFormBase extends FormBase implements BaseFormIdInterface, Trus
   protected function getMediaLibraryState(FormStateInterface $form_state) {
     $state = $form_state->get('media_library_state');
     if (!$state) {
-      throw new \InvalidArgumentException('The media library state is not present in the form state.');
+      throw new InvalidArgumentException('The media library state is not present in the form state.');
     }
     return $state;
   }

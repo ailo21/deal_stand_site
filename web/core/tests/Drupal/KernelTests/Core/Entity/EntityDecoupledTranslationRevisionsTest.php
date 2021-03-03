@@ -2,6 +2,7 @@
 
 namespace Drupal\KernelTests\Core\Entity;
 
+use Drupal;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\entity_test\Entity\EntityTestMulRev;
@@ -102,7 +103,7 @@ class EntityDecoupledTranslationRevisionsTest extends EntityKernelTestBase {
 
     // Make sure entity bundles are translatable.
     $this->state->set('entity_test.translation', TRUE);
-    $this->bundleInfo = \Drupal::service('entity_type.bundle.info');
+    $this->bundleInfo = Drupal::service('entity_type.bundle.info');
     $this->bundleInfo->clearCachedBundles();
   }
 
@@ -205,7 +206,7 @@ class EntityDecoupledTranslationRevisionsTest extends EntityKernelTestBase {
    */
   public function testDecoupledPendingRevisions($sequence) {
     $revision_id = $this->doTestEditSequence($sequence);
-    $this->assertEquals(count($sequence), $revision_id);
+    $this->assertCount($revision_id, $sequence);
   }
 
   /**

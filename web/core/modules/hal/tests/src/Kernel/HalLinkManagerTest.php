@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\hal\Kernel;
 
+use Drupal;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
@@ -50,8 +51,6 @@ class HalLinkManagerTest extends KernelTestBase {
       'bundle' => 'page',
       'field_name' => 'field_ref',
     ])->save();
-
-    \Drupal::service('router.builder')->rebuild();
   }
 
   /**
@@ -59,7 +58,7 @@ class HalLinkManagerTest extends KernelTestBase {
    * @dataProvider providerTestGetTypeUri
    */
   public function testGetTypeUri($link_domain, $entity_type, $bundle, array $context, $expected_return, array $expected_context) {
-    $hal_settings = \Drupal::configFactory()->getEditable('hal.settings');
+    $hal_settings = Drupal::configFactory()->getEditable('hal.settings');
 
     if ($link_domain === NULL) {
       $hal_settings->clear('link_domain');
@@ -69,7 +68,7 @@ class HalLinkManagerTest extends KernelTestBase {
     }
 
     /* @var \Drupal\hal\LinkManager\TypeLinkManagerInterface $type_manager */
-    $type_manager = \Drupal::service('hal.link_manager.type');
+    $type_manager = Drupal::service('hal.link_manager.type');
 
     $link = $type_manager->getTypeUri($entity_type, $bundle, $context);
     $this->assertSame($link, str_replace('BASE_URL/', Url::fromRoute('<front>', [], ['absolute' => TRUE])->toString(), $expected_return));
@@ -140,7 +139,7 @@ class HalLinkManagerTest extends KernelTestBase {
    * @dataProvider providerTestGetRelationUri
    */
   public function testGetRelationUri($link_domain, $entity_type, $bundle, $field_name, array $context, $expected_return, array $expected_context) {
-    $hal_settings = \Drupal::configFactory()->getEditable('hal.settings');
+    $hal_settings = Drupal::configFactory()->getEditable('hal.settings');
 
     if ($link_domain === NULL) {
       $hal_settings->clear('link_domain');
@@ -150,7 +149,7 @@ class HalLinkManagerTest extends KernelTestBase {
     }
 
     /* @var \Drupal\hal\LinkManager\RelationLinkManagerInterface $relation_manager */
-    $relation_manager = \Drupal::service('hal.link_manager.relation');
+    $relation_manager = Drupal::service('hal.link_manager.relation');
 
     $link = $relation_manager->getRelationUri($entity_type, $bundle, $field_name, $context);
     $this->assertSame($link, str_replace('BASE_URL/', Url::fromRoute('<front>', [], ['absolute' => TRUE])->toString(), $expected_return));
@@ -225,7 +224,7 @@ class HalLinkManagerTest extends KernelTestBase {
    */
   public function testGetRelationInternalIds() {
     /* @var \Drupal\hal\LinkManager\RelationLinkManagerInterface $relation_manager */
-    $relation_manager = \Drupal::service('hal.link_manager.relation');
+    $relation_manager = Drupal::service('hal.link_manager.relation');
     $link = $relation_manager->getRelationUri('node', 'page', 'field_ref');
     $internal_ids = $relation_manager->getRelationInternalIds($link);
 
@@ -245,14 +244,14 @@ class HalLinkManagerTest extends KernelTestBase {
     ];
 
     /* @var \Drupal\hal\LinkManager\LinkManager $link_manager */
-    $link_manager = \Drupal::service('hal.link_manager');
+    $link_manager = Drupal::service('hal.link_manager');
     $link_manager->setLinkDomain('http://example.com/');
     $link = $link_manager->getTypeUri('node', 'page', $serialization_context);
-    $this->assertEqual($link, 'http://example.com/rest/type/node/page');
-    $this->assertEqual(new CacheableMetadata(), $serialization_context[CacheableNormalizerInterface::SERIALIZATION_CONTEXT_CACHEABILITY]);
+    $this->assertEqual('http://example.com/rest/type/node/page', $link);
+    $this->assertEqual($serialization_context[CacheableNormalizerInterface::SERIALIZATION_CONTEXT_CACHEABILITY], new CacheableMetadata());
     $link = $link_manager->getRelationUri('node', 'page', 'field_ref', $serialization_context);
-    $this->assertEqual($link, 'http://example.com/rest/relation/node/page/field_ref');
-    $this->assertEqual(new CacheableMetadata(), $serialization_context[CacheableNormalizerInterface::SERIALIZATION_CONTEXT_CACHEABILITY]);
+    $this->assertEqual('http://example.com/rest/relation/node/page/field_ref', $link);
+    $this->assertEqual($serialization_context[CacheableNormalizerInterface::SERIALIZATION_CONTEXT_CACHEABILITY], new CacheableMetadata());
   }
 
 }

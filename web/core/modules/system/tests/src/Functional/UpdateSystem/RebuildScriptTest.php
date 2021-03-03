@@ -4,6 +4,7 @@ namespace Drupal\Tests\system\Functional\UpdateSystem;
 
 use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
+use stdClass;
 
 /**
  * Tests the rebuild script access and functionality.
@@ -25,8 +26,8 @@ class RebuildScriptTest extends BrowserTestBase {
 
     $cache->set('rebuild_test', TRUE);
     $this->drupalGet(Url::fromUri('base:core/rebuild.php'));
-    $this->assertUrl(new Url('<front>'));
-    $this->assertInstanceOf(\stdClass::class, $cache->get('rebuild_test'));
+    $this->assertSession()->addressEquals(new Url('<front>'));
+    $this->assertInstanceOf(stdClass::class, $cache->get('rebuild_test'));
 
     $settings['settings']['rebuild_access'] = (object) [
       'value' => TRUE,
@@ -38,7 +39,7 @@ class RebuildScriptTest extends BrowserTestBase {
 
     $cache->set('rebuild_test', TRUE);
     $this->drupalGet(Url::fromUri('base:core/rebuild.php'));
-    $this->assertUrl(new Url('<front>'));
+    $this->assertSession()->addressEquals(new Url('<front>'));
     $this->assertFalse($cache->get('rebuild_test'));
   }
 

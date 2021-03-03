@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\system\Functional\System;
 
+use Drupal;
 use Drupal\rest\Entity\RestResourceConfig;
 use Drupal\Tests\BrowserTestBase;
 
@@ -42,20 +43,20 @@ class ResponseGeneratorTest extends BrowserTestBase {
 
     $node = $this->drupalCreateNode();
 
-    list($version) = explode('.', \Drupal::VERSION, 2);
+    [$version] = explode('.', Drupal::VERSION, 2);
     $expectedGeneratorHeader = 'Drupal ' . $version . ' (https://www.drupal.org)';
 
     // Check to see if the header is added when viewing a normal content page
     $this->drupalGet($node->toUrl());
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertEqual('text/html; charset=UTF-8', $this->drupalGetHeader('Content-Type'));
-    $this->assertEqual($expectedGeneratorHeader, $this->drupalGetHeader('X-Generator'));
+    $this->assertSession()->responseHeaderEquals('Content-Type', 'text/html; charset=UTF-8');
+    $this->assertSession()->responseHeaderEquals('X-Generator', $expectedGeneratorHeader);
 
     // Check to see if the header is also added for a non-successful response
     $this->drupalGet('llama');
     $this->assertSession()->statusCodeEquals(404);
-    $this->assertEqual('text/html; charset=UTF-8', $this->drupalGetHeader('Content-Type'));
-    $this->assertEqual($expectedGeneratorHeader, $this->drupalGetHeader('X-Generator'));
+    $this->assertSession()->responseHeaderEquals('Content-Type', 'text/html; charset=UTF-8');
+    $this->assertSession()->responseHeaderEquals('X-Generator', $expectedGeneratorHeader);
 
     // Enable cookie-based authentication for the entity:node REST resource.
     /** @var \Drupal\rest\RestResourceConfigInterface $resource_config */
@@ -68,8 +69,8 @@ class ResponseGeneratorTest extends BrowserTestBase {
     // Tests to see if this also works for a non-html request
     $this->drupalGet($node->toUrl()->setOption('query', ['_format' => 'hal_json']));
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertEqual('application/hal+json', $this->drupalGetHeader('Content-Type'));
-    $this->assertEqual($expectedGeneratorHeader, $this->drupalGetHeader('X-Generator'));
+    $this->assertSession()->responseHeaderEquals('Content-Type', 'application/hal+json');
+    $this->assertSession()->responseHeaderEquals('X-Generator', $expectedGeneratorHeader);
 
   }
 

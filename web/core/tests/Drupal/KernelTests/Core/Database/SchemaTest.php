@@ -10,6 +10,8 @@ use Drupal\Core\Database\SchemaObjectExistsException;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Tests\Core\Database\SchemaIntrospectionTestTrait;
+use Exception;
+use ReflectionMethod;
 
 /**
  * Tests table creation and modification via the schema API.
@@ -145,7 +147,7 @@ class SchemaTest extends KernelTestBase {
 
     // We should have successfully inserted exactly two rows.
     $count = $this->connection->query('SELECT COUNT(*) FROM {test_table2}')->fetchField();
-    $this->assertEqual($count, 2, 'Two fields were successfully inserted.');
+    $this->assertEqual(2, $count, 'Two fields were successfully inserted.');
 
     // Try to drop the table.
     $this->schema->dropTable('test_table2');
@@ -172,7 +174,7 @@ class SchemaTest extends KernelTestBase {
     $this->assertTrue($max2 > $max1, 'The serial is monotone.');
 
     $count = $this->connection->query('SELECT COUNT(*) FROM {test_table}')->fetchField();
-    $this->assertEqual($count, 2, 'There were two rows.');
+    $this->assertEqual(2, $count, 'There were two rows.');
 
     // Test adding a serial field to an existing table.
     $this->schema->dropTable('test_table');
@@ -181,7 +183,7 @@ class SchemaTest extends KernelTestBase {
     $this->schema->addField('test_table', 'test_serial', ['type' => 'serial', 'not null' => TRUE], ['primary key' => ['test_serial']]);
 
     // Test the primary key columns.
-    $method = new \ReflectionMethod(get_class($this->schema), 'findPrimaryKeyColumns');
+    $method = new ReflectionMethod(get_class($this->schema), 'findPrimaryKeyColumns');
     $method->setAccessible(TRUE);
     $this->assertSame(['test_serial'], $method->invoke($this->schema, 'test_table'));
 
@@ -192,7 +194,7 @@ class SchemaTest extends KernelTestBase {
     $this->assertTrue($max2 > $max1, 'The serial is monotone.');
 
     $count = $this->connection->query('SELECT COUNT(*) FROM {test_table}')->fetchField();
-    $this->assertEqual($count, 2, 'There were two rows.');
+    $this->assertEqual(2, $count, 'There were two rows.');
 
     // Test adding a new column and form a composite primary key with it.
     $this->schema->addField('test_table', 'test_composite_primary_key', ['type' => 'int', 'not null' => TRUE, 'default' => 0], ['primary key' => ['test_serial', 'test_composite_primary_key']]);
@@ -270,7 +272,7 @@ class SchemaTest extends KernelTestBase {
     try {
       $this->schema->createTable('test_timestamp', $table_specification);
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
     }
     $this->assertTrue($this->schema->tableExists('test_timestamp'), 'Table with database specific datatype was created.');
   }
@@ -326,14 +328,14 @@ class SchemaTest extends KernelTestBase {
 
     unset($table_specification['fields']);
 
-    $introspect_index_schema = new \ReflectionMethod(get_class($this->schema), 'introspectIndexSchema');
+    $introspect_index_schema = new ReflectionMethod(get_class($this->schema), 'introspectIndexSchema');
     $introspect_index_schema->setAccessible(TRUE);
     $index_schema = $introspect_index_schema->invoke($this->schema, $table_name);
 
     // The PostgreSQL driver is using a custom naming scheme for its indexes, so
     // we need to adjust the initial table specification.
     if ($this->connection->databaseType() === 'pgsql') {
-      $ensure_identifier_length = new \ReflectionMethod(get_class($this->schema), 'ensureIdentifiersLength');
+      $ensure_identifier_length = new ReflectionMethod(get_class($this->schema), 'ensureIdentifiersLength');
       $ensure_identifier_length->setAccessible(TRUE);
 
       foreach ($table_specification['unique keys'] as $original_index_name => $columns) {
@@ -479,10 +481,10 @@ class SchemaTest extends KernelTestBase {
     }
     $test_count = 0;
     foreach ($results as $result) {
-      $this->assertEqual($result->Sub_part, $expected_lengths[$result->Key_name][$result->Column_name], 'Index length matches expected value.');
+      $this->assertEqual($expected_lengths[$result->Key_name][$result->Column_name], $result->Sub_part, 'Index length matches expected value.');
       $test_count++;
     }
-    $this->assertEqual($test_count, $column_count, 'Number of tests matches expected value.');
+    $this->assertEqual($column_count, $test_count, 'Number of tests matches expected value.');
   }
 
   /**
@@ -502,7 +504,7 @@ class SchemaTest extends KernelTestBase {
         ->execute();
       return TRUE;
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       return FALSE;
     }
   }
@@ -525,7 +527,7 @@ class SchemaTest extends KernelTestBase {
         $max_length = $column ? 255 : 60;
         $description = Unicode::truncate($description, $max_length, TRUE, TRUE);
       }
-      $this->assertEqual($comment, $description, 'The comment matches the schema description.');
+      $this->assertEqual($description, $comment, 'The comment matches the schema description.');
     }
   }
 
@@ -579,7 +581,7 @@ class SchemaTest extends KernelTestBase {
         ->execute();
       return TRUE;
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       return FALSE;
     }
   }
@@ -749,7 +751,7 @@ class SchemaTest extends KernelTestBase {
         ->countQuery()
         ->execute()
         ->fetchField();
-      $this->assertEqual($count, 0, 'Initial values filled out.');
+      $this->assertEqual(0, $count, 'Initial values filled out.');
     }
 
     // Check that the initial value from another field has been registered.
@@ -763,7 +765,7 @@ class SchemaTest extends KernelTestBase {
         ->countQuery()
         ->execute()
         ->fetchField();
-      $this->assertEqual($count, 0, 'Initial values from another field filled out.');
+      $this->assertEqual(0, $count, 'Initial values from another field filled out.');
     }
     elseif (isset($field_spec['initial_from_field']) && isset($field_spec['initial'])) {
       // There should be no row with a value different than '100'.
@@ -774,7 +776,7 @@ class SchemaTest extends KernelTestBase {
         ->countQuery()
         ->execute()
         ->fetchField();
-      $this->assertEqual($count, 0, 'Initial values from another field or a default value filled out.');
+      $this->assertEqual(0, $count, 'Initial values from another field or a default value filled out.');
     }
 
     // Check that the default value has been registered.
@@ -790,7 +792,7 @@ class SchemaTest extends KernelTestBase {
         ->condition('serial_column', $id)
         ->execute()
         ->fetchField();
-      $this->assertEqual($field_value, $field_spec['default'], 'Default value registered.');
+      $this->assertEqual($field_spec['default'], $field_value, 'Default value registered.');
     }
   }
 
@@ -810,7 +812,7 @@ class SchemaTest extends KernelTestBase {
    * @covers ::findPrimaryKeyColumns
    */
   public function testSchemaChangePrimaryKey(array $initial_primary_key, array $renamed_primary_key) {
-    $find_primary_key_columns = new \ReflectionMethod(get_class($this->schema), 'findPrimaryKeyColumns');
+    $find_primary_key_columns = new ReflectionMethod(get_class($this->schema), 'findPrimaryKeyColumns');
     $find_primary_key_columns->setAccessible(TRUE);
 
     // Test making the field the primary key of the table upon creation.
@@ -1046,7 +1048,7 @@ class SchemaTest extends KernelTestBase {
         ->condition('serial_column', $id)
         ->execute()
         ->fetchField();
-      $this->assertIdentical($field_value, $test_data);
+      $this->assertSame($test_data, $field_value);
     }
 
     // Check the field was changed.
@@ -1060,7 +1062,7 @@ class SchemaTest extends KernelTestBase {
    * @covers ::findPrimaryKeyColumns
    */
   public function testFindPrimaryKeyColumns() {
-    $method = new \ReflectionMethod(get_class($this->schema), 'findPrimaryKeyColumns');
+    $method = new ReflectionMethod(get_class($this->schema), 'findPrimaryKeyColumns');
     $method->setAccessible(TRUE);
 
     // Test with single column primary key.
@@ -1233,7 +1235,7 @@ class SchemaTest extends KernelTestBase {
       'test_2_table',
       'the_third_table',
     ];
-    $this->assertEqual($tables, $expected, 'All tables were found.');
+    $this->assertEqual($expected, $tables, 'All tables were found.');
 
     // Check the restrictive syntax.
     $tables = $test_schema->findTables('test_%');
@@ -1242,7 +1244,7 @@ class SchemaTest extends KernelTestBase {
       'test_1_table',
       'test_2_table',
     ];
-    $this->assertEqual($tables, $expected, 'Two tables were found.');
+    $this->assertEqual($expected, $tables, 'Two tables were found.');
 
     // Go back to the initial connection.
     Database::setActiveConnection('default');

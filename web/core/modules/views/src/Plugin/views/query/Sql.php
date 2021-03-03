@@ -2,10 +2,10 @@
 
 namespace Drupal\views\Plugin\views\query;
 
+use Drupal;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Database\Database;
-use Drupal\Core\Database\Query\Condition;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerInterface;
@@ -16,6 +16,9 @@ use Drupal\views\Plugin\views\HandlerBase;
 use Drupal\views\ResultRow;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Views;
+use PDO;
+use RecursiveArrayIterator;
+use RecursiveIteratorIterator;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -37,7 +40,7 @@ class Sql extends QueryPluginBase {
   protected $tableQueue = [];
 
   /**
-   * Holds an array of tables and counts added so that we can create aliases
+   * Holds an array of tables and counts added so that we can create aliases.
    */
   public $tables = [];
 
@@ -885,7 +888,7 @@ class Sql extends QueryPluginBase {
    * @code
    * $this->query->addWhere(
    *   $this->options['group'],
-   *   (new Condition('OR'))
+   *   ($this->query->getConnection()->condition('OR'))
    *     ->condition($field, $value, 'NOT IN')
    *     ->condition($field, $value, 'IS NULL')
    * );
@@ -1111,13 +1114,16 @@ class Sql extends QueryPluginBase {
     $has_arguments = FALSE;
     $has_filter = FALSE;
 
-    $main_group = new Condition('AND');
-    $filter_group = $this->groupOperator == 'OR' ? new Condition('OR') : new Condition('AND');
+    /** @var \Drupal\Core\Database\Connection $connection */
+    $connection = $this->getConnection();
+
+    $main_group = $connection->condition('AND');
+    $filter_group = $this->groupOperator == 'OR' ? $connection->condition('OR') : $connection->condition('AND');
 
     foreach ($this->$where as $group => $info) {
 
       if (!empty($info['conditions'])) {
-        $sub_group = $info['type'] == 'OR' ? new Condition('OR') : new Condition('AND');
+        $sub_group = $info['type'] == 'OR' ? $connection->condition('OR') : $connection->condition('AND');
         foreach ($info['conditions'] as $clause) {
           if ($clause['operator'] == 'formula') {
             $has_condition = TRUE;
@@ -1249,6 +1255,24 @@ class Sql extends QueryPluginBase {
   }
 
   /**
+   * Gets the database connection to use for the view.
+   *
+   * The returned database connection does not have to be the default database
+   * connection. It can also be to another database connection when the view is
+   * to an external database or a replica database.
+   *
+   * @return \Drupal\Core\Database\Connection
+   *   The database connection to be used for the query.
+   */
+  public function getConnection() {
+    // Set the replica target if the replica option is set for the view.
+    $target = empty($this->options['replica']) ? 'default' : 'replica';
+    // Use an external database when the view configured to.
+    $key = $this->view->base_database ?? 'default';
+    return Database::getConnection($target, $key);
+  }
+
+  /**
    * Generate a query and a countquery from all of the information supplied
    * to the object.
    *
@@ -1282,22 +1306,9 @@ class Sql extends QueryPluginBase {
       $this->getCountOptimized = TRUE;
     }
 
-    $options = [];
-    $target = 'default';
-    $key = 'default';
-    // Detect an external database and set the
-    if (isset($this->view->base_database)) {
-      $key = $this->view->base_database;
-    }
-
-    // Set the replica target if the replica option is set
-    if (!empty($this->options['replica'])) {
-      $target = 'replica';
-    }
-
     // Go ahead and build the query.
-    $query = Database::getConnection($target, $key)
-      ->select($this->view->storage->get('base_table'), $this->view->storage->get('base_table'), $options)
+    $query = $this->getConnection()
+      ->select($this->view->storage->get('base_table'), $this->view->storage->get('base_table'))
       ->addTag('views')
       ->addTag('views_' . $this->view->storage->id());
 
@@ -1345,7 +1356,7 @@ class Sql extends QueryPluginBase {
       }
 
       foreach ($entity_information as $entity_type_id => $info) {
-        $entity_type = \Drupal::entityTypeManager()->getDefinition($info['entity_type']);
+        $entity_type = Drupal::entityTypeManager()->getDefinition($info['entity_type']);
         $base_field = !$info['revision'] ? $entity_type->getKey('id') : $entity_type->getKey('revision');
         $this->addField($info['alias'], $base_field, '', $params);
       }
@@ -1400,7 +1411,7 @@ class Sql extends QueryPluginBase {
     }
 
     // Add all query substitutions as metadata.
-    $query->addMetaData('views_substitutions', \Drupal::moduleHandler()->invokeAll('views_query_substitutions', [$this->view]));
+    $query->addMetaData('views_substitutions', Drupal::moduleHandler()->invokeAll('views_query_substitutions', [$this->view]));
 
     return $query;
   }
@@ -1423,7 +1434,7 @@ class Sql extends QueryPluginBase {
    * Let modules modify the query just prior to finalizing it.
    */
   public function alter(ViewExecutable $view) {
-    \Drupal::moduleHandler()->invokeAll('views_query_alter', [$view, $this]);
+    Drupal::moduleHandler()->invokeAll('views_query_alter', [$view, $this]);
   }
 
   /**
@@ -1478,7 +1489,7 @@ class Sql extends QueryPluginBase {
     }
 
     if ($query) {
-      $additional_arguments = \Drupal::moduleHandler()->invokeAll('views_query_substitutions', [$view]);
+      $additional_arguments = Drupal::moduleHandler()->invokeAll('views_query_substitutions', [$view]);
 
       // Count queries must be run through the preExecute() method.
       // If not, then hook_query_node_access_alter() may munge the count by
@@ -1517,7 +1528,7 @@ class Sql extends QueryPluginBase {
         }
 
         $result = $query->execute();
-        $result->setFetchMode(\PDO::FETCH_CLASS, 'Drupal\views\ResultRow');
+        $result->setFetchMode(PDO::FETCH_CLASS, 'Drupal\views\ResultRow');
 
         // Setup the result row objects.
         $view->result = iterator_to_array($result);
@@ -1603,7 +1614,7 @@ class Sql extends QueryPluginBase {
     // Load all entities and assign them to the correct result row.
     foreach ($entity_ids_by_type as $entity_type => $ids) {
       $entity_storage = $this->entityTypeManager->getStorage($entity_type);
-      $flat_ids = iterator_to_array(new \RecursiveIteratorIterator(new \RecursiveArrayIterator($ids)), FALSE);
+      $flat_ids = iterator_to_array(new RecursiveIteratorIterator(new RecursiveArrayIterator($ids)), FALSE);
 
       $entities = $entity_storage->loadMultiple(array_unique($flat_ids));
       $results = $this->assignEntitiesToResult($ids, $entities, $results);

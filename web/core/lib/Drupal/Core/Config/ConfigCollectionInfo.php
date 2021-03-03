@@ -2,7 +2,8 @@
 
 namespace Drupal\Core\Config;
 
-use Symfony\Component\EventDispatcher\Event;
+use Drupal\Component\EventDispatcher\Event;
+use InvalidArgumentException;
 
 /**
  * Gets information on all the possible configuration collections.
@@ -34,7 +35,7 @@ class ConfigCollectionInfo extends Event {
    */
   public function addCollection($collection, ConfigFactoryOverrideInterface $override_service = NULL) {
     if ($collection == StorageInterface::DEFAULT_COLLECTION) {
-      throw new \InvalidArgumentException('Can not add the default collection to the ConfigCollectionInfo object');
+      throw new InvalidArgumentException('Can not add the default collection to the ConfigCollectionInfo object');
     }
     $this->collections[$collection] = $override_service;
   }

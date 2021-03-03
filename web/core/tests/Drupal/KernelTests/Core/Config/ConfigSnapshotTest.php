@@ -2,6 +2,7 @@
 
 namespace Drupal\KernelTests\Core\Config;
 
+use Drupal;
 use Drupal\Core\Config\StorageComparer;
 use Drupal\KernelTests\KernelTestBase;
 
@@ -27,7 +28,7 @@ class ConfigSnapshotTest extends KernelTestBase {
     $this->installConfig(['system']);
     // Update the config snapshot. This allows the parent::setUp() to write
     // configuration files.
-    \Drupal::service('config.manager')->createSnapshot(\Drupal::service('config.storage'), \Drupal::service('config.storage.snapshot'));
+    Drupal::service('config.manager')->createSnapshot(Drupal::service('config.storage'), Drupal::service('config.storage.snapshot'));
     $this->copyConfig($this->container->get('config.storage'), $this->container->get('config.storage.sync'));
   }
 
@@ -55,7 +56,7 @@ class ConfigSnapshotTest extends KernelTestBase {
     $this->assertTrue($active_snapshot_comparer->reset()->hasChanges());
 
     // Update the config snapshot.
-    \Drupal::service('config.manager')->createSnapshot($active, $snapshot);
+    Drupal::service('config.manager')->createSnapshot($active, $snapshot);
 
     // The snapshot and active config should now contain the same config
     // objects.
@@ -75,8 +76,8 @@ class ConfigSnapshotTest extends KernelTestBase {
     $this->configImporter()->import();
 
     // Verify changed config was properly imported.
-    \Drupal::configFactory()->reset($config_name);
-    $this->assertIdentical($this->config($config_name)->get($config_key), $new_data);
+    Drupal::configFactory()->reset($config_name);
+    $this->assertSame($new_data, $this->config($config_name)->get($config_key));
 
     // Verify that a new snapshot was created which and that it matches
     // the active config.

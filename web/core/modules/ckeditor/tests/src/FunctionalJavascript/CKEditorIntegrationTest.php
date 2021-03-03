@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\ckeditor\FunctionalJavascript;
 
+use Drupal;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\editor\Entity\Editor;
 use Drupal\field\Entity\FieldConfig;
@@ -206,11 +207,11 @@ class CKEditorIntegrationTest extends WebDriverTestBase {
     // not overridden by the off-canvas css reset.
     $assert_session->elementExists('css', '.cke_top');
     $ckeditor_top_bg_color = $this->getSession()->evaluateScript('window.getComputedStyle(document.getElementsByClassName(\'cke_top\')[0]).backgroundColor');
-    $this->assertEqual($ckeditor_top_bg_color, 'rgb(248, 248, 248)');
+    $this->assertEqual('rgb(248, 248, 248)', $ckeditor_top_bg_color);
 
     $assert_session->elementExists('css', '.cke_button__source');
     $ckeditor_source_button_bg_color = $this->getSession()->evaluateScript('window.getComputedStyle(document.getElementsByClassName(\'cke_button__source\')[0]).backgroundColor');
-    $this->assertEqual($ckeditor_source_button_bg_color, 'rgba(0, 0, 0, 0)');
+    $this->assertEqual('rgba(0, 0, 0, 0)', $ckeditor_source_button_bg_color);
 
     // Check that only one off-canvas style is cached in local storage and that
     // it gets updated with the cache-busting query string.
@@ -222,7 +223,7 @@ class CKEditorIntegrationTest extends WebDriverTestBase {
     // Normally flushing caches regenerates the cache busting query string, but
     // as it's based on the request time, it won't change within this test so
     // explicitly set it.
-    \Drupal::state()->set('system.css_js_query_string', '0');
+    Drupal::state()->set('system.css_js_query_string', '0');
     $this->drupalGet('/ckeditor_test/off_canvas');
     $page->clickLink('Add Node');
     $assert_session->waitForElementVisible('css', '#drupal-off-canvas');

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\views\Functional\Entity;
 
+use Drupal;
 use Drupal\Core\Language\Language;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\node\Entity\Node;
@@ -49,7 +50,7 @@ class FieldEntityTranslationTest extends ViewTestBase {
     $node_type->save();
 
     /** @var \Drupal\content_translation\ContentTranslationManagerInterface $content_translation_manager */
-    $content_translation_manager = \Drupal::service('content_translation.manager');
+    $content_translation_manager = Drupal::service('content_translation.manager');
 
     $content_translation_manager->setEnabled('node', 'article', TRUE);
 
@@ -178,7 +179,7 @@ class FieldEntityTranslationTest extends ViewTestBase {
         'sticky' => $row->find('xpath', (new CssSelectorConverter())->toXPath('.views-field-sticky span.field-content'))->getText(),
       ];
     }
-    $this->assertEqual($actual, $expected);
+    $this->assertEqual($expected, $actual);
   }
 
 }

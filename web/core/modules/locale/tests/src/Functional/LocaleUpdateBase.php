@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\locale\Functional;
 
+use Drupal;
 use Drupal\Core\Database\Database;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\StreamWrapper\PublicStream;
@@ -77,7 +78,7 @@ abstract class LocaleUpdateBase extends BrowserTestBase {
    *   directory.
    */
   protected function setTranslationsDirectory($path) {
-    \Drupal::service('file_system')->prepareDirectory($path, FileSystemInterface::CREATE_DIRECTORY);
+    Drupal::service('file_system')->prepareDirectory($path, FileSystemInterface::CREATE_DIRECTORY);
     $this->config('locale.settings')->set('translation.path', $path)->save();
   }
 
@@ -89,9 +90,9 @@ abstract class LocaleUpdateBase extends BrowserTestBase {
    */
   protected function addLanguage($langcode) {
     $edit = ['predefined_langcode' => $langcode];
-    $this->drupalPostForm('admin/config/regional/language/add', $edit, t('Add language'));
+    $this->drupalPostForm('admin/config/regional/language/add', $edit, 'Add language');
     $this->container->get('language_manager')->reset();
-    $this->assertNotEmpty(\Drupal::languageManager()->getLanguage($langcode), new FormattableMarkup('Language %langcode added.', ['%langcode' => $langcode]));
+    $this->assertNotEmpty(Drupal::languageManager()->getLanguage($langcode), new FormattableMarkup('Language %langcode added.', ['%langcode' => $langcode]));
   }
 
   /**
@@ -131,7 +132,7 @@ EOF;
       }
     }
 
-    \Drupal::service('file_system')->prepareDirectory($path, FileSystemInterface::CREATE_DIRECTORY);
+    Drupal::service('file_system')->prepareDirectory($path, FileSystemInterface::CREATE_DIRECTORY);
     $file = File::create([
       'uid' => 1,
       'filename' => $filename,
@@ -141,7 +142,7 @@ EOF;
       'status' => FILE_STATUS_PERMANENT,
     ]);
     file_put_contents($file->getFileUri(), $po_header . $text);
-    touch(\Drupal::service('file_system')->realpath($file->getFileUri()), $timestamp);
+    touch(Drupal::service('file_system')->realpath($file->getFileUri()), $timestamp);
     $file->save();
   }
 
@@ -178,8 +179,8 @@ EOF;
 
     // A flag is set to let the locale_test module replace the project data with
     // a set of test projects which match the below project files.
-    \Drupal::state()->set('locale.test_projects_alter', TRUE);
-    \Drupal::state()->set('locale.remove_core_project', FALSE);
+    Drupal::state()->set('locale.test_projects_alter', TRUE);
+    Drupal::state()->set('locale.remove_core_project', FALSE);
 
     // Setup the environment.
     $public_path = PublicStream::basePath();
@@ -293,7 +294,7 @@ EOF;
    * @param string $source
    *   Translation source string.
    * @param string $translation
-   *   Translation to check. Use empty string to check for a not existing
+   *   Translation to check. Use empty string to check for a non-existent
    *   translation.
    * @param string $langcode
    *   Language code of the language to translate to.

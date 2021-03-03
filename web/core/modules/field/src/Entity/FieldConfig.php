@@ -2,6 +2,7 @@
 
 namespace Drupal\field\Entity;
 
+use Drupal;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\FieldableEntityStorageInterface;
 use Drupal\Core\Field\FieldConfigBase;
@@ -147,7 +148,7 @@ class FieldConfig extends FieldConfigBase implements FieldConfigInterface {
    *   In case of failures at the configuration storage level.
    */
   public function preSave(EntityStorageInterface $storage) {
-    $field_type_manager = \Drupal::service('plugin.manager.field.field_type');
+    $field_type_manager = Drupal::service('plugin.manager.field.field_type');
 
     $storage_definition = $this->getFieldStorageDefinition();
 
@@ -159,7 +160,7 @@ class FieldConfig extends FieldConfigBase implements FieldConfigInterface {
 
     if ($this->isNew()) {
       // Notify the entity storage.
-      \Drupal::service('field_definition.listener')->onFieldDefinitionCreate($this);
+      Drupal::service('field_definition.listener')->onFieldDefinitionCreate($this);
     }
     else {
       // Some updates are always disallowed.
@@ -173,7 +174,7 @@ class FieldConfig extends FieldConfigBase implements FieldConfigInterface {
         throw new FieldException("Cannot change an existing field's storage.");
       }
       // Notify the entity storage.
-      \Drupal::service('field_definition.listener')->onFieldDefinitionUpdate($this, $this->original);
+      Drupal::service('field_definition.listener')->onFieldDefinitionUpdate($this, $this->original);
     }
 
     parent::preSave($storage);
@@ -194,8 +195,8 @@ class FieldConfig extends FieldConfigBase implements FieldConfigInterface {
    */
   public static function preDelete(EntityStorageInterface $storage, array $fields) {
     /** @var \Drupal\Core\Field\DeletedFieldsRepositoryInterface $deleted_fields_repository */
-    $deleted_fields_repository = \Drupal::service('entity_field.deleted_fields_repository');
-    $entity_type_manager = \Drupal::entityTypeManager();
+    $deleted_fields_repository = Drupal::service('entity_field.deleted_fields_repository');
+    $entity_type_manager = Drupal::entityTypeManager();
 
     parent::preDelete($storage, $fields);
 
@@ -220,12 +221,12 @@ class FieldConfig extends FieldConfigBase implements FieldConfigInterface {
    */
   public static function postDelete(EntityStorageInterface $storage, array $fields) {
     // Clear the cache upfront, to refresh the results of getBundles().
-    \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
+    Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
 
     // Notify the entity storage.
     foreach ($fields as $field) {
       if (!$field->deleted) {
-        \Drupal::service('field_definition.listener')->onFieldDefinitionDelete($field);
+        Drupal::service('field_definition.listener')->onFieldDefinitionDelete($field);
       }
     }
 
@@ -247,7 +248,7 @@ class FieldConfig extends FieldConfigBase implements FieldConfigInterface {
       }
     }
     if ($storages_to_delete) {
-      \Drupal::entityTypeManager()->getStorage('field_storage_config')->delete($storages_to_delete);
+      Drupal::entityTypeManager()->getStorage('field_storage_config')->delete($storages_to_delete);
     }
   }
 
@@ -256,7 +257,7 @@ class FieldConfig extends FieldConfigBase implements FieldConfigInterface {
    */
   protected function linkTemplates() {
     $link_templates = parent::linkTemplates();
-    if (\Drupal::moduleHandler()->moduleExists('field_ui')) {
+    if (Drupal::moduleHandler()->moduleExists('field_ui')) {
       $link_templates["{$this->entity_type}-field-edit-form"] = 'entity.field_config.' . $this->entity_type . '_field_edit_form';
       $link_templates["{$this->entity_type}-storage-edit-form"] = 'entity.field_config.' . $this->entity_type . '_storage_edit_form';
       $link_templates["{$this->entity_type}-field-delete-form"] = 'entity.field_config.' . $this->entity_type . '_field_delete_form';
@@ -273,7 +274,7 @@ class FieldConfig extends FieldConfigBase implements FieldConfigInterface {
    */
   protected function urlRouteParameters($rel) {
     $parameters = parent::urlRouteParameters($rel);
-    $entity_type = \Drupal::entityTypeManager()->getDefinition($this->entity_type);
+    $entity_type = Drupal::entityTypeManager()->getDefinition($this->entity_type);
     $bundle_parameter_key = $entity_type->getBundleEntityType() ?: 'bundle';
     $parameters[$bundle_parameter_key] = $this->bundle;
     return $parameters;
@@ -293,14 +294,14 @@ class FieldConfig extends FieldConfigBase implements FieldConfigInterface {
     if (!$this->fieldStorage) {
       $field_storage_definition = NULL;
 
-      $field_storage_definitions = \Drupal::service('entity_field.manager')->getFieldStorageDefinitions($this->entity_type);
+      $field_storage_definitions = Drupal::service('entity_field.manager')->getFieldStorageDefinitions($this->entity_type);
       if (isset($field_storage_definitions[$this->field_name])) {
         $field_storage_definition = $field_storage_definitions[$this->field_name];
       }
       // If this field has been deleted, try to find its field storage
       // definition in the deleted fields repository.
       elseif ($this->deleted) {
-        $deleted_storage_definitions = \Drupal::service('entity_field.deleted_fields_repository')->getFieldStorageDefinitions();
+        $deleted_storage_definitions = Drupal::service('entity_field.deleted_fields_repository')->getFieldStorageDefinitions();
         foreach ($deleted_storage_definitions as $deleted_storage_definition) {
           if ($deleted_storage_definition->getName() === $this->field_name) {
             $field_storage_definition = $deleted_storage_definition;
@@ -366,12 +367,12 @@ class FieldConfig extends FieldConfigBase implements FieldConfigInterface {
    * @param string $field_name
    *   Name of the field.
    *
-   * @return static
+   * @return Drupal\field\Entity\FieldConfigInterface|null
    *   The field config entity if one exists for the provided field
    *   name, otherwise NULL.
    */
   public static function loadByName($entity_type_id, $bundle, $field_name) {
-    return \Drupal::entityTypeManager()->getStorage('field_config')->load($entity_type_id . '.' . $bundle . '.' . $field_name);
+    return Drupal::entityTypeManager()->getStorage('field_config')->load($entity_type_id . '.' . $bundle . '.' . $field_name);
   }
 
 }

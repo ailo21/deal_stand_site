@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\migrate_drupal\Kernel\d6;
 
+use Drupal;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\migrate\MigrateExecutable;
@@ -64,9 +65,9 @@ class EntityContentBaseTest extends MigrateDrupal6TestBase {
     $this->executeMigration('d6_user');
     /** @var \Drupal\user\UserInterface $account */
     $account = User::load(2);
-    $this->assertIdentical('john.doe', $account->label());
-    $this->assertIdentical('john.doe@example.com', $account->getEmail());
-    $this->assertIdentical('doe@example.com', $account->getInitialEmail());
+    $this->assertSame('john.doe', $account->label());
+    $this->assertSame('john.doe@example.com', $account->getEmail());
+    $this->assertSame('doe@example.com', $account->getInitialEmail());
   }
 
   /**
@@ -80,12 +81,12 @@ class EntityContentBaseTest extends MigrateDrupal6TestBase {
 
     /** @var \Drupal\user\UserInterface $account */
     $account = User::load(2);
-    $this->assertIdentical('john.doe', $account->label());
-    $this->assertIdentical('john.doe@example.com', $account->getEmail());
-    $this->assertIdentical('The answer is 42.', $account->signature->value);
+    $this->assertSame('john.doe', $account->label());
+    $this->assertSame('john.doe@example.com', $account->getEmail());
+    $this->assertSame('The answer is 42.', $account->signature->value);
     // This value is not overwritten because it's not listed in
     // overwrite_properties.
-    $this->assertIdentical('proto@zo.an', $account->getInitialEmail());
+    $this->assertSame('proto@zo.an', $account->getInitialEmail());
   }
 
   /**
@@ -96,7 +97,7 @@ class EntityContentBaseTest extends MigrateDrupal6TestBase {
     $this->installEntitySchema('no_language_entity_test');
 
     /** @var MigrationInterface $migration */
-    $migration = \Drupal::service('plugin.manager.migration')->createStubMigration([
+    $migration = Drupal::service('plugin.manager.migration')->createStubMigration([
       'source' => [
         'plugin' => 'embedded_data',
         'ids' => ['id' => ['type' => 'integer']],

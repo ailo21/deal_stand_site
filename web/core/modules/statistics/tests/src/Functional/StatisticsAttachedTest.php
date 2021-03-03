@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\statistics\Functional;
 
+use Drupal;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\node\Entity\Node;
 
@@ -34,13 +35,13 @@ class StatisticsAttachedTest extends BrowserTestBase {
 
     // Install "statistics_test_attached" and set it as the default theme.
     $theme = 'statistics_test_attached';
-    \Drupal::service('theme_installer')->install([$theme]);
+    Drupal::service('theme_installer')->install([$theme]);
     $this->config('system.theme')
       ->set('default', $theme)
       ->save();
     // Installing a theme will cause the kernel terminate event to rebuild the
     // router. Simulate that here.
-    \Drupal::service('router.builder')->rebuildIfNeeded();
+    Drupal::service('router.builder')->rebuildIfNeeded();
   }
 
   /**
@@ -56,7 +57,7 @@ class StatisticsAttachedTest extends BrowserTestBase {
     $node->save();
     $this->drupalGet('node/' . $node->id());
 
-    $this->assertRaw('core/modules/statistics/statistics.js', 'Statistics library is available');
+    $this->assertRaw('core/modules/statistics/statistics.js');
   }
 
 }

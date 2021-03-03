@@ -2,6 +2,7 @@
 
 namespace Drupal\KernelTests\Core\Entity;
 
+use Drupal;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\TypedData\TranslationStatusInterface;
@@ -10,6 +11,9 @@ use Drupal\entity_test\Entity\EntityTestMulRev;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\language\Entity\ConfigurableLanguage;
+use Exception;
+use InvalidArgumentException;
+use LogicException;
 
 /**
  * Tests entity translation functionality.
@@ -42,31 +46,31 @@ class EntityTranslationTest extends EntityLanguageTestBase {
         'name' => 'test',
         'user_id' => $this->container->get('current_user')->id(),
       ]);
-    $this->assertEqual($entity->language()->getId(), $this->languageManager->getDefaultLanguage()->getId(), new FormattableMarkup('%entity_type: Entity created with API has default language.', ['%entity_type' => $entity_type]));
+    $this->assertEqual($this->languageManager->getDefaultLanguage()->getId(), $entity->language()->getId(), new FormattableMarkup('%entity_type: Entity created with API has default language.', ['%entity_type' => $entity_type]));
     $entity = $this->container->get('entity_type.manager')
       ->getStorage($entity_type)
       ->create([
         'name' => 'test',
-        'user_id' => \Drupal::currentUser()->id(),
+        'user_id' => Drupal::currentUser()->id(),
         $langcode_key => LanguageInterface::LANGCODE_NOT_SPECIFIED,
       ]);
 
-    $this->assertEqual($entity->language()->getId(), LanguageInterface::LANGCODE_NOT_SPECIFIED, new FormattableMarkup('%entity_type: Entity language not specified.', ['%entity_type' => $entity_type]));
+    $this->assertEqual(LanguageInterface::LANGCODE_NOT_SPECIFIED, $entity->language()->getId(), new FormattableMarkup('%entity_type: Entity language not specified.', ['%entity_type' => $entity_type]));
     $this->assertEmpty($entity->getTranslationLanguages(FALSE), new FormattableMarkup('%entity_type: No translations are available', ['%entity_type' => $entity_type]));
 
     // Set the value in default language.
     $entity->set($this->fieldName, [0 => ['value' => 'default value']]);
     // Get the value.
     $field = $entity->getTranslation(LanguageInterface::LANGCODE_DEFAULT)->get($this->fieldName);
-    $this->assertEqual($field->value, 'default value', new FormattableMarkup('%entity_type: Untranslated value retrieved.', ['%entity_type' => $entity_type]));
-    $this->assertEqual($field->getLangcode(), LanguageInterface::LANGCODE_NOT_SPECIFIED, new FormattableMarkup('%entity_type: Field object has the expected langcode.', ['%entity_type' => $entity_type]));
+    $this->assertEqual('default value', $field->value, new FormattableMarkup('%entity_type: Untranslated value retrieved.', ['%entity_type' => $entity_type]));
+    $this->assertEqual(LanguageInterface::LANGCODE_NOT_SPECIFIED, $field->getLangcode(), new FormattableMarkup('%entity_type: Field object has the expected langcode.', ['%entity_type' => $entity_type]));
 
     // Try to get add a translation to language neutral entity.
     try {
       $entity->addTranslation($this->langcodes[1]);
       $this->fail('Adding a translation to a language-neutral entity results in an error.');
     }
-    catch (\InvalidArgumentException $e) {
+    catch (InvalidArgumentException $e) {
       // Expected exception; just continue testing.
     }
 
@@ -75,36 +79,36 @@ class EntityTranslationTest extends EntityLanguageTestBase {
     $default_langcode = $this->langcodes[0];
     $entity->{$langcode_key}->value = $default_langcode;
     $entity->{$this->fieldName} = [];
-    $this->assertEqual($entity->language(), \Drupal::languageManager()->getLanguage($this->langcodes[0]), new FormattableMarkup('%entity_type: Entity language retrieved.', ['%entity_type' => $entity_type]));
+    $this->assertEqual(Drupal::languageManager()->getLanguage($this->langcodes[0]), $entity->language(), new FormattableMarkup('%entity_type: Entity language retrieved.', ['%entity_type' => $entity_type]));
     $this->assertEmpty($entity->getTranslationLanguages(FALSE), new FormattableMarkup('%entity_type: No translations are available', ['%entity_type' => $entity_type]));
 
     // Set the value in default language.
     $entity->set($this->fieldName, [0 => ['value' => 'default value']]);
     // Get the value.
     $field = $entity->get($this->fieldName);
-    $this->assertEqual($field->value, 'default value', new FormattableMarkup('%entity_type: Untranslated value retrieved.', ['%entity_type' => $entity_type]));
-    $this->assertEqual($field->getLangcode(), $default_langcode, new FormattableMarkup('%entity_type: Field object has the expected langcode.', ['%entity_type' => $entity_type]));
+    $this->assertEqual('default value', $field->value, new FormattableMarkup('%entity_type: Untranslated value retrieved.', ['%entity_type' => $entity_type]));
+    $this->assertEqual($default_langcode, $field->getLangcode(), new FormattableMarkup('%entity_type: Field object has the expected langcode.', ['%entity_type' => $entity_type]));
 
     // Set a translation.
     $entity->addTranslation($this->langcodes[1])->set($this->fieldName, [0 => ['value' => 'translation 1']]);
     $field = $entity->getTranslation($this->langcodes[1])->{$this->fieldName};
-    $this->assertEqual($field->value, 'translation 1', new FormattableMarkup('%entity_type: Translated value set.', ['%entity_type' => $entity_type]));
-    $this->assertEqual($field->getLangcode(), $this->langcodes[1], new FormattableMarkup('%entity_type: Field object has the expected langcode.', ['%entity_type' => $entity_type]));
+    $this->assertEqual('translation 1', $field->value, new FormattableMarkup('%entity_type: Translated value set.', ['%entity_type' => $entity_type]));
+    $this->assertEqual($this->langcodes[1], $field->getLangcode(), new FormattableMarkup('%entity_type: Field object has the expected langcode.', ['%entity_type' => $entity_type]));
 
     // Make sure the untranslated value stays.
     $field = $entity->get($this->fieldName);
-    $this->assertEqual($field->value, 'default value', 'Untranslated value stays.');
-    $this->assertEqual($field->getLangcode(), $default_langcode, 'Untranslated value has the expected langcode.');
+    $this->assertEqual('default value', $field->value, 'Untranslated value stays.');
+    $this->assertEqual($default_langcode, $field->getLangcode(), 'Untranslated value has the expected langcode.');
 
-    $translations[$this->langcodes[1]] = \Drupal::languageManager()->getLanguage($this->langcodes[1]);
-    $this->assertEqual($entity->getTranslationLanguages(FALSE), $translations, 'Translations retrieved.');
+    $translations[$this->langcodes[1]] = Drupal::languageManager()->getLanguage($this->langcodes[1]);
+    $this->assertEqual($translations, $entity->getTranslationLanguages(FALSE), 'Translations retrieved.');
 
     // Try to get a value using a language code for a non-existing translation.
     try {
       $entity->getTranslation($this->langcodes[2])->get($this->fieldName)->value;
       $this->fail('Getting a non existing translation results in an error.');
     }
-    catch (\InvalidArgumentException $e) {
+    catch (InvalidArgumentException $e) {
       // Expected exception; just continue testing.
     }
 
@@ -116,7 +120,7 @@ class EntityTranslationTest extends EntityLanguageTestBase {
       $entity->getTranslation('invalid')->get($this->fieldName)->value;
       $this->fail('Getting an invalid translation results in an error.');
     }
-    catch (\InvalidArgumentException $e) {
+    catch (InvalidArgumentException $e) {
       // Expected exception; just continue testing.
     }
 
@@ -125,7 +129,7 @@ class EntityTranslationTest extends EntityLanguageTestBase {
       $entity->getTranslation('invalid')->set($this->fieldName, NULL);
       $this->fail(new FormattableMarkup('%entity_type: Setting a translation for an invalid language throws an exception.', ['%entity_type' => $entity_type]));
     }
-    catch (\InvalidArgumentException $e) {
+    catch (InvalidArgumentException $e) {
       // Expected exception; just continue testing.
     }
 
@@ -134,8 +138,8 @@ class EntityTranslationTest extends EntityLanguageTestBase {
     $entity->getTranslation($this->langcodes[1])->set($field_name, [0 => ['value' => 'default value2']]);
     // Get the value.
     $field = $entity->get($field_name);
-    $this->assertEqual($field->value, 'default value2', new FormattableMarkup('%entity_type: Untranslated value set into a translation in non-strict mode.', ['%entity_type' => $entity_type]));
-    $this->assertEqual($field->getLangcode(), $default_langcode, new FormattableMarkup('%entity_type: Field object has the expected langcode.', ['%entity_type' => $entity_type]));
+    $this->assertEqual('default value2', $field->value, new FormattableMarkup('%entity_type: Untranslated value set into a translation in non-strict mode.', ['%entity_type' => $entity_type]));
+    $this->assertEqual($default_langcode, $field->getLangcode(), new FormattableMarkup('%entity_type: Field object has the expected langcode.', ['%entity_type' => $entity_type]));
   }
 
   /**
@@ -169,7 +173,7 @@ class EntityTranslationTest extends EntityLanguageTestBase {
     $entity->save();
     $entity = $storage->load($entity->id());
     $default_langcode = $entity->language()->getId();
-    $this->assertEqual($default_langcode, LanguageInterface::LANGCODE_NOT_SPECIFIED, new FormattableMarkup('%entity_type: Entity created as language neutral.', ['%entity_type' => $entity_type]));
+    $this->assertEqual(LanguageInterface::LANGCODE_NOT_SPECIFIED, $default_langcode, new FormattableMarkup('%entity_type: Entity created as language neutral.', ['%entity_type' => $entity_type]));
     $field = $entity->getTranslation(LanguageInterface::LANGCODE_DEFAULT)->get('name');
     $this->assertEqual($name, $field->value, new FormattableMarkup('%entity_type: The entity name has been correctly stored as language neutral.', ['%entity_type' => $entity_type]));
     $this->assertEqual($default_langcode, $field->getLangcode(), new FormattableMarkup('%entity_type: The field object has the expect langcode.', ['%entity_type' => $entity_type]));
@@ -193,7 +197,7 @@ class EntityTranslationTest extends EntityLanguageTestBase {
     $entity->save();
     $entity = $storage->load($entity->id());
     $default_langcode = $entity->language()->getId();
-    $this->assertEqual($default_langcode, $langcode, new FormattableMarkup('%entity_type: Entity created as language specific.', ['%entity_type' => $entity_type]));
+    $this->assertEqual($langcode, $default_langcode, new FormattableMarkup('%entity_type: Entity created as language specific.', ['%entity_type' => $entity_type]));
     $field = $entity->getTranslation($langcode)->get('name');
     $this->assertEqual($name, $field->value, new FormattableMarkup('%entity_type: The entity name has been correctly stored as a language-aware property.', ['%entity_type' => $entity_type]));
     $this->assertEqual($default_langcode, $field->getLangcode(), new FormattableMarkup('%entity_type: The field object has the expect langcode.', ['%entity_type' => $entity_type]));
@@ -232,8 +236,8 @@ class EntityTranslationTest extends EntityLanguageTestBase {
       $field = $entity->getTranslation($langcode)->get('name');
       $this->assertEqual($properties[$langcode]['name'][0], $field->value, new FormattableMarkup('%entity_type: The entity name has been correctly stored for language %langcode.', $args));
       $field_langcode = ($langcode == $entity->language()->getId()) ? $default_langcode : $langcode;
-      $this->assertEqual($field_langcode, $field->getLangcode(), new FormattableMarkup('%entity_type: The field object has the expected langcode  %langcode.', $args));
-      $this->assertEqual($properties[$langcode]['user_id'][0], $entity->getTranslation($langcode)->get('user_id')->target_id, new FormattableMarkup('%entity_type: The entity author has been correctly stored for language %langcode.', $args));
+      $this->assertEqual($field->getLangcode(), $field_langcode, new FormattableMarkup('%entity_type: The field object has the expected langcode  %langcode.', $args));
+      $this->assertEqual($entity->getTranslation($langcode)->get('user_id')->target_id, $properties[$langcode]['user_id'][0], new FormattableMarkup('%entity_type: The entity author has been correctly stored for language %langcode.', $args));
     }
 
     // Test query conditions (cache is reset at each call).
@@ -273,7 +277,7 @@ class EntityTranslationTest extends EntityLanguageTestBase {
 
     // Test property conditions and orders with multiple languages in the same
     // query.
-    $query = \Drupal::entityQuery($entity_type);
+    $query = Drupal::entityQuery($entity_type);
     $group = $query->andConditionGroup()
       ->condition('user_id', $properties[$default_langcode]['user_id'][0], '=', $default_langcode)
       ->condition('name', $properties[$default_langcode]['name'][0], '=', $default_langcode);
@@ -289,7 +293,7 @@ class EntityTranslationTest extends EntityLanguageTestBase {
     $field_value = $this->randomString();
     $entity->getTranslation($langcode)->set($this->fieldName, [['value' => $field_value]]);
     $entity->save();
-    $query = \Drupal::entityQuery($entity_type);
+    $query = Drupal::entityQuery($entity_type);
     $default_langcode_group = $query->andConditionGroup()
       ->condition('user_id', $properties[$default_langcode]['user_id'][0], '=', $default_langcode)
       ->condition('name', $properties[$default_langcode]['name'][0], '=', $default_langcode);
@@ -353,7 +357,7 @@ class EntityTranslationTest extends EntityLanguageTestBase {
       $entity->getTranslation(LanguageInterface::LANGCODE_NOT_SPECIFIED);
       $this->fail('A language-neutral translation cannot be retrieved.');
     }
-    catch (\LogicException $e) {
+    catch (LogicException $e) {
       // Expected exception; just continue testing.
     }
 
@@ -366,24 +370,24 @@ class EntityTranslationTest extends EntityLanguageTestBase {
     $this->assertTrue($translation->isNewTranslation(), 'Newly added translations are marked as new.');
     $this->assertNotIdentical($entity, $translation, 'The entity and the translation object differ from one another.');
     $this->assertTrue($entity->hasTranslation($langcode), 'The new translation exists.');
-    $this->assertEqual($translation->language()->getId(), $langcode, 'The translation language matches the specified one.');
-    $this->assertEqual($translation->{$langcode_key}->value, $langcode, 'The translation field language value matches the specified one.');
+    $this->assertEqual($langcode, $translation->language()->getId(), 'The translation language matches the specified one.');
+    $this->assertEqual($langcode, $translation->{$langcode_key}->value, 'The translation field language value matches the specified one.');
     $this->assertFalse($translation->{$default_langcode_key}->value, 'The translation object is not the default one.');
-    $this->assertEqual($translation->getUntranslated()->language()->getId(), $default_langcode, 'The original language can still be retrieved.');
+    $this->assertEqual($default_langcode, $translation->getUntranslated()->language()->getId(), 'The original language can still be retrieved.');
     $translation->name->value = $name_translated;
-    $this->assertEqual($entity->name->value, $name, 'The original name is retained after setting a translated value.');
+    $this->assertEqual($name, $entity->name->value, 'The original name is retained after setting a translated value.');
     $entity->name->value = $name;
-    $this->assertEqual($translation->name->value, $name_translated, 'The translated name is retained after setting the original value.');
+    $this->assertEqual($name_translated, $translation->name->value, 'The translated name is retained after setting the original value.');
 
     // Save the translation and check that the expected hooks are fired.
     $translation->save();
     $hooks = $this->getHooksInfo();
 
-    $this->assertEqual($hooks['entity_translation_create'], $langcode, 'The generic entity translation creation hook has fired.');
-    $this->assertEqual($hooks[$entity_type . '_translation_create'], $langcode, 'The entity-type-specific entity translation creation hook has fired.');
+    $this->assertEqual($langcode, $hooks['entity_translation_create'], 'The generic entity translation creation hook has fired.');
+    $this->assertEqual($langcode, $hooks[$entity_type . '_translation_create'], 'The entity-type-specific entity translation creation hook has fired.');
 
-    $this->assertEqual($hooks['entity_translation_insert'], $langcode, 'The generic entity translation insertion hook has fired.');
-    $this->assertEqual($hooks[$entity_type . '_translation_insert'], $langcode, 'The entity-type-specific entity translation insertion hook has fired.');
+    $this->assertEqual($langcode, $hooks['entity_translation_insert'], 'The generic entity translation insertion hook has fired.');
+    $this->assertEqual($langcode, $hooks[$entity_type . '_translation_insert'], 'The entity-type-specific entity translation insertion hook has fired.');
 
     // Verify that changing translation language causes an exception to be
     // thrown.
@@ -391,7 +395,7 @@ class EntityTranslationTest extends EntityLanguageTestBase {
       $translation->{$langcode_key}->value = $this->langcodes[2];
       $this->fail('The translation language cannot be changed.');
     }
-    catch (\LogicException $e) {
+    catch (LogicException $e) {
       // Expected exception; just continue testing.
     }
 
@@ -399,7 +403,7 @@ class EntityTranslationTest extends EntityLanguageTestBase {
     try {
       $translation->{$langcode_key}->value = $langcode;
     }
-    catch (\LogicException $e) {
+    catch (LogicException $e) {
       $this->fail('The translation language can be reassigned the same value.');
     }
 
@@ -412,7 +416,7 @@ class EntityTranslationTest extends EntityLanguageTestBase {
       try {
         $translation->{$default_langcode_key}->value = $default;
       }
-      catch (\LogicException $e) {
+      catch (LogicException $e) {
         $this->fail('The default translation flag can be reassigned the same value.');
       }
 
@@ -420,16 +424,16 @@ class EntityTranslationTest extends EntityLanguageTestBase {
         $translation->{$default_langcode_key}->value = !$default;
         $this->fail('The default translation flag cannot be changed.');
       }
-      catch (\LogicException $e) {
+      catch (LogicException $e) {
         // Expected exception; just continue testing.
       }
 
-      $this->assertEqual($translation->{$default_langcode_key}->value, $default);
+      $this->assertEqual($default, $translation->{$default_langcode_key}->value);
     }
 
     // Check that after loading an entity the language is the default one.
     $entity = $this->reloadEntity($entity);
-    $this->assertEqual($entity->language()->getId(), $default_langcode, 'The loaded entity is the original one.');
+    $this->assertEqual($default_langcode, $entity->language()->getId(), 'The loaded entity is the original one.');
 
     // Add another translation and check that everything works as expected. A
     // new translation object can be obtained also by just specifying a valid
@@ -438,15 +442,15 @@ class EntityTranslationTest extends EntityLanguageTestBase {
     $translation = $entity->addTranslation($langcode2);
     $value = $entity !== $translation && $translation->language()->getId() == $langcode2 && $entity->hasTranslation($langcode2);
     $this->assertTrue($value, 'A new translation object can be obtained also by specifying a valid language.');
-    $this->assertEqual($entity->language()->getId(), $default_langcode, 'The original language has been preserved.');
+    $this->assertEqual($default_langcode, $entity->language()->getId(), 'The original language has been preserved.');
     $translation->save();
     $hooks = $this->getHooksInfo();
 
-    $this->assertEqual($hooks['entity_translation_create'], $langcode2, 'The generic entity translation creation hook has fired.');
-    $this->assertEqual($hooks[$entity_type . '_translation_create'], $langcode2, 'The entity-type-specific entity translation creation hook has fired.');
+    $this->assertEqual($langcode2, $hooks['entity_translation_create'], 'The generic entity translation creation hook has fired.');
+    $this->assertEqual($langcode2, $hooks[$entity_type . '_translation_create'], 'The entity-type-specific entity translation creation hook has fired.');
 
-    $this->assertEqual($hooks['entity_translation_insert'], $langcode2, 'The generic entity translation insertion hook has fired.');
-    $this->assertEqual($hooks[$entity_type . '_translation_insert'], $langcode2, 'The entity-type-specific entity translation insertion hook has fired.');
+    $this->assertEqual($langcode2, $hooks['entity_translation_insert'], 'The generic entity translation insertion hook has fired.');
+    $this->assertEqual($langcode2, $hooks[$entity_type . '_translation_insert'], 'The entity-type-specific entity translation insertion hook has fired.');
 
     // Verify that trying to manipulate a translation object referring to a
     // removed translation results in exceptions being thrown.
@@ -458,7 +462,7 @@ class EntityTranslationTest extends EntityLanguageTestBase {
         $translation->{$method}('name', $this->randomMachineName());
         $this->fail("The $method method raises an exception when trying to manipulate a removed translation.");
       }
-      catch (\Exception $e) {
+      catch (Exception $e) {
         // Expected exception; just continue testing.
       }
     }
@@ -467,8 +471,8 @@ class EntityTranslationTest extends EntityLanguageTestBase {
     // translation.
     $entity->save();
     $hooks = $this->getHooksInfo();
-    $this->assertEqual($hooks['entity_translation_delete'], $langcode2, 'The generic entity translation deletion hook has fired.');
-    $this->assertEqual($hooks[$entity_type . '_translation_delete'], $langcode2, 'The entity-type-specific entity translation deletion hook has fired.');
+    $this->assertEqual($langcode2, $hooks['entity_translation_delete'], 'The generic entity translation deletion hook has fired.');
+    $this->assertEqual($langcode2, $hooks[$entity_type . '_translation_delete'], 'The entity-type-specific entity translation deletion hook has fired.');
     $entity = $this->reloadEntity($entity);
     $this->assertFalse($entity->hasTranslation($langcode2), 'The translation does not appear among available translations after saving the entity.');
 
@@ -479,7 +483,7 @@ class EntityTranslationTest extends EntityLanguageTestBase {
         $entity->removeTranslation($invalid_langcode);
         $this->fail("Removing an invalid translation ($invalid_langcode) causes an exception to be thrown.");
       }
-      catch (\Exception $e) {
+      catch (Exception $e) {
         // Expected exception; just continue testing.
       }
     }
@@ -519,10 +523,10 @@ class EntityTranslationTest extends EntityLanguageTestBase {
     $entity->name->value = $this->randomMachineName();
     $name = $default_langcode . '_' . $this->randomMachineName();
     $entity->getTranslation($default_langcode)->name->value = $name;
-    $this->assertEqual($entity->name->value, $name, 'No stale reference for the translation object corresponding to the original language.');
+    $this->assertEqual($name, $entity->name->value, 'No stale reference for the translation object corresponding to the original language.');
     $translation2 = $entity->getTranslation($langcode);
     $translation2->name->value .= $this->randomMachineName();
-    $this->assertNotEqual($translation->name->value, $translation2->name->value, 'No stale reference for the actual translation object.');
+    $this->assertNotEquals($translation->name->value, $translation2->name->value, 'No stale reference for the actual translation object.');
     $this->assertEqual($entity, $translation2->getUntranslated(), 'No stale reference in the actual translation object.');
 
     // Verify that deep-cloning is still available when we are not instantiating
@@ -565,8 +569,8 @@ class EntityTranslationTest extends EntityLanguageTestBase {
         'color' => "color:1:description_$langcode2",
       ],
     ];
-    $this->assertEqual($translation->description->getValue(), $expected, 'Language-aware default values correctly populated.');
-    $this->assertEqual($translation->description->getLangcode(), $langcode2, 'Field object has the expected langcode.');
+    $this->assertEqual($expected, $translation->description->getValue(), 'Language-aware default values correctly populated.');
+    $this->assertEqual($langcode2, $translation->description->getLangcode(), 'Field object has the expected langcode.');
 
     // Reset hook firing information.
     $this->getHooksInfo();
@@ -620,30 +624,30 @@ class EntityTranslationTest extends EntityLanguageTestBase {
 
     // Check that retrieving the current translation works as expected.
     $entity = $this->reloadEntity($entity);
-    $translation = \Drupal::service('entity.repository')->getTranslationFromContext($entity, $langcode2);
-    $this->assertEqual($translation->language()->getId(), $default_langcode, 'The current translation language matches the expected one.');
+    $translation = Drupal::service('entity.repository')->getTranslationFromContext($entity, $langcode2);
+    $this->assertEqual($default_langcode, $translation->language()->getId(), 'The current translation language matches the expected one.');
 
     // Check that language fallback respects language weight by default.
     $language = ConfigurableLanguage::load($languages[$langcode]->getId());
     $language->set('weight', -1);
     $language->save();
-    $translation = \Drupal::service('entity.repository')->getTranslationFromContext($entity, $langcode2);
-    $this->assertEqual($translation->language()->getId(), $langcode, 'The current translation language matches the expected one.');
+    $translation = Drupal::service('entity.repository')->getTranslationFromContext($entity, $langcode2);
+    $this->assertEqual($langcode, $translation->language()->getId(), 'The current translation language matches the expected one.');
 
     // Check that the current translation is properly returned.
-    $translation = \Drupal::service('entity.repository')->getTranslationFromContext($entity);
+    $translation = Drupal::service('entity.repository')->getTranslationFromContext($entity);
     $this->assertEqual($langcode, $translation->language()->getId(), 'The current translation language matches the topmost language fallback candidate.');
     $entity->addTranslation($current_langcode, $values[$current_langcode]);
-    $translation = \Drupal::service('entity.repository')->getTranslationFromContext($entity);
+    $translation = Drupal::service('entity.repository')->getTranslationFromContext($entity);
     $this->assertEqual($current_langcode, $translation->language()->getId(), 'The current translation language matches the current language.');
 
     // Check that if the entity has no translation no fallback is applied.
     $entity2 = $controller->create([$langcode_key => $default_langcode]);
-    // Get an view builder.
+    // Get a view builder.
     $controller = $this->entityTypeManager->getViewBuilder($entity_type);
     $entity2_build = $controller->view($entity2);
     $entity2_output = (string) $renderer->renderRoot($entity2_build);
-    $translation = \Drupal::service('entity.repository')->getTranslationFromContext($entity2, $default_langcode);
+    $translation = Drupal::service('entity.repository')->getTranslationFromContext($entity2, $default_langcode);
     $translation_build = $controller->view($translation);
     $translation_output = (string) $renderer->renderRoot($translation_build);
     $this->assertSame($entity2_output, $translation_output, 'When the entity has no translation no fallback is applied.');
@@ -652,7 +656,7 @@ class EntityTranslationTest extends EntityLanguageTestBase {
     $controller = $this->entityTypeManager->getViewBuilder($entity_type);
     $build = $controller->view($entity);
     $renderer->renderRoot($build);
-    $this->assertEqual($build['label']['#markup'], $values[$current_langcode]['name'], 'By default the entity is rendered in the current language.');
+    $this->assertEqual($values[$current_langcode]['name'], $build['label']['#markup'], 'By default the entity is rendered in the current language.');
 
     $langcodes = array_combine($this->langcodes, $this->langcodes);
     // We have no translation for the $langcode2 language, hence the expected
@@ -664,7 +668,7 @@ class EntityTranslationTest extends EntityLanguageTestBase {
       // making the renderable array keys available to compare.
       unset($build['#cache']);
       $renderer->renderRoot($build);
-      $this->assertEqual($build['label']['#markup'], $values[$expected]['name'], 'The entity is rendered in the expected language.');
+      $this->assertEqual($values[$expected]['name'], $build['label']['#markup'], 'The entity is rendered in the expected language.');
     }
   }
 
@@ -676,7 +680,7 @@ class EntityTranslationTest extends EntityLanguageTestBase {
     // in field definitions.
     $entity_type = 'entity_test_mulrev';
     $this->state->set('entity_test.field_definitions.translatable', ['name' => FALSE]);
-    $entity_field_manager = \Drupal::service('entity_field.manager');
+    $entity_field_manager = Drupal::service('entity_field.manager');
     $entity_field_manager->clearCachedFieldDefinitions();
     $definitions = $entity_field_manager->getBaseFieldDefinitions($entity_type);
     $this->assertFalse($definitions['name']->isTranslatable(), 'Field translatability can be disabled programmatically.');
@@ -707,7 +711,7 @@ class EntityTranslationTest extends EntityLanguageTestBase {
         $entity_field_manager->getBaseFieldDefinitions($entity_type);
         $this->fail("Field $name cannot be translatable.");
       }
-      catch (\LogicException $e) {
+      catch (LogicException $e) {
         // Expected exception; just continue testing.
       }
     }
@@ -743,7 +747,7 @@ class EntityTranslationTest extends EntityLanguageTestBase {
     ];
     $entity = $controller->create($values);
     foreach ([$this->fieldName, $this->untranslatableFieldName] as $field_name) {
-      $this->assertEqual($entity->get($field_name)->getLangcode(), $langcode, 'Field language works as expected.');
+      $this->assertEqual($langcode, $entity->get($field_name)->getLangcode(), 'Field language works as expected.');
     }
 
     // Check that field languages keep matching entity language even after
@@ -751,7 +755,7 @@ class EntityTranslationTest extends EntityLanguageTestBase {
     $langcode = $this->langcodes[1];
     $entity->{$langcode_key}->value = $langcode;
     foreach ([$this->fieldName, $this->untranslatableFieldName] as $field_name) {
-      $this->assertEqual($entity->get($field_name)->getLangcode(), $langcode, 'Field language works as expected after changing entity language.');
+      $this->assertEqual($langcode, $entity->get($field_name)->getLangcode(), 'Field language works as expected after changing entity language.');
     }
 
     // Check that entity translation does not affect the language of original
@@ -760,7 +764,7 @@ class EntityTranslationTest extends EntityLanguageTestBase {
     $entity->addTranslation($this->langcodes[2], [$this->fieldName => $this->randomMachineName()]);
     $entity->{$langcode_key}->value = $langcode;
     foreach ([$this->fieldName, $this->untranslatableFieldName] as $field_name) {
-      $this->assertEqual($entity->get($field_name)->getLangcode(), $langcode, 'Field language works as expected after translating the entity and changing language.');
+      $this->assertEqual($langcode, $entity->get($field_name)->getLangcode(), 'Field language works as expected after translating the entity and changing language.');
     }
 
     // Check that setting the default language to an existing translation
@@ -769,7 +773,7 @@ class EntityTranslationTest extends EntityLanguageTestBase {
       $entity->{$langcode_key}->value = $this->langcodes[2];
       $this->fail('An exception is thrown when setting the default language to an existing translation language');
     }
-    catch (\InvalidArgumentException $e) {
+    catch (InvalidArgumentException $e) {
       // Expected exception; just continue testing.
     }
   }
@@ -794,7 +798,7 @@ class EntityTranslationTest extends EntityLanguageTestBase {
     foreach ($langcodes as $langcode) {
       $adapter = $entity->getTranslation($langcode)->getTypedData();
       $name = $adapter->get('name')->value;
-      $this->assertEqual($name, $values[$langcode]['name'], new FormattableMarkup('Name correctly retrieved from "@langcode" adapter', ['@langcode' => $langcode]));
+      $this->assertEqual($values[$langcode]['name'], $name, new FormattableMarkup('Name correctly retrieved from "@langcode" adapter', ['@langcode' => $langcode]));
     }
   }
 
@@ -882,8 +886,8 @@ class EntityTranslationTest extends EntityLanguageTestBase {
     $entity->save();
 
     // Assert there are no deleted languages in the lists yet.
-    $this->assertNull(\Drupal::state()->get('entity_test.delete.translatable_test_field'));
-    $this->assertNull(\Drupal::state()->get('entity_test.delete.untranslatable_test_field'));
+    $this->assertNull(Drupal::state()->get('entity_test.delete.translatable_test_field'));
+    $this->assertNull(Drupal::state()->get('entity_test.delete.untranslatable_test_field'));
 
     // Remove the second and third langcodes from the entity.
     $entity->removeTranslation('l1');
@@ -892,32 +896,32 @@ class EntityTranslationTest extends EntityLanguageTestBase {
 
     // Ensure that for the translatable test field the second and third
     // langcodes are in the deleted languages list.
-    $actual = \Drupal::state()->get('entity_test.delete.translatable_test_field');
+    $actual = Drupal::state()->get('entity_test.delete.translatable_test_field');
     $expected_translatable = ['l1', 'l2'];
     sort($actual);
     sort($expected_translatable);
-    $this->assertEqual($actual, $expected_translatable);
+    $this->assertEqual($expected_translatable, $actual);
     // Ensure that the untranslatable test field is untouched.
-    $this->assertNull(\Drupal::state()->get('entity_test.delete.untranslatable_test_field'));
+    $this->assertNull(Drupal::state()->get('entity_test.delete.untranslatable_test_field'));
 
     // Delete the entity, which removes all remaining translations.
     $entity->delete();
 
     // All languages have been deleted now.
-    $actual = \Drupal::state()->get('entity_test.delete.translatable_test_field');
+    $actual = Drupal::state()->get('entity_test.delete.translatable_test_field');
     $expected_translatable[] = 'en';
     $expected_translatable[] = 'l0';
     sort($actual);
     sort($expected_translatable);
-    $this->assertEqual($actual, $expected_translatable);
+    $this->assertEqual($expected_translatable, $actual);
 
     // The untranslatable field is shared and only deleted once, for the
     // default langcode.
-    $actual = \Drupal::state()->get('entity_test.delete.untranslatable_test_field');
+    $actual = Drupal::state()->get('entity_test.delete.untranslatable_test_field');
     $expected_untranslatable = ['en'];
     sort($actual);
     sort($expected_untranslatable);
-    $this->assertEqual($actual, $expected_untranslatable);
+    $this->assertEqual($expected_untranslatable, $actual);
   }
 
   /**
@@ -1017,13 +1021,13 @@ class EntityTranslationTest extends EntityLanguageTestBase {
 
     // Test that the default translation object is put into the translation
     // object cache when a new translation object is initialized.
-    $entity = \Drupal::entityTypeManager()->getStorage($entity->getEntityTypeId())->loadUnchanged($entity->id());
+    $entity = Drupal::entityTypeManager()->getStorage($entity->getEntityTypeId())->loadUnchanged($entity->id());
     $default_translation_spl_object_hash = spl_object_hash($entity);
     $this->assertEquals($default_translation_spl_object_hash, spl_object_hash($entity->getTranslation($translation_langcode)->getTranslation($default_langcode)));
 
     // Test that non-default translations are always served from the translation
     // object cache.
-    $entity = \Drupal::entityTypeManager()->getStorage($entity->getEntityTypeId())->loadUnchanged($entity->id());
+    $entity = Drupal::entityTypeManager()->getStorage($entity->getEntityTypeId())->loadUnchanged($entity->id());
     $this->assertEquals(spl_object_hash($entity->getTranslation($translation_langcode)), spl_object_hash($entity->getTranslation($translation_langcode)));
     $this->assertEquals(spl_object_hash($entity->getTranslation($translation_langcode)), spl_object_hash($entity->getTranslation($translation_langcode)->getTranslation($default_langcode)->getTranslation($translation_langcode)));
   }

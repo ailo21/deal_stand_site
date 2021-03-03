@@ -2,7 +2,9 @@
 
 namespace Drupal\Tests\system\Kernel\Common;
 
+use Drupal;
 use Drupal\KernelTests\KernelTestBase;
+use LogicException;
 
 /**
  * Test page rendering hooks.
@@ -16,7 +18,6 @@ class PageRenderTest extends KernelTestBase {
    */
   public function testHookPageAttachmentsExceptions() {
     $this->enableModules(['common_test', 'system']);
-    \Drupal::service('router.builder')->rebuild();
 
     $this->assertPageRenderHookExceptions('common_test', 'hook_page_attachments');
   }
@@ -26,7 +27,6 @@ class PageRenderTest extends KernelTestBase {
    */
   public function testHookPageAlter() {
     $this->enableModules(['common_test', 'system']);
-    \Drupal::service('router.builder')->rebuild();
 
     $this->assertPageRenderHookExceptions('common_test', 'hook_page_attachments_alter');
   }
@@ -40,41 +40,41 @@ class PageRenderTest extends KernelTestBase {
    *   The page render hook to assert expected exceptions for.
    */
   public function assertPageRenderHookExceptions($module, $hook) {
-    $html_renderer = \Drupal::getContainer()->get('main_content_renderer.html');
+    $html_renderer = Drupal::getContainer()->get('main_content_renderer.html');
 
     // Assert a valid hook implementation doesn't trigger an exception.
     $page = [];
     $html_renderer->invokePageAttachmentHooks($page);
 
     // Assert that hooks can set cache tags.
-    $this->assertEqual($page['#cache']['tags'], ['example']);
-    $this->assertEqual($page['#cache']['contexts'], ['user.permissions']);
+    $this->assertEqual(['example'], $page['#cache']['tags']);
+    $this->assertEqual(['user.permissions'], $page['#cache']['contexts']);
 
     // Assert an invalid hook implementation doesn't trigger an exception.
-    \Drupal::state()->set($module . '.' . $hook . '.descendant_attached', TRUE);
+    Drupal::state()->set($module . '.' . $hook . '.descendant_attached', TRUE);
     $assertion = $hook . '() implementation that sets #attached on a descendant triggers an exception';
     $page = [];
     try {
       $html_renderer->invokePageAttachmentHooks($page);
       $this->error($assertion);
     }
-    catch (\LogicException $e) {
-      $this->assertEqual($e->getMessage(), 'Only #attached and #cache may be set in ' . $hook . '().');
+    catch (LogicException $e) {
+      $this->assertEqual('Only #attached and #cache may be set in ' . $hook . '().', $e->getMessage());
     }
-    \Drupal::state()->set('bc_test.' . $hook . '.descendant_attached', FALSE);
+    Drupal::state()->set('bc_test.' . $hook . '.descendant_attached', FALSE);
 
     // Assert an invalid hook implementation doesn't trigger an exception.
-    \Drupal::state()->set('bc_test.' . $hook . '.render_array', TRUE);
+    Drupal::state()->set('bc_test.' . $hook . '.render_array', TRUE);
     $assertion = $hook . '() implementation that sets a child render array triggers an exception';
     $page = [];
     try {
       $html_renderer->invokePageAttachmentHooks($page);
       $this->error($assertion);
     }
-    catch (\LogicException $e) {
-      $this->assertEqual($e->getMessage(), 'Only #attached and #cache may be set in ' . $hook . '().');
+    catch (LogicException $e) {
+      $this->assertEqual('Only #attached and #cache may be set in ' . $hook . '().', $e->getMessage());
     }
-    \Drupal::state()->set($module . '.' . $hook . '.render_array', FALSE);
+    Drupal::state()->set($module . '.' . $hook . '.render_array', FALSE);
   }
 
 }

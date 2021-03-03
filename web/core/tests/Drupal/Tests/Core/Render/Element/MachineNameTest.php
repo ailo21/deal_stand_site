@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\Core\Render\Element;
 
+use Drupal;
 use Drupal\Core\Access\CsrfTokenGenerator;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormStateInterface;
@@ -88,7 +89,7 @@ class MachineNameTest extends UnitTestCase {
     $container = $this->prophesize(ContainerInterface::class);
     $container->get('language_manager')->willReturn($language_manager->reveal());
     $container->get('csrf_token')->willReturn($csrf_token->reveal());
-    \Drupal::setContainer($container->reveal());
+    Drupal::setContainer($container->reveal());
 
     $element = MachineName::processMachineName($element, $form_state, $complete_form);
     $settings = $element['#attached']['drupalSettings']['machineName']['#source'];
@@ -108,16 +109,6 @@ class MachineNameTest extends UnitTestCase {
     foreach ($allowed_options as $key) {
       $this->assertArrayHasKey($key, $settings);
     }
-  }
-
-}
-
-namespace Drupal\Core\Render\Element;
-
-if (!function_exists('t')) {
-
-  function t($string, array $args = []) {
-    return strtr($string, $args);
   }
 
 }

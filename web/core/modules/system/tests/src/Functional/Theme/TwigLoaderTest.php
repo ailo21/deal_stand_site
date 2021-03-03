@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\system\Functional\Theme;
 
+use Drupal;
 use Drupal\Tests\BrowserTestBase;
 
 /**
@@ -27,13 +28,13 @@ class TwigLoaderTest extends BrowserTestBase {
    * Tests adding an additional twig loader to the loader chain.
    */
   public function testTwigLoaderAddition() {
-    $environment = \Drupal::service('twig');
+    $environment = Drupal::service('twig');
 
     $template = $environment->loadTemplate('kittens');
-    $this->assertEqual($template->render([]), 'kittens', 'Passing "kittens" to the custom Twig loader returns "kittens".');
+    $this->assertEqual('kittens', $template->render([]), 'Passing "kittens" to the custom Twig loader returns "kittens".');
 
     $template = $environment->loadTemplate('meow');
-    $this->assertEqual($template->render([]), 'cats', 'Passing something other than "kittens" to the custom Twig loader returns "cats".');
+    $this->assertEqual('cats', $template->render([]), 'Passing something other than "kittens" to the custom Twig loader returns "cats".');
   }
 
 }

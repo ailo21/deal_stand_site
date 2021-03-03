@@ -2,6 +2,7 @@
 
 namespace Drupal\media_library\Plugin\Field\FieldWidget;
 
+use Drupal;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Component\Utility\SortArray;
 use Drupal\Core\Ajax\AjaxResponse;
@@ -16,7 +17,6 @@ use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
@@ -24,6 +24,7 @@ use Drupal\field_ui\FieldUI;
 use Drupal\media\Entity\Media;
 use Drupal\media_library\MediaLibraryUiBuilder;
 use Drupal\media_library\MediaLibraryState;
+use LogicException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Validator\ConstraintViolationInterface;
 
@@ -43,7 +44,7 @@ use Symfony\Component\Validator\ConstraintViolationInterface;
  * @internal
  *   Plugin classes are internal.
  */
-class MediaLibraryWidget extends WidgetBase implements ContainerFactoryPluginInterface, TrustedCallbackInterface {
+class MediaLibraryWidget extends WidgetBase implements TrustedCallbackInterface {
 
   /**
    * Entity type manager service.
@@ -485,9 +486,6 @@ class MediaLibraryWidget extends WidgetBase implements ContainerFactoryPluginInt
         'class' => [
           'js-media-library-open-button',
         ],
-        // The jQuery UI dialog automatically moves focus to the first :tabbable
-        // element of the modal, so we need to disable refocus on the button.
-        'data-disable-refocus' => 'true',
       ],
       '#media_library_state' => $state,
       '#ajax' => [
@@ -496,6 +494,9 @@ class MediaLibraryWidget extends WidgetBase implements ContainerFactoryPluginInt
           'type' => 'throbber',
           'message' => $this->t('Opening media library.'),
         ],
+        // The AJAX system automatically moves focus to the first :tabbable
+        // element of the modal, so we need to disable refocus on the button.
+        'disable-refocus' => TRUE,
       ],
       // Allow the media library to be opened even if there are form errors.
       '#limit_validation_errors' => [],
@@ -666,7 +667,7 @@ class MediaLibraryWidget extends WidgetBase implements ContainerFactoryPluginInt
     $is_remove_button = end($triggering_element['#parents']) === 'remove_button';
     $length = $is_remove_button ? -3 : -1;
     if (count($triggering_element['#array_parents']) < abs($length)) {
-      throw new \LogicException('The element that triggered the widget update was at an unexpected depth. Triggering element parents were: ' . implode(',', $triggering_element['#array_parents']));
+      throw new LogicException('The element that triggered the widget update was at an unexpected depth. Triggering element parents were: ' . implode(',', $triggering_element['#array_parents']));
     }
     $parents = array_slice($triggering_element['#array_parents'], 0, $length);
     $element = NestedArray::getValue($form, $parents);
@@ -684,7 +685,7 @@ class MediaLibraryWidget extends WidgetBase implements ContainerFactoryPluginInt
     }
     else {
       $new_items = count(static::getNewMediaItems($element, $form_state));
-      $announcement = \Drupal::translation()->formatPlural($new_items, 'Added one media item.', 'Added @count media items.');
+      $announcement = Drupal::translation()->formatPlural($new_items, 'Added one media item.', 'Added @count media items.');
     }
 
     $response = new AjaxResponse();
@@ -743,7 +744,7 @@ class MediaLibraryWidget extends WidgetBase implements ContainerFactoryPluginInt
 
     // Get the parents required to find the top-level widget element.
     if (count($triggering_element['#array_parents']) < 4) {
-      throw new \LogicException('Expected the remove button to be more than four levels deep in the form. Triggering element parents were: ' . implode(',', $triggering_element['#array_parents']));
+      throw new LogicException('Expected the remove button to be more than four levels deep in the form. Triggering element parents were: ' . implode(',', $triggering_element['#array_parents']));
     }
     $parents = array_slice($triggering_element['#array_parents'], 0, -3);
     $element = NestedArray::getValue($form, $parents);
@@ -781,7 +782,7 @@ class MediaLibraryWidget extends WidgetBase implements ContainerFactoryPluginInt
    */
   public static function openMediaLibrary(array $form, FormStateInterface $form_state) {
     $triggering_element = $form_state->getTriggeringElement();
-    $library_ui = \Drupal::service('media_library.ui_builder')->buildUi($triggering_element['#media_library_state']);
+    $library_ui = Drupal::service('media_library.ui_builder')->buildUi($triggering_element['#media_library_state']);
     $dialog_options = MediaLibraryUiBuilder::dialogOptions();
     return (new AjaxResponse())
       ->addCommand(new OpenModalDialogCommand($dialog_options['title'], $library_ui, $dialog_options));
@@ -812,11 +813,11 @@ class MediaLibraryWidget extends WidgetBase implements ContainerFactoryPluginInt
     $cardinality_unlimited = ($element['#cardinality'] === FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
     $selection = count($field_state['items']) + count($media);
     if (!$cardinality_unlimited && ($selection > $element['#cardinality'])) {
-      $form_state->setError($element, \Drupal::translation()->formatPlural($element['#cardinality'], 'Only one item can be selected.', 'Only @count items can be selected.'));
+      $form_state->setError($element, Drupal::translation()->formatPlural($element['#cardinality'], 'Only one item can be selected.', 'Only @count items can be selected.'));
     }
 
     // Validate that each selected media is of an allowed bundle.
-    $all_bundles = \Drupal::service('entity_type.bundle.info')->getBundleInfo('media');
+    $all_bundles = Drupal::service('entity_type.bundle.info')->getBundleInfo('media');
     $bundle_labels = array_map(function ($bundle) use ($all_bundles) {
       return $all_bundles[$bundle]['label'];
     }, $element['#target_bundles']);

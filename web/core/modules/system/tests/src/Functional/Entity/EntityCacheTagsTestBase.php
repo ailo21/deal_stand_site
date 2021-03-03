@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\system\Functional\Entity;
 
+use Drupal;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\EventSubscriber\MainContentViewSubscriber;
@@ -13,6 +14,7 @@ use Drupal\field\Entity\FieldConfig;
 use Drupal\Tests\system\Functional\Cache\PageCacheTagsTestBase;
 use Drupal\user\Entity\Role;
 use Drupal\user\RoleInterface;
+use stdClass;
 
 /**
  * Provides helper methods for Entity cache tags tests.
@@ -91,10 +93,10 @@ abstract class EntityCacheTagsTestBase extends PageCacheTagsTestBase {
     }
 
     // Create a referencing and a non-referencing entity.
-    list(
+    [
       $this->referencingEntity,
       $this->nonReferencingEntity,
-    ) = $this->createReferenceTestEntities($this->entity);
+    ] = $this->createReferenceTestEntities($this->entity);
   }
 
   /**
@@ -204,7 +206,7 @@ abstract class EntityCacheTagsTestBase extends PageCacheTagsTestBase {
    * chooses 'default'.
    */
   protected function selectViewMode($entity_type) {
-    $view_modes = \Drupal::entityTypeManager()
+    $view_modes = Drupal::entityTypeManager()
       ->getStorage('entity_view_mode')
       ->loadByProperties(['targetEntityType' => $entity_type]);
 
@@ -267,7 +269,7 @@ abstract class EntityCacheTagsTestBase extends PageCacheTagsTestBase {
       ],
     ])->save();
     /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $display_repository */
-    $display_repository = \Drupal::service('entity_display.repository');
+    $display_repository = Drupal::service('entity_display.repository');
     if (!$this->entity->getEntityType()->hasHandlerClass('view_builder')) {
       $display_repository->getViewDisplay($entity_type, $bundle, 'full')
         ->setComponent($field_name, [
@@ -288,7 +290,7 @@ abstract class EntityCacheTagsTestBase extends PageCacheTagsTestBase {
     }
 
     // Create an entity that does reference the entity being tested.
-    $label_key = \Drupal::entityTypeManager()->getDefinition($entity_type)->getKey('label');
+    $label_key = Drupal::entityTypeManager()->getDefinition($entity_type)->getKey('label');
     $referencing_entity = $this->container->get('entity_type.manager')
       ->getStorage($entity_type)
       ->create([
@@ -349,21 +351,21 @@ abstract class EntityCacheTagsTestBase extends PageCacheTagsTestBase {
     $page_cache_tags = Cache::mergeTags(['http_response', 'rendered'], ['config:user.role.anonymous']);
     // If the block module is used, the Block page display variant is used,
     // which adds the block config entity type's list cache tags.
-    $page_cache_tags = Cache::mergeTags($page_cache_tags, \Drupal::moduleHandler()->moduleExists('block') ? ['config:block_list'] : []);
+    $page_cache_tags = Cache::mergeTags($page_cache_tags, Drupal::moduleHandler()->moduleExists('block') ? ['config:block_list'] : []);
 
     $page_cache_tags_referencing_entity = in_array('user.permissions', $this->getAccessCacheContextsForEntity($this->referencingEntity)) ? ['config:user.role.anonymous'] : [];
 
     $view_cache_tag = [];
     if ($this->entity->getEntityType()->hasHandlerClass('view_builder')) {
-      $view_cache_tag = \Drupal::entityTypeManager()->getViewBuilder($entity_type)
+      $view_cache_tag = Drupal::entityTypeManager()->getViewBuilder($entity_type)
         ->getCacheTags();
     }
 
-    $context_metadata = \Drupal::service('cache_contexts_manager')->convertTokensToKeys($entity_cache_contexts);
+    $context_metadata = Drupal::service('cache_contexts_manager')->convertTokensToKeys($entity_cache_contexts);
     $cache_context_tags = $context_metadata->getCacheTags();
 
     // Generate the cache tags for the (non) referencing entities.
-    $referencing_entity_cache_tags = Cache::mergeTags($this->referencingEntity->getCacheTags(), \Drupal::entityTypeManager()->getViewBuilder('entity_test')->getCacheTags());
+    $referencing_entity_cache_tags = Cache::mergeTags($this->referencingEntity->getCacheTags(), Drupal::entityTypeManager()->getViewBuilder('entity_test')->getCacheTags());
     // Includes the main entity's cache tags, since this entity references it.
     $referencing_entity_cache_tags = Cache::mergeTags($referencing_entity_cache_tags, $this->entity->getCacheTags());
     $referencing_entity_cache_tags = Cache::mergeTags($referencing_entity_cache_tags, $this->getAdditionalCacheTagsForEntity($this->entity));
@@ -371,7 +373,7 @@ abstract class EntityCacheTagsTestBase extends PageCacheTagsTestBase {
     $referencing_entity_cache_tags = Cache::mergeTags($referencing_entity_cache_tags, $cache_context_tags);
     $referencing_entity_cache_tags = Cache::mergeTags($referencing_entity_cache_tags, ['rendered']);
 
-    $non_referencing_entity_cache_tags = Cache::mergeTags($this->nonReferencingEntity->getCacheTags(), \Drupal::entityTypeManager()->getViewBuilder('entity_test')->getCacheTags());
+    $non_referencing_entity_cache_tags = Cache::mergeTags($this->nonReferencingEntity->getCacheTags(), Drupal::entityTypeManager()->getViewBuilder('entity_test')->getCacheTags());
     $non_referencing_entity_cache_tags = Cache::mergeTags($non_referencing_entity_cache_tags, ['rendered']);
 
     // Generate the cache tags for all two possible entity listing paths.
@@ -400,7 +402,7 @@ abstract class EntityCacheTagsTestBase extends PageCacheTagsTestBase {
       $cache_contexts = Cache::mergeContexts($entity_cache_contexts, $additional_cache_contexts);
       $cache_contexts = Cache::mergeContexts($cache_contexts, $access_cache_contexts);
       $redirected_cid = $this->createCacheId($cache_keys, $cache_contexts);
-      $context_metadata = \Drupal::service('cache_contexts_manager')->convertTokensToKeys($cache_contexts);
+      $context_metadata = Drupal::service('cache_contexts_manager')->convertTokensToKeys($cache_contexts);
       $referencing_entity_cache_tags = Cache::mergeTags($referencing_entity_cache_tags, $context_metadata->getCacheTags());
     }
     $this->verifyRenderCache($cid, $referencing_entity_cache_tags, $redirected_cid);
@@ -485,7 +487,7 @@ abstract class EntityCacheTagsTestBase extends PageCacheTagsTestBase {
       // entities, but not for any other routes.
       $referenced_entity_view_mode = $this->selectViewMode($this->entity->getEntityTypeId());
       /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $display_repository */
-      $display_repository = \Drupal::service('entity_display.repository');
+      $display_repository = Drupal::service('entity_display.repository');
       $entity_display = $display_repository->getViewDisplay($entity_type, $this->entity->bundle(), $referenced_entity_view_mode);
       $entity_display->save();
       $this->verifyPageCache($referencing_entity_url, 'MISS');
@@ -618,7 +620,7 @@ abstract class EntityCacheTagsTestBase extends PageCacheTagsTestBase {
     $this->verifyPageCache($non_referencing_entity_url, 'HIT');
 
     // Verify cache hits.
-    $referencing_entity_cache_tags = Cache::mergeTags($this->referencingEntity->getCacheTags(), \Drupal::entityTypeManager()->getViewBuilder('entity_test')->getCacheTags());
+    $referencing_entity_cache_tags = Cache::mergeTags($this->referencingEntity->getCacheTags(), Drupal::entityTypeManager()->getViewBuilder('entity_test')->getCacheTags());
     $referencing_entity_cache_tags = Cache::mergeTags($referencing_entity_cache_tags, ['http_response', 'rendered']);
 
     $nonempty_entity_listing_cache_tags = Cache::mergeTags($this->entity->getEntityType()->getListCacheTags(), $this->getAdditionalCacheTagsForEntityListing());
@@ -644,7 +646,7 @@ abstract class EntityCacheTagsTestBase extends PageCacheTagsTestBase {
   protected function createCacheId(array $keys, array $contexts) {
     $cid_parts = $keys;
 
-    $contexts = \Drupal::service('cache_contexts_manager')->convertTokensToKeys($contexts);
+    $contexts = Drupal::service('cache_contexts_manager')->convertTokensToKeys($contexts);
     $cid_parts = array_merge($cid_parts, $contexts->getKeys());
 
     return implode(':', $cid_parts);
@@ -662,11 +664,11 @@ abstract class EntityCacheTagsTestBase extends PageCacheTagsTestBase {
    */
   protected function verifyRenderCache($cid, array $tags, $redirected_cid = NULL) {
     // Also verify the existence of an entity render cache entry.
-    $cache_entry = \Drupal::cache('render')->get($cid);
-    $this->assertInstanceOf(\stdClass::class, $cache_entry);
+    $cache_entry = Drupal::cache('render')->get($cid);
+    $this->assertInstanceOf(stdClass::class, $cache_entry);
     sort($cache_entry->tags);
     sort($tags);
-    $this->assertIdentical($cache_entry->tags, $tags);
+    $this->assertSame($cache_entry->tags, $tags);
     $is_redirecting_cache_item = isset($cache_entry->data['#cache_redirect']);
     if ($redirected_cid === NULL) {
       $this->assertFalse($is_redirecting_cache_item, 'Render cache entry is not a redirect.');
@@ -688,7 +690,7 @@ abstract class EntityCacheTagsTestBase extends PageCacheTagsTestBase {
         $redirect_cache_metadata['keys'],
         $redirect_cache_metadata['contexts']
       );
-      $this->assertIdentical($redirected_cid, $actual_redirection_cid);
+      $this->assertSame($redirected_cid, $actual_redirection_cid);
       // Finally, verify that the redirected CID exists and has the same cache
       // tags.
       $this->verifyRenderCache($redirected_cid, $tags);

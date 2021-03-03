@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\user\Kernel;
 
+use Drupal;
 use Drupal\block\Entity\Block;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\User;
@@ -57,7 +58,7 @@ class WhosOnlineBlockTest extends KernelTestBase {
       'plugin' => 'views_block:who_s_online-who_s_online_block',
       'region' => 'sidebar_first',
       'id' => 'views_block__who_s_online_who_s_online_block',
-      'theme' => \Drupal::configFactory()->get('system.theme')->get('default'),
+      'theme' => Drupal::configFactory()->get('system.theme')->get('default'),
       'label' => "Who's online",
       'visibility' => [],
       'weight' => 0,
@@ -72,7 +73,7 @@ class WhosOnlineBlockTest extends KernelTestBase {
    * Test the Who's Online block.
    */
   public function testWhosOnlineBlock() {
-    $request_time = \Drupal::time()->getRequestTime();
+    $request_time = Drupal::time()->getRequestTime();
     // Generate users.
     $user1 = User::create([
       'name' => 'user1',
@@ -102,11 +103,11 @@ class WhosOnlineBlockTest extends KernelTestBase {
     $user3->save();
 
     // Test block output.
-    \Drupal::currentUser()->setAccount($user1);
+    Drupal::currentUser()->setAccount($user1);
 
     // Test the rendering of a block.
     $entity = Block::load('views_block__who_s_online_who_s_online_block');
-    $output = \Drupal::entityTypeManager()
+    $output = Drupal::entityTypeManager()
       ->getViewBuilder($entity->getEntityTypeId())
       ->view($entity, 'block');
     $this->setRawContent($this->renderer->renderRoot($output));
@@ -114,7 +115,8 @@ class WhosOnlineBlockTest extends KernelTestBase {
     $this->assertText($user1->getAccountName(), 'Active user 1 found in online list.');
     $this->assertText($user2->getAccountName(), 'Active user 2 found in online list.');
     $this->assertNoText($user3->getAccountName(), 'Inactive user not found in online list.');
-    $this->assertTrue(strpos($this->getRawContent(), $user1->getAccountName()) > strpos($this->getRawContent(), $user2->getAccountName()), 'Online users are ordered correctly.');
+    // Verify that online users are ordered correctly.
+    $this->assertGreaterThan(strpos($this->getRawContent(), $user2->getAccountName()), strpos($this->getRawContent(), $user1->getAccountName()));
   }
 
 }

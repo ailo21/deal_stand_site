@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\views\FunctionalJavascript\Plugin\views\Handler;
 
+use Drupal;
 use Drupal\Tests\SchemaCheckTestTrait;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
@@ -51,10 +52,10 @@ class FieldTest extends WebDriverTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    ViewTestData::createTestViews(get_class($this), ['views_test_config']);
+    ViewTestData::createTestViews(static::class, ['views_test_config']);
 
     // Disable automatic live preview to make the sequence of calls clearer.
-    \Drupal::configFactory()->getEditable('views.settings')->set('ui.always_live_preview', FALSE)->save();
+    Drupal::configFactory()->getEditable('views.settings')->set('ui.always_live_preview', FALSE)->save();
 
     $this->account = $this->drupalCreateUser(['administer views']);
     $this->drupalLogin($this->account);

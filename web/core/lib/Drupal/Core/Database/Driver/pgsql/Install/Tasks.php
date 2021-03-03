@@ -5,6 +5,7 @@ namespace Drupal\Core\Database\Driver\pgsql\Install;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Database\Install\Tasks as InstallTasks;
 use Drupal\Core\Database\DatabaseNotFoundException;
+use Exception;
 
 /**
  * Specifies installation tasks for PostgreSQL databases.
@@ -72,7 +73,7 @@ class Tasks extends InstallTasks {
       Database::getConnection();
       $this->pass('Drupal can CONNECT to the database ok.');
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       // Attempt to create the database if it is not found.
       if ($e instanceof DatabaseNotFoundException) {
         // Remove the database string from connection info.
@@ -107,8 +108,8 @@ class Tasks extends InstallTasks {
         }
       }
       else {
-        // Database connection failed for some other reason than the database
-        // not existing.
+        // Database connection failed for some other reason than a non-existent
+        // database.
         $this->fail(t('Failed to connect to your database server. The server reports the following message: %error.<ul><li>Is the database server running?</li><li>Does the database exist, and have you entered the correct database name?</li><li>Have you entered the correct username and password?</li><li>Have you entered the correct database hostname and port number?</li></ul>', ['%error' => $e->getMessage()]));
         return FALSE;
       }
@@ -131,7 +132,7 @@ class Tasks extends InstallTasks {
         ]));
       }
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       $this->fail(t('Drupal could not determine the encoding of the database was set to UTF-8'));
     }
   }
@@ -155,7 +156,7 @@ class Tasks extends InstallTasks {
       try {
         $database_connection->query($query);
       }
-      catch (\Exception $e) {
+      catch (Exception $e) {
         // Ignore possible errors when the user doesn't have the necessary
         // privileges to ALTER the database.
       }
@@ -207,7 +208,7 @@ class Tasks extends InstallTasks {
       try {
         $database_connection->query($query);
       }
-      catch (\Exception $e) {
+      catch (Exception $e) {
         // Ignore possible errors when the user doesn't have the necessary
         // privileges to ALTER the database.
       }
@@ -275,7 +276,7 @@ class Tasks extends InstallTasks {
 
       $this->pass(t('PostgreSQL has initialized itself.'));
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       $this->fail(t('Drupal could not be correctly setup with the existing database due to the following error: @error.', ['@error' => $e->getMessage()]));
     }
   }

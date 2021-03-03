@@ -4,6 +4,7 @@ namespace Drupal\Core\KeyValueStore;
 
 use Drupal\Component\Serialization\SerializationInterface;
 use Drupal\Core\Database\Connection;
+use Exception;
 
 /**
  * Defines the key/value store factory for the database backend.
@@ -58,9 +59,31 @@ class KeyValueDatabaseExpirableFactory implements KeyValueExpirableFactoryInterf
    * Deletes expired items.
    */
   public function garbageCollection() {
-    $this->connection->delete('key_value_expire')
-      ->condition('expire', REQUEST_TIME, '<')
-      ->execute();
+    try {
+      $this->connection->delete('key_value_expire')
+        ->condition('expire', REQUEST_TIME, '<')
+        ->execute();
+    }
+    catch (Exception $e) {
+      $this->catchException($e);
+    }
+  }
+
+  /**
+   * Act on an exception when the table might not have been created.
+   *
+   * If the table does not yet exist, that's fine, but if the table exists and
+   * yet the query failed, then the exception needs to propagate.
+   *
+   * @param \Exception $e
+   *   The exception.
+   *
+   * @throws \Exception
+   */
+  protected function catchException(Exception $e) {
+    if ($this->connection->schema()->tableExists('key_value_expire')) {
+      throw $e;
+    }
   }
 
 }

@@ -7,15 +7,19 @@
 
 namespace Drupal\Core\ProxyClass\File\MimeType {
 
-    /**
+  use Drupal\Core\DependencyInjection\DependencySerializationTrait;
+  use Symfony\Component\DependencyInjection\ContainerInterface;
+  use Symfony\Component\HttpFoundation\File\MimeType\MimeTypeGuesserInterface;
+
+  /**
      * Provides a proxy class for \Drupal\Core\File\MimeType\ExtensionMimeTypeGuesser.
      *
      * @see \Drupal\Component\ProxyBuilder
      */
-    class ExtensionMimeTypeGuesser implements \Symfony\Component\HttpFoundation\File\MimeType\MimeTypeGuesserInterface
+    class ExtensionMimeTypeGuesser implements \Symfony\Component\Mime\MimeTypeGuesserInterface, MimeTypeGuesserInterface
     {
 
-        use \Drupal\Core\DependencyInjection\DependencySerializationTrait;
+        use DependencySerializationTrait;
 
         /**
          * The id of the original proxied service.
@@ -46,7 +50,7 @@ namespace Drupal\Core\ProxyClass\File\MimeType {
          * @param string $drupal_proxy_original_service_id
          *   The service ID of the original service.
          */
-        public function __construct(\Symfony\Component\DependencyInjection\ContainerInterface $container, $drupal_proxy_original_service_id)
+        public function __construct(ContainerInterface $container, $drupal_proxy_original_service_id)
         {
             $this->container = $container;
             $this->drupalProxyOriginalServiceId = $drupal_proxy_original_service_id;
@@ -78,9 +82,25 @@ namespace Drupal\Core\ProxyClass\File\MimeType {
         /**
          * {@inheritdoc}
          */
-        public function setMapping(array $mapping = NULL)
+        public function guessMimeType($path): string
+        {
+            return $this->lazyLoadItself()->guessMimeType($path);
+        }
+
+        /**
+         * {@inheritdoc}
+         */
+        public function setMapping(?array $mapping = NULL)
         {
             return $this->lazyLoadItself()->setMapping($mapping);
+        }
+
+        /**
+         * {@inheritdoc}
+         */
+        public function isGuesserSupported(): bool
+        {
+            return $this->lazyLoadItself()->isGuesserSupported();
         }
 
     }

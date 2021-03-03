@@ -2,6 +2,7 @@
 
 namespace Drupal\toolbar\Element;
 
+use Drupal;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Render\Element\RenderElement;
 use Drupal\Core\Render\Element;
@@ -17,7 +18,7 @@ class Toolbar extends RenderElement {
    * {@inheritdoc}
    */
   public function getInfo() {
-    $class = get_class($this);
+    $class = static::class;
     return [
       '#pre_render' => [
         [$class, 'preRenderToolbar'],
@@ -101,7 +102,7 @@ class Toolbar extends RenderElement {
    * @return \Drupal\breakpoint\BreakpointManagerInterface
    */
   protected static function breakpointManager() {
-    return \Drupal::service('breakpoint.manager');
+    return Drupal::service('breakpoint.manager');
   }
 
   /**
@@ -110,7 +111,7 @@ class Toolbar extends RenderElement {
    * @return \Drupal\Core\Extension\ModuleHandlerInterface
    */
   protected static function moduleHandler() {
-    return \Drupal::moduleHandler();
+    return Drupal::moduleHandler();
   }
 
 }

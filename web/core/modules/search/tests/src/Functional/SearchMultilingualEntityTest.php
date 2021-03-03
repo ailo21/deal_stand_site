@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\search\Functional;
 
+use Drupal;
 use Drupal\Core\Database\Database;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\language\Entity\ConfigurableLanguage;
@@ -147,14 +148,14 @@ class SearchMultilingualEntityTest extends BrowserTestBase {
     // Run the shutdown function. Testing is a unique case where indexing
     // and searching has to happen in the same request, so running the shutdown
     // function manually is needed to finish the indexing process.
-    $search_index = \Drupal::service('search.index');
+    $search_index = Drupal::service('search.index');
     assert($search_index instanceof SearchIndexInterface);
     $this->assertIndexCounts(6, 8, 'after updating partially');
     $this->assertDatabaseCounts(2, 0, 'after updating partially');
 
     // Now index the rest of the nodes.
     // Make sure index throttle is high enough, via the UI.
-    $this->drupalPostForm('admin/config/search/pages', ['cron_limit' => 20], t('Save configuration'));
+    $this->drupalPostForm('admin/config/search/pages', ['cron_limit' => 20], 'Save configuration');
     $this->assertEqual(20, $this->config('search.settings')->get('index.cron_limit', 100), 'Config setting was saved correctly');
     // Get a new search plugin, to make sure it has this setting.
     $this->plugin = $this->container->get('plugin.manager.search')->createInstance('node_search');
@@ -164,8 +165,8 @@ class SearchMultilingualEntityTest extends BrowserTestBase {
     $this->assertDatabaseCounts(8, 0, 'after updating fully');
 
     // Click the reindex button on the admin page, verify counts, and reindex.
-    $this->drupalPostForm('admin/config/search/pages', [], t('Re-index site'));
-    $this->drupalPostForm(NULL, [], t('Re-index site'));
+    $this->drupalPostForm('admin/config/search/pages', [], 'Re-index site');
+    $this->submitForm([], 'Re-index site');
     $this->assertIndexCounts(8, 8, 'after reindex');
     $this->assertDatabaseCounts(8, 0, 'after reindex');
     $this->plugin->updateIndex();
@@ -187,7 +188,7 @@ class SearchMultilingualEntityTest extends BrowserTestBase {
     $search_result = $this->plugin->execute();
 
     $this->assertCount(1, $search_result, 'The search found only one result');
-    $this->assertEqual($search_result[0]['title'], 'Third node this is the Hungarian title', 'The search finds the correct Hungarian title.');
+    $this->assertEqual('Third node this is the Hungarian title', $search_result[0]['title'], 'The search finds the correct Hungarian title.');
 
     // Test for search with common key word across multiple languages.
     $this->plugin->setSearch('node', [], []);
@@ -203,7 +204,7 @@ class SearchMultilingualEntityTest extends BrowserTestBase {
 
     // Test to check for the language of result items.
     foreach ($search_result as $result) {
-      $this->assertEqual($result['langcode'], 'hu', 'The search found the correct Hungarian result');
+      $this->assertEqual('hu', $result['langcode'], 'The search found the correct Hungarian result');
     }
 
     // Mark one of the nodes for reindexing, using the API function, and
@@ -239,7 +240,7 @@ class SearchMultilingualEntityTest extends BrowserTestBase {
       ->condition('sid', $this->searchableNodes[1]->id())
       ->execute()
       ->fetchField();
-    $this->assertEqual($result, $old, 'Reindex time was not updated if node was already marked');
+    $this->assertEqual($old, $result, 'Reindex time was not updated if node was already marked');
 
     // Add a bogus entry to the search index table using a different search
     // type. This will not appear in the index status, because it is not
@@ -286,8 +287,8 @@ class SearchMultilingualEntityTest extends BrowserTestBase {
   protected function assertIndexCounts($remaining, $total, $message) {
     // Check status via plugin method call.
     $status = $this->plugin->indexStatus();
-    $this->assertEqual($status['remaining'], $remaining, 'Remaining items ' . $message . ' is ' . $remaining);
-    $this->assertEqual($status['total'], $total, 'Total items ' . $message . ' is ' . $total);
+    $this->assertEqual($remaining, $status['remaining'], 'Remaining items ' . $message . ' is ' . $remaining);
+    $this->assertEqual($total, $status['total'], 'Total items ' . $message . ' is ' . $total);
 
     // Check text in progress section of Search settings page. Note that this
     // test avoids using
@@ -296,17 +297,17 @@ class SearchMultilingualEntityTest extends BrowserTestBase {
     $indexed = $total - $remaining;
     $percent = ($total > 0) ? floor(100 * $indexed / $total) : 100;
     $this->drupalGet('admin/config/search/pages');
-    $this->assertText($percent . '% of the site has been indexed.', 'Progress percent text at top of Search settings page is correct at: ' . $message);
-    $this->assertText($remaining . ' item', 'Remaining text at top of Search settings page is correct at: ' . $message);
+    $this->assertText($percent . '% of the site has been indexed.');
+    $this->assertText($remaining . ' item');
 
     // Check text in pages section of Search settings page.
-    $this->assertText($indexed . ' of ' . $total . ' indexed', 'Progress text in pages section of Search settings page is correct at: ' . $message);
+    $this->assertText($indexed . ' of ' . $total . ' indexed');
 
     // Check text on status report page.
     $this->drupalGet('admin/reports/status');
-    $this->assertText('Search index progress', 'Search status section header is present on status report page');
-    $this->assertText($percent . '%', 'Correct percentage is shown on status report page at: ' . $message);
-    $this->assertText('(' . $remaining . ' remaining)', 'Correct remaining value is shown on status report page at: ' . $message);
+    $this->assertText('Search index progress');
+    $this->assertText($percent . '%');
+    $this->assertText('(' . $remaining . ' remaining)');
   }
 
   /**

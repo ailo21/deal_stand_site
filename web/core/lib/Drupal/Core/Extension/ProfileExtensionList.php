@@ -2,6 +2,8 @@
 
 namespace Drupal\Core\Extension;
 
+use Drupal;
+
 /**
  * Provides a list of installation profiles.
  *
@@ -22,7 +24,7 @@ class ProfileExtensionList extends ExtensionList {
     'description' => '',
     'package' => 'Other',
     'version' => NULL,
-    'php' => DRUPAL_MINIMUM_PHP,
+    'php' => Drupal::MINIMUM_PHP,
   ];
 
   /**

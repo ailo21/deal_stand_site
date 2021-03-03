@@ -7,15 +7,19 @@
 
 namespace Drupal\Core\ProxyClass\Lock {
 
-    /**
+  use Drupal\Core\DependencyInjection\DependencySerializationTrait;
+  use Drupal\Core\Lock\LockBackendInterface;
+  use Symfony\Component\DependencyInjection\ContainerInterface;
+
+  /**
      * Provides a proxy class for \Drupal\Core\Lock\PersistentDatabaseLockBackend.
      *
      * @see \Drupal\Component\ProxyBuilder
      */
-    class PersistentDatabaseLockBackend implements \Drupal\Core\Lock\LockBackendInterface
+    class PersistentDatabaseLockBackend implements LockBackendInterface
     {
 
-        use \Drupal\Core\DependencyInjection\DependencySerializationTrait;
+        use DependencySerializationTrait;
 
         /**
          * The id of the original proxied service.
@@ -46,7 +50,7 @@ namespace Drupal\Core\ProxyClass\Lock {
          * @param string $drupal_proxy_original_service_id
          *   The service ID of the original service.
          */
-        public function __construct(\Symfony\Component\DependencyInjection\ContainerInterface $container, $drupal_proxy_original_service_id)
+        public function __construct(ContainerInterface $container, $drupal_proxy_original_service_id)
         {
             $this->container = $container;
             $this->drupalProxyOriginalServiceId = $drupal_proxy_original_service_id;
@@ -70,7 +74,7 @@ namespace Drupal\Core\ProxyClass\Lock {
         /**
          * {@inheritdoc}
          */
-        public function acquire($name, $timeout = 30)
+        public function acquire($name, $timeout = 30.0)
         {
             return $this->lazyLoadItself()->acquire($name, $timeout);
         }

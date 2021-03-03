@@ -7,6 +7,7 @@ use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\Tests\rest\Functional\AnonResourceTestTrait;
 use Drupal\Tests\rest\Functional\ResourceTestBase;
+use UnexpectedValueException;
 
 /**
  * Ensures that the 'api_json' format is not supported by the REST module.
@@ -54,7 +55,7 @@ class RestJsonApiUnsupported extends ResourceTestBase {
         break;
 
       default:
-        throw new \UnexpectedValueException();
+        throw new UnexpectedValueException();
     }
   }
 
@@ -123,10 +124,5 @@ class RestJsonApiUnsupported extends ResourceTestBase {
    * {@inheritdoc}
    */
   protected function getExpectedUnauthorizedAccessCacheability() {}
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function getExpectedBcUnauthorizedAccessMessage($method) {}
 
 }

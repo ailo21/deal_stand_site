@@ -7,6 +7,7 @@ use Drupal\Core\Form\FormStateDecoratorBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\Tests\UnitTestCase;
+use LogicException;
 use Prophecy\Argument;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -162,8 +163,8 @@ class FormStateDecoratorBaseTest extends UnitTestCase {
    */
   public function testSetCachedWithLogicException($cache) {
     $this->decoratedFormState->setCached($cache)
-      ->willThrow(\LogicException::class);
-    $this->expectException(\LogicException::class);
+      ->willThrow(LogicException::class);
+    $this->expectException(LogicException::class);
     $this->formStateDecoratorBase->setCached($cache);
   }
 
@@ -182,7 +183,7 @@ class FormStateDecoratorBaseTest extends UnitTestCase {
    */
   public function testSetExecuted() {
     $this->decoratedFormState->setExecuted()
-      ->shouldBecalled();
+      ->shouldBeCalled();
 
     $this->assertSame($this->formStateDecoratorBase, $this->formStateDecoratorBase->setExecuted());
   }
@@ -277,7 +278,7 @@ class FormStateDecoratorBaseTest extends UnitTestCase {
    */
   public function testSetLimitValidationErrors($limit_validation_errors) {
     $this->decoratedFormState->setLimitValidationErrors($limit_validation_errors)
-      ->shouldBecalled();
+      ->shouldBeCalled();
 
     $this->assertSame($this->formStateDecoratorBase, $this->formStateDecoratorBase->setLimitValidationErrors($limit_validation_errors));
   }
@@ -323,7 +324,7 @@ class FormStateDecoratorBaseTest extends UnitTestCase {
    */
   public function testSetMethod($method) {
     $this->decoratedFormState->setMethod($method)
-      ->shouldBecalled();
+      ->shouldBeCalled();
 
     $this->assertSame($this->formStateDecoratorBase, $this->formStateDecoratorBase->setMethod($method));
   }
@@ -340,7 +341,7 @@ class FormStateDecoratorBaseTest extends UnitTestCase {
   public function testIsMethodType($expected_return_value, $method_type) {
     $this->decoratedFormState->isMethodType($method_type)
       ->willReturn($expected_return_value)
-      ->shouldBecalled();
+      ->shouldBeCalled();
 
     $this->assertSame($expected_return_value, $this->formStateDecoratorBase->isMethodType($method_type));
   }
@@ -405,7 +406,7 @@ class FormStateDecoratorBaseTest extends UnitTestCase {
   public function testIsValidationEnforced($must_validate) {
     $this->decoratedFormState->isValidationEnforced()
       ->willReturn($must_validate)
-      ->shouldBecalled();
+      ->shouldBeCalled();
 
     $this->assertSame($must_validate, $this->formStateDecoratorBase->isValidationEnforced());
   }
@@ -463,7 +464,7 @@ class FormStateDecoratorBaseTest extends UnitTestCase {
   public function testIsProcessingInput($process_input) {
     $this->decoratedFormState->isProcessingInput()
       ->willReturn($process_input)
-      ->shouldBecalled();
+      ->shouldBeCalled();
 
     $this->assertSame($process_input, $this->formStateDecoratorBase->isProcessingInput());
   }
@@ -477,7 +478,7 @@ class FormStateDecoratorBaseTest extends UnitTestCase {
    */
   public function testSetProgrammed($programmed) {
     $this->decoratedFormState->setProgrammed($programmed)
-      ->shouldBecalled();
+      ->shouldBeCalled();
 
     $this->assertSame($this->formStateDecoratorBase, $this->formStateDecoratorBase->setProgrammed($programmed));
   }
@@ -492,7 +493,7 @@ class FormStateDecoratorBaseTest extends UnitTestCase {
   public function testIsProgrammed($programmed) {
     $this->decoratedFormState->isProgrammed()
       ->willReturn($programmed)
-      ->shouldBecalled();
+      ->shouldBeCalled();
 
     $this->assertSame($programmed, $this->formStateDecoratorBase->isProgrammed());
   }
@@ -506,7 +507,7 @@ class FormStateDecoratorBaseTest extends UnitTestCase {
    */
   public function testSetProgrammedBypassAccessCheck($programmed_bypass_access_check) {
     $this->decoratedFormState->setProgrammedBypassAccessCheck($programmed_bypass_access_check)
-      ->shouldBecalled();
+      ->shouldBeCalled();
 
     $this->assertSame($this->formStateDecoratorBase, $this->formStateDecoratorBase->setProgrammedBypassAccessCheck($programmed_bypass_access_check));
   }
@@ -824,7 +825,7 @@ class FormStateDecoratorBaseTest extends UnitTestCase {
 
     $this->decoratedFormState->getValidateHandlers()
       ->willReturn($validate_handlers)
-      ->shouldBecalled();
+      ->shouldBeCalled();
 
     $this->assertSame($validate_handlers, $this->formStateDecoratorBase->getValidateHandlers());
   }

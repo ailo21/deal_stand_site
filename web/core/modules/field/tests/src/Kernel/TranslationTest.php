@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\field\Kernel;
 
+use Drupal;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\language\Entity\ConfigurableLanguage;
@@ -110,7 +111,7 @@ class TranslationTest extends FieldKernelTestBase {
   public function testTranslatableFieldSaveLoad() {
     // Enable field translations for nodes.
     field_test_entity_info_translatable('node', TRUE);
-    $entity_type = \Drupal::entityTypeManager()->getDefinition('node');
+    $entity_type = Drupal::entityTypeManager()->getDefinition('node');
     $this->assertTrue($entity_type->isTranslatable(), 'Nodes are translatable.');
 
     // Prepare the field translations.
@@ -174,9 +175,9 @@ class TranslationTest extends FieldKernelTestBase {
     // @todo Test every translation once the Entity Translation API allows for
     //   multilingual defaults.
     $langcode = $entity->language()->getId();
-    $this->assertEqual($entity->getTranslation($langcode)->{$field_name_default}->getValue(), $field->getDefaultValueLiteral(), new FormattableMarkup('Default value correctly populated for language %language.', ['%language' => $langcode]));
+    $this->assertEqual($field->getDefaultValueLiteral(), $entity->getTranslation($langcode)->{$field_name_default}->getValue(), new FormattableMarkup('Default value correctly populated for language %language.', ['%language' => $langcode]));
 
-    $storage = \Drupal::entityTypeManager()->getStorage($entity_type_id);
+    $storage = Drupal::entityTypeManager()->getStorage($entity_type_id);
     // Check that explicit empty values are not overridden with default values.
     foreach ([NULL, []] as $empty_items) {
       $values = ['type' => $field->getTargetBundle(), 'langcode' => $translation_langcodes[0]];
@@ -204,7 +205,7 @@ class TranslationTest extends FieldKernelTestBase {
    * @see https://www.drupal.org/node/2404739
    */
   public function testFieldAccess() {
-    $access_control_handler = \Drupal::entityTypeManager()->getAccessControlHandler($this->entityType);
+    $access_control_handler = Drupal::entityTypeManager()->getAccessControlHandler($this->entityType);
     $this->assertTrue($access_control_handler->fieldAccess('view', $this->field));
   }
 

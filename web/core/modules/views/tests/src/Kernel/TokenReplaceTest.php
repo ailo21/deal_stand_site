@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\views\Kernel;
 
+use Drupal;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\views\Views;
@@ -22,16 +23,11 @@ class TokenReplaceTest extends ViewsKernelTestBase {
    */
   public static $testViews = ['test_tokens', 'test_invalid_tokens'];
 
-  protected function setUp($import_test_views = TRUE): void {
-    parent::setUp();
-    $this->container->get('router.builder')->rebuild();
-  }
-
   /**
    * Tests core token replacements generated from a view.
    */
   public function testTokenReplacement() {
-    $token_handler = \Drupal::token();
+    $token_handler = Drupal::token();
     $view = Views::getView('test_tokens');
     $view->setDisplay('page_1');
     // Force the view to span more than one page to better test page_count.
@@ -69,8 +65,8 @@ class TokenReplaceTest extends ViewsKernelTestBase {
     foreach ($expected as $token => $expected_output) {
       $bubbleable_metadata = new BubbleableMetadata();
       $output = $token_handler->replace($token, ['view' => $view], [], $bubbleable_metadata);
-      $this->assertIdentical($output, $expected_output, new FormattableMarkup('Token %token replaced correctly.', ['%token' => $token]));
-      $this->assertEqual($bubbleable_metadata, $metadata_tests[$token]);
+      $this->assertSame($expected_output, $output, new FormattableMarkup('Token %token replaced correctly.', ['%token' => $token]));
+      $this->assertEqual($metadata_tests[$token], $bubbleable_metadata);
     }
   }
 
@@ -78,7 +74,7 @@ class TokenReplaceTest extends ViewsKernelTestBase {
    * Tests core token replacements generated from a view.
    */
   public function testTokenReplacementWithMiniPager() {
-    $token_handler = \Drupal::token();
+    $token_handler = Drupal::token();
     $view = Views::getView('test_tokens');
     $view->setDisplay('page_3');
     $this->executeView($view);
@@ -115,7 +111,7 @@ class TokenReplaceTest extends ViewsKernelTestBase {
    * Tests core token replacements generated from a view without results.
    */
   public function testTokenReplacementNoResults() {
-    $token_handler = \Drupal::token();
+    $token_handler = Drupal::token();
     $view = Views::getView('test_tokens');
     $view->setDisplay('page_2');
     $this->executeView($view);
@@ -126,7 +122,7 @@ class TokenReplaceTest extends ViewsKernelTestBase {
 
     foreach ($expected as $token => $expected_output) {
       $output = $token_handler->replace($token, ['view' => $view]);
-      $this->assertIdentical($output, $expected_output, new FormattableMarkup('Token %token replaced correctly.', ['%token' => $token]));
+      $this->assertSame($expected_output, $output, new FormattableMarkup('Token %token replaced correctly.', ['%token' => $token]));
     }
   }
 
@@ -134,7 +130,7 @@ class TokenReplaceTest extends ViewsKernelTestBase {
    * Tests path token replacements generated from a view without a path.
    */
   public function testTokenReplacementNoPath() {
-    $token_handler = \Drupal::token();
+    $token_handler = Drupal::token();
     $view = Views::getView('test_invalid_tokens');
     $view->setDisplay('block_1');
     $this->executeView($view);
@@ -145,7 +141,7 @@ class TokenReplaceTest extends ViewsKernelTestBase {
 
     foreach ($expected as $token => $expected_output) {
       $output = $token_handler->replace($token, ['view' => $view]);
-      $this->assertIdentical($output, $expected_output, new FormattableMarkup('Token %token replaced correctly.', ['%token' => $token]));
+      $this->assertSame($expected_output, $output, new FormattableMarkup('Token %token replaced correctly.', ['%token' => $token]));
     }
   }
 

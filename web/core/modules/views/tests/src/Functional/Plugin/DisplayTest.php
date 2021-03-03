@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\views\Functional\Plugin;
 
+use Drupal;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Tests\views\Functional\ViewTestBase;
 use Drupal\views\Views;
@@ -71,7 +72,7 @@ class DisplayTest extends ViewTestBase {
       'display_title' => 'Display test',
       'position' => 1,
     ];
-    $this->assertEqual($displays['display_test_1'], $options);
+    $this->assertEqual($options, $displays['display_test_1']);
 
     // Add another one to ensure that position is counted up.
     $view->storage->addDisplay('display_test');
@@ -83,7 +84,7 @@ class DisplayTest extends ViewTestBase {
       'display_title' => 'Display test 2',
       'position' => 2,
     ];
-    $this->assertEqual($displays['display_test_2'], $options);
+    $this->assertEqual($options, $displays['display_test_2']);
 
     // Move the second display before the first one in order to test custom
     // sorting.
@@ -97,7 +98,7 @@ class DisplayTest extends ViewTestBase {
     $this->assertInstanceOf(DisplayTestPlugin::class, $view->display_handler);
 
     // Check the test option.
-    $this->assertIdentical($view->display_handler->getOption('test_option'), '');
+    $this->assertSame('', $view->display_handler->getOption('test_option'));
 
     $style = $view->display_handler->getOption('style');
     $style['type'] = 'test_style';
@@ -126,13 +127,13 @@ class DisplayTest extends ViewTestBase {
     $this->assertText('Display test settings');
     // Ensure that the order is as expected.
     $result = $this->xpath('//ul[@id="views-display-menu-tabs"]/li/a/child::text()');
-    $this->assertEqual($result[0]->getText(), 'Display test 2');
-    $this->assertEqual($result[1]->getText(), 'Display test');
+    $this->assertEqual('Display test 2', $result[0]->getText());
+    $this->assertEqual('Display test', $result[1]->getText());
 
     $this->clickLink('Test option title');
 
     $test_option = $this->randomString();
-    $this->drupalPostForm(NULL, ['test_option' => $test_option], t('Apply'));
+    $this->submitForm(['test_option' => $test_option], 'Apply');
 
     // Check the new value has been saved by checking the UI summary text.
     $this->drupalGet('admin/structure/views/view/test_view/edit/display_test_1');
@@ -166,10 +167,10 @@ class DisplayTest extends ViewTestBase {
 
     // Both the feed_1 and the feed_2 display are attached to the page display.
     $view->setDisplay('page_1');
-    $this->assertEqual($view->display_handler->getAttachedDisplays(), ['feed_1', 'feed_2']);
+    $this->assertEqual(['feed_1', 'feed_2'], $view->display_handler->getAttachedDisplays());
 
     $view->setDisplay('feed_1');
-    $this->assertEqual($view->display_handler->getAttachedDisplays(), []);
+    $this->assertEqual([], $view->display_handler->getAttachedDisplays());
   }
 
   /**
@@ -187,7 +188,7 @@ class DisplayTest extends ViewTestBase {
     $view->setDisplay('default');
     $errors = $view->validate();
     $this->assertTrue(!empty($errors), 'More link validation has some errors.');
-    $this->assertEqual($errors['default'][0], 'Display "Master" uses a "more" link but there are no displays it can link to. You need to specify a custom URL.', 'More link validation has the right error.');
+    $this->assertEqual('Display "Master" uses a "more" link but there are no displays it can link to. You need to specify a custom URL.', $errors['default'][0], 'More link validation has the right error.');
 
     // Confirm that the view does not validate when the page display does not exist.
     $view = Views::getView('test_view');
@@ -195,7 +196,7 @@ class DisplayTest extends ViewTestBase {
     $view->display_handler->setOption('use_more', 1);
     $errors = $view->validate();
     $this->assertTrue(!empty($errors), 'More link validation has some errors.');
-    $this->assertEqual($errors['default'][0], 'Display "Master" uses a "more" link but there are no displays it can link to. You need to specify a custom URL.', 'More link validation has the right error.');
+    $this->assertEqual('Display "Master" uses a "more" link but there are no displays it can link to. You need to specify a custom URL.', $errors['default'][0], 'More link validation has the right error.');
   }
 
   /**
@@ -312,7 +313,7 @@ class DisplayTest extends ViewTestBase {
 
     // Rebuild the router, and ensure that the path is not accessible anymore.
     views_invalidate_cache();
-    \Drupal::service('router.builder')->rebuildIfNeeded();
+    Drupal::service('router.builder')->rebuildIfNeeded();
 
     $this->drupalGet('test_display_invalid');
     $this->assertSession()->statusCodeEquals(404);
@@ -363,8 +364,8 @@ class DisplayTest extends ViewTestBase {
     $errors = $view->validate();
     // Check that the error messages are shown.
     $this->assertCount(2, $errors['default'], 'Error messages found for required relationship');
-    $this->assertEqual($errors['default'][0], t('The %handler_type %handler uses a relationship that has been removed.', ['%handler_type' => 'field', '%handler' => 'User: Last login']));
-    $this->assertEqual($errors['default'][1], t('The %handler_type %handler uses a relationship that has been removed.', ['%handler_type' => 'field', '%handler' => 'User: Created']));
+    $this->assertEqual(t('The %handler_type %handler uses a relationship that has been removed.', ['%handler_type' => 'field', '%handler' => 'User: Last login']), $errors['default'][0]);
+    $this->assertEqual(t('The %handler_type %handler uses a relationship that has been removed.', ['%handler_type' => 'field', '%handler' => 'User: Created']), $errors['default'][1]);
   }
 
   /**
@@ -373,7 +374,7 @@ class DisplayTest extends ViewTestBase {
   public function testOutputIsEmpty() {
     $view = Views::getView('test_display_empty');
     $this->executeView($view);
-    $this->assertTrue(count($view->result) > 0, 'Ensure the result of the view is not empty.');
+    $this->assertNotEmpty($view->result);
     $this->assertFalse($view->display_handler->outputIsEmpty(), 'Ensure the view output is marked as not empty.');
     $view->destroy();
 
@@ -414,12 +415,11 @@ class DisplayTest extends ViewTestBase {
    * Test translation rendering settings based on entity translatability.
    */
   public function testTranslationSetting() {
-    \Drupal::service('module_installer')->install(['file']);
-    \Drupal::service('router.builder')->rebuild();
+    Drupal::service('module_installer')->install(['file']);
 
     // By default there should be no language settings.
     $this->checkTranslationSetting();
-    \Drupal::service('module_installer')->install(['language']);
+    Drupal::service('module_installer')->install(['language']);
 
     // Enabling the language module should not make a difference.
     $this->checkTranslationSetting();

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\views\Functional\Plugin;
 
+use Drupal;
 use Drupal\Core\Database\Database;
 use Drupal\dynamic_page_cache\EventSubscriber\DynamicPageCacheSubscriber;
 use Drupal\Tests\views\Functional\ViewTestBase;
@@ -43,11 +44,11 @@ class StyleTableTest extends ViewTestBase {
 
     $result = $this->xpath('//caption/child::text()');
     $this->assertNotEmpty($result, 'The caption appears on the table.');
-    $this->assertEqual(trim($result[0]->getText()), 'caption-text');
+    $this->assertEqual('caption-text', trim($result[0]->getText()));
 
     $result = $this->xpath('//summary/child::text()');
     $this->assertNotEmpty($result, 'The summary appears on the table.');
-    $this->assertEqual(trim($result[0]->getText()), 'summary-text');
+    $this->assertEqual('summary-text', trim($result[0]->getText()));
     // Check that the summary has the right accessibility settings.
     $summary = $this->xpath('//summary')[0];
     $this->assertTrue($summary->hasAttribute('role'));
@@ -55,7 +56,7 @@ class StyleTableTest extends ViewTestBase {
 
     $result = $this->xpath('//caption/details/child::text()[normalize-space()]');
     $this->assertNotEmpty($result, 'The table description appears on the table.');
-    $this->assertEqual(trim($result[0]->getText()), 'description-text');
+    $this->assertEqual('description-text', trim($result[0]->getText()));
 
     // Remove the caption and ensure the caption is not displayed anymore.
     $view = View::load('test_table');
@@ -150,7 +151,7 @@ class StyleTableTest extends ViewTestBase {
    */
   public function testEmptyColumn() {
     // Empty the 'job' data.
-    \Drupal::database()->update('views_test_data')
+    Drupal::database()->update('views_test_data')
       ->fields(['job' => ''])
       ->execute();
 
@@ -169,7 +170,7 @@ class StyleTableTest extends ViewTestBase {
    */
   public function testGrouping() {
     /** @var \Drupal\views\ViewEntityInterface $view */
-    $view = \Drupal::entityTypeManager()->getStorage('view')->load('test_table');
+    $view = Drupal::entityTypeManager()->getStorage('view')->load('test_table');
     // Get a reference to the display configuration so we can alter some
     // specific style options.
     $display = &$view->getDisplay('default');
@@ -210,13 +211,13 @@ class StyleTableTest extends ViewTestBase {
     ];
 
     // Ensure that we don't find the caption containing unsafe markup.
-    $this->assertNoRaw($unsafe_markup, "Didn't find caption containing unsafe markup.");
+    $this->assertNoRaw($unsafe_markup);
     // Ensure that the summary isn't shown.
     $this->assertEmpty($this->xpath('//caption/details'));
 
     // Ensure that all expected captions are found.
     foreach ($expected_captions as $raw_caption) {
-      $this->assertEscaped($raw_caption);
+      $this->assertSession()->assertEscaped($raw_caption);
     }
 
     $display = &$view->getDisplay('default');
@@ -234,11 +235,11 @@ class StyleTableTest extends ViewTestBase {
     ];
 
     // Ensure that we don't find the caption containing unsafe markup.
-    $this->assertNoRaw($unsafe_markup, "Didn't find caption containing unsafe markup.");
+    $this->assertNoRaw($unsafe_markup);
 
     // Ensure that all expected captions are found.
     foreach ($expected_captions as $raw_caption) {
-      $this->assertEscaped($raw_caption);
+      $this->assertSession()->assertEscaped($raw_caption);
     }
   }
 
@@ -246,14 +247,14 @@ class StyleTableTest extends ViewTestBase {
    * Tests the cacheability of the table display.
    */
   public function testTableCacheability() {
-    \Drupal::service('module_installer')->uninstall(['page_cache']);
+    Drupal::service('module_installer')->uninstall(['page_cache']);
 
     $url = 'test-table';
     $this->drupalGet($url);
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertEquals('MISS', $this->drupalGetHeader(DynamicPageCacheSubscriber::HEADER));
+    $this->assertSession()->responseHeaderEquals(DynamicPageCacheSubscriber::HEADER, 'MISS');
     $this->drupalGet($url);
-    $this->assertEquals('HIT', $this->drupalGetHeader(DynamicPageCacheSubscriber::HEADER));
+    $this->assertSession()->responseHeaderEquals(DynamicPageCacheSubscriber::HEADER, 'HIT');
   }
 
 }

@@ -2,10 +2,12 @@
 
 namespace Drupal\Tests\workspaces\Kernel;
 
+use Drupal;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
 use Drupal\Tests\node\Traits\NodeCreationTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
+use InvalidArgumentException;
 
 /**
  * Tests workspace merging.
@@ -54,14 +56,14 @@ class WorkspaceMergerTest extends KernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    $this->entityTypeManager = \Drupal::entityTypeManager();
+    $this->entityTypeManager = Drupal::entityTypeManager();
 
     $this->installEntitySchema('node');
     $this->installEntitySchema('user');
 
     $this->installConfig(['filter', 'node', 'system']);
 
-    $this->installSchema('system', ['key_value_expire', 'sequences']);
+    $this->installSchema('system', ['sequences']);
     $this->installSchema('node', ['node_access']);
 
     $this->createContentType(['type' => 'article']);
@@ -152,7 +154,7 @@ class WorkspaceMergerTest extends KernelTestBase {
     $this->assertWorkspaceAssociation($expected_workspace_association, 'node');
 
     /** @var \Drupal\workspaces\WorkspaceMergerInterface $workspace_merger */
-    $workspace_merger = \Drupal::service('workspaces.operation_factory')->getMerger($this->workspaces['local_1'], $this->workspaces['dev']);
+    $workspace_merger = Drupal::service('workspaces.operation_factory')->getMerger($this->workspaces['local_1'], $this->workspaces['dev']);
 
     // Check that there is no content in Dev that's not also in Local 1.
     $this->assertEmpty($workspace_merger->getDifferringRevisionIdsOnTarget());
@@ -185,7 +187,7 @@ class WorkspaceMergerTest extends KernelTestBase {
     ];
     $this->assertWorkspaceAssociation($expected_workspace_association, 'node');
 
-    $workspace_merger = \Drupal::service('workspaces.operation_factory')->getMerger($this->workspaces['local_1'], $this->workspaces['stage']);
+    $workspace_merger = Drupal::service('workspaces.operation_factory')->getMerger($this->workspaces['local_1'], $this->workspaces['stage']);
 
     // Check that there is no content in Stage that's not also in Local 1.
     $this->assertEmpty($workspace_merger->getDifferringRevisionIdsOnTarget());
@@ -204,7 +206,7 @@ class WorkspaceMergerTest extends KernelTestBase {
 
     // Check that Local 1 can not be merged directly into Stage, since it can
     // only be merged into its direct parent.
-    $this->expectException(\InvalidArgumentException::class);
+    $this->expectException(InvalidArgumentException::class);
     $this->expectExceptionMessage('The contents of a workspace can only be merged into its parent workspace.');
     $workspace_merger->merge();
   }

@@ -5,7 +5,10 @@
  * Hooks provided by the Block module.
  */
 
+use Drupal\block\Entity\Block;
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Block\BlockPluginInterface;
+use Drupal\Core\Session\AccountInterface;
 
 /**
  * @defgroup block_api Block API
@@ -91,7 +94,7 @@ use Drupal\Core\Access\AccessResult;
  *
  * @ingroup block_api
  */
-function hook_block_view_alter(array &$build, \Drupal\Core\Block\BlockPluginInterface $block) {
+function hook_block_view_alter(array &$build, BlockPluginInterface $block) {
   // Remove the contextual links on all blocks that provide them.
   if (isset($build['#contextual_links'])) {
     unset($build['#contextual_links']);
@@ -121,7 +124,7 @@ function hook_block_view_alter(array &$build, \Drupal\Core\Block\BlockPluginInte
  *
  * @ingroup block_api
  */
-function hook_block_view_BASE_BLOCK_ID_alter(array &$build, \Drupal\Core\Block\BlockPluginInterface $block) {
+function hook_block_view_BASE_BLOCK_ID_alter(array &$build, BlockPluginInterface $block) {
   // Change the title of the specific block.
   $build['#title'] = t('New title of the block');
 }
@@ -148,7 +151,7 @@ function hook_block_view_BASE_BLOCK_ID_alter(array &$build, \Drupal\Core\Block\B
  *
  * @ingroup block_api
  */
-function hook_block_build_alter(array &$build, \Drupal\Core\Block\BlockPluginInterface $block) {
+function hook_block_build_alter(array &$build, BlockPluginInterface $block) {
   // Add the 'user' cache context to some blocks.
   if ($block->label() === 'some condition') {
     $build['#cache']['contexts'][] = 'user';
@@ -176,7 +179,7 @@ function hook_block_build_alter(array &$build, \Drupal\Core\Block\BlockPluginInt
  *
  * @ingroup block_api
  */
-function hook_block_build_BASE_BLOCK_ID_alter(array &$build, \Drupal\Core\Block\BlockPluginInterface $block) {
+function hook_block_build_BASE_BLOCK_ID_alter(array &$build, BlockPluginInterface $block) {
   // Explicitly enable placeholdering of the specific block.
   $build['#create_placeholder'] = TRUE;
 }
@@ -205,7 +208,7 @@ function hook_block_build_BASE_BLOCK_ID_alter(array &$build, \Drupal\Core\Block\
  * @see \Drupal\block\BlockAccessControlHandler::checkAccess()
  * @ingroup block_api
  */
-function hook_block_access(\Drupal\block\Entity\Block $block, $operation, \Drupal\Core\Session\AccountInterface $account) {
+function hook_block_access(Block $block, $operation, AccountInterface $account) {
   // Example code that would prevent displaying the 'Powered by Drupal' block in
   // a region different than the footer.
   if ($operation == 'view' && $block->getPluginId() == 'system_powered_by_block') {
@@ -214,6 +217,23 @@ function hook_block_access(\Drupal\block\Entity\Block $block, $operation, \Drupa
 
   // No opinion.
   return AccessResult::neutral();
+}
+
+/**
+ * Allow modules to alter the block plugin definitions.
+ *
+ * @param array[] $definitions
+ *   The array of block definitions, keyed by plugin ID.
+ *
+ * @ingroup block_api
+ */
+function hook_block_alter(&$definitions) {
+  foreach ($definitions as $id => $definition) {
+    if (strpos($id, 'system_menu_block:') === 0) {
+      // Replace $definition properties: id, deriver, class, provider to ones
+      // provided by this custom module.
+    }
+  }
 }
 
 /**

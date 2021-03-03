@@ -5,11 +5,11 @@ namespace Drupal\migrate_drupal\Plugin\migrate\source;
 use Drupal\Component\Plugin\DependentPluginInterface;
 use Drupal\Core\Entity\DependencyTrait;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\Exception\RequirementsException;
 use Drupal\migrate\Plugin\migrate\source\SqlBase;
+use Exception;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -27,7 +27,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @see \Drupal\migrate\Plugin\migrate\source\SqlBase
  * @see \Drupal\migrate\Plugin\migrate\source\SourcePluginBase
  */
-abstract class DrupalSqlBase extends SqlBase implements ContainerFactoryPluginInterface, DependentPluginInterface {
+abstract class DrupalSqlBase extends SqlBase implements DependentPluginInterface {
 
   use DependencyTrait;
 
@@ -77,7 +77,7 @@ abstract class DrupalSqlBase extends SqlBase implements ContainerFactoryPluginIn
           $this->systemData[$result['type']][$result['name']] = $result;
         }
       }
-      catch (\Exception $e) {
+      catch (Exception $e) {
         // The table might not exist for example in tests.
       }
     }
@@ -106,8 +106,12 @@ abstract class DrupalSqlBase extends SqlBase implements ContainerFactoryPluginIn
     if ($this->pluginDefinition['requirements_met'] === TRUE) {
       if (isset($this->pluginDefinition['source_module'])) {
         if ($this->moduleExists($this->pluginDefinition['source_module'])) {
-          if (isset($this->pluginDefinition['minimum_schema_version']) && !$this->getModuleSchemaVersion($this->pluginDefinition['source_module']) < $this->pluginDefinition['minimum_schema_version']) {
-            throw new RequirementsException('Required minimum schema version ' . $this->pluginDefinition['minimum_schema_version'], ['minimum_schema_version' => $this->pluginDefinition['minimum_schema_version']]);
+          if (isset($this->pluginDefinition['minimum_version'])) {
+            $minimum_version = $this->pluginDefinition['minimum_version'];
+            $installed_version = $this->getModuleSchemaVersion($this->pluginDefinition['source_module']);
+            if ($minimum_version > $installed_version) {
+              throw new RequirementsException('Required minimum version ' . $this->pluginDefinition['minimum_version'], ['minimum_version' => $this->pluginDefinition['minimum_version']]);
+            }
           }
         }
         else {
@@ -165,7 +169,7 @@ abstract class DrupalSqlBase extends SqlBase implements ContainerFactoryPluginIn
         ->fetchField();
     }
     // The table might not exist.
-    catch (\Exception $e) {
+    catch (Exception $e) {
       $result = FALSE;
     }
     return $result !== FALSE ? unserialize($result) : $default;

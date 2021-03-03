@@ -2,6 +2,7 @@
 
 namespace Drupal\KernelTests\Core\Entity;
 
+use Drupal;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
@@ -127,9 +128,9 @@ abstract class EntityLanguageTestBase extends EntityKernelTestBase {
       $field->set('translatable', $translatable);
       $field->save();
       $field = FieldConfig::loadByName($entity_type, $bundle, $field_name);
-      $this->assertEqual($field->isTranslatable(), $translatable, 'Field translatability changed.');
+      $this->assertEqual($translatable, $field->isTranslatable(), 'Field translatability changed.');
     }
-    \Drupal::cache('entity')->deleteAll();
+    Drupal::cache('entity')->deleteAll();
   }
 
 }

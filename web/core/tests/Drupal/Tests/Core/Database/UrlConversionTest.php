@@ -2,9 +2,12 @@
 
 namespace Drupal\Tests\Core\Database;
 
+use Drupal;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Site\Settings;
 use Drupal\Tests\UnitTestCase;
+use InvalidArgumentException;
+use RuntimeException;
 
 /**
  * Tests for database URL to/from database connection array conversions.
@@ -38,7 +41,7 @@ class UrlConversionTest extends UnitTestCase {
       ->method('getParameter')
       ->with('site.path')
       ->willReturn('');
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
 
     new Settings(['extension_discovery_scan_tests' => TRUE]);
   }
@@ -48,13 +51,13 @@ class UrlConversionTest extends UnitTestCase {
    *
    * @dataProvider providerConvertDbUrlToConnectionInfo
    */
-  public function testDbUrltoConnectionConversion($root, $url, $database_array) {
+  public function testDbUrlToConnectionConversion($root, $url, $database_array) {
     $result = Database::convertDbUrlToConnectionInfo($url, $root ?: $this->root);
     $this->assertEquals($database_array, $result);
   }
 
   /**
-   * Dataprovider for testDbUrltoConnectionConversion().
+   * Data provider for testDbUrlToConnectionConversion().
    *
    * @return array
    *   Array of arrays with the following elements:
@@ -210,13 +213,13 @@ class UrlConversionTest extends UnitTestCase {
    * @dataProvider providerInvalidArgumentsUrlConversion
    */
   public function testGetInvalidArgumentExceptionInUrlConversion($url, $root, $expected_exception_message) {
-    $this->expectException(\InvalidArgumentException::class);
+    $this->expectException(InvalidArgumentException::class);
     $this->expectExceptionMessage($expected_exception_message);
     Database::convertDbUrlToConnectionInfo($url, $root);
   }
 
   /**
-   * Dataprovider for testGetInvalidArgumentExceptionInUrlConversion().
+   * Data provider for testGetInvalidArgumentExceptionInUrlConversion().
    *
    * @return array
    *   Array of arrays with the following elements:
@@ -248,7 +251,7 @@ class UrlConversionTest extends UnitTestCase {
   }
 
   /**
-   * Dataprovider for testGetConnectionInfoAsUrl().
+   * Data provider for testGetConnectionInfoAsUrl().
    *
    * @return array
    *   Array of arrays with the following elements:
@@ -370,13 +373,13 @@ class UrlConversionTest extends UnitTestCase {
    */
   public function testGetInvalidArgumentGetConnectionInfoAsUrl(array $connection_options, $expected_exception_message) {
     Database::addConnectionInfo('default', 'default', $connection_options);
-    $this->expectException(\InvalidArgumentException::class);
+    $this->expectException(InvalidArgumentException::class);
     $this->expectExceptionMessage($expected_exception_message);
     $url = Database::getConnectionInfoAsUrl();
   }
 
   /**
-   * Dataprovider for testGetInvalidArgumentGetConnectionInfoAsUrl().
+   * Data provider for testGetInvalidArgumentGetConnectionInfoAsUrl().
    *
    * @return array
    *   Array of arrays with the following elements:
@@ -402,7 +405,7 @@ class UrlConversionTest extends UnitTestCase {
    */
   public function testDriverModuleDoesNotExist() {
     $url = 'mysql://test_user:test_pass@test_host:3306/test_database?module=does_not_exist';
-    $this->expectException(\RuntimeException::class);
+    $this->expectException(RuntimeException::class);
     $this->expectExceptionMessage("Cannot find the module 'does_not_exist' for the database driver namespace 'Drupal\does_not_exist\Driver\Database\mysql'");
     Database::convertDbUrlToConnectionInfo($url, $this->root);
   }
@@ -412,7 +415,7 @@ class UrlConversionTest extends UnitTestCase {
    */
   public function testModuleDriverDoesNotExist() {
     $url = 'mysql://test_user:test_pass@test_host:3306/test_database?module=driver_test';
-    $this->expectException(\RuntimeException::class);
+    $this->expectException(RuntimeException::class);
     $this->expectExceptionMessage("Cannot find the database driver namespace 'Drupal\driver_test\Driver\Database\mysql' in module 'driver_test'");
     Database::convertDbUrlToConnectionInfo($url, $this->root);
   }

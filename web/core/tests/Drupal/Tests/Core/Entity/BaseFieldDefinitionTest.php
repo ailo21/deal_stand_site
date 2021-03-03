@@ -2,12 +2,14 @@
 
 namespace Drupal\Tests\Core\Entity;
 
+use Drupal;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\TypedData\DataDefinition;
 use Drupal\Tests\UnitTestCase;
+use InvalidArgumentException;
 
 /**
  * Unit test for BaseFieldDefinition.
@@ -67,7 +69,7 @@ class BaseFieldDefinitionTest extends UnitTestCase {
 
     $container = new ContainerBuilder();
     $container->set('plugin.manager.field.field_type', $field_type_manager);
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
   }
 
   /**
@@ -353,7 +355,7 @@ class BaseFieldDefinitionTest extends UnitTestCase {
    */
   public function testDefaultValueCallback() {
     $definition = BaseFieldDefinition::create($this->fieldType);
-    $callback = get_class($this) . '::mockDefaultValueCallback';
+    $callback = static::class . '::mockDefaultValueCallback';
     // setDefaultValueCallback returns $this.
     $this->assertSame($definition, $definition->setDefaultValueCallback($callback));
   }
@@ -366,8 +368,8 @@ class BaseFieldDefinitionTest extends UnitTestCase {
   public function testInvalidDefaultValueCallback() {
     $definition = BaseFieldDefinition::create($this->fieldType);
     // setDefaultValueCallback returns $this.
-    $this->expectException(\InvalidArgumentException::class);
-    $definition->setDefaultValueCallback([get_class($this), 'mockDefaultValueCallback']);
+    $this->expectException(InvalidArgumentException::class);
+    $definition->setDefaultValueCallback([static::class, 'mockDefaultValueCallback']);
   }
 
   /**

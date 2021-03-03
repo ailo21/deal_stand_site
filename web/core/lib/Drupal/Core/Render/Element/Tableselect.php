@@ -2,6 +2,7 @@
 
 namespace Drupal\Core\Render\Element;
 
+use Drupal;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Component\Utility\Html as HtmlUtility;
@@ -56,7 +57,7 @@ class Tableselect extends Table {
    * {@inheritdoc}
    */
   public function getInfo() {
-    $class = get_class($this);
+    $class = static::class;
     return [
       '#input' => TRUE,
       '#js_select' => TRUE,
@@ -159,7 +160,7 @@ class Tableselect extends Table {
           $row += $element['#options'][$key]['#attributes'];
         }
         // Render the checkbox / radio element.
-        $row['data'][] = \Drupal::service('renderer')->render($element[$key]);
+        $row['data'][] = Drupal::service('renderer')->render($element[$key]);
 
         // As table.html.twig only maps header and row columns by order, create
         // the correct order by iterating over the header fields.

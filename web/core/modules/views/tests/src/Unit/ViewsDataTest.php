@@ -6,6 +6,7 @@ use Drupal\Core\Language\Language;
 use Drupal\Tests\UnitTestCase;
 use Drupal\views\ViewsData;
 use Drupal\views\Tests\ViewTestData;
+use InvalidArgumentException;
 
 /**
  * @coversDefaultClass \Drupal\views\ViewsData
@@ -92,8 +93,8 @@ class ViewsDataTest extends UnitTestCase {
     $data['views_test_data']['job']['area']['id'] = 'text';
     $data['views_test_data']['job']['area']['sub_type'] = ['header', 'footer'];
 
-    // Duplicate the example views test data for different weight, different title,
-    // and matching data.
+    // Duplicate the example views test data for different weight, different
+    // title and matching data.
     $data['views_test_data_2'] = $data['views_test_data'];
     $data['views_test_data_2']['table']['base']['weight'] = 50;
 
@@ -163,7 +164,7 @@ class ViewsDataTest extends UnitTestCase {
     for ($i = 1; $i < count($base_tables); ++$i) {
       $prev = $base_tables[$base_tables_keys[$i - 1]];
       $current = $base_tables[$base_tables_keys[$i]];
-      $this->assertTrue($prev['weight'] <= $current['weight'] && $prev['title'] <= $prev['title'], 'The tables are sorted as expected.');
+      $this->assertGreaterThanOrEqual($prev['weight'], $current['weight']);
     }
 
     // Test the values returned for each base table.
@@ -386,7 +387,7 @@ class ViewsDataTest extends UnitTestCase {
   }
 
   /**
-   * Tests the cache backend behavior with requesting the same table multiple
+   * Tests the cache backend behavior with requesting the same table multiple.
    */
   public function testCacheCallsWithSameTableMultipleTimes() {
     $expected_views_data = $this->viewsDataWithProvider();
@@ -480,7 +481,7 @@ class ViewsDataTest extends UnitTestCase {
   }
 
   /**
-   * Tests the cache calls for an not existing table:
+   * Tests the cache calls for a non-existent table:
    *
    * Warm cache:
    *   - all tables
@@ -518,7 +519,7 @@ class ViewsDataTest extends UnitTestCase {
   }
 
   /**
-   * Tests the cache calls for an not existing table:
+   * Tests the cache calls for a non-existent table:
    *
    * Warm cache:
    *   - all tables
@@ -644,7 +645,7 @@ class ViewsDataTest extends UnitTestCase {
    * @dataProvider providerTestGetEmptyKey
    */
   public function testGetEmptyKey($key) {
-    $this->expectException(\InvalidArgumentException::class);
+    $this->expectException(InvalidArgumentException::class);
     $this->expectExceptionMessage('A valid cache entry key is required. Use getAll() to get all table data.');
 
     $this->viewsData->get($key);

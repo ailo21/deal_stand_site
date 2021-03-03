@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\dblog\Kernel;
 
+use Drupal;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Form\FormInterface;
 use Drupal\Core\Form\FormState;
@@ -78,15 +79,15 @@ class DbLogFormInjectionTest extends KernelTestBase implements FormInterface {
   protected function setUp(): void {
     parent::setUp();
     $this->installSchema('dblog', ['watchdog']);
-    $this->installSchema('system', ['key_value_expire', 'sequences']);
+    $this->installSchema('system', ['sequences']);
     $this->installEntitySchema('user');
-    $this->logger = \Drupal::logger('test_logger');
+    $this->logger = Drupal::logger('test_logger');
     $test_user = User::create([
       'name' => 'foobar',
       'mail' => 'foobar@example.com',
     ]);
     $test_user->save();
-    \Drupal::service('current_user')->setAccount($test_user);
+    Drupal::service('current_user')->setAccount($test_user);
   }
 
   /**

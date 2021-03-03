@@ -10,6 +10,7 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Render\AttachmentsInterface;
 use Drupal\Core\Render\AttachmentsResponseProcessorInterface;
 use Drupal\Core\Render\RendererInterface;
+use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -71,7 +72,7 @@ class AjaxResponseAttachmentsProcessor implements AttachmentsResponseProcessorIn
   protected $moduleHandler;
 
   /**
-   * Constructs a AjaxResponseAttachmentsProcessor object.
+   * Constructs an AjaxResponseAttachmentsProcessor object.
    *
    * @param \Drupal\Core\Asset\AssetResolverInterface $asset_resolver
    *   An asset resolver.
@@ -104,7 +105,7 @@ class AjaxResponseAttachmentsProcessor implements AttachmentsResponseProcessorIn
   public function processAttachments(AttachmentsInterface $response) {
     // @todo Convert to assertion once https://www.drupal.org/node/2408013 lands
     if (!$response instanceof AjaxResponse) {
-      throw new \InvalidArgumentException('\Drupal\Core\Ajax\AjaxResponse instance expected.');
+      throw new InvalidArgumentException('\Drupal\Core\Ajax\AjaxResponse instance expected.');
     }
 
     $request = $this->requestStack->getCurrentRequest();
@@ -142,7 +143,7 @@ class AjaxResponseAttachmentsProcessor implements AttachmentsResponseProcessorIn
       ->setAlreadyLoadedLibraries(isset($ajax_page_state['libraries']) ? explode(',', $ajax_page_state['libraries']) : [])
       ->setSettings(isset($attachments['drupalSettings']) ? $attachments['drupalSettings'] : []);
     $css_assets = $this->assetResolver->getCssAssets($assets, $optimize_css);
-    list($js_assets_header, $js_assets_footer) = $this->assetResolver->getJsAssets($assets, $optimize_js);
+    [$js_assets_header, $js_assets_footer] = $this->assetResolver->getJsAssets($assets, $optimize_js);
 
     // First, AttachedAssets::setLibraries() ensures duplicate libraries are
     // removed: it converts it to a set of libraries if necessary. Second,

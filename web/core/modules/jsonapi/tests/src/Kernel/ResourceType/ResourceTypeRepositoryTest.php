@@ -2,10 +2,13 @@
 
 namespace Drupal\Tests\jsonapi\Kernel\ResourceType;
 
+use Drupal;
 use Drupal\Core\Cache\Cache;
 use Drupal\jsonapi\ResourceType\ResourceType;
 use Drupal\node\Entity\NodeType;
 use Drupal\Tests\jsonapi\Kernel\JsonapiKernelTestBase;
+use LogicException;
+use ReflectionClass;
 
 /**
  * @coversDefaultClass \Drupal\jsonapi\ResourceType\ResourceTypeRepository
@@ -121,13 +124,13 @@ class ResourceTypeRepositoryTest extends JsonapiKernelTestBase {
    * @dataProvider getFieldsProvider
    */
   public function testMappingNameConflictCheck($field_name_list) {
-    $entity_type = \Drupal::entityTypeManager()->getDefinition('node');
+    $entity_type = Drupal::entityTypeManager()->getDefinition('node');
     $bundle = 'article';
-    $reflection_class = new \ReflectionClass($this->resourceTypeRepository);
+    $reflection_class = new ReflectionClass($this->resourceTypeRepository);
     $reflection_method = $reflection_class->getMethod('getFields');
     $reflection_method->setAccessible(TRUE);
 
-    $this->expectException(\LogicException::class);
+    $this->expectException(LogicException::class);
     $this->expectExceptionMessage("The generated alias '{$field_name_list[1]}' for field name '{$field_name_list[0]}' conflicts with an existing field. Please report this in the JSON:API issue queue!");
     $reflection_method->invokeArgs($this->resourceTypeRepository, [$field_name_list, $entity_type, $bundle]);
   }
@@ -160,7 +163,7 @@ class ResourceTypeRepositoryTest extends JsonapiKernelTestBase {
       'node--page',
       'user--user',
     ];
-    \Drupal::state()->set('jsonapi_test_resource_type_builder.disabled_resource_types', $disabled_resource_types);
+    Drupal::state()->set('jsonapi_test_resource_type_builder.disabled_resource_types', $disabled_resource_types);
     Cache::invalidateTags(['jsonapi_resource_types']);
     $this->assertFalse($this->resourceTypeRepository->getByTypeName('node--article')->isInternal());
     $this->assertTrue($this->resourceTypeRepository->getByTypeName('node--page')->isInternal());
@@ -181,10 +184,20 @@ class ResourceTypeRepositoryTest extends JsonapiKernelTestBase {
         'uid' => 'owner',
       ],
     ];
-    \Drupal::state()->set('jsonapi_test_resource_type_builder.resource_type_field_aliases', $resource_type_field_aliases);
+    Drupal::state()->set('jsonapi_test_resource_type_builder.resource_type_field_aliases', $resource_type_field_aliases);
     Cache::invalidateTags(['jsonapi_resource_types']);
     $this->assertSame($this->resourceTypeRepository->getByTypeName('node--article')->getPublicName('uid'), 'author');
     $this->assertSame($this->resourceTypeRepository->getByTypeName('node--page')->getPublicName('uid'), 'owner');
+  }
+
+  /**
+   * Tests that resource type fields can be aliased per resource type.
+   */
+  public function testResourceTypeNameAliasing() {
+    // When this test is implemented, ensure the the tested behaviors in
+    // ResourceTypeNameAliasTest have been covered and remove it. Then remove
+    // the jsonapi_test_resource_type_aliasing test module.
+    $this->markTestSkipped('Remove in https://www.drupal.org/project/drupal/issues/3105318');
   }
 
   /**
@@ -201,7 +214,7 @@ class ResourceTypeRepositoryTest extends JsonapiKernelTestBase {
         'uid' => FALSE,
       ],
     ];
-    \Drupal::state()->set('jsonapi_test_resource_type_builder.disabled_resource_type_fields', $disabled_resource_type_fields);
+    Drupal::state()->set('jsonapi_test_resource_type_builder.disabled_resource_type_fields', $disabled_resource_type_fields);
     Cache::invalidateTags(['jsonapi_resource_types']);
     $this->assertFalse($this->resourceTypeRepository->getByTypeName('node--article')->isFieldEnabled('uid'));
     $this->assertTrue($this->resourceTypeRepository->getByTypeName('node--page')->isFieldEnabled('uid'));

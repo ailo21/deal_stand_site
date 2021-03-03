@@ -2,8 +2,14 @@
 
 namespace Drupal\Tests\Component\Datetime;
 
+use BadMethodCallException;
+use DateInterval;
+use DateTime;
+use DateTimeZone;
 use Drupal\Component\Datetime\DateTimePlus;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
+use UnexpectedValueException;
 
 /**
  * @coversDefaultClass \Drupal\Component\Datetime\DateTimePlus
@@ -69,7 +75,7 @@ class DateTimePlusTest extends TestCase {
    *
    * @dataProvider providerTestDateDiff
    */
-  public function testDateDiff($input1, $input2, $absolute, \DateInterval $expected) {
+  public function testDateDiff($input1, $input2, $absolute, DateInterval $expected) {
     $interval = $input1->diff($input2, $absolute);
     $this->assertEquals($interval, $expected);
   }
@@ -87,7 +93,7 @@ class DateTimePlusTest extends TestCase {
    * @dataProvider providerTestInvalidDateDiff
    */
   public function testInvalidDateDiff($input1, $input2, $absolute) {
-    $this->expectException(\BadMethodCallException::class);
+    $this->expectException(BadMethodCallException::class);
     $this->expectExceptionMessage('Method Drupal\Component\Datetime\DateTimePlus::diff expects parameter 1 to be a \DateTime or \Drupal\Component\Datetime\DateTimePlus object');
     $interval = $input1->diff($input2, $absolute);
   }
@@ -208,7 +214,7 @@ class DateTimePlusTest extends TestCase {
     $this->assertEquals($initial['expected_offset'], $value, sprintf("The current offset is %s: should be %s.", $value, $initial['expected_offset']));
 
     // Transform the date to another timezone.
-    $date->setTimezone(new \DateTimeZone($transform['timezone']));
+    $date->setTimezone(new DateTimeZone($transform['timezone']));
 
     // Check transformed format.
     $value = $date->format($transform['format']);
@@ -291,7 +297,7 @@ class DateTimePlusTest extends TestCase {
    */
   public function testDateTimezoneWithDateTimeObject() {
     // Create a date object with another date object.
-    $input = new \DateTime('now', new \DateTimeZone('Pacific/Midway'));
+    $input = new DateTime('now', new DateTimeZone('Pacific/Midway'));
     $timezone = NULL;
     $expected_timezone = 'Pacific/Midway';
     $message = 'DateTimePlus uses the specified timezone if provided.';
@@ -419,15 +425,15 @@ class DateTimePlusTest extends TestCase {
     return [
       // Test for invalid month names when we are using a short version
       // of the month.
-      ['23 abc 2012', NULL, 'd M Y', "23 abc 2012 contains an invalid month name and did not produce errors.", \InvalidArgumentException::class],
+      ['23 abc 2012', NULL, 'd M Y', "23 abc 2012 contains an invalid month name and did not produce errors.", InvalidArgumentException::class],
       // Test for invalid hour.
-      ['0000-00-00T45:30:00', NULL, 'Y-m-d\TH:i:s', "0000-00-00T45:30:00 contains an invalid hour and did not produce errors.", \UnexpectedValueException::class],
+      ['0000-00-00T45:30:00', NULL, 'Y-m-d\TH:i:s', "0000-00-00T45:30:00 contains an invalid hour and did not produce errors.", UnexpectedValueException::class],
       // Test for invalid day.
-      ['0000-00-99T05:30:00', NULL, 'Y-m-d\TH:i:s', "0000-00-99T05:30:00 contains an invalid day and did not produce errors.", \UnexpectedValueException::class],
+      ['0000-00-99T05:30:00', NULL, 'Y-m-d\TH:i:s', "0000-00-99T05:30:00 contains an invalid day and did not produce errors.", UnexpectedValueException::class],
       // Test for invalid month.
-      ['0000-75-00T15:30:00', NULL, 'Y-m-d\TH:i:s', "0000-75-00T15:30:00 contains an invalid month and did not produce errors.", \UnexpectedValueException::class],
+      ['0000-75-00T15:30:00', NULL, 'Y-m-d\TH:i:s', "0000-75-00T15:30:00 contains an invalid month and did not produce errors.", UnexpectedValueException::class],
       // Test for invalid year.
-      ['11-08-01T15:30:00', NULL, 'Y-m-d\TH:i:s', "11-08-01T15:30:00 contains an invalid year and did not produce errors.", \UnexpectedValueException::class],
+      ['11-08-01T15:30:00', NULL, 'Y-m-d\TH:i:s', "11-08-01T15:30:00 contains an invalid year and did not produce errors.", UnexpectedValueException::class],
 
     ];
   }
@@ -445,17 +451,17 @@ class DateTimePlusTest extends TestCase {
   public function providerTestInvalidDateArrays() {
     return [
       // One year larger than the documented upper limit of checkdate().
-      [['year' => 32768, 'month' => 1, 'day' => 8, 'hour' => 8, 'minute' => 0, 'second' => 0], 'America/Chicago', \InvalidArgumentException::class],
+      [['year' => 32768, 'month' => 1, 'day' => 8, 'hour' => 8, 'minute' => 0, 'second' => 0], 'America/Chicago', InvalidArgumentException::class],
       // One year smaller than the documented lower limit of checkdate().
-      [['year' => 0, 'month' => 1, 'day' => 8, 'hour' => 8, 'minute' => 0, 'second' => 0], 'America/Chicago', \InvalidArgumentException::class],
+      [['year' => 0, 'month' => 1, 'day' => 8, 'hour' => 8, 'minute' => 0, 'second' => 0], 'America/Chicago', InvalidArgumentException::class],
       // Test for invalid month from date array.
-      [['year' => 2010, 'month' => 27, 'day' => 8, 'hour' => 8, 'minute' => 0, 'second' => 0], 'America/Chicago', \InvalidArgumentException::class],
+      [['year' => 2010, 'month' => 27, 'day' => 8, 'hour' => 8, 'minute' => 0, 'second' => 0], 'America/Chicago', InvalidArgumentException::class],
       // Test for invalid hour from date array.
-      [['year' => 2010, 'month' => 2, 'day' => 28, 'hour' => 80, 'minute' => 0, 'second' => 0], 'America/Chicago', \InvalidArgumentException::class],
+      [['year' => 2010, 'month' => 2, 'day' => 28, 'hour' => 80, 'minute' => 0, 'second' => 0], 'America/Chicago', InvalidArgumentException::class],
       // Test for invalid minute from date array.
-      [['year' => 2010, 'month' => 7, 'day' => 8, 'hour' => 8, 'minute' => 88, 'second' => 0], 'America/Chicago', \InvalidArgumentException::class],
+      [['year' => 2010, 'month' => 7, 'day' => 8, 'hour' => 8, 'minute' => 88, 'second' => 0], 'America/Chicago', InvalidArgumentException::class],
       // Regression test for https://www.drupal.org/node/2084455.
-      [['hour' => 59, 'minute' => 1, 'second' => 1], 'America/Chicago', \InvalidArgumentException::class],
+      [['hour' => 59, 'minute' => 1, 'second' => 1], 'America/Chicago', InvalidArgumentException::class],
     ];
   }
 
@@ -509,7 +515,7 @@ class DateTimePlusTest extends TestCase {
       // Create a date object with a specified timezone name.
       [$date_string, 'America/Yellowknife', 'America/Yellowknife', 'DateTimePlus uses the specified timezone if provided.'],
       // Create a date object with a timezone object.
-      [$date_string, new \DateTimeZone('Australia/Canberra'), 'Australia/Canberra', 'DateTimePlus uses the specified timezone if provided.'],
+      [$date_string, new DateTimeZone('Australia/Canberra'), 'Australia/Canberra', 'DateTimePlus uses the specified timezone if provided.'],
       // Create a date object with another date object.
       [new DateTimePlus('now', 'Pacific/Midway'), NULL, 'Pacific/Midway', 'DateTimePlus uses the specified timezone if provided.'],
     ];
@@ -647,37 +653,37 @@ class DateTimePlusTest extends TestCase {
    */
   public function providerTestDateDiff() {
 
-    $empty_interval = new \DateInterval('PT0S');
+    $empty_interval = new DateInterval('PT0S');
 
-    $positive_19_hours = new \DateInterval('PT19H');
+    $positive_19_hours = new DateInterval('PT19H');
 
-    $positive_18_hours = new \DateInterval('PT18H');
+    $positive_18_hours = new DateInterval('PT18H');
 
-    $positive_1_hour = new \DateInterval('PT1H');
+    $positive_1_hour = new DateInterval('PT1H');
 
-    $negative_1_hour = new \DateInterval('PT1H');
+    $negative_1_hour = new DateInterval('PT1H');
     $negative_1_hour->invert = 1;
 
     return [
       // There should be a 19 hour time interval between
       // new years in Sydney and new years in LA in year 2000.
       [
-        'input2' => DateTimePlus::createFromFormat('Y-m-d H:i:s', '2000-01-01 00:00:00', new \DateTimeZone('Australia/Sydney')),
-        'input1' => DateTimePlus::createFromFormat('Y-m-d H:i:s', '2000-01-01 00:00:00', new \DateTimeZone('America/Los_Angeles')),
+        'input2' => DateTimePlus::createFromFormat('Y-m-d H:i:s', '2000-01-01 00:00:00', new DateTimeZone('Australia/Sydney')),
+        'input1' => DateTimePlus::createFromFormat('Y-m-d H:i:s', '2000-01-01 00:00:00', new DateTimeZone('America/Los_Angeles')),
         'absolute' => FALSE,
         'expected' => $positive_19_hours,
       ],
       // In 1970 Sydney did not observe daylight savings time
-      // So there is only a 18 hour time interval.
+      // So there is only an 18 hour time interval.
       [
-        'input2' => DateTimePlus::createFromFormat('Y-m-d H:i:s', '1970-01-01 00:00:00', new \DateTimeZone('Australia/Sydney')),
-        'input1' => DateTimePlus::createFromFormat('Y-m-d H:i:s', '1970-01-01 00:00:00', new \DateTimeZone('America/Los_Angeles')),
+        'input2' => DateTimePlus::createFromFormat('Y-m-d H:i:s', '1970-01-01 00:00:00', new DateTimeZone('Australia/Sydney')),
+        'input1' => DateTimePlus::createFromFormat('Y-m-d H:i:s', '1970-01-01 00:00:00', new DateTimeZone('America/Los_Angeles')),
         'absolute' => FALSE,
         'expected' => $positive_18_hours,
       ],
       [
-        'input1' => DateTimePlus::createFromFormat('U', 3600, new \DateTimeZone('America/Los_Angeles')),
-        'input2' => DateTimePlus::createFromFormat('U', 0, new \DateTimeZone('UTC')),
+        'input1' => DateTimePlus::createFromFormat('U', 3600, new DateTimeZone('America/Los_Angeles')),
+        'input2' => DateTimePlus::createFromFormat('U', 0, new DateTimeZone('UTC')),
         'absolute' => FALSE,
         'expected' => $negative_1_hour,
       ],
@@ -689,7 +695,7 @@ class DateTimePlusTest extends TestCase {
       ],
       [
         'input1' => DateTimePlus::createFromFormat('U', 3600),
-        'input2' => \DateTime::createFromFormat('U', 0),
+        'input2' => DateTime::createFromFormat('U', 0),
         'absolute' => FALSE,
         'expected' => $negative_1_hour,
       ],
@@ -701,7 +707,7 @@ class DateTimePlusTest extends TestCase {
       ],
       [
         'input1' => DateTimePlus::createFromFormat('U', 3600),
-        'input2' => \DateTime::createFromFormat('U', 0),
+        'input2' => DateTime::createFromFormat('U', 0),
         'absolute' => TRUE,
         'expected' => $positive_1_hour,
       ],
@@ -842,7 +848,7 @@ class DateTimePlusTest extends TestCase {
 
     // Parse the same date with ['validate_format' => TRUE] and make sure we
     // get the expected exception.
-    $this->expectException(\UnexpectedValueException::class);
+    $this->expectException(UnexpectedValueException::class);
     $date = DateTimePlus::createFromFormat('Y-m-d H:i:s', '11-03-31 17:44:00', 'UTC', ['validate_format' => TRUE]);
   }
 
@@ -850,7 +856,7 @@ class DateTimePlusTest extends TestCase {
    * Tests setting the default time for date-only objects.
    */
   public function testDefaultDateTime() {
-    $utc = new \DateTimeZone('UTC');
+    $utc = new DateTimeZone('UTC');
 
     $date = DateTimePlus::createFromFormat('Y-m-d H:i:s', '2017-05-23 22:58:00', $utc);
     $this->assertEquals('22:58:00', $date->format('H:i:s'));
@@ -871,11 +877,11 @@ class DateTimePlusTest extends TestCase {
     $this->assertEquals('1970-05-24 07:21:18 Australia/Sydney', $rendered);
 
     $date->setTimestamp(23456789);
-    $rendered = $date->setTimezone(new \DateTimeZone('America/New_York'))->render();
+    $rendered = $date->setTimezone(new DateTimeZone('America/New_York'))->render();
     $this->assertEquals('1970-09-29 07:46:29 America/New_York', $rendered);
 
-    $date = DateTimePlus::createFromFormat('Y-m-d H:i:s', '1970-05-24 07:21:18', new \DateTimeZone('Australia/Sydney'))
-      ->setTimezone(new \DateTimeZone('America/New_York'));
+    $date = DateTimePlus::createFromFormat('Y-m-d H:i:s', '1970-05-24 07:21:18', new DateTimeZone('Australia/Sydney'))
+      ->setTimezone(new DateTimeZone('America/New_York'));
     $rendered = $date->render();
     $this->assertInstanceOf(DateTimePlus::class, $date);
     $this->assertEquals(12345678, $date->getTimestamp());
@@ -891,7 +897,7 @@ class DateTimePlusTest extends TestCase {
     $datetime1 = new DateTimePlus('2009-10-11 12:00:00');
     $datetime2 = new DateTimePlus('2009-10-13 12:00:00');
     $interval = $datetime1->diff($datetime2);
-    $this->assertInstanceOf(\DateInterval::class, $interval);
+    $this->assertInstanceOf(DateInterval::class, $interval);
     $this->assertEquals('+2 days', $interval->format('%R%a days'));
   }
 
@@ -901,18 +907,18 @@ class DateTimePlusTest extends TestCase {
    * @covers ::__call
    */
   public function testChainableNonCallable() {
-    $this->expectException(\BadMethodCallException::class);
+    $this->expectException(BadMethodCallException::class);
     $this->expectExceptionMessage('Call to undefined method Drupal\Component\Datetime\DateTimePlus::nonexistent()');
     $date = new DateTimePlus('now', 'Australia/Sydney');
-    $date->setTimezone(new \DateTimeZone('America/New_York'))->nonexistent();
+    $date->setTimezone(new DateTimeZone('America/New_York'))->nonexistent();
   }
 
   /**
    * @covers ::getPhpDateTime
    */
   public function testGetPhpDateTime() {
-    $new_york = new \DateTimeZone('America/New_York');
-    $berlin = new \DateTimeZone('Europe/Berlin');
+    $new_york = new DateTimeZone('America/New_York');
+    $berlin = new DateTimeZone('Europe/Berlin');
 
     // Test retrieving a cloned copy of the wrapped \DateTime object, and that
     // altering it does not change the DateTimePlus object.

@@ -51,7 +51,7 @@ function system_token_info() {
   ];
 
   /** @var \Drupal\Core\Datetime\DateFormatterInterface $date_formatter */
-  $date_formatter = \Drupal::service('date.formatter');
+  $date_formatter = Drupal::service('date.formatter');
 
   // Date related tokens.
   $date['short'] = [
@@ -68,7 +68,7 @@ function system_token_info() {
   ];
   $date['custom'] = [
     'name' => t("Custom format"),
-    'description' => t('A date in a custom format. See <a href="http://php.net/manual/function.date.php">the PHP documentation</a> for details.'),
+    'description' => t('A date in a custom format. See <a href="https://www.php.net/manual/datetime.format.php#refsect1-datetime.format-parameters">the PHP documentation</a> for details.'),
   ];
   $date['since'] = [
     'name' => t("Time-since"),
@@ -92,11 +92,11 @@ function system_token_info() {
  * Implements hook_tokens().
  */
 function system_tokens($type, $tokens, array $data, array $options, BubbleableMetadata $bubbleable_metadata) {
-  $token_service = \Drupal::token();
+  $token_service = Drupal::token();
 
   $url_options = ['absolute' => TRUE];
   if (isset($options['langcode'])) {
-    $url_options['language'] = \Drupal::languageManager()->getLanguage($options['langcode']);
+    $url_options['language'] = Drupal::languageManager()->getLanguage($options['langcode']);
     $langcode = $options['langcode'];
   }
   else {
@@ -108,25 +108,25 @@ function system_tokens($type, $tokens, array $data, array $options, BubbleableMe
     foreach ($tokens as $name => $original) {
       switch ($name) {
         case 'name':
-          $config = \Drupal::config('system.site');
+          $config = Drupal::config('system.site');
           $bubbleable_metadata->addCacheableDependency($config);
           $site_name = $config->get('name');
           $replacements[$original] = $site_name;
           break;
 
         case 'slogan':
-          $config = \Drupal::config('system.site');
+          $config = Drupal::config('system.site');
           $bubbleable_metadata->addCacheableDependency($config);
           $slogan = $config->get('slogan');
           $build = [
             '#markup' => $slogan,
           ];
           // @todo Fix in https://www.drupal.org/node/2577827
-          $replacements[$original] = \Drupal::service('renderer')->renderPlain($build);
+          $replacements[$original] = Drupal::service('renderer')->renderPlain($build);
           break;
 
         case 'mail':
-          $config = \Drupal::config('system.site');
+          $config = Drupal::config('system.site');
           $bubbleable_metadata->addCacheableDependency($config);
           $replacements[$original] = $config->get('mail');
           break;
@@ -173,11 +173,11 @@ function system_tokens($type, $tokens, array $data, array $options, BubbleableMe
         case 'long':
           $date_format = DateFormat::load($name);
           $bubbleable_metadata->addCacheableDependency($date_format);
-          $replacements[$original] = \Drupal::service('date.formatter')->format($date, $name, '', NULL, $langcode);
+          $replacements[$original] = Drupal::service('date.formatter')->format($date, $name, '', NULL, $langcode);
           break;
 
         case 'since':
-          $replacements[$original] = \Drupal::service('date.formatter')->formatTimeDiffSince($date, ['langcode' => $langcode]);
+          $replacements[$original] = Drupal::service('date.formatter')->formatTimeDiffSince($date, ['langcode' => $langcode]);
           $bubbleable_metadata->setCacheMaxAge(0);
           break;
 
@@ -189,7 +189,7 @@ function system_tokens($type, $tokens, array $data, array $options, BubbleableMe
 
     if ($created_tokens = $token_service->findWithPrefix($tokens, 'custom')) {
       foreach ($created_tokens as $name => $original) {
-        $replacements[$original] = \Drupal::service('date.formatter')->format($date, 'custom', $name, NULL, $langcode);
+        $replacements[$original] = Drupal::service('date.formatter')->format($date, 'custom', $name, NULL, $langcode);
       }
     }
   }

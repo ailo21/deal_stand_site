@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\system\Functional\Theme;
 
+use Drupal;
 use Drupal\Tests\BrowserTestBase;
 
 /**
@@ -25,7 +26,7 @@ class EngineNyanCatTest extends BrowserTestBase {
 
   protected function setUp(): void {
     parent::setUp();
-    \Drupal::service('theme_installer')->install(['test_theme_nyan_cat_engine']);
+    Drupal::service('theme_installer')->install(['test_theme_nyan_cat_engine']);
   }
 
   /**
@@ -36,7 +37,7 @@ class EngineNyanCatTest extends BrowserTestBase {
       ->set('default', 'test_theme_nyan_cat_engine')
       ->save();
     $this->drupalGet('theme-test/template-test');
-    $this->assertText('Success: Template overridden with Nyan Cat theme. All of them', 'Template overridden by Nyan Cat file.');
+    $this->assertText('Success: Template overridden with Nyan Cat theme. All of them');
   }
 
 }

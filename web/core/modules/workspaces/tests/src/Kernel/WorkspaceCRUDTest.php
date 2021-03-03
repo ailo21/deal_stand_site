@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\workspaces\Kernel;
 
+use Drupal;
 use Drupal\Core\Entity\EntityStorageException;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
@@ -64,7 +65,6 @@ class WorkspaceCRUDTest extends KernelTestBase {
 
     $this->setUpCurrentUser();
 
-    $this->installSchema('system', ['key_value_expire']);
     $this->installSchema('node', ['node_access']);
 
     $this->installEntitySchema('workspace');
@@ -75,9 +75,9 @@ class WorkspaceCRUDTest extends KernelTestBase {
 
     $this->createContentType(['type' => 'page']);
 
-    $this->entityTypeManager = \Drupal::entityTypeManager();
-    $this->state = \Drupal::state();
-    $this->workspaceManager = \Drupal::service('workspaces.manager');
+    $this->entityTypeManager = Drupal::entityTypeManager();
+    $this->state = Drupal::state();
+    $this->workspaceManager = Drupal::service('workspaces.manager');
   }
 
   /**
@@ -94,7 +94,7 @@ class WorkspaceCRUDTest extends KernelTestBase {
     $this->setCurrentUser($admin);
 
     /** @var \Drupal\workspaces\WorkspaceAssociationInterface $workspace_association */
-    $workspace_association = \Drupal::service('workspaces.association');
+    $workspace_association = Drupal::service('workspaces.association');
 
     // Create a workspace with a very small number of associated node revisions.
     $workspace_1 = Workspace::create([
@@ -188,7 +188,7 @@ class WorkspaceCRUDTest extends KernelTestBase {
     $live_revisions = $this->getUnassociatedRevisions('node', [$workspace_2_node_1->id()]);
     $this->assertCount(1, $live_revisions);
 
-    $workspace_deleted = \Drupal::state()->get('workspace.deleted');
+    $workspace_deleted = Drupal::state()->get('workspace.deleted');
     $this->assertCount(1, $workspace_deleted);
 
     // Check that we can not create another workspace with the same ID while its
@@ -203,7 +203,7 @@ class WorkspaceCRUDTest extends KernelTestBase {
 
     // Running cron should delete the remaining data as well as the workspace ID
     // from the "workspace.delete" state entry.
-    \Drupal::service('cron')->run();
+    Drupal::service('cron')->run();
 
     $associated_revisions = $workspace_association->getTrackedEntities($workspace_2->id());
     $this->assertCount(0, $associated_revisions);
@@ -218,7 +218,7 @@ class WorkspaceCRUDTest extends KernelTestBase {
     $live_revisions = $this->getUnassociatedRevisions('node');
     $this->assertCount(3, $live_revisions);
 
-    $workspace_deleted = \Drupal::state()->get('workspace.deleted');
+    $workspace_deleted = Drupal::state()->get('workspace.deleted');
     $this->assertCount(0, $workspace_deleted);
   }
 

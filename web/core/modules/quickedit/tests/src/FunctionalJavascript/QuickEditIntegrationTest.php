@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\quickedit\FunctionalJavascript;
 
+use Drupal;
 use Drupal\block_content\Entity\BlockContent;
 use Drupal\block_content\Entity\BlockContentType;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
@@ -86,12 +87,12 @@ class QuickEditIntegrationTest extends QuickEditJavascriptTestBase {
     $this->createEntityReferenceField('node', 'article', $field_name, 'Tags', 'taxonomy_term', 'default', $handler_settings, FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
 
     // Add formatter & widget for "tags" field.
-    \Drupal::entityTypeManager()
+    Drupal::entityTypeManager()
       ->getStorage('entity_form_display')
       ->load('node.article.default')
       ->setComponent($field_name, ['type' => 'entity_reference_autocomplete_tags'])
       ->save();
-    \Drupal::entityTypeManager()
+    Drupal::entityTypeManager()
       ->getStorage('entity_view_display')
       ->load('node.article.default')
       ->setComponent($field_name, ['type' => 'entity_reference_label'])
@@ -179,7 +180,7 @@ class QuickEditIntegrationTest extends QuickEditJavascriptTestBase {
       'node/1/body/en/full'       => 'candidate',
       'node/1/field_tags/en/full' => 'candidate',
     ]);
-    $this->assertEntityInstanceFieldMarkup('node', 1, 0, [
+    $this->assertEntityInstanceFieldMarkup([
       'node/1/title/en/full' => '[contenteditable="true"]',
     ]);
 
@@ -208,9 +209,7 @@ class QuickEditIntegrationTest extends QuickEditJavascriptTestBase {
     ]);
     hold_test_response(FALSE);
 
-    // Wait for CKEditor to load, then verify it has.
-    $this->assertJsCondition('CKEDITOR.status === "loaded"');
-    $this->assertEntityInstanceFieldMarkup('node', 1, 0, [
+    $this->assertEntityInstanceFieldMarkup([
       'node/1/body/en/full'       => '.cke_editable_inline',
       'node/1/field_tags/en/full' => ':not(.quickedit-editor-is-popup)',
     ]);
@@ -231,7 +230,7 @@ class QuickEditIntegrationTest extends QuickEditJavascriptTestBase {
       'node/1/field_tags/en/full' => 'activating',
       'node/1/title/en/full'      => 'candidate',
     ]);
-    $this->assertEntityInstanceFieldMarkup('node', 1, 0, [
+    $this->assertEntityInstanceFieldMarkup([
       'node/1/title/en/full'      => '.quickedit-changed',
       'node/1/field_tags/en/full' => '.quickedit-editor-is-popup',
     ]);
@@ -272,17 +271,23 @@ class QuickEditIntegrationTest extends QuickEditJavascriptTestBase {
       'node/1/field_tags/en/full' => 'saving',
       'node/1/title/en/full'      => 'candidate',
     ]);
-    hold_test_response(FALSE);
-    $this->assertEntityInstanceFieldMarkup('node', 1, 0, [
+    $this->assertEntityInstanceFieldMarkup([
       'node/1/title/en/full'      => '.quickedit-changed',
       'node/1/field_tags/en/full' => '.quickedit-changed',
     ]);
+    hold_test_response(FALSE);
 
     // Wait for the saving of the tags field to complete.
     $this->assertJsCondition("Drupal.quickedit.collections.entities.get('node/1[0]').get('state') === 'closed'");
     $this->assertEntityInstanceStates([
       'node/1[0]' => 'closed',
     ]);
+
+    // Get the load again and ensure the values are the expected values.
+    $this->drupalGet('node/' . $node->id());
+    $this->assertSession()->pageTextContains(' Llamas are awesome!');
+    $this->assertSession()->linkExists('foo');
+    $this->assertSession()->linkExists('bar');
   }
 
   /**
@@ -336,10 +341,7 @@ class QuickEditIntegrationTest extends QuickEditJavascriptTestBase {
     $this->assertEntityInstanceFieldStates('block_content', 1, 0, [
       'block_content/1/body/en/full' => 'active',
     ]);
-
-    // Wait for CKEditor to load, then verify it has.
-    $this->assertJsCondition('CKEDITOR.status === "loaded"');
-    $this->assertEntityInstanceFieldMarkup('block_content', 1, 0, [
+    $this->assertEntityInstanceFieldMarkup([
       'block_content/1/body/en/full' => '.cke_editable_inline',
     ]);
     $this->assertSession()->elementExists('css', '#quickedit-entity-toolbar .quickedit-toolgroup.wysiwyg-main > .cke_chrome .cke_top[role="presentation"] .cke_toolbar[role="toolbar"] .cke_toolgroup[role="presentation"] > .cke_button[title~="Bold"][role="button"]');

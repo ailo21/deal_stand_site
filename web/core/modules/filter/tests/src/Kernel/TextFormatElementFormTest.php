@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\filter\Kernel;
 
+use Drupal;
 use Drupal\Core\Form\FormInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\filter\Entity\FilterFormat;
@@ -44,14 +45,20 @@ class TextFormatElementFormTest extends KernelTestBase implements FormInterface 
     $this->installEntitySchema('user');
     $this->installSchema('system', ['sequences']);
     $this->installConfig(['filter', 'filter_test']);
-    // Filter tips link to the full-page.
-    \Drupal::service('router.builder')->rebuild();
+
+    // Create user 1 so that the user created later in the test has a different
+    // user ID.
+    // @todo Remove in https://www.drupal.org/node/540008.
+    User::create(['uid' => 1, 'name' => 'user1'])->save();
+
     /* @var \Drupal\Core\Render\ElementInfoManager $manager */
-    $manager = \Drupal::service('plugin.manager.element_info');
+    $manager = Drupal::service('plugin.manager.element_info');
     $manager->clearCachedDefinitions();
     $manager->getDefinitions();
     /* @var \Drupal\filter\FilterFormatInterface $filter_test_format */
     $filter_test_format = FilterFormat::load('filter_test');
+    $full_html_format = FilterFormat::load('full_html');
+    $filtered_html_format = FilterFormat::load('filtered_html');
 
     /* @var \Drupal\user\RoleInterface $role */
     $role = Role::create([
@@ -59,6 +66,8 @@ class TextFormatElementFormTest extends KernelTestBase implements FormInterface 
       'label' => 'admin',
     ]);
     $role->grantPermission($filter_test_format->getPermissionName());
+    $role->grantPermission($full_html_format->getPermissionName());
+    $role->grantPermission($filtered_html_format->getPermissionName());
     $role->save();
     $this->testUser = User::create([
       'name' => 'foobar',
@@ -66,7 +75,7 @@ class TextFormatElementFormTest extends KernelTestBase implements FormInterface 
     ]);
     $this->testUser->addRole($role->id());
     $this->testUser->save();
-    \Drupal::service('current_user')->setAccount($this->testUser);
+    Drupal::service('current_user')->setAccount($this->testUser);
   }
 
   /**

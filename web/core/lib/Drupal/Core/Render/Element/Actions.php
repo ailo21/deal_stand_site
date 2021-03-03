@@ -2,6 +2,7 @@
 
 namespace Drupal\Core\Render\Element;
 
+use Drupal;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Render\Element;
@@ -30,7 +31,7 @@ class Actions extends Container {
    * {@inheritdoc}
    */
   public function getInfo() {
-    $class = get_class($this);
+    $class = static::class;
     return [
       '#process' => [
         // @todo Move this to #pre_render.
@@ -100,7 +101,7 @@ class Actions extends Container {
         // Add this button to the corresponding dropbutton.
         // @todo Change #type 'dropbutton' to be based on item-list.html.twig
         //   instead of links.html.twig to avoid this preemptive rendering.
-        $button = \Drupal::service('renderer')->renderPlain($element[$key]);
+        $button = Drupal::service('renderer')->renderPlain($element[$key]);
         $dropbuttons[$dropbutton]['#links'][$key] = [
           'title' => $button,
         ];

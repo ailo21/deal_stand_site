@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\options\Kernel;
 
+use Drupal;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\Tests\field\Kernel\FieldKernelTestBase;
 use Drupal\field\Entity\FieldStorageConfig;
@@ -51,7 +52,6 @@ abstract class OptionsFieldUnitTestBase extends FieldKernelTestBase {
    */
   protected function setUp() {
     parent::setUp();
-    $this->container->get('router.builder')->rebuild();
 
     $this->fieldStorageDefinition = [
       'field_name' => $this->fieldName,
@@ -71,7 +71,7 @@ abstract class OptionsFieldUnitTestBase extends FieldKernelTestBase {
     ]);
     $this->field->save();
 
-    \Drupal::service('entity_display.repository')
+    Drupal::service('entity_display.repository')
       ->getFormDisplay('entity_test', 'entity_test')
       ->setComponent($this->fieldName, [
         'type' => 'options_buttons',

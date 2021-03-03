@@ -2,11 +2,13 @@
 
 namespace Drupal\Core\Archiver;
 
+use Drupal;
 use Drupal\Component\Plugin\Factory\DefaultFactory;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
+use Traversable;
 
 /**
  * Provides an Archiver plugin manager.
@@ -25,7 +27,7 @@ class ArchiverManager extends DefaultPluginManager {
   protected $fileSystem;
 
   /**
-   * Constructs a ArchiverManager object.
+   * Constructs an ArchiverManager object.
    *
    * @param \Traversable $namespaces
    *   An object that implements \Traversable which contains the root paths
@@ -37,13 +39,13 @@ class ArchiverManager extends DefaultPluginManager {
    * @param \Drupal\Core\File\FileSystemInterface $file_system
    *   The file handler.
    */
-  public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler, FileSystemInterface $file_system = NULL) {
+  public function __construct(Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler, FileSystemInterface $file_system = NULL) {
     parent::__construct('Plugin/Archiver', $namespaces, $module_handler, 'Drupal\Core\Archiver\ArchiverInterface', 'Drupal\Core\Archiver\Annotation\Archiver');
     $this->alterInfo('archiver_info');
     $this->setCacheBackend($cache_backend, 'archiver_info_plugins');
     if (!isset($file_system)) {
       @trigger_error('Not defining the final $file_system argument to ' . __METHOD__ . ' is deprecated in drupal:8.8.3 and will throw an error in drupal:10.0.0.', E_USER_DEPRECATED);
-      $file_system = \Drupal::service('file_system');
+      $file_system = Drupal::service('file_system');
     }
     $this->fileSystem = $file_system;
   }

@@ -2,11 +2,14 @@
 
 namespace Drupal\Tests\Component\Utility;
 
+use AssertionError;
+use DOMDocument;
 use Drupal\Component\Render\MarkupInterface;
 use Drupal\Component\Render\MarkupTrait;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Random;
 use PHPUnit\Framework\TestCase;
+use ReflectionProperty;
 
 /**
  * Tests \Drupal\Component\Utility\Html.
@@ -23,7 +26,7 @@ class HtmlTest extends TestCase {
   protected function setUp(): void {
     parent::setUp();
 
-    $property = new \ReflectionProperty('Drupal\Component\Utility\Html', 'seenIdsInit');
+    $property = new ReflectionProperty('Drupal\Component\Utility\Html', 'seenIdsInit');
     $property->setAccessible(TRUE);
     $property->setValue(NULL);
   }
@@ -127,6 +130,7 @@ class HtmlTest extends TestCase {
    *   Test data.
    */
   public function providerTestHtmlGetUniqueId() {
+    // cSpell:disable
     $id = 'abcdefghijklmnopqrstuvwxyz-0123456789';
     return [
       // Verify that letters, digits, and hyphens are not stripped from the ID.
@@ -140,6 +144,7 @@ class HtmlTest extends TestCase {
       ['test-unique-id--2', 'test-unique-id'],
       ['test-unique-id--3', 'test-unique-id'],
     ];
+    // cSpell:enable
   }
 
   /**
@@ -210,6 +215,7 @@ class HtmlTest extends TestCase {
    *   Test data.
    */
   public function providerTestHtmlGetId() {
+    // cSpell:disable
     $id = 'abcdefghijklmnopqrstuvwxyz-0123456789';
     return [
       // Verify that letters, digits, and hyphens are not stripped from the ID.
@@ -222,6 +228,7 @@ class HtmlTest extends TestCase {
       ['test-unique-id', 'test-unique-id'],
       ['test-unique-id', 'test-unique-id'],
     ];
+    // cSpell:enable
   }
 
   /**
@@ -325,7 +332,7 @@ class HtmlTest extends TestCase {
    * @covers ::serialize
    */
   public function testSerialize() {
-    $document = new \DOMDocument();
+    $document = new DOMDocument();
     $result = Html::serialize($document);
     $this->assertSame('', $result);
   }
@@ -343,7 +350,7 @@ class HtmlTest extends TestCase {
    * @dataProvider providerTestTransformRootRelativeUrlsToAbsoluteAssertion
    */
   public function testTransformRootRelativeUrlsToAbsoluteAssertion($scheme_and_host) {
-    $this->expectException(\AssertionError::class);
+    $this->expectException(AssertionError::class);
     Html::transformRootRelativeUrlsToAbsolute('', $scheme_and_host);
   }
 

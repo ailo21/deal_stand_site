@@ -7,6 +7,7 @@ use Drupal\Core\Url;
 use Drupal\link\Plugin\Validation\Constraint\LinkExternalProtocolsConstraint;
 use Drupal\link\Plugin\Validation\Constraint\LinkExternalProtocolsConstraintValidator;
 use Drupal\Tests\UnitTestCase;
+use InvalidArgumentException;
 use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 /**
@@ -42,7 +43,7 @@ class LinkExternalProtocolsConstraintValidatorTest extends UnitTestCase {
   }
 
   /**
-   * Data provider for ::testValidate
+   * Data provider for ::testValidate.
    */
   public function providerValidate() {
     $data = [];
@@ -50,6 +51,7 @@ class LinkExternalProtocolsConstraintValidatorTest extends UnitTestCase {
     // Test allowed protocols.
     $data[] = ['http://www.drupal.org', TRUE];
     $data[] = ['https://www.drupal.org', TRUE];
+    // cSpell:disable-next-line
     $data[] = ['magnet:?xt=urn:sha1:YNCKHTQCWBTRNJIV4WNAE52SJUQCZO5C', TRUE];
 
     // Invalid protocols.
@@ -76,7 +78,7 @@ class LinkExternalProtocolsConstraintValidatorTest extends UnitTestCase {
     $link = $this->createMock('Drupal\link\LinkItemInterface');
     $link->expects($this->any())
       ->method('getUrl')
-      ->willThrowException(new \InvalidArgumentException());
+      ->willThrowException(new InvalidArgumentException());
 
     $context = $this->createMock(ExecutionContextInterface::class);
     $context->expects($this->never())

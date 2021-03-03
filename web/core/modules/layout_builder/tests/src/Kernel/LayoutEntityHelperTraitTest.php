@@ -17,6 +17,7 @@ use Drupal\layout_builder\Section;
 use Drupal\layout_builder\SectionStorage\SectionStorageManagerInterface;
 use Drupal\layout_builder\SectionStorageInterface;
 use Prophecy\Argument;
+use UnexpectedValueException;
 
 /**
  * @coversDefaultClass \Drupal\layout_builder\LayoutEntityHelperTrait
@@ -41,13 +42,12 @@ class LayoutEntityHelperTraitTest extends KernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    $this->installSchema('system', ['key_value_expire']);
     $this->installEntitySchema('user');
     $this->installEntitySchema('entity_test');
   }
 
   /**
-   * Dataprovider for testGetSectionStorageForEntity().
+   * Data provider for testGetSectionStorageForEntity().
    */
   public function providerTestGetSectionStorageForEntity() {
     $data = [];
@@ -114,13 +114,13 @@ class LayoutEntityHelperTraitTest extends KernelTestBase {
       $this->assertEquals($expected_display->getThirdPartySettings('layout_builder'), $display_entity->getThirdPartySettings('layout_builder'));
     }
     else {
-      throw new \UnexpectedValueException("Unexpected entity type.");
+      throw new UnexpectedValueException("Unexpected entity type.");
     }
 
   }
 
   /**
-   * Dataprovider for testOriginalEntityUsesDefaultStorage().
+   * Data provider for testOriginalEntityUsesDefaultStorage().
    */
   public function providerTestOriginalEntityUsesDefaultStorage() {
     return [

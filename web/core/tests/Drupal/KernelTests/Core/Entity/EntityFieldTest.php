@@ -2,6 +2,7 @@
 
 namespace Drupal\KernelTests\Core\Entity;
 
+use Drupal;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
@@ -122,13 +123,13 @@ class EntityFieldTest extends EntityKernelTestBase {
 
     $this->assertEqual($this->entityName, $entity->name->value, new FormattableMarkup('%entity_type: Name value can be read.', ['%entity_type' => $entity_type]));
     $this->assertEqual($this->entityName, $entity->name[0]->value, new FormattableMarkup('%entity_type: Name value can be read through list access.', ['%entity_type' => $entity_type]));
-    $this->assertEqual($entity->name->getValue(), [0 => ['value' => $this->entityName]], new FormattableMarkup('%entity_type: Plain field value returned.', ['%entity_type' => $entity_type]));
+    $this->assertEqual([0 => ['value' => $this->entityName]], $entity->name->getValue(), new FormattableMarkup('%entity_type: Plain field value returned.', ['%entity_type' => $entity_type]));
 
     // Change the name.
     $new_name = $this->randomMachineName();
     $entity->name->value = $new_name;
     $this->assertEqual($new_name, $entity->name->value, new FormattableMarkup('%entity_type: Name can be updated and read.', ['%entity_type' => $entity_type]));
-    $this->assertEqual($entity->name->getValue(), [0 => ['value' => $new_name]], new FormattableMarkup('%entity_type: Plain field value reflects the update.', ['%entity_type' => $entity_type]));
+    $this->assertEqual([0 => ['value' => $new_name]], $entity->name->getValue(), new FormattableMarkup('%entity_type: Plain field value reflects the update.', ['%entity_type' => $entity_type]));
 
     $new_name = $this->randomMachineName();
     $entity->name[0]->value = $new_name;
@@ -206,7 +207,7 @@ class EntityFieldTest extends EntityKernelTestBase {
     $this->assertTrue(isset($entity->name[0]), new FormattableMarkup('%entity_type: Name string item is set.', ['%entity_type' => $entity_type]));
     $this->assertFalse(isset($entity->name[1]), new FormattableMarkup('%entity_type: Second name string item is not set as it does not exist', ['%entity_type' => $entity_type]));
     $this->assertTrue(isset($entity->name), new FormattableMarkup('%entity_type: Name field is set.', ['%entity_type' => $entity_type]));
-    $this->assertFalse(isset($entity->nameInvalid), new FormattableMarkup('%entity_type: Not existing field is not set.', ['%entity_type' => $entity_type]));
+    $this->assertFalse(isset($entity->nameInvalid), new FormattableMarkup('%entity_type: Non-existent field is not set.', ['%entity_type' => $entity_type]));
 
     unset($entity->name[0]);
     $this->assertFalse(isset($entity->name[0]), new FormattableMarkup('%entity_type: Name field item is not set.', ['%entity_type' => $entity_type]));
@@ -229,7 +230,7 @@ class EntityFieldTest extends EntityKernelTestBase {
       $this->assertTrue(isset($entity->name), new FormattableMarkup('%entity_type: Name field is set.', ['%entity_type' => $entity_type]));
       $this->assertTrue($entity->name->isEmpty(), new FormattableMarkup('%entity_type: Name field is set.', ['%entity_type' => $entity_type]));
       $this->assertCount(0, $entity->name, new FormattableMarkup('%entity_type: Name field contains no items.', ['%entity_type' => $entity_type]));
-      $this->assertIdentical($entity->name->getValue(), [], new FormattableMarkup('%entity_type: Name field value is an empty array.', ['%entity_type' => $entity_type]));
+      $this->assertSame([], $entity->name->getValue(), new FormattableMarkup('%entity_type: Name field value is an empty array.', ['%entity_type' => $entity_type]));
       $this->assertFalse(isset($entity->name[0]), new FormattableMarkup('%entity_type: Name field item is not set.', ['%entity_type' => $entity_type]));
       $this->assertFalse(isset($entity->name[0]->value), new FormattableMarkup('%entity_type: First name item value is not set.', ['%entity_type' => $entity_type]));
       $this->assertFalse(isset($entity->name->value), new FormattableMarkup('%entity_type: Name value is not set.', ['%entity_type' => $entity_type]));
@@ -238,24 +239,24 @@ class EntityFieldTest extends EntityKernelTestBase {
     // Access the language field.
     $langcode_key = $this->entityTypeManager->getDefinition($entity_type)->getKey('langcode');
     $this->assertEqual($langcode, $entity->{$langcode_key}->value, new FormattableMarkup('%entity_type: Language code can be read.', ['%entity_type' => $entity_type]));
-    $this->assertEqual(\Drupal::languageManager()->getLanguage($langcode), $entity->{$langcode_key}->language, new FormattableMarkup('%entity_type: Language object can be read.', ['%entity_type' => $entity_type]));
+    $this->assertEqual(Drupal::languageManager()->getLanguage($langcode), $entity->{$langcode_key}->language, new FormattableMarkup('%entity_type: Language object can be read.', ['%entity_type' => $entity_type]));
 
     // Change the language by code.
-    $entity->{$langcode_key}->value = \Drupal::languageManager()->getDefaultLanguage()->getId();
-    $this->assertEqual(\Drupal::languageManager()->getDefaultLanguage()->getId(), $entity->{$langcode_key}->value, new FormattableMarkup('%entity_type: Language code can be read.', ['%entity_type' => $entity_type]));
-    $this->assertEqual(\Drupal::languageManager()->getDefaultLanguage(), $entity->{$langcode_key}->language, new FormattableMarkup('%entity_type: Language object can be read.', ['%entity_type' => $entity_type]));
+    $entity->{$langcode_key}->value = Drupal::languageManager()->getDefaultLanguage()->getId();
+    $this->assertEqual(Drupal::languageManager()->getDefaultLanguage()->getId(), $entity->{$langcode_key}->value, new FormattableMarkup('%entity_type: Language code can be read.', ['%entity_type' => $entity_type]));
+    $this->assertEqual(Drupal::languageManager()->getDefaultLanguage(), $entity->{$langcode_key}->language, new FormattableMarkup('%entity_type: Language object can be read.', ['%entity_type' => $entity_type]));
 
     // Revert language by code then try setting it by language object.
     $entity->{$langcode_key}->value = $langcode;
-    $entity->{$langcode_key}->language = \Drupal::languageManager()->getDefaultLanguage();
-    $this->assertEqual(\Drupal::languageManager()->getDefaultLanguage()->getId(), $entity->{$langcode_key}->value, new FormattableMarkup('%entity_type: Language code can be read.', ['%entity_type' => $entity_type]));
-    $this->assertEqual(\Drupal::languageManager()->getDefaultLanguage(), $entity->{$langcode_key}->language, new FormattableMarkup('%entity_type: Language object can be read.', ['%entity_type' => $entity_type]));
+    $entity->{$langcode_key}->language = Drupal::languageManager()->getDefaultLanguage();
+    $this->assertEqual(Drupal::languageManager()->getDefaultLanguage()->getId(), $entity->{$langcode_key}->value, new FormattableMarkup('%entity_type: Language code can be read.', ['%entity_type' => $entity_type]));
+    $this->assertEqual(Drupal::languageManager()->getDefaultLanguage(), $entity->{$langcode_key}->language, new FormattableMarkup('%entity_type: Language object can be read.', ['%entity_type' => $entity_type]));
 
     // Access the text field and test updating.
-    $this->assertEqual($entity->field_test_text->value, $this->entityFieldText, new FormattableMarkup('%entity_type: Text field can be read.', ['%entity_type' => $entity_type]));
+    $this->assertEqual($this->entityFieldText, $entity->field_test_text->value, new FormattableMarkup('%entity_type: Text field can be read.', ['%entity_type' => $entity_type]));
     $new_text = $this->randomMachineName();
     $entity->field_test_text->value = $new_text;
-    $this->assertEqual($entity->field_test_text->value, $new_text, new FormattableMarkup('%entity_type: Updated text field can be read.', ['%entity_type' => $entity_type]));
+    $this->assertEqual($new_text, $entity->field_test_text->value, new FormattableMarkup('%entity_type: Updated text field can be read.', ['%entity_type' => $entity_type]));
 
     // Test creating the entity by passing in plain values.
     $this->entityName = $this->randomMachineName();
@@ -295,19 +296,19 @@ class EntityFieldTest extends EntityKernelTestBase {
 
     // Tests adding a value to a field item list.
     $entity->name[] = 'Another name';
-    $this->assertEqual($entity->name[1]->value, 'Another name', new FormattableMarkup('%entity_type: List item added via [] and the first property.', ['%entity_type' => $entity_type]));
+    $this->assertEqual('Another name', $entity->name[1]->value, new FormattableMarkup('%entity_type: List item added via [] and the first property.', ['%entity_type' => $entity_type]));
     $entity->name[] = ['value' => 'Third name'];
-    $this->assertEqual($entity->name[2]->value, 'Third name', new FormattableMarkup('%entity_type: List item added via [] and an array of properties.', ['%entity_type' => $entity_type]));
+    $this->assertEqual('Third name', $entity->name[2]->value, new FormattableMarkup('%entity_type: List item added via [] and an array of properties.', ['%entity_type' => $entity_type]));
     $entity->name[3] = ['value' => 'Fourth name'];
-    $this->assertEqual($entity->name[3]->value, 'Fourth name', new FormattableMarkup('%entity_type: List item added via offset and an array of properties.', ['%entity_type' => $entity_type]));
+    $this->assertEqual('Fourth name', $entity->name[3]->value, new FormattableMarkup('%entity_type: List item added via offset and an array of properties.', ['%entity_type' => $entity_type]));
     unset($entity->name[3]);
 
     // Test removing and empty-ing list items.
     $this->assertCount(3, $entity->name, new FormattableMarkup('%entity_type: List has 3 items.', ['%entity_type' => $entity_type]));
     unset($entity->name[1]);
     $this->assertCount(2, $entity->name, new FormattableMarkup('%entity_type: Second list item has been removed.', ['%entity_type' => $entity_type]));
-    $this->assertEqual($entity->name[1]->value, 'Third name', new FormattableMarkup('%entity_type: The subsequent items have been shifted up.', ['%entity_type' => $entity_type]));
-    $this->assertEqual($entity->name[1]->getName(), 1, new FormattableMarkup('%entity_type: The items names have been updated to their new delta.', ['%entity_type' => $entity_type]));
+    $this->assertEqual('Third name', $entity->name[1]->value, new FormattableMarkup('%entity_type: The subsequent items have been shifted up.', ['%entity_type' => $entity_type]));
+    $this->assertEqual(1, $entity->name[1]->getName(), new FormattableMarkup('%entity_type: The items names have been updated to their new delta.', ['%entity_type' => $entity_type]));
     $entity->name[1] = NULL;
     $this->assertCount(2, $entity->name, new FormattableMarkup('%entity_type: Assigning NULL does not reduce array count.', ['%entity_type' => $entity_type]));
     $this->assertTrue($entity->name[1]->isEmpty(), new FormattableMarkup('%entity_type: Assigning NULL empties the item.', ['%entity_type' => $entity_type]));
@@ -319,7 +320,7 @@ class EntityFieldTest extends EntityKernelTestBase {
     $this->assertTrue($entity->name[0]->isEmpty(), new FormattableMarkup('%entity_type: Name item is empty.', ['%entity_type' => $entity_type]));
     $this->assertTrue($entity->name->isEmpty(), new FormattableMarkup('%entity_type: Name field is empty.', ['%entity_type' => $entity_type]));
     $this->assertCount(1, $entity->name, new FormattableMarkup('%entity_type: Empty item is considered when counting.', ['%entity_type' => $entity_type]));
-    $this->assertEqual(count(iterator_to_array($entity->name->getIterator())), count($entity->name), new FormattableMarkup('%entity_type: Count matches iterator count.', ['%entity_type' => $entity_type]));
+    $this->assertCount(1, iterator_to_array($entity->name->getIterator()), new FormattableMarkup('%entity_type: Count matches iterator count.', ['%entity_type' => $entity_type]));
     $this->assertTrue($entity->name->getValue() === [0 => ['value' => NULL]], new FormattableMarkup('%entity_type: Name field value contains a NULL value.', ['%entity_type' => $entity_type]));
 
     // Test using filterEmptyItems().
@@ -327,15 +328,15 @@ class EntityFieldTest extends EntityKernelTestBase {
     $this->assertCount(2, $entity->name, new FormattableMarkup('%entity_type: List has 2 items.', ['%entity_type' => $entity_type]));
     $entity->name->filterEmptyItems();
     $this->assertCount(1, $entity->name, new FormattableMarkup('%entity_type: The empty item was removed.', ['%entity_type' => $entity_type]));
-    $this->assertEqual($entity->name[0]->value, 'foo', new FormattableMarkup('%entity_type: The items were renumbered.', ['%entity_type' => $entity_type]));
-    $this->assertEqual($entity->name[0]->getName(), 0, new FormattableMarkup('%entity_type: The deltas were updated in the items.', ['%entity_type' => $entity_type]));
+    $this->assertEqual('foo', $entity->name[0]->value, new FormattableMarkup('%entity_type: The items were renumbered.', ['%entity_type' => $entity_type]));
+    $this->assertEqual(0, $entity->name[0]->getName(), new FormattableMarkup('%entity_type: The deltas were updated in the items.', ['%entity_type' => $entity_type]));
 
     // Test get and set field values.
     $entity->name = 'foo';
-    $this->assertEqual($entity->name[0]->toArray(), ['value' => 'foo'], new FormattableMarkup('%entity_type: Field value has been retrieved via toArray()', ['%entity_type' => $entity_type]));
+    $this->assertEqual(['value' => 'foo'], $entity->name[0]->toArray(), new FormattableMarkup('%entity_type: Field value has been retrieved via toArray()', ['%entity_type' => $entity_type]));
 
     $values = $entity->toArray();
-    $this->assertEqual($values['name'], [0 => ['value' => 'foo']], new FormattableMarkup('%entity_type: Field value has been retrieved via toArray() from an entity.', ['%entity_type' => $entity_type]));
+    $this->assertEqual([0 => ['value' => 'foo']], $values['name'], new FormattableMarkup('%entity_type: Field value has been retrieved via toArray() from an entity.', ['%entity_type' => $entity_type]));
 
     // Make sure the user id can be set to zero.
     $user_item[0]['target_id'] = 0;
@@ -347,7 +348,7 @@ class EntityFieldTest extends EntityKernelTestBase {
         'field_test_text' => $text_item,
       ]);
     $this->assertNotNull($entity->user_id->target_id, new FormattableMarkup('%entity_type: User id is not NULL', ['%entity_type' => $entity_type]));
-    $this->assertIdentical($entity->user_id->target_id, 0, new FormattableMarkup('%entity_type: User id has been set to 0', ['%entity_type' => $entity_type]));
+    $this->assertSame(0, $entity->user_id->target_id, new FormattableMarkup('%entity_type: User id has been set to 0', ['%entity_type' => $entity_type]));
 
     // Test setting the ID with the value only.
     $entity = $this->container->get('entity_type.manager')
@@ -358,7 +359,7 @@ class EntityFieldTest extends EntityKernelTestBase {
         'field_test_text' => $text_item,
       ]);
     $this->assertNotNull($entity->user_id->target_id, new FormattableMarkup('%entity_type: User id is not NULL', ['%entity_type' => $entity_type]));
-    $this->assertIdentical($entity->user_id->target_id, 0, new FormattableMarkup('%entity_type: User id has been set to 0', ['%entity_type' => $entity_type]));
+    $this->assertSame(0, $entity->user_id->target_id, new FormattableMarkup('%entity_type: User id has been set to 0', ['%entity_type' => $entity_type]));
   }
 
   /**
@@ -392,7 +393,7 @@ class EntityFieldTest extends EntityKernelTestBase {
     $this->assertEqual(1, $entity->id->value, new FormattableMarkup('%entity_type: ID value can be read.', ['%entity_type' => $entity_type]));
     $this->assertIsString($entity->uuid->value);
     $this->assertEqual('en', $entity->{$langcode_key}->value, new FormattableMarkup('%entity_type: Language code can be read.', ['%entity_type' => $entity_type]));
-    $this->assertEqual(\Drupal::languageManager()->getLanguage('en'), $entity->{$langcode_key}->language, new FormattableMarkup('%entity_type: Language object can be read.', ['%entity_type' => $entity_type]));
+    $this->assertEqual(Drupal::languageManager()->getLanguage('en'), $entity->{$langcode_key}->language, new FormattableMarkup('%entity_type: Language object can be read.', ['%entity_type' => $entity_type]));
     $this->assertEqual($this->entityUser->id(), $entity->user_id->target_id, new FormattableMarkup('%entity_type: User id can be read.', ['%entity_type' => $entity_type]));
     $this->assertEqual($this->entityUser->getAccountName(), $entity->user_id->entity->name->value, new FormattableMarkup('%entity_type: User name can be read.', ['%entity_type' => $entity_type]));
     $this->assertEqual($this->entityFieldText, $entity->field_test_text->value, new FormattableMarkup('%entity_type: Text field can be read.', ['%entity_type' => $entity_type]));
@@ -417,19 +418,19 @@ class EntityFieldTest extends EntityKernelTestBase {
   protected function doTestIntrospection($entity_type) {
     // Test getting metadata upfront. The entity types used for this test have
     // a default bundle that is the same as the entity type.
-    $definitions = \Drupal::service('entity_field.manager')->getFieldDefinitions($entity_type, $entity_type);
-    $this->assertEqual($definitions['name']->getType(), 'string', $entity_type . ': Name field found.');
-    $this->assertEqual($definitions['user_id']->getType(), 'entity_reference', $entity_type . ': User field found.');
-    $this->assertEqual($definitions['field_test_text']->getType(), 'text', $entity_type . ': Test-text-field field found.');
+    $definitions = Drupal::service('entity_field.manager')->getFieldDefinitions($entity_type, $entity_type);
+    $this->assertEqual('string', $definitions['name']->getType(), $entity_type . ': Name field found.');
+    $this->assertEqual('entity_reference', $definitions['user_id']->getType(), $entity_type . ': User field found.');
+    $this->assertEqual('text', $definitions['field_test_text']->getType(), $entity_type . ': Test-text-field field found.');
 
     // Test deriving further metadata.
     $this->assertInstanceOf(FieldDefinitionInterface::class, $definitions['name']);
     $field_item_definition = $definitions['name']->getItemDefinition();
     $this->assertInstanceOf(ComplexDataDefinitionInterface::class, $field_item_definition);
-    $this->assertEqual($field_item_definition->getDataType(), 'field_item:string');
+    $this->assertEqual('field_item:string', $field_item_definition->getDataType());
     $value_definition = $field_item_definition->getPropertyDefinition('value');
     $this->assertInstanceOf(DataDefinitionInterface::class, $value_definition);
-    $this->assertEqual($value_definition->getDataType(), 'string');
+    $this->assertEqual('string', $value_definition->getDataType());
 
     // Test deriving metadata from references.
     $entity_definition = EntityDataDefinition::create($entity_type);
@@ -437,19 +438,19 @@ class EntityFieldTest extends EntityKernelTestBase {
     $reference_definition = $entity_definition->getPropertyDefinition($langcode_key)
       ->getPropertyDefinition('language')
       ->getTargetDefinition();
-    $this->assertEqual($reference_definition->getDataType(), 'language');
+    $this->assertEqual('language', $reference_definition->getDataType());
 
     $reference_definition = $entity_definition->getPropertyDefinition('user_id')
       ->getPropertyDefinition('entity')
       ->getTargetDefinition();
 
     $this->assertInstanceOf(EntityDataDefinitionInterface::class, $reference_definition);
-    $this->assertEqual($reference_definition->getEntityTypeId(), 'user', 'Referenced entity is of type "user".');
+    $this->assertEqual('user', $reference_definition->getEntityTypeId(), 'Referenced entity is of type "user".');
 
     // Test propagating down.
     $name_definition = $reference_definition->getPropertyDefinition('name');
     $this->assertInstanceOf(FieldDefinitionInterface::class, $name_definition);
-    $this->assertEqual($name_definition->getPropertyDefinition('value')->getDataType(), 'string');
+    $this->assertEqual('string', $name_definition->getPropertyDefinition('value')->getDataType());
 
     // Test introspecting an entity object.
     // @todo: Add bundles and test bundles as well.
@@ -458,47 +459,47 @@ class EntityFieldTest extends EntityKernelTestBase {
       ->create();
 
     $definitions = $entity->getFieldDefinitions();
-    $this->assertEqual($definitions['name']->getType(), 'string', $entity_type . ': Name field found.');
-    $this->assertEqual($definitions['user_id']->getType(), 'entity_reference', $entity_type . ': User field found.');
-    $this->assertEqual($definitions['field_test_text']->getType(), 'text', $entity_type . ': Test-text-field field found.');
+    $this->assertEqual('string', $definitions['name']->getType(), $entity_type . ': Name field found.');
+    $this->assertEqual('entity_reference', $definitions['user_id']->getType(), $entity_type . ': User field found.');
+    $this->assertEqual('text', $definitions['field_test_text']->getType(), $entity_type . ': Test-text-field field found.');
 
     $name_properties = $entity->name->getFieldDefinition()->getPropertyDefinitions();
-    $this->assertEqual($name_properties['value']->getDataType(), 'string', $entity_type . ': String value property of the name found.');
+    $this->assertEqual('string', $name_properties['value']->getDataType(), $entity_type . ': String value property of the name found.');
 
     $userref_properties = $entity->user_id->getFieldDefinition()->getPropertyDefinitions();
-    $this->assertEqual($userref_properties['target_id']->getDataType(), 'integer', $entity_type . ': Entity id property of the user found.');
-    $this->assertEqual($userref_properties['entity']->getDataType(), 'entity_reference', $entity_type . ': Entity reference property of the user found.');
+    $this->assertEqual('integer', $userref_properties['target_id']->getDataType(), $entity_type . ': Entity id property of the user found.');
+    $this->assertEqual('entity_reference', $userref_properties['entity']->getDataType(), $entity_type . ': Entity reference property of the user found.');
 
     $textfield_properties = $entity->field_test_text->getFieldDefinition()->getFieldStorageDefinition()->getPropertyDefinitions();
-    $this->assertEqual($textfield_properties['value']->getDataType(), 'string', $entity_type . ': String value property of the test-text field found.');
-    $this->assertEqual($textfield_properties['format']->getDataType(), 'filter_format', $entity_type . ': String format field of the test-text field found.');
-    $this->assertEqual($textfield_properties['processed']->getDataType(), 'string', $entity_type . ': String processed property of the test-text field found.');
+    $this->assertEqual('string', $textfield_properties['value']->getDataType(), $entity_type . ': String value property of the test-text field found.');
+    $this->assertEqual('filter_format', $textfield_properties['format']->getDataType(), $entity_type . ': String format field of the test-text field found.');
+    $this->assertEqual('string', $textfield_properties['processed']->getDataType(), $entity_type . ': String processed property of the test-text field found.');
 
     // Make sure provided contextual information is right.
     $entity_adapter = $entity->getTypedData();
     $this->assertSame($entity_adapter->getRoot(), $entity_adapter, 'Entity is root object.');
-    $this->assertEqual($entity_adapter->getPropertyPath(), '');
-    $this->assertEqual($entity_adapter->getName(), '');
-    $this->assertEqual($entity_adapter->getParent(), NULL);
+    $this->assertEqual('', $entity_adapter->getPropertyPath());
+    $this->assertEqual('', $entity_adapter->getName());
+    $this->assertNull($entity_adapter->getParent());
 
     $field = $entity->user_id;
     $this->assertSame($field->getRoot()->getValue(), $entity, 'Entity is root object.');
     $this->assertSame($field->getEntity(), $entity, 'getEntity() returns the entity.');
-    $this->assertEqual($field->getPropertyPath(), 'user_id');
-    $this->assertEqual($field->getName(), 'user_id');
+    $this->assertEqual('user_id', $field->getPropertyPath());
+    $this->assertEqual('user_id', $field->getName());
     $this->assertSame($field->getParent()->getValue(), $entity, 'Parent object matches.');
 
     $field_item = $field[0];
     $this->assertSame($field_item->getRoot()->getValue(), $entity, 'Entity is root object.');
     $this->assertSame($field_item->getEntity(), $entity, 'getEntity() returns the entity.');
-    $this->assertEqual($field_item->getPropertyPath(), 'user_id.0');
-    $this->assertEqual($field_item->getName(), '0');
+    $this->assertEqual('user_id.0', $field_item->getPropertyPath());
+    $this->assertEqual('0', $field_item->getName());
     $this->assertSame($field_item->getParent(), $field, 'Parent object matches.');
 
     $item_value = $field_item->get('entity');
     $this->assertSame($item_value->getRoot()->getValue(), $entity, 'Entity is root object.');
-    $this->assertEqual($item_value->getPropertyPath(), 'user_id.0.entity');
-    $this->assertEqual($item_value->getName(), 'entity');
+    $this->assertEqual('user_id.0.entity', $item_value->getPropertyPath());
+    $this->assertEqual('entity', $item_value->getName());
     $this->assertSame($item_value->getParent(), $field_item, 'Parent object matches.');
   }
 
@@ -537,8 +538,8 @@ class EntityFieldTest extends EntityKernelTestBase {
     }
 
     $fields = $entity->getFields();
-    $this->assertEqual(array_keys($fields), array_keys($entity->getTypedData()->getDataDefinition()->getPropertyDefinitions()), new FormattableMarkup('%entity_type: All fields returned.', ['%entity_type' => $entity_type]));
-    $this->assertEqual($fields, iterator_to_array($entity->getIterator()), new FormattableMarkup('%entity_type: Entity iterator iterates over all fields.', ['%entity_type' => $entity_type]));
+    $this->assertEqual(array_keys($entity->getTypedData()->getDataDefinition()->getPropertyDefinitions()), array_keys($fields), new FormattableMarkup('%entity_type: All fields returned.', ['%entity_type' => $entity_type]));
+    $this->assertEqual(iterator_to_array($entity->getIterator()), $fields, new FormattableMarkup('%entity_type: Entity iterator iterates over all fields.', ['%entity_type' => $entity_type]));
   }
 
   /**
@@ -586,7 +587,7 @@ class EntityFieldTest extends EntityKernelTestBase {
 
     asort($strings);
     asort($target_strings);
-    $this->assertEqual(array_values($strings), array_values($target_strings), new FormattableMarkup('%entity_type: All contained strings found.', ['%entity_type' => $entity_type]));
+    $this->assertEqual(array_values($target_strings), array_values($strings), new FormattableMarkup('%entity_type: All contained strings found.', ['%entity_type' => $entity_type]));
   }
 
   /**
@@ -618,13 +619,13 @@ class EntityFieldTest extends EntityKernelTestBase {
    * Makes sure data types are correctly derived for all entity types.
    */
   public function testDataTypes() {
-    $types = \Drupal::typedDataManager()->getDefinitions();
+    $types = Drupal::typedDataManager()->getDefinitions();
     foreach (entity_test_entity_types() as $entity_type) {
       $this->assertNotEmpty($types['entity:' . $entity_type]['class'], 'Entity data type registered.');
     }
     // Check bundle types are provided as well.
     entity_test_create_bundle('bundle');
-    $types = \Drupal::typedDataManager()->getDefinitions();
+    $types = Drupal::typedDataManager()->getDefinitions();
     $this->assertNotEmpty($types['entity:entity_test:bundle']['class'], 'Entity bundle data type registered.');
   }
 
@@ -638,13 +639,13 @@ class EntityFieldTest extends EntityKernelTestBase {
       'type' => 'page',
       'name' => 'page',
     ])->save();
-    \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
-    $fields = \Drupal::service('entity_field.manager')->getFieldDefinitions('node', 'page');
+    Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
+    $fields = Drupal::service('entity_field.manager')->getFieldDefinitions('node', 'page');
     $override = $fields['status']->getConfig('page');
     $override->setLabel($this->randomString())->save();
-    \Drupal::state()->set('entity_test.node_remove_status_field', TRUE);
-    \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
-    $fields = \Drupal::service('entity_field.manager')->getFieldDefinitions('node', 'page');
+    Drupal::state()->set('entity_test.node_remove_status_field', TRUE);
+    Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
+    $fields = Drupal::service('entity_field.manager')->getFieldDefinitions('node', 'page');
     // A base field override on a non-existing base field should not cause a
     // field definition to come into existence.
     $this->assertFalse(isset($fields['status']), 'Node\'s status base field does not exist.');
@@ -659,13 +660,13 @@ class EntityFieldTest extends EntityKernelTestBase {
     // First make sure the bundle field override in code, which is provided by
     // the test entity works.
     entity_test_create_bundle('some_test_bundle', 'Some test bundle', 'entity_test_field_override');
-    $field_definitions = \Drupal::service('entity_field.manager')->getFieldDefinitions('entity_test_field_override', 'entity_test_field_override');
-    $this->assertEqual($field_definitions['name']->getDescription(), 'The default description.');
+    $field_definitions = Drupal::service('entity_field.manager')->getFieldDefinitions('entity_test_field_override', 'entity_test_field_override');
+    $this->assertEqual('The default description.', $field_definitions['name']->getDescription());
     $this->assertNull($field_definitions['name']->getTargetBundle());
 
-    $field_definitions = \Drupal::service('entity_field.manager')->getFieldDefinitions('entity_test_field_override', 'some_test_bundle');
-    $this->assertEqual($field_definitions['name']->getDescription(), 'Custom description.');
-    $this->assertEqual($field_definitions['name']->getTargetBundle(), 'some_test_bundle');
+    $field_definitions = Drupal::service('entity_field.manager')->getFieldDefinitions('entity_test_field_override', 'some_test_bundle');
+    $this->assertEqual('Custom description.', $field_definitions['name']->getDescription());
+    $this->assertEqual('some_test_bundle', $field_definitions['name']->getTargetBundle());
 
     // Now create a config override of the bundle field.
     $field_config = $field_definitions['name']->getConfig('some_test_bundle');
@@ -673,10 +674,10 @@ class EntityFieldTest extends EntityKernelTestBase {
     $field_config->save();
 
     // Make sure both overrides are present.
-    \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
-    $field_definitions = \Drupal::service('entity_field.manager')->getFieldDefinitions('entity_test_field_override', 'some_test_bundle');
-    $this->assertEqual($field_definitions['name']->getDescription(), 'Custom description.');
-    $this->assertEqual($field_definitions['name']->getTargetBundle(), 'some_test_bundle');
+    Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
+    $field_definitions = Drupal::service('entity_field.manager')->getFieldDefinitions('entity_test_field_override', 'some_test_bundle');
+    $this->assertEqual('Custom description.', $field_definitions['name']->getDescription());
+    $this->assertEqual('some_test_bundle', $field_definitions['name']->getTargetBundle());
     $this->assertFalse($field_definitions['name']->isTranslatable());
   }
 
@@ -690,12 +691,12 @@ class EntityFieldTest extends EntityKernelTestBase {
     $definition = BaseFieldDefinition::create('entity_reference')
       ->setLabel('Test entity')
       ->setSetting('target_type', 'entity_test');
-    $reference_field = \Drupal::typedDataManager()->create($definition);
+    $reference_field = Drupal::typedDataManager()->create($definition);
     $reference = $reference_field->appendItem(['entity' => $entity])->get('entity');
 
     // Test validation the typed data object.
     $violations = $reference->validate();
-    $this->assertEqual($violations->count(), 0);
+    $this->assertEqual(0, $violations->count());
 
     // Test validating an entity of the wrong type.
     $user = $this->createUser();
@@ -707,7 +708,7 @@ class EntityFieldTest extends EntityKernelTestBase {
     ]);
     $reference->setValue($node);
     $violations = $reference->validate();
-    $this->assertEqual($violations->count(), 1);
+    $this->assertEqual(1, $violations->count());
 
     // Test bundle validation.
     NodeType::create(['type' => 'article'])
@@ -716,10 +717,10 @@ class EntityFieldTest extends EntityKernelTestBase {
       ->setLabel('Test entity')
       ->setSetting('target_type', 'node')
       ->setSetting('handler_settings', ['target_bundles' => ['article' => 'article']]);
-    $reference_field = \Drupal::TypedDataManager()->create($definition);
+    $reference_field = Drupal::TypedDataManager()->create($definition);
     $reference_field->appendItem(['entity' => $node]);
     $violations = $reference_field->validate();
-    $this->assertEqual($violations->count(), 1);
+    $this->assertEqual(1, $violations->count());
 
     $node = Node::create([
       'type' => 'article',
@@ -729,7 +730,7 @@ class EntityFieldTest extends EntityKernelTestBase {
     $node->save();
     $reference_field->entity = $node;
     $violations = $reference_field->validate();
-    $this->assertEqual($violations->count(), 0);
+    $this->assertEqual(0, $violations->count());
   }
 
   /**
@@ -748,31 +749,31 @@ class EntityFieldTest extends EntityKernelTestBase {
   public function testComputedFields() {
     $this->installEntitySchema('entity_test_computed_field');
 
-    \Drupal::state()->set('entity_test_computed_field_item_list_value', ['foo computed']);
+    Drupal::state()->set('entity_test_computed_field_item_list_value', ['foo computed']);
 
     // Check that the values are not computed unnecessarily during the lifecycle
     // of an entity when the field is not interacted with directly.
-    \Drupal::state()->set('computed_test_field_execution', 0);
+    Drupal::state()->set('computed_test_field_execution', 0);
     $entity = EntityTestComputedField::create([]);
-    $this->assertSame(0, \Drupal::state()->get('computed_test_field_execution', 0));
+    $this->assertSame(0, Drupal::state()->get('computed_test_field_execution', 0));
 
     $entity->name->value = $this->randomString();
-    $this->assertSame(0, \Drupal::state()->get('computed_test_field_execution', 0));
+    $this->assertSame(0, Drupal::state()->get('computed_test_field_execution', 0));
 
     $entity->save();
-    $this->assertSame(0, \Drupal::state()->get('computed_test_field_execution', 0));
+    $this->assertSame(0, Drupal::state()->get('computed_test_field_execution', 0));
 
     // Test \Drupal\Core\TypedData\ComputedItemListTrait::getValue().
-    \Drupal::state()->set('computed_test_field_execution', 0);
+    Drupal::state()->set('computed_test_field_execution', 0);
     $entity = EntityTestComputedField::create([]);
     $this->assertSame([['value' => 'foo computed']], $entity->computed_string_field->getValue());
 
     // Check that the values are only computed once.
-    $this->assertSame(1, \Drupal::state()->get('computed_test_field_execution', 0));
+    $this->assertSame(1, Drupal::state()->get('computed_test_field_execution', 0));
 
     // Test \Drupal\Core\TypedData\ComputedItemListTrait::setValue(). This also
     // checks that a subsequent getter does not try to re-compute the value.
-    \Drupal::state()->set('computed_test_field_execution', 0);
+    Drupal::state()->set('computed_test_field_execution', 0);
     $entity = EntityTestComputedField::create([]);
     $entity->computed_string_field->setValue([
       ['value' => 'foo computed 1'],
@@ -782,7 +783,7 @@ class EntityFieldTest extends EntityKernelTestBase {
 
     // Check that the values have not been computed when they were explicitly
     // set.
-    $this->assertSame(0, \Drupal::state()->get('computed_test_field_execution', 0));
+    $this->assertSame(0, Drupal::state()->get('computed_test_field_execution', 0));
 
     // Test \Drupal\Core\TypedData\ComputedItemListTrait::getString().
     $entity = EntityTestComputedField::create([]);
@@ -814,11 +815,11 @@ class EntityFieldTest extends EntityKernelTestBase {
     $this->assertTrue($entity->computed_string_field->isEmpty());
 
     // Test \Drupal\Core\TypedData\ComputedItemListTrait::isEmpty().
-    \Drupal::state()->set('entity_test_computed_field_item_list_value', []);
+    Drupal::state()->set('entity_test_computed_field_item_list_value', []);
     $entity = EntityTestComputedField::create([]);
     $this->assertTrue($entity->computed_string_field->isEmpty());
 
-    \Drupal::state()->set('entity_test_computed_field_item_list_value', ['foo computed']);
+    Drupal::state()->set('entity_test_computed_field_item_list_value', ['foo computed']);
     $entity = EntityTestComputedField::create([]);
     $this->assertFalse($entity->computed_string_field->isEmpty());
 
@@ -856,12 +857,12 @@ class EntityFieldTest extends EntityKernelTestBase {
     $this->assertCount(1, $entity->computed_string_field);
 
     // Check that computed items are not auto-created when they have no values.
-    \Drupal::state()->set('entity_test_computed_field_item_list_value', []);
+    Drupal::state()->set('entity_test_computed_field_item_list_value', []);
     $entity = EntityTestComputedField::create([]);
     $this->assertCount(0, $entity->computed_string_field);
 
     // Test \Drupal\Core\Field\FieldItemList::equals() for a computed field.
-    \Drupal::state()->set('entity_test_computed_field_item_list_value', ['foo computed']);
+    Drupal::state()->set('entity_test_computed_field_item_list_value', ['foo computed']);
     $entity = EntityTestComputedField::create([]);
     $computed_item_list1 = $entity->computed_string_field;
 
@@ -885,7 +886,7 @@ class EntityFieldTest extends EntityKernelTestBase {
     $ref1->save();
     $ref2 = EntityTest::create(['name' => 'baz', 'type' => 'bar']);
     $ref2->save();
-    \Drupal::state()->set('entity_test_reference_computed_target_ids', [$ref1->id(), $ref2->id()]);
+    Drupal::state()->set('entity_test_reference_computed_target_ids', [$ref1->id(), $ref2->id()]);
 
     $entity = EntityTestComputedField::create([]);
     $entity->save();
@@ -912,14 +913,14 @@ class EntityFieldTest extends EntityKernelTestBase {
     $entity->field_test_text->format = filter_default_format();
 
     $target = "<p>The &lt;strong&gt;text&lt;/strong&gt; text to filter.</p>\n";
-    $this->assertEqual($entity->field_test_text->processed, $target, new FormattableMarkup('%entity_type: Text is processed with the default filter.', ['%entity_type' => $entity_type]));
+    $this->assertEqual($target, $entity->field_test_text->processed, new FormattableMarkup('%entity_type: Text is processed with the default filter.', ['%entity_type' => $entity_type]));
 
     // Save and load entity and make sure it still works.
     $entity->save();
     $entity = $this->container->get('entity_type.manager')
       ->getStorage($entity_type)
       ->load($entity->id());
-    $this->assertEqual($entity->field_test_text->processed, $target, new FormattableMarkup('%entity_type: Text is processed with the default filter.', ['%entity_type' => $entity_type]));
+    $this->assertEqual($target, $entity->field_test_text->processed, new FormattableMarkup('%entity_type: Text is processed with the default filter.', ['%entity_type' => $entity_type]));
   }
 
   /**

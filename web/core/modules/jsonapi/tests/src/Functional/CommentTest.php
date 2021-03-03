@@ -2,6 +2,9 @@
 
 namespace Drupal\Tests\jsonapi\Functional;
 
+use DateTime;
+use DateTimeZone;
+use Drupal;
 use Drupal\comment\Entity\Comment;
 use Drupal\comment\Entity\CommentType;
 use Drupal\comment\Tests\CommentTestTrait;
@@ -14,6 +17,7 @@ use Drupal\Core\Url;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\Tests\jsonapi\Traits\CommonCollectionFilterAccessTestPatternsTrait;
 use Drupal\user\Entity\User;
+use Exception;
 use GuzzleHttp\RequestOptions;
 
 /**
@@ -158,7 +162,7 @@ class CommentTest extends ResourceTestBase {
         ],
         'attributes' => [
           'created' => '1973-11-29T21:33:09+00:00',
-          'changed' => (new \DateTime())->setTimestamp($this->entity->getChangedTime())->setTimezone(new \DateTimeZone('UTC'))->format(\DateTime::RFC3339),
+          'changed' => (new DateTime())->setTimestamp($this->entity->getChangedTime())->setTimezone(new DateTimeZone('UTC'))->format(DateTime::RFC3339),
           'comment_body' => [
             'value' => 'The name "llama" was adopted by European settlers from native Peruvians.',
             'format' => 'plain_text',
@@ -327,7 +331,7 @@ class CommentTest extends ResourceTestBase {
       $response = $this->request('POST', $url, $request_options);
       $this->assertResourceErrorResponse(422, 'entity_id: This value should not be null.', NULL, $response, '/data/attributes/entity_id');
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       $this->assertSame("Error: Call to a member function get() on null\nDrupal\\comment\\Plugin\\Validation\\Constraint\\CommentNameConstraintValidator->getAnonymousContactDetailsSetting()() (Line: 96)\n", $e->getMessage());
     }
 
@@ -384,15 +388,8 @@ class CommentTest extends ResourceTestBase {
   protected static function entityAccess(EntityInterface $entity, $operation, AccountInterface $account) {
     // Also reset the 'entity_test' entity access control handler because
     // comment access also depends on access to the commented entity type.
-    \Drupal::entityTypeManager()->getAccessControlHandler('entity_test')->resetCache();
+    Drupal::entityTypeManager()->getAccessControlHandler('entity_test')->resetCache();
     return parent::entityAccess($entity, $operation, $account);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function testRelated() {
-    $this->markTestSkipped('Remove this in https://www.drupal.org/project/drupal/issues/2940339');
   }
 
   /**
@@ -429,7 +426,7 @@ class CommentTest extends ResourceTestBase {
     $doc = Json::decode((string) $response->getBody());
     $this->assertCount(1, $doc['data']);
     // Mark the commented entity as inaccessible.
-    \Drupal::state()->set('jsonapi__entity_test_filter_access_blacklist', [$this->entity->getCommentedEntityId()]);
+    Drupal::state()->set('jsonapi__entity_test_filter_access_blacklist', [$this->entity->getCommentedEntityId()]);
     Cache::invalidateTags(['state:jsonapi__entity_test_filter_access_blacklist']);
     // ?filter[spotlight.LABEL]: 0 results.
     $response = $this->request('GET', $collection_filter_url, $request_options);

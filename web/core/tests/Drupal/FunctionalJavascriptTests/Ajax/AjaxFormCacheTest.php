@@ -2,8 +2,7 @@
 
 namespace Drupal\FunctionalJavascriptTests\Ajax;
 
-use Drupal\Core\EventSubscriber\MainContentViewSubscriber;
-use Drupal\Core\Form\FormBuilderInterface;
+use Drupal;
 use Drupal\Core\Url;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 
@@ -29,7 +28,7 @@ class AjaxFormCacheTest extends WebDriverTestBase {
    */
   public function testFormCacheUsage() {
     /** @var \Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface $key_value_expirable */
-    $key_value_expirable = \Drupal::service('keyvalue.expirable')->get('form');
+    $key_value_expirable = Drupal::service('keyvalue.expirable')->get('form');
     $this->drupalLogin($this->rootUser);
 
     // Ensure that the cache is empty.
@@ -51,7 +50,6 @@ class AjaxFormCacheTest extends WebDriverTestBase {
   public function testBlockForms() {
     $this->container->get('module_installer')->install(['block', 'search']);
     $this->rebuildContainer();
-    $this->container->get('router.builder')->rebuild();
     $this->drupalLogin($this->rootUser);
 
     $this->drupalPlaceBlock('search_form_block', ['weight' => -5]);
@@ -104,10 +102,8 @@ class AjaxFormCacheTest extends WebDriverTestBase {
 
     $url->setOption('query', [
       'foo' => 'bar',
-      FormBuilderInterface::AJAX_FORM_REQUEST => 1,
-      MainContentViewSubscriber::WRAPPER_FORMAT => 'drupal_ajax',
     ]);
-    $this->assertUrl($url);
+    $this->assertSession()->addressEquals($url);
   }
 
 }

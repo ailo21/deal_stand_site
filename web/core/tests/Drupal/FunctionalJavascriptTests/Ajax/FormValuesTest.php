@@ -2,6 +2,7 @@
 
 namespace Drupal\FunctionalJavascriptTests\Ajax;
 
+use Drupal;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 
 /**
@@ -42,7 +43,7 @@ class FormValuesTest extends WebDriverTestBase {
 
     // Verify form values of a select element.
     foreach (['green', 'blue', 'red'] as $item) {
-      // Updating the field will trigger a AJAX request/response.
+      // Updating the field will trigger an AJAX request/response.
       $session->getPage()->selectFieldOption('select', $item);
 
       // The AJAX command in the response will update the DOM
@@ -67,7 +68,7 @@ class FormValuesTest extends WebDriverTestBase {
     $this->assertAjaxHeader = FALSE;
     foreach (['null', 'empty', 'nonexistent'] as $key) {
       $element_name = 'select_' . $key . '_callback';
-      // Updating the field will trigger a AJAX request/response.
+      // Updating the field will trigger an AJAX request/response.
       $session->getPage()->selectFieldOption($element_name, 'green');
 
       // The select element is disabled as the AJAX request is issued.
@@ -79,7 +80,7 @@ class FormValuesTest extends WebDriverTestBase {
       $this->assertStringContainsString('"The specified #ajax callback is empty or not callable."', file_get_contents(DRUPAL_ROOT . '/' . $this->siteDirectory . '/error.log'));
       // The exceptions are expected. Do not interpret them as a test failure.
       // Not using File API; a potential error must trigger a PHP warning.
-      unlink(\Drupal::root() . '/' . $this->siteDirectory . '/error.log');
+      unlink(Drupal::root() . '/' . $this->siteDirectory . '/error.log');
     }
     // We need to reload the page to kill any unfinished AJAX calls before
     // tearDown() is called.

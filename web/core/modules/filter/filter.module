@@ -22,7 +22,7 @@ function filter_help($route_name, RouteMatchInterface $route_match) {
     case 'help.page.filter':
       $output = '';
       $output .= '<h3>' . t('About') . '</h3>';
-      $output .= '<p>' . t('The Filter module allows administrators to configure text formats. Text formats change how HTML tags and other text will be <em>processed and displayed</em> in the site. They are used to transform text, and also help to defend your web site against potentially damaging input from malicious users. Visual text editors can be associated with text formats by using the <a href=":editor_help">Text Editor module</a>. For more information, see the <a href=":filter_do">online documentation for the Filter module</a>.', [':filter_do' => 'https://www.drupal.org/documentation/modules/filter/', ':editor_help' => (\Drupal::moduleHandler()->moduleExists('editor')) ? Url::fromRoute('help.page', ['name' => 'editor'])->toString() : '#']) . '</p>';
+      $output .= '<p>' . t('The Filter module allows administrators to configure text formats. Text formats change how HTML tags and other text will be <em>processed and displayed</em> in the site. They are used to transform text, and also help to defend your website against potentially damaging input from malicious users. Visual text editors can be associated with text formats by using the <a href=":editor_help">Text Editor module</a>. For more information, see the <a href=":filter_do">online documentation for the Filter module</a>.', [':filter_do' => 'https://www.drupal.org/documentation/modules/filter/', ':editor_help' => (Drupal::moduleHandler()->moduleExists('editor')) ? Url::fromRoute('help.page', ['name' => 'editor'])->toString() : '#']) . '</p>';
       $output .= '<h3>' . t('Uses') . '</h3>';
       $output .= '<dl>';
       $output .= '<dt>' . t('Managing text formats') . '</dt>';
@@ -98,14 +98,14 @@ function filter_formats(AccountInterface $account = NULL) {
 
   // All available formats are cached for performance.
   if (!isset($formats['all'])) {
-    $language_interface = \Drupal::languageManager()->getCurrentLanguage();
-    if ($cache = \Drupal::cache()->get("filter_formats:{$language_interface->getId()}")) {
+    $language_interface = Drupal::languageManager()->getCurrentLanguage();
+    if ($cache = Drupal::cache()->get("filter_formats:{$language_interface->getId()}")) {
       $formats['all'] = $cache->data;
     }
     else {
-      $formats['all'] = \Drupal::entityTypeManager()->getStorage('filter_format')->loadByProperties(['status' => TRUE]);
+      $formats['all'] = Drupal::entityTypeManager()->getStorage('filter_format')->loadByProperties(['status' => TRUE]);
       uasort($formats['all'], 'Drupal\Core\Config\Entity\ConfigEntityBase::sort');
-      \Drupal::cache()->set("filter_formats:{$language_interface->getId()}", $formats['all'], Cache::PERMANENT, \Drupal::entityTypeManager()->getDefinition('filter_format')->getListCacheTags());
+      Drupal::cache()->set("filter_formats:{$language_interface->getId()}", $formats['all'], Cache::PERMANENT, Drupal::entityTypeManager()->getDefinition('filter_format')->getListCacheTags());
     }
   }
 
@@ -204,7 +204,7 @@ function filter_get_formats_by_role($rid) {
  */
 function filter_default_format(AccountInterface $account = NULL) {
   if (!isset($account)) {
-    $account = \Drupal::currentUser();
+    $account = Drupal::currentUser();
   }
   // Get a list of formats for this user, ordered by weight. The first one
   // available is the user's default format.
@@ -249,7 +249,7 @@ function filter_fallback_format() {
   // existing (and potentially unsafe) text format on the site automatically
   // available to all users. Returning NULL at least guarantees that this
   // cannot happen.
-  return \Drupal::config('filter.settings')->get('fallback_format');
+  return Drupal::config('filter.settings')->get('fallback_format');
 }
 
 /**
@@ -262,11 +262,11 @@ function filter_fallback_format() {
  * preview of content in a disallowed format.
  *
  * Note: this function should only be used when filtering text for use elsewhere
- * than on a rendered HTML page. If this is part of a HTML page, then a
+ * than on a rendered HTML page. If this is part of an HTML page, then a
  * renderable array with a #type 'processed_text' element should be used instead
  * of this, because that will allow cacheability metadata to be set and bubbled
  * up and attachments to be associated (assets, placeholders, etc.). In other
- * words: if you are presenting the filtered text in a HTML page, the only way
+ * words: if you are presenting the filtered text in an HTML page, the only way
  * this will be presented correctly, is by using the 'processed_text' element.
  *
  * @param string $text
@@ -300,7 +300,7 @@ function check_markup($text, $format_id = NULL, $langcode = '', $filter_types_to
     '#filter_types_to_skip' => $filter_types_to_skip,
     '#langcode' => $langcode,
   ];
-  return \Drupal::service('renderer')->renderPlain($build);
+  return Drupal::service('renderer')->renderPlain($build);
 }
 
 /**
@@ -320,7 +320,7 @@ function check_markup($text, $format_id = NULL, $langcode = '', $filter_types_to
  *   - id: Filter ID.
  */
 function _filter_tips($format_id, $long = FALSE) {
-  $formats = filter_formats(\Drupal::currentUser());
+  $formats = filter_formats(Drupal::currentUser());
 
   $tips = [];
 
@@ -467,7 +467,7 @@ function _filter_url($text, $filter) {
   // differ between protocols here without hard-coding MAILTO, so '//' is
   // optional for all protocols.
   // @see \Drupal\Component\Utility\UrlHelper::stripDangerousProtocols()
-  $protocols = \Drupal::getContainer()->getParameter('filter_protocols');
+  $protocols = Drupal::getContainer()->getParameter('filter_protocols');
   $protocols = implode(':(?://)?|', $protocols) . ':(?://)?';
 
   $valid_url_path_characters = "[\p{L}\p{M}\p{N}!\*\';:=\+,\.\$\/%#\[\]\-_~@&]";
@@ -703,7 +703,7 @@ function _filter_autop($text) {
       }
       // Opening or closing tag?
       $open = ($chunk[1] != '/');
-      list($tag) = preg_split('/[ >]/', substr($chunk, 2 - $open), 2);
+      [$tag] = preg_split('/[ >]/', substr($chunk, 2 - $open), 2);
       if (!$ignore) {
         if ($open) {
           $ignore = TRUE;
@@ -764,7 +764,7 @@ function _filter_html_image_secure_process($text) {
   $base_path_length = mb_strlen($base_path);
 
   // Find the directory on the server where index.php resides.
-  $local_dir = \Drupal::root() . '/';
+  $local_dir = Drupal::root() . '/';
 
   $html_dom = Html::load($text);
   $images = $html_dom->getElementsByTagName('img');
@@ -790,7 +790,7 @@ function _filter_html_image_secure_process($text) {
     }
     // Allow modules and themes to replace an invalid image with an error
     // indicator. See filter_filter_secure_image_alter().
-    \Drupal::moduleHandler()->alter('filter_secure_image', $image);
+    Drupal::moduleHandler()->alter('filter_secure_image', $image);
   }
   $text = Html::serialize($html_dom);
   return $text;

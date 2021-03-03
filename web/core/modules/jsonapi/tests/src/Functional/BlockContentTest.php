@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\jsonapi\Functional;
 
+use DateTime;
+use DateTimeZone;
 use Drupal\block_content\Entity\BlockContent;
 use Drupal\block_content\Entity\BlockContentType;
 use Drupal\Core\Cache\Cache;
@@ -116,10 +118,10 @@ class BlockContentTest extends ResourceTestBase {
             'summary' => NULL,
             'processed' => "<p>The name &quot;llama&quot; was adopted by European settlers from native Peruvians.</p>\n",
           ],
-          'changed' => (new \DateTime())->setTimestamp($this->entity->getChangedTime())->setTimezone(new \DateTimeZone('UTC'))->format(\DateTime::RFC3339),
+          'changed' => (new DateTime())->setTimestamp($this->entity->getChangedTime())->setTimezone(new DateTimeZone('UTC'))->format(DateTime::RFC3339),
           'info' => 'Llama',
           'revision_log' => NULL,
-          'revision_created' => (new \DateTime())->setTimestamp($this->entity->getRevisionCreationTime())->setTimezone(new \DateTimeZone('UTC'))->format(\DateTime::RFC3339),
+          'revision_created' => (new DateTime())->setTimestamp($this->entity->getRevisionCreationTime())->setTimezone(new DateTimeZone('UTC'))->format(DateTime::RFC3339),
           'revision_translation_affected' => TRUE,
           'status' => FALSE,
           'langcode' => 'en',
@@ -194,13 +196,6 @@ class BlockContentTest extends ResourceTestBase {
       $contexts = Cache::mergeContexts($contexts, ['languages:language_interface', 'theme']);
     }
     return $contexts;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function testRelated() {
-    $this->markTestSkipped('Remove this in https://www.drupal.org/project/drupal/issues/2940339');
   }
 
   /**

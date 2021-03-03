@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\shortcut\Functional;
 
+use Drupal;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Url;
 use Drupal\shortcut\Entity\Shortcut;
@@ -69,7 +70,7 @@ class ShortcutCacheTagsTest extends EntityCacheTagsTestBase {
   public function testEntityCreation() {
     // Create a cache entry that is tagged with a shortcut set cache tag.
     $cache_tags = ['config:shortcut.set.default'];
-    \Drupal::cache('render')->set('foo', 'bar', CacheBackendInterface::CACHE_PERMANENT, $cache_tags);
+    Drupal::cache('render')->set('foo', 'bar', CacheBackendInterface::CACHE_PERMANENT, $cache_tags);
 
     // Verify a cache hit.
     $this->verifyRenderCache('foo', $cache_tags);
@@ -78,7 +79,7 @@ class ShortcutCacheTagsTest extends EntityCacheTagsTestBase {
     $this->createEntity();
 
     // Verify a cache miss.
-    $this->assertFalse(\Drupal::cache('render')->get('foo'), 'Creating a new shortcut invalidates the cache tag of the shortcut set.');
+    $this->assertFalse(Drupal::cache('render')->get('foo'), 'Creating a new shortcut invalidates the cache tag of the shortcut set.');
   }
 
   /**
@@ -101,13 +102,14 @@ class ShortcutCacheTagsTest extends EntityCacheTagsTestBase {
       'config:block_list',
       'config:shortcut.set.default',
       'config:system.menu.admin',
+      'config:system.theme',
       'config:user.role.authenticated',
       'rendered',
       'user:' . $this->rootUser->id(),
     ];
     $this->assertCacheTags($expected_cache_tags);
 
-    \Drupal::configFactory()
+    Drupal::configFactory()
       ->getEditable('stark.settings')
       ->set('third_party_settings.shortcut.module_link', TRUE)
       ->save(TRUE);

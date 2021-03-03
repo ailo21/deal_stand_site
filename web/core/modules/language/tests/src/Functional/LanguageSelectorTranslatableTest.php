@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\language\Functional;
 
+use Drupal;
 use Drupal\Tests\BrowserTestBase;
 
 /**
@@ -70,11 +71,11 @@ class LanguageSelectorTranslatableTest extends BrowserTestBase {
   public function testLanguageStringSelector() {
     // Add another language.
     $edit = ['predefined_langcode' => 'es'];
-    $this->drupalPostForm('admin/config/regional/language/add', $edit, t('Add language'));
+    $this->drupalPostForm('admin/config/regional/language/add', $edit, 'Add language');
 
     // Translate the string English in Spanish (Inglés). Override config entity.
     $name_translation = 'Inglés';
-    \Drupal::languageManager()
+    Drupal::languageManager()
       ->getLanguageConfigOverride('es', 'language.entity.en')
       ->set('label', $name_translation)
       ->save();
@@ -87,7 +88,7 @@ class LanguageSelectorTranslatableTest extends BrowserTestBase {
     $elements = $this->xpath('//select[@id=:id]//option[@value=:option]', [':id' => 'edit-settings-user-user-settings-language-langcode', ':option' => 'en']);
 
     // Check that the language text is translated.
-    $this->assertEqual($elements[0]->getText(), $name_translation, 'Checking the option string English is translated to Spanish.');
+    $this->assertEqual($name_translation, $elements[0]->getText(), 'Checking the option string English is translated to Spanish.');
   }
 
 }

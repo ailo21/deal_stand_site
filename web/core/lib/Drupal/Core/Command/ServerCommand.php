@@ -2,11 +2,13 @@
 
 namespace Drupal\Core\Command;
 
+use Drupal;
 use Drupal\Core\Database\ConnectionNotDefinedException;
 use Drupal\Core\DrupalKernel;
 use Drupal\Core\DrupalKernelInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\user\Entity\User;
+use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -148,8 +150,8 @@ class ServerCommand extends Command {
       $url = escapeshellarg($url);
     }
 
-    $is_linux = (new Process('which xdg-open'))->run();
-    $is_osx = (new Process('which open'))->run();
+    $is_linux = Process::fromShellCommandline('which xdg-open')->run();
+    $is_osx = Process::fromShellCommandline('which open')->run();
     if ($is_linux === 0) {
       $cmd = 'xdg-open ' . $url;
     }
@@ -176,7 +178,6 @@ class ServerCommand extends Command {
     $php = "<?php sleep(2); passthru(\"$cmd\"); ?>";
     $process = new PhpProcess($php);
     $process->start();
-    return;
   }
 
   /**
@@ -187,7 +188,7 @@ class ServerCommand extends Command {
    */
   protected function getOneTimeLoginUrl() {
     $user = User::load(1);
-    \Drupal::moduleHandler()->load('user');
+    Drupal::moduleHandler()->load('user');
     return user_pass_reset_url($user);
   }
 
@@ -212,7 +213,7 @@ class ServerCommand extends Command {
     $finder = new PhpExecutableFinder();
     $binary = $finder->find();
     if ($binary === FALSE) {
-      throw new \RuntimeException('Unable to find the PHP binary.');
+      throw new RuntimeException('Unable to find the PHP binary.');
     }
 
     $io->writeln("<info>Drupal development server started:</info> <http://{$host}:{$port}>");

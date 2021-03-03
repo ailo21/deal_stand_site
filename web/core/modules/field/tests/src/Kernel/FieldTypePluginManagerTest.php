@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\field\Kernel;
 
+use Drupal;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Extension\ExtensionDiscovery;
 use Drupal\Core\Field\BaseFieldDefinition;
@@ -18,11 +19,11 @@ class FieldTypePluginManagerTest extends FieldKernelTestBase {
    * Tests the default settings convenience methods.
    */
   public function testDefaultSettings() {
-    $field_type_manager = \Drupal::service('plugin.manager.field.field_type');
+    $field_type_manager = Drupal::service('plugin.manager.field.field_type');
     foreach (['test_field', 'shape', 'hidden_test_field'] as $type) {
       $definition = $field_type_manager->getDefinition($type);
-      $this->assertIdentical($field_type_manager->getDefaultStorageSettings($type), $definition['class']::defaultStorageSettings(), new FormattableMarkup("%type storage settings were returned", ['%type' => $type]));
-      $this->assertIdentical($field_type_manager->getDefaultFieldSettings($type), $definition['class']::defaultFieldSettings(), new FormattableMarkup(" %type field settings were returned", ['%type' => $type]));
+      $this->assertSame($field_type_manager->getDefaultStorageSettings($type), $definition['class']::defaultStorageSettings(), new FormattableMarkup("%type storage settings were returned", ['%type' => $type]));
+      $this->assertSame($field_type_manager->getDefaultFieldSettings($type), $definition['class']::defaultFieldSettings(), new FormattableMarkup(" %type field settings were returned", ['%type' => $type]));
     }
   }
 
@@ -31,7 +32,7 @@ class FieldTypePluginManagerTest extends FieldKernelTestBase {
    */
   public function testCreateInstance() {
     /** @var \Drupal\Core\Field\FieldTypePluginManagerInterface $field_type_manager */
-    $field_type_manager = \Drupal::service('plugin.manager.field.field_type');
+    $field_type_manager = Drupal::service('plugin.manager.field.field_type');
     foreach (['test_field', 'shape', 'hidden_test_field'] as $type) {
       $definition = $field_type_manager->getDefinition($type);
 
@@ -58,7 +59,7 @@ class FieldTypePluginManagerTest extends FieldKernelTestBase {
    */
   public function testCreateInstanceWithConfig() {
     /** @var \Drupal\Core\Field\FieldTypePluginManagerInterface $field_type_manager */
-    $field_type_manager = \Drupal::service('plugin.manager.field.field_type');
+    $field_type_manager = Drupal::service('plugin.manager.field.field_type');
     $type = 'test_field';
     $definition = $field_type_manager->getDefinition($type);
 
@@ -81,8 +82,8 @@ class FieldTypePluginManagerTest extends FieldKernelTestBase {
 
     $this->assertInstanceOf($class, $instance);
     $this->assertEqual($field_name, $instance->getName(), new FormattableMarkup('Instance name is @name', ['@name' => $field_name]));
-    $this->assertEqual($instance->getFieldDefinition()->getLabel(), 'Jenny', 'Instance label is Jenny');
-    $this->assertEqual($instance->getFieldDefinition()->getDefaultValue($entity), [['value' => 8675309]], 'Instance default_value is 8675309');
+    $this->assertEqual('Jenny', $instance->getFieldDefinition()->getLabel(), 'Instance label is Jenny');
+    $this->assertEqual([['value' => 8675309]], $instance->getFieldDefinition()->getDefaultValue($entity), 'Instance default_value is 8675309');
   }
 
   /**
@@ -94,10 +95,13 @@ class FieldTypePluginManagerTest extends FieldKernelTestBase {
     $this->enableAllCoreModules();
 
     /** @var \Drupal\Core\Field\FieldTypePluginManagerInterface $field_type_manager */
-    $field_type_manager = \Drupal::service('plugin.manager.field.field_type');
+    $field_type_manager = Drupal::service('plugin.manager.field.field_type');
     foreach ($field_type_manager->getDefinitions() as $plugin_id => $definition) {
       $class = $definition['class'];
       $property = $class::mainPropertyName();
+      if ($property === NULL) {
+        continue;
+      }
       $storage_definition = BaseFieldDefinition::create($plugin_id);
       $property_definitions = $class::propertyDefinitions($storage_definition);
       $properties = implode(', ', array_keys($property_definitions));

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\statistics\Functional;
 
+use Drupal;
 use Drupal\Component\Render\FormattableMarkup;
 
 /**
@@ -21,7 +22,7 @@ class StatisticsTokenReplaceTest extends StatisticsTestBase {
    * Creates a node, then tests the statistics tokens generated from it.
    */
   public function testStatisticsTokenReplacement() {
-    $language_interface = \Drupal::languageManager()->getCurrentLanguage();
+    $language_interface = Drupal::languageManager()->getCurrentLanguage();
 
     // Create user and node.
     $user = $this->drupalCreateUser(['create page content']);
@@ -36,10 +37,10 @@ class StatisticsTokenReplaceTest extends StatisticsTestBase {
     $headers = ['Content-Type' => 'application/x-www-form-urlencoded'];
     global $base_url;
     $stats_path = $base_url . '/' . drupal_get_path('module', 'statistics') . '/statistics.php';
-    $client = \Drupal::httpClient();
+    $client = Drupal::httpClient();
     $client->post($stats_path, ['headers' => $headers, 'body' => $post]);
     /** @var \Drupal\statistics\StatisticsViewsResult $statistics */
-    $statistics = \Drupal::service('statistics.storage.node')->fetchView($node->id());
+    $statistics = Drupal::service('statistics.storage.node')->fetchView($node->id());
 
     // Generate and test tokens.
     $tests = [];
@@ -54,8 +55,8 @@ class StatisticsTokenReplaceTest extends StatisticsTestBase {
     $this->assertNotContains(0, array_map('strlen', $tests), 'No empty tokens generated.');
 
     foreach ($tests as $input => $expected) {
-      $output = \Drupal::token()->replace($input, ['node' => $node], ['langcode' => $language_interface->getId()]);
-      $this->assertEqual($output, $expected, new FormattableMarkup('Statistics token %token replaced.', ['%token' => $input]));
+      $output = Drupal::token()->replace($input, ['node' => $node], ['langcode' => $language_interface->getId()]);
+      $this->assertEqual($expected, $output, new FormattableMarkup('Statistics token %token replaced.', ['%token' => $input]));
     }
   }
 

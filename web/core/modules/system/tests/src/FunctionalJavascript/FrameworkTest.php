@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\system\FunctionalJavascript;
 
+use Drupal;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 
@@ -67,7 +68,7 @@ class FrameworkTest extends WebDriverTestBase {
 
     // Verify the expected setting was added, both to drupalSettings, and as
     // the first AJAX command.
-    $this->assertIdentical($new_settings[$expected['setting_name']], $expected['setting_value'], new FormattableMarkup('Page now has the %setting.', ['%setting' => $expected['setting_name']]));
+    $this->assertSame($expected['setting_value'], $new_settings[$expected['setting_name']], new FormattableMarkup('Page now has the %setting.', ['%setting' => $expected['setting_name']]));
 
     // Verify the expected CSS file was added, both to drupalSettings, and as
     // the second AJAX command for inclusion into the HTML.
@@ -103,7 +104,7 @@ class FrameworkTest extends WebDriverTestBase {
   public function testLazyLoadOverriddenCSS() {
     // The test theme overrides js.module.css without an implementation,
     // thereby removing it.
-    \Drupal::service('theme_installer')->install(['test_theme']);
+    Drupal::service('theme_installer')->install(['test_theme']);
     $this->config('system.theme')
       ->set('default', 'test_theme')
       ->save();
@@ -122,7 +123,7 @@ class FrameworkTest extends WebDriverTestBase {
     // information about the file; we only really care about whether it appears
     // in a LINK or STYLE tag, for which Drupal always adds a query string for
     // cache control.
-    $assert->responseNotContains('js.module.css?', 'Ajax lazy loading does not add overridden CSS files.');
+    $assert->responseNotContains('js.module.css?');
   }
 
 }

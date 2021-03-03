@@ -2,6 +2,7 @@
 
 namespace Drupal\block;
 
+use Drupal;
 use Drupal\Core\Block\MainContentBlockPluginInterface;
 use Drupal\Core\Block\TitleBlockPluginInterface;
 use Drupal\Core\Cache\Cache;
@@ -92,7 +93,7 @@ class BlockViewBuilder extends EntityViewBuilder implements TrustedCallbackInter
    * @return array
    *   A render array with a #pre_render callback to render the block.
    */
-  protected static function buildPreRenderableBlock($entity, ModuleHandlerInterface $module_handler) {
+  protected static function buildPreRenderableBlock(BlockInterface $entity, ModuleHandlerInterface $module_handler) {
     $plugin = $entity->getPlugin();
     $plugin_id = $plugin->getPluginId();
     $base_id = $plugin->getBaseId();
@@ -101,8 +102,8 @@ class BlockViewBuilder extends EntityViewBuilder implements TrustedCallbackInter
 
     // Inject runtime contexts.
     if ($plugin instanceof ContextAwarePluginInterface) {
-      $contexts = \Drupal::service('context.repository')->getRuntimeContexts($plugin->getContextMapping());
-      \Drupal::service('context.handler')->applyContextMapping($plugin, $contexts);
+      $contexts = Drupal::service('context.repository')->getRuntimeContexts($plugin->getContextMapping());
+      Drupal::service('context.handler')->applyContextMapping($plugin, $contexts);
     }
 
     // Create the render array for the block as a whole.
@@ -155,7 +156,7 @@ class BlockViewBuilder extends EntityViewBuilder implements TrustedCallbackInter
    *   A render array with a #pre_render callback to render the block.
    */
   public static function lazyBuilder($entity_id, $view_mode) {
-    return static::buildPreRenderableBlock(Block::load($entity_id), \Drupal::service('module_handler'));
+    return static::buildPreRenderableBlock(Block::load($entity_id), Drupal::service('module_handler'));
   }
 
   /**

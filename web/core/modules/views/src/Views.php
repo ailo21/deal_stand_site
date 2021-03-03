@@ -2,6 +2,9 @@
 
 namespace Drupal\views;
 
+use Drupal;
+use Exception;
+
 /**
  * Static service container wrapper for views.
  */
@@ -55,7 +58,7 @@ class Views {
    *   Returns a views data cache object.
    */
   public static function viewsData() {
-    return \Drupal::service('views.views_data');
+    return Drupal::service('views.views_data');
   }
 
   /**
@@ -65,7 +68,7 @@ class Views {
    *   Returns a views data helper object.
    */
   public static function viewsDataHelper() {
-    return \Drupal::service('views.views_data_helper');
+    return Drupal::service('views.views_data_helper');
   }
 
   /**
@@ -75,7 +78,7 @@ class Views {
    *   Returns a views executable factory.
    */
   public static function executableFactory() {
-    return \Drupal::service('views.executable');
+    return Drupal::service('views.executable');
   }
 
   /**
@@ -85,7 +88,7 @@ class Views {
    *   Returns a view analyzer object.
    */
   public static function analyzer() {
-    return \Drupal::service('views.analyzer');
+    return Drupal::service('views.analyzer');
   }
 
   /**
@@ -97,7 +100,7 @@ class Views {
    * @return \Drupal\views\Plugin\ViewsPluginManager
    */
   public static function pluginManager($type) {
-    return \Drupal::service('plugin.manager.views.' . $type);
+    return Drupal::service('plugin.manager.views.' . $type);
   }
 
   /**
@@ -106,7 +109,7 @@ class Views {
    * @return \Drupal\views\Plugin\ViewsHandlerManager
    */
   public static function handlerManager($type) {
-    return \Drupal::service('plugin.manager.views.' . $type);
+    return Drupal::service('plugin.manager.views.' . $type);
   }
 
   /**
@@ -119,7 +122,7 @@ class Views {
    *   A view executable instance or NULL if the view does not exist.
    */
   public static function getView($id) {
-    $view = \Drupal::entityTypeManager()->getStorage('view')->load($id);
+    $view = Drupal::entityTypeManager()->getStorage('view')->load($id);
     if ($view) {
       return static::executableFactory()->get($view);
     }
@@ -127,7 +130,7 @@ class Views {
   }
 
   /**
-   * Fetches a list of all base tables available
+   * Fetches a list of all base tables available.
    *
    * @param string $type
    *   Either 'display', 'style' or 'row'.
@@ -182,7 +185,7 @@ class Views {
    * Gets enabled display extenders.
    */
   public static function getEnabledDisplayExtenders() {
-    $enabled = array_filter((array) \Drupal::config('views.settings')->get('display_extenders'));
+    $enabled = array_filter((array) Drupal::config('views.settings')->get('display_extenders'));
 
     return array_combine($enabled, $enabled);
   }
@@ -214,13 +217,13 @@ class Views {
       }
     }
 
-    $entity_ids = \Drupal::entityQuery('view')
+    $entity_ids = Drupal::entityQuery('view')
       ->condition('status', TRUE)
       ->condition("display.*.display_plugin", $plugin_ids, 'IN')
       ->execute();
 
     $result = [];
-    foreach (\Drupal::entityTypeManager()->getStorage('view')->loadMultiple($entity_ids) as $view) {
+    foreach (Drupal::entityTypeManager()->getStorage('view')->loadMultiple($entity_ids) as $view) {
       // Check each display to see if it meets the criteria and is enabled.
 
       foreach ($view->get('display') as $id => $display) {
@@ -243,7 +246,7 @@ class Views {
    *   An array of loaded view entities.
    */
   public static function getAllViews() {
-    return \Drupal::entityTypeManager()->getStorage('view')->loadMultiple();
+    return Drupal::entityTypeManager()->getStorage('view')->loadMultiple();
   }
 
   /**
@@ -253,11 +256,11 @@ class Views {
    *   An array of loaded enabled view entities.
    */
   public static function getEnabledViews() {
-    $query = \Drupal::entityQuery('view')
+    $query = Drupal::entityQuery('view')
       ->condition('status', TRUE)
       ->execute();
 
-    return \Drupal::entityTypeManager()->getStorage('view')->loadMultiple($query);
+    return Drupal::entityTypeManager()->getStorage('view')->loadMultiple($query);
   }
 
   /**
@@ -267,11 +270,11 @@ class Views {
    *   An array of loaded disabled view entities.
    */
   public static function getDisabledViews() {
-    $query = \Drupal::entityQuery('view')
+    $query = Drupal::entityQuery('view')
       ->condition('status', FALSE)
       ->execute();
 
-    return \Drupal::entityTypeManager()->getStorage('view')->loadMultiple($query);
+    return Drupal::entityTypeManager()->getStorage('view')->loadMultiple($query);
   }
 
   /**
@@ -326,7 +329,7 @@ class Views {
     else {
       // Append a ':' to the $exclude_view string so we always have more than one
       // item to explode.
-      list($exclude_view_name, $exclude_view_display) = explode(':', "$exclude_view:");
+      [$exclude_view_name, $exclude_view_display] = explode(':', "$exclude_view:");
     }
 
     $options = [];
@@ -511,7 +514,7 @@ class Views {
     }
 
     if (!in_array($type, ['plugin', 'handler'])) {
-      throw new \Exception('Invalid plugin type used. Valid types are "plugin" or "handler".');
+      throw new Exception('Invalid plugin type used. Valid types are "plugin" or "handler".');
     }
 
     return array_keys(array_filter(static::$plugins, function ($plugin_type) use ($type) {
@@ -526,7 +529,7 @@ class Views {
    */
   protected static function t($string, array $args = [], array $options = []) {
     if (empty(static::$translationManager)) {
-      static::$translationManager = \Drupal::service('string_translation');
+      static::$translationManager = Drupal::service('string_translation');
     }
 
     return static::$translationManager->translate($string, $args, $options);

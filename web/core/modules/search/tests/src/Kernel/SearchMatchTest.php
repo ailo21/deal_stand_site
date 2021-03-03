@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\search\Kernel;
 
+use Drupal;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\KernelTests\KernelTestBase;
@@ -50,7 +51,7 @@ class SearchMatchTest extends KernelTestBase {
   public function _setup() {
     $this->config('search.settings')->set('index.minimum_word_size', 3)->save();
 
-    $search_index = \Drupal::service('search.index');
+    $search_index = Drupal::service('search.index');
     assert($search_index instanceof SearchIndexInterface);
     for ($i = 1; $i <= 7; ++$i) {
       $search_index->index(static::SEARCH_TYPE, $i, LanguageInterface::LANGCODE_NOT_SPECIFIED, $this->getText($i));
@@ -253,7 +254,7 @@ class SearchMatchTest extends KernelTestBase {
     $this->assertEqual($scores, array_reverse($sorted), "Query order '$query'");
 
     // Check range.
-    $this->assertEqual(!count($scores) || (min($scores) > 0.0 && max($scores) <= 1.0001), TRUE, "Query scoring '$query'");
+    $this->assertTrue(!count($scores) || (min($scores) > 0.0 && max($scores) <= 1.0001), "Query scoring '$query'");
   }
 
 }

@@ -3,6 +3,7 @@
 namespace Drupal\Tests\Component\Utility;
 
 use Drupal\Component\Utility\UrlHelper;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -512,7 +513,7 @@ class UrlHelperTest extends TestCase {
   }
 
   /**
-   * Enhances test urls with schemes
+   * Enhances test urls with schemes.
    *
    * @param array $urls
    *   The list of urls.
@@ -618,7 +619,7 @@ class UrlHelperTest extends TestCase {
    * @dataProvider providerTestExternalIsLocalInvalid
    */
   public function testExternalIsLocalInvalid($url, $base_url) {
-    $this->expectException(\InvalidArgumentException::class);
+    $this->expectException(InvalidArgumentException::class);
     UrlHelper::externalIsLocal($url, $base_url);
   }
 

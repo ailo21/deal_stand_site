@@ -2,6 +2,7 @@
 
 namespace Drupal\field\Entity;
 
+use Drupal;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
@@ -286,7 +287,7 @@ class FieldStorageConfig extends ConfigEntityBase implements FieldStorageConfigI
     // Filter out unknown settings and make sure all settings are present, so
     // that a complete field definition is passed to the various hooks and
     // written to config.
-    $field_type_manager = \Drupal::service('plugin.manager.field.field_type');
+    $field_type_manager = Drupal::service('plugin.manager.field.field_type');
     $default_settings = $field_type_manager->getDefaultStorageSettings($this->type);
     $this->settings = array_intersect_key($this->settings, $default_settings) + $default_settings;
 
@@ -310,8 +311,8 @@ class FieldStorageConfig extends ConfigEntityBase implements FieldStorageConfigI
    *   If the field definition is invalid.
    */
   protected function preSaveNew(EntityStorageInterface $storage) {
-    $entity_field_manager = \Drupal::service('entity_field.manager');
-    $field_type_manager = \Drupal::service('plugin.manager.field.field_type');
+    $entity_field_manager = Drupal::service('entity_field.manager');
+    $field_type_manager = Drupal::service('plugin.manager.field.field_type');
 
     // Assign the ID.
     $this->id = $this->id();
@@ -337,7 +338,7 @@ class FieldStorageConfig extends ConfigEntityBase implements FieldStorageConfigI
     $this->module = $field_type['provider'];
 
     // Notify the field storage definition listener.
-    \Drupal::service('field_storage_definition.listener')->onFieldStorageDefinitionCreate($this);
+    Drupal::service('field_storage_definition.listener')->onFieldStorageDefinitionCreate($this);
   }
 
   /**
@@ -349,11 +350,11 @@ class FieldStorageConfig extends ConfigEntityBase implements FieldStorageConfigI
     $this->addDependency('module', $this->getTypeProvider());
     // Ask the field type for any additional storage dependencies.
     // @see \Drupal\Core\Field\FieldItemInterface::calculateStorageDependencies()
-    $definition = \Drupal::service('plugin.manager.field.field_type')->getDefinition($this->getType(), FALSE);
+    $definition = Drupal::service('plugin.manager.field.field_type')->getDefinition($this->getType(), FALSE);
     $this->addDependencies($definition['class']::calculateStorageDependencies($this));
 
     // Ensure the field is dependent on the provider of the entity type.
-    $entity_type = \Drupal::entityTypeManager()->getDefinition($this->entity_type);
+    $entity_type = Drupal::entityTypeManager()->getDefinition($this->entity_type);
     $this->addDependency('module', $entity_type->getProvider());
     return $this;
   }
@@ -365,7 +366,7 @@ class FieldStorageConfig extends ConfigEntityBase implements FieldStorageConfigI
    *   The entity storage.
    */
   protected function preSaveUpdated(EntityStorageInterface $storage) {
-    $module_handler = \Drupal::moduleHandler();
+    $module_handler = Drupal::moduleHandler();
 
     // Some updates are always disallowed.
     if ($this->getType() != $this->original->getType()) {
@@ -382,7 +383,7 @@ class FieldStorageConfig extends ConfigEntityBase implements FieldStorageConfigI
     // Notify the field storage definition listener. A listener can reject the
     // definition update as invalid by raising an exception, which stops
     // execution before the definition is written to config.
-    \Drupal::service('field_storage_definition.listener')->onFieldStorageDefinitionUpdate($this, $this->original);
+    Drupal::service('field_storage_definition.listener')->onFieldStorageDefinitionUpdate($this, $this->original);
   }
 
   /**
@@ -391,7 +392,7 @@ class FieldStorageConfig extends ConfigEntityBase implements FieldStorageConfigI
   public function postSave(EntityStorageInterface $storage, $update = TRUE) {
     if ($update) {
       // Invalidate the render cache for all affected entities.
-      $entity_type_manager = \Drupal::entityTypeManager();
+      $entity_type_manager = Drupal::entityTypeManager();
       $entity_type = $this->getTargetEntityTypeId();
       if ($entity_type_manager->hasHandler($entity_type, 'view_builder')) {
         $entity_type_manager->getViewBuilder($entity_type)->resetCache();
@@ -404,7 +405,7 @@ class FieldStorageConfig extends ConfigEntityBase implements FieldStorageConfigI
    */
   public static function preDelete(EntityStorageInterface $storage, array $field_storages) {
     /** @var \Drupal\Core\Field\DeletedFieldsRepositoryInterface $deleted_fields_repository */
-    $deleted_fields_repository = \Drupal::service('entity_field.deleted_fields_repository');
+    $deleted_fields_repository = Drupal::service('entity_field.deleted_fields_repository');
 
     // Set the static flag so that we don't delete field storages whilst
     // deleting fields.
@@ -419,7 +420,7 @@ class FieldStorageConfig extends ConfigEntityBase implements FieldStorageConfigI
     foreach ($field_storages as $field_storage) {
       // Only mark a field for purging if there is data. Otherwise, just remove
       // it.
-      $target_entity_storage = \Drupal::entityTypeManager()->getStorage($field_storage->getTargetEntityTypeId());
+      $target_entity_storage = Drupal::entityTypeManager()->getStorage($field_storage->getTargetEntityTypeId());
       if (!$field_storage->deleted && $target_entity_storage instanceof FieldableEntityStorageInterface && $target_entity_storage->countFieldData($field_storage, TRUE)) {
         $storage_definition = clone $field_storage;
         $storage_definition->deleted = TRUE;
@@ -435,7 +436,7 @@ class FieldStorageConfig extends ConfigEntityBase implements FieldStorageConfigI
     // Notify the storage.
     foreach ($fields as $field) {
       if (!$field->deleted) {
-        \Drupal::service('field_storage_definition.listener')->onFieldStorageDefinitionDelete($field);
+        Drupal::service('field_storage_definition.listener')->onFieldStorageDefinitionDelete($field);
         $field->deleted = TRUE;
       }
     }
@@ -496,7 +497,7 @@ class FieldStorageConfig extends ConfigEntityBase implements FieldStorageConfigI
    */
   public function getBundles() {
     if (!$this->isDeleted()) {
-      $map = \Drupal::service('entity_field.manager')->getFieldMap();
+      $map = Drupal::service('entity_field.manager')->getFieldMap();
       if (isset($map[$this->getTargetEntityTypeId()][$this->getName()]['bundles'])) {
         return $map[$this->getTargetEntityTypeId()][$this->getName()]['bundles'];
       }
@@ -540,7 +541,7 @@ class FieldStorageConfig extends ConfigEntityBase implements FieldStorageConfigI
     //   some CPU and memory profiling to see if it's worth statically caching
     //   $field_type_info, or the default field storage and field settings,
     //   within $this.
-    $field_type_manager = \Drupal::service('plugin.manager.field.field_type');
+    $field_type_manager = Drupal::service('plugin.manager.field.field_type');
 
     $settings = $field_type_manager->getDefaultStorageSettings($this->getType());
     return $this->settings + $settings;
@@ -630,13 +631,13 @@ class FieldStorageConfig extends ConfigEntityBase implements FieldStorageConfigI
    */
   public function getCardinality() {
     /** @var \Drupal\Core\Field\FieldTypePluginManager $field_type_manager */
-    $field_type_manager = \Drupal::service('plugin.manager.field.field_type');
+    $field_type_manager = Drupal::service('plugin.manager.field.field_type');
     $definition = $field_type_manager->getDefinition($this->getType());
-    $enforced_cardinality = isset($definition['cardinality']) ? $definition['cardinality'] : NULL;
+    $enforced_cardinality = isset($definition['cardinality']) ? (int) $definition['cardinality'] : NULL;
 
     // Enforced cardinality is a positive integer or -1.
     if ($enforced_cardinality !== NULL && $enforced_cardinality < 1 && $enforced_cardinality !== FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED) {
-      throw new FieldException("Invalid enforced cardinality '$enforced_cardinality'. Allowed values: a positive integer or -1.");
+      throw new FieldException("Invalid enforced cardinality '{$definition['cardinality']}'. Allowed values: a positive integer or -1.");
     }
 
     return $enforced_cardinality ?: $this->cardinality;
@@ -659,7 +660,7 @@ class FieldStorageConfig extends ConfigEntityBase implements FieldStorageConfigI
     // without modifying the entity being worked on.
     if (is_subclass_of($this->getFieldItemClass(), OptionsProviderInterface::class)) {
       $items = $entity->get($this->getName());
-      return \Drupal::service('plugin.manager.field.field_type')->createFieldItem($items, 0);
+      return Drupal::service('plugin.manager.field.field_type')->createFieldItem($items, 0);
     }
     // @todo: Allow setting custom options provider, see
     // https://www.drupal.org/node/2002138.
@@ -702,7 +703,7 @@ class FieldStorageConfig extends ConfigEntityBase implements FieldStorageConfigI
    *   TRUE if the field has data for any entity; FALSE otherwise.
    */
   public function hasData() {
-    return \Drupal::entityTypeManager()->getStorage($this->entity_type)->countFieldData($this, TRUE);
+    return Drupal::entityTypeManager()->getStorage($this->entity_type)->countFieldData($this, TRUE);
   }
 
   /**
@@ -783,7 +784,7 @@ class FieldStorageConfig extends ConfigEntityBase implements FieldStorageConfigI
    * Helper to retrieve the field item class.
    */
   protected function getFieldItemClass() {
-    $type_definition = \Drupal::typedDataManager()
+    $type_definition = Drupal::typedDataManager()
       ->getDefinition('field_item:' . $this->getType());
     return $type_definition['class'];
   }
@@ -796,12 +797,12 @@ class FieldStorageConfig extends ConfigEntityBase implements FieldStorageConfigI
    * @param string $field_name
    *   Name of the field.
    *
-   * @return static
+   * @return \Drupal\field\FieldStorageConfigInterface|null
    *   The field config entity if one exists for the provided field name,
    *   otherwise NULL.
    */
   public static function loadByName($entity_type_id, $field_name) {
-    return \Drupal::entityTypeManager()->getStorage('field_storage_config')->load($entity_type_id . '.' . $field_name);
+    return Drupal::entityTypeManager()->getStorage('field_storage_config')->load($entity_type_id . '.' . $field_name);
   }
 
   /**

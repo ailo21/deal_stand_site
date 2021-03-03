@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\media\FunctionalJavascript;
 
+use DOMXPath;
+use Drupal;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Url;
 use Drupal\editor\Entity\Editor;
@@ -267,7 +269,6 @@ class CKEditorIntegrationTest extends WebDriverTestBase {
     $this->config('node.settings')
       ->set('use_admin_theme', TRUE)
       ->save();
-    $this->container->get('router.builder')->rebuild();
 
     // Allow the test user to view the admin theme.
     $this->adminUser->addRole($this->drupalCreateRole(['view the administration theme']));
@@ -396,7 +397,7 @@ class CKEditorIntegrationTest extends WebDriverTestBase {
     $source = $assert_session->elementExists('css', 'textarea.cke_source');
     $value = $source->getValue();
     $dom = Html::load($value);
-    $xpath = new \DOMXPath($dom);
+    $xpath = new DOMXPath($dom);
     $drupal_media = $xpath->query('//drupal-media')[0];
     $this->assertSame('Caught in a landslide! No escape from reality!', $drupal_media->getAttribute('data-caption'));
 
@@ -653,6 +654,8 @@ class CKEditorIntegrationTest extends WebDriverTestBase {
     $this->waitForEditor();
     $this->assignNameToCkeditorIframe();
     $this->getSession()->switchToIFrame('ckeditor');
+    // Wait for the media preview to load.
+    $this->assertNotEmpty($assert_session->waitForElementVisible('css', 'drupal-media img'));
     // Test that by default no alt attribute is present on the drupal-media
     // element.
     $this->pressEditorButton('source');
@@ -667,6 +670,7 @@ class CKEditorIntegrationTest extends WebDriverTestBase {
     $assert_session->elementAttributeContains('named', ['field', 'attributes[alt]'], 'placeholder', 'default alt');
 
     // Fill in the alt field, submit and return to CKEditor.
+    // cSpell:disable-next-line
     $who_is_zartan = 'Zartan is the leader of the Dreadnoks.';
     $page->fillField('attributes[alt]', $who_is_zartan);
     $this->submitDialog();
@@ -747,7 +751,7 @@ class CKEditorIntegrationTest extends WebDriverTestBase {
    * Test that dialog loads appropriate translation's alt text.
    */
   public function testTranslationAlt() {
-    \Drupal::service('module_installer')->install(['language', 'content_translation']);
+    Drupal::service('module_installer')->install(['language', 'content_translation']);
     $this->resetAll();
     ConfigurableLanguage::create(['id' => 'fr'])->save();
     ContentLanguageSettings::loadByEntityTypeBundle('media', 'image')
@@ -793,6 +797,7 @@ class CKEditorIntegrationTest extends WebDriverTestBase {
     $host->save();
 
     $translation = $host->addTranslation('fr');
+    // cSpell:disable-next-line
     $translation->title = 'Animaux avec des noms étranges';
     $translation->body->value = $host->body->value;
     $translation->body->format = $host->body->format;
@@ -810,16 +815,20 @@ class CKEditorIntegrationTest extends WebDriverTestBase {
     $this->getSession()->switchToIFrame('ckeditor');
 
     // Test that the default alt attribute displays without an override.
+    // cSpell:disable-next-line
     $this->assertNotEmpty($assert_session->waitForElementVisible('xpath', '//img[contains(@alt, "texte alternatif par défaut")]'));
     // Test `aria-label` attribute appears on the widget wrapper.
+    // cSpell:disable-next-line
     $assert_session->elementExists('css', '.cke_widget_drupalmedia[aria-label="Tatou poilu hurlant"]');
     $page->pressButton('Edit media');
     $this->waitForMetadataDialog();
     // Assert that the placeholder is set to the value of the media field's
     // alt text.
+    // cSpell:disable-next-line
     $assert_session->elementAttributeContains('named', ['field', 'attributes[alt]'], 'placeholder', 'texte alternatif par défaut');
 
     // Fill in the alt field in the dialog.
+    // cSpell:disable-next-line
     $qui_est_zartan = 'Zartan est le chef des Dreadnoks.';
     $page->fillField('attributes[alt]', $qui_est_zartan);
     $this->submitDialog();
@@ -1101,7 +1110,7 @@ class CKEditorIntegrationTest extends WebDriverTestBase {
     $this->assignNameToCkeditorIframe();
     $this->getSession()->switchToIFrame('ckeditor');
     // Wait for preview to load.
-    $this->assertNotEmpty($img = $assert_session->waitForElement('css', 'drupal-media img'));
+    $this->assertNotEmpty($assert_session->waitForElement('css', 'drupal-media img'));
     // Assert the drupal-media element starts without a data-align attribute.
     $drupal_media = $assert_session->elementExists('css', 'drupal-media');
     $this->assertFalse($drupal_media->hasAttribute('data-align'));
@@ -1117,7 +1126,7 @@ class CKEditorIntegrationTest extends WebDriverTestBase {
     foreach ($alignments as $alignment) {
       $this->fillFieldInMetadataDialogAndSubmit('attributes[data-align]', $alignment);
       // Wait for preview to load.
-      $this->assertNotEmpty($img = $assert_session->waitForElement('css', 'drupal-media img'));
+      $this->assertNotEmpty($assert_session->waitForElement('css', 'drupal-media img'));
       // Now verify the result. Assert the first element within the
       // <drupal-media> element has the alignment class.
       $selector = sprintf('drupal-media[data-align="%s"] .caption-drupal-media.align-%s', $alignment, $alignment);
@@ -1543,7 +1552,7 @@ JS;
       ->elementExists('css', 'textarea.cke_source')
       ->getValue();
     $dom = Html::load($value);
-    $xpath = new \DOMXPath($dom);
+    $xpath = new DOMXPath($dom);
     $list = $xpath->query('//drupal-media');
     return count($list) > 0 ? $list[0] : NULL;
   }

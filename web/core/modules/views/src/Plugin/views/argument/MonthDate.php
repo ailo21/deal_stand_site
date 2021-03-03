@@ -2,6 +2,8 @@
 
 namespace Drupal\views\Plugin\views\argument;
 
+use InvalidArgumentException;
+
 /**
  * Argument handler for a month (MM)
  *
@@ -24,7 +26,12 @@ class MonthDate extends Date {
    */
   public function summaryName($data) {
     $month = str_pad($data->{$this->name_alias}, 2, '0', STR_PAD_LEFT);
-    return $this->dateFormatter->format(strtotime("2005" . $month . "15" . " 00:00:00 UTC"), 'custom', $this->format, 'UTC');
+    try {
+      return $this->dateFormatter->format(strtotime("2005" . $month . "15" . " 00:00:00 UTC"), 'custom', $this->format, 'UTC');
+    }
+    catch (InvalidArgumentException $e) {
+      return parent::summaryName($data);
+    }
   }
 
   /**
@@ -32,7 +39,12 @@ class MonthDate extends Date {
    */
   public function title() {
     $month = str_pad($this->argument, 2, '0', STR_PAD_LEFT);
-    return $this->dateFormatter->format(strtotime("2005" . $month . "15" . " 00:00:00 UTC"), 'custom', $this->format, 'UTC');
+    try {
+      return $this->dateFormatter->format(strtotime("2005" . $month . "15" . " 00:00:00 UTC"), 'custom', $this->format, 'UTC');
+    }
+    catch (InvalidArgumentException $e) {
+      return parent::title();
+    }
   }
 
   public function summaryArgument($data) {

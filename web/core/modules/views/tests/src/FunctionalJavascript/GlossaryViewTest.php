@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\views\FunctionalJavascript;
 
+use Drupal;
 use Drupal\Core\Url;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\language\Entity\ConfigurableLanguage;
@@ -46,7 +47,7 @@ class GlossaryViewTest extends WebDriverTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    ViewTestData::createTestViews(get_class($this), ['views_test_config']);
+    ViewTestData::createTestViews(static::class, ['views_test_config']);
 
     // Create a Content type and some test nodes with titles that start with
     // different letters.
@@ -109,7 +110,7 @@ class GlossaryViewTest extends WebDriverTestBase {
     $config->set('url.prefixes', ['en' => 'en', 'nl' => 'nl'])
       ->save();
 
-    \Drupal::service('kernel')->rebuildContainer();
+    Drupal::service('kernel')->rebuildContainer();
 
     $url = Url::fromRoute('view.test_glossary.page_1');
     $this->drupalGet($url);

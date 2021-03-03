@@ -6,6 +6,7 @@ dependencies:
     - field.field.node.note.body
     - field.field.node.note.field_category
     - field.field.node.note.field_images
+    - field.field.node.note.field_phone
     - field.field.node.note.field_price
     - image.style.thumbnail
     - node.type.note
@@ -40,6 +41,14 @@ content:
       preview_image_style: thumbnail
     third_party_settings: {  }
     type: image_image
+    region: content
+  field_phone:
+    weight: 26
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: string_textfield
     region: content
   field_price:
     weight: 4

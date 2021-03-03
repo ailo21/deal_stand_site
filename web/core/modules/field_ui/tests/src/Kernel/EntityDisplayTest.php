@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\field_ui\Kernel;
 
+use Drupal;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Database\Database;
@@ -66,20 +67,20 @@ class EntityDisplayTest extends KernelTestBase {
     $expected['component_2'] = ['weight' => -3, 'settings' => [], 'third_party_settings' => []];
     $display->setComponent('component_1');
     $display->setComponent('component_2');
-    $this->assertEqual($display->getComponent('component_1'), $expected['component_1']);
-    $this->assertEqual($display->getComponent('component_2'), $expected['component_2']);
+    $this->assertEqual($expected['component_1'], $display->getComponent('component_1'));
+    $this->assertEqual($expected['component_2'], $display->getComponent('component_2'));
 
     // Check that arbitrary options are correctly stored.
     $expected['component_3'] = ['weight' => 10, 'third_party_settings' => ['field_test' => ['foo' => 'bar']], 'settings' => []];
     $display->setComponent('component_3', $expected['component_3']);
-    $this->assertEqual($display->getComponent('component_3'), $expected['component_3']);
+    $this->assertEqual($expected['component_3'], $display->getComponent('component_3'));
 
     // Check that the display can be properly saved and read back.
     $display->save();
     $display = EntityViewDisplay::load($display->id());
     foreach (['component_1', 'component_2', 'component_3'] as $name) {
       $expected[$name]['region'] = 'content';
-      $this->assertEqual($display->getComponent($name), $expected[$name]);
+      $this->assertEqual($expected[$name], $display->getComponent($name));
     }
 
     // Ensure that third party settings were added to the config entity.
@@ -98,7 +99,7 @@ class EntityDisplayTest extends KernelTestBase {
       'third_party_settings' => [],
       'region' => 'content',
     ];
-    $this->assertEqual($display->getComponents(), $expected);
+    $this->assertEqual($expected, $display->getComponents());
 
     // Check that a component can be removed.
     $display->removeComponent('component_3');
@@ -117,14 +118,14 @@ class EntityDisplayTest extends KernelTestBase {
     $new_display = EntityViewDisplay::load($new_display->id());
     $dependencies = $new_display->calculateDependencies()->getDependencies();
     $this->assertEqual(['config' => ['core.entity_view_mode.entity_test.other_view_mode'], 'module' => ['entity_test']], $dependencies);
-    $this->assertEqual($new_display->getTargetEntityTypeId(), $display->getTargetEntityTypeId());
-    $this->assertEqual($new_display->getTargetBundle(), $display->getTargetBundle());
-    $this->assertEqual($new_display->getMode(), 'other_view_mode');
-    $this->assertEqual($new_display->getComponents(), $display->getComponents());
+    $this->assertEqual($display->getTargetEntityTypeId(), $new_display->getTargetEntityTypeId());
+    $this->assertEqual($display->getTargetBundle(), $new_display->getTargetBundle());
+    $this->assertEqual('other_view_mode', $new_display->getMode());
+    $this->assertEqual($display->getComponents(), $new_display->getComponents());
   }
 
   /**
-   * Test sorting of components by name on basic CRUD operations
+   * Test sorting of components by name on basic CRUD operations.
    */
   public function testEntityDisplayCRUDSort() {
     $display = EntityViewDisplay::create([
@@ -139,7 +140,7 @@ class EntityDisplayTest extends KernelTestBase {
     $components = array_keys($display->getComponents());
     // The name field is not configurable so will be added automatically.
     $expected = [0 => 'component_1', 1 => 'component_2', 2 => 'component_3', 'name'];
-    $this->assertIdentical($components, $expected);
+    $this->assertSame($expected, $components);
   }
 
   /**
@@ -160,8 +161,8 @@ class EntityDisplayTest extends KernelTestBase {
     // Check that getViewDisplay() returns the correct object.
     $display = $display_repository->getViewDisplay('entity_test', 'entity_test');
     $this->assertFalse($display->isNew());
-    $this->assertEqual($display->id(), 'entity_test.entity_test.default');
-    $this->assertEqual($display->getComponent('component_1'), ['weight' => 10, 'settings' => [], 'third_party_settings' => [], 'region' => 'content']);
+    $this->assertEqual('entity_test.entity_test.default', $display->id());
+    $this->assertEqual(['weight' => 10, 'settings' => [], 'third_party_settings' => [], 'region' => 'content'], $display->getComponent('component_1'));
   }
 
   /**
@@ -177,22 +178,14 @@ class EntityDisplayTest extends KernelTestBase {
 
     // Check that the default visibility taken into account for extra fields
     // unknown in the display.
-    $this->assertEqual(
-      $display->getComponent('display_extra_field'),
-      [
-        'weight' => 5,
-        'region' => 'content',
-        'settings' => [],
-        'third_party_settings' => [],
-      ]
-    );
+    $this->assertEqual(['weight' => 5, 'region' => 'content', 'settings' => [], 'third_party_settings' => []], $display->getComponent('display_extra_field'));
     $this->assertNull($display->getComponent('display_extra_field_hidden'));
 
     // Check that setting explicit options overrides the defaults.
     $display->removeComponent('display_extra_field');
     $display->setComponent('display_extra_field_hidden', ['weight' => 10]);
     $this->assertNull($display->getComponent('display_extra_field'));
-    $this->assertEqual($display->getComponent('display_extra_field_hidden'), ['weight' => 10, 'settings' => [], 'third_party_settings' => []]);
+    $this->assertEqual(['weight' => 10, 'settings' => [], 'third_party_settings' => []], $display->getComponent('display_extra_field_hidden'));
   }
 
   /**
@@ -214,14 +207,14 @@ class EntityDisplayTest extends KernelTestBase {
 
     // Check that the default visibility taken into account for extra fields
     // unknown in the display that were included in the initial config.
-    $this->assertEqual($display->getComponent('display_extra_field'), ['weight' => 5, 'region' => 'content']);
+    $this->assertEqual(['weight' => 5, 'region' => 'content'], $display->getComponent('display_extra_field'));
     $this->assertNull($display->getComponent('display_extra_field_hidden'));
 
     // Check that setting explicit options overrides the defaults.
     $display->removeComponent('display_extra_field');
     $display->setComponent('display_extra_field_hidden', ['weight' => 10]);
     $this->assertNull($display->getComponent('display_extra_field'));
-    $this->assertEqual($display->getComponent('display_extra_field_hidden'), ['weight' => 10, 'settings' => [], 'third_party_settings' => []]);
+    $this->assertEqual(['weight' => 10, 'settings' => [], 'third_party_settings' => []], $display->getComponent('display_extra_field_hidden'));
   }
 
   /**
@@ -250,9 +243,9 @@ class EntityDisplayTest extends KernelTestBase {
 
     // Check that providing no options results in default values being used.
     $display->setComponent($field_name);
-    $field_type_info = \Drupal::service('plugin.manager.field.field_type')->getDefinition($field_storage->getType());
+    $field_type_info = Drupal::service('plugin.manager.field.field_type')->getDefinition($field_storage->getType());
     $default_formatter = $field_type_info['default_formatter'];
-    $formatter_settings = \Drupal::service('plugin.manager.field.formatter')->getDefaultSettings($default_formatter);
+    $formatter_settings = Drupal::service('plugin.manager.field.formatter')->getDefaultSettings($default_formatter);
     $expected = [
       'weight' => -4,
       'label' => 'above',
@@ -260,26 +253,26 @@ class EntityDisplayTest extends KernelTestBase {
       'settings' => $formatter_settings,
       'third_party_settings' => [],
     ];
-    $this->assertEqual($display->getComponent($field_name), $expected);
+    $this->assertEqual($expected, $display->getComponent($field_name));
 
     // Check that the getFormatter() method returns the correct formatter plugin.
     $formatter = $display->getRenderer($field_name);
-    $this->assertEqual($formatter->getPluginId(), $default_formatter);
-    $this->assertEqual($formatter->getSettings(), $formatter_settings);
+    $this->assertEqual($default_formatter, $formatter->getPluginId());
+    $this->assertEqual($formatter_settings, $formatter->getSettings());
 
     // Check that the formatter is statically persisted, by assigning an
     // arbitrary property and reading it back.
     $random_value = $this->randomString();
     $formatter->randomValue = $random_value;
     $formatter = $display->getRenderer($field_name);
-    $this->assertEqual($formatter->randomValue, $random_value);
+    $this->assertEqual($random_value, $formatter->randomValue);
 
     // Check that changing the definition creates a new formatter.
     $display->setComponent($field_name, [
       'type' => 'field_test_multiple',
     ]);
     $formatter = $display->getRenderer($field_name);
-    $this->assertEqual($formatter->getPluginId(), 'field_test_multiple');
+    $this->assertEqual('field_test_multiple', $formatter->getPluginId());
     $this->assertFalse(isset($formatter->randomValue));
 
     // Check that the display has dependencies on the field and the module that
@@ -299,7 +292,7 @@ class EntityDisplayTest extends KernelTestBase {
     ]);
 
     // Check that default options are correctly filled in.
-    $formatter_settings = \Drupal::service('plugin.manager.field.formatter')->getDefaultSettings('text_default');
+    $formatter_settings = Drupal::service('plugin.manager.field.formatter')->getDefaultSettings('text_default');
     $expected = [
       'test_no_display' => NULL,
       'test_display_configurable' => [
@@ -320,7 +313,7 @@ class EntityDisplayTest extends KernelTestBase {
       ],
     ];
     foreach ($expected as $field_name => $options) {
-      $this->assertEqual($display->getComponent($field_name), $options);
+      $this->assertEqual($options, $display->getComponent($field_name));
     }
 
     // Check that saving the display only writes data for fields whose display
@@ -330,14 +323,14 @@ class EntityDisplayTest extends KernelTestBase {
     $data = $config->get();
     $this->assertFalse(isset($data['content']['test_no_display']));
     $this->assertFalse(isset($data['hidden']['test_no_display']));
-    $this->assertEqual($data['content']['test_display_configurable'], $expected['test_display_configurable']);
+    $this->assertEqual($expected['test_display_configurable'], $data['content']['test_display_configurable']);
     $this->assertFalse(isset($data['content']['test_display_non_configurable']));
     $this->assertFalse(isset($data['hidden']['test_display_non_configurable']));
 
     // Check that defaults are correctly filled when loading the display.
     $display = EntityViewDisplay::load($display->id());
     foreach ($expected as $field_name => $options) {
-      $this->assertEqual($display->getComponent($field_name), $options);
+      $this->assertEqual($options, $display->getComponent($field_name));
     }
 
     // Check that data manually written for fields whose display is not
@@ -347,7 +340,7 @@ class EntityDisplayTest extends KernelTestBase {
     $config->setData($data)->save();
     $display = EntityViewDisplay::load($display->id());
     foreach ($expected as $field_name => $options) {
-      $this->assertEqual($display->getComponent($field_name), $options);
+      $this->assertEqual($options, $display->getComponent($field_name));
     }
   }
 
@@ -360,7 +353,7 @@ class EntityDisplayTest extends KernelTestBase {
     $type->save();
     node_add_body_field($type);
     /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $display_repository */
-    $display_repository = \Drupal::service('entity_display.repository');
+    $display_repository = Drupal::service('entity_display.repository');
     $display_repository->getViewDisplay('node', 'article')->save();
     $display_repository->getFormDisplay('node', 'article')->save();
 
@@ -404,7 +397,7 @@ class EntityDisplayTest extends KernelTestBase {
     ])->setComponent($field_name)->save();
 
     /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $display_repository */
-    $display_repository = \Drupal::service('entity_display.repository');
+    $display_repository = Drupal::service('entity_display.repository');
 
     // Check the component exists.
     $display = $display_repository->getViewDisplay('entity_test', 'entity_test');
@@ -449,20 +442,20 @@ class EntityDisplayTest extends KernelTestBase {
     ])->setComponent($field_name, ['type' => 'field_plugins_test_text_formatter'])->save();
 
     /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $display_repository */
-    $display_repository = \Drupal::service('entity_display.repository');
+    $display_repository = Drupal::service('entity_display.repository');
 
     // Check the component exists and is of the correct type.
     $display = $display_repository->getViewDisplay('entity_test', 'entity_test');
-    $this->assertEqual($display->getComponent($field_name)['type'], 'field_plugins_test_text_formatter');
+    $this->assertEqual('field_plugins_test_text_formatter', $display->getComponent($field_name)['type']);
 
     // Removing the field_plugins_test module should change the component to use
     // the default formatter for test fields.
-    \Drupal::service('config.manager')->uninstall('module', 'field_plugins_test');
+    Drupal::service('config.manager')->uninstall('module', 'field_plugins_test');
     $display = $display_repository->getViewDisplay('entity_test', 'entity_test');
-    $this->assertEqual($display->getComponent($field_name)['type'], 'text_default');
+    $this->assertEqual('text_default', $display->getComponent($field_name)['type']);
 
     // Removing the text module should remove the field from the view display.
-    \Drupal::service('config.manager')->uninstall('module', 'text');
+    Drupal::service('config.manager')->uninstall('module', 'text');
     $display = $display_repository->getViewDisplay('entity_test', 'entity_test');
     $this->assertNull($display->getComponent($field_name));
   }
@@ -471,7 +464,7 @@ class EntityDisplayTest extends KernelTestBase {
    * Ensure that entity view display changes invalidates cache tags.
    */
   public function testEntityDisplayInvalidateCacheTags() {
-    $cache = \Drupal::cache();
+    $cache = Drupal::cache();
     $cache->set('cid', 'kittens', Cache::PERMANENT, ['config:entity_view_display_list']);
     $display = EntityViewDisplay::create([
       'targetEntityType' => 'entity_test',
@@ -516,18 +509,18 @@ class EntityDisplayTest extends KernelTestBase {
     $form_display_teaser->save();
 
     // Test getViewModeOptionsByBundle().
-    $view_modes = \Drupal::service('entity_display.repository')->getViewModeOptionsByBundle('node', 'article');
-    $this->assertEqual($view_modes, ['default' => 'Default']);
+    $view_modes = Drupal::service('entity_display.repository')->getViewModeOptionsByBundle('node', 'article');
+    $this->assertEqual(['default' => 'Default'], $view_modes);
     $display_teaser->setStatus(TRUE)->save();
-    $view_modes = \Drupal::service('entity_display.repository')->getViewModeOptionsByBundle('node', 'article');
-    $this->assertEqual($view_modes, ['default' => 'Default', 'teaser' => 'Teaser']);
+    $view_modes = Drupal::service('entity_display.repository')->getViewModeOptionsByBundle('node', 'article');
+    $this->assertEqual(['default' => 'Default', 'teaser' => 'Teaser'], $view_modes);
 
     // Test getFormModeOptionsByBundle().
-    $form_modes = \Drupal::service('entity_display.repository')->getFormModeOptionsByBundle('user', 'user');
-    $this->assertEqual($form_modes, ['default' => 'Default']);
+    $form_modes = Drupal::service('entity_display.repository')->getFormModeOptionsByBundle('user', 'user');
+    $this->assertEqual(['default' => 'Default'], $form_modes);
     $form_display_teaser->setStatus(TRUE)->save();
-    $form_modes = \Drupal::service('entity_display.repository')->getFormModeOptionsByBundle('user', 'user');
-    $this->assertEqual($form_modes, ['default' => 'Default', 'register' => 'Register']);
+    $form_modes = Drupal::service('entity_display.repository')->getFormModeOptionsByBundle('user', 'user');
+    $this->assertEqual(['default' => 'Default', 'register' => 'Register'], $form_modes);
   }
 
   /**
@@ -694,7 +687,7 @@ class EntityDisplayTest extends KernelTestBase {
    *   The entity display object to get dependencies from.
    *
    * @return bool
-   *   TRUE if the assertion succeeded, FALSE otherwise.
+   *   TRUE if the assertion succeeded.
    */
   protected function assertDependencyHelper($assertion, $type, $key, EntityDisplayInterface $display) {
     $all_dependencies = $display->getDependencies();
@@ -703,7 +696,8 @@ class EntityDisplayTest extends KernelTestBase {
     $value = $assertion ? in_array($key, $dependencies) : !in_array($key, $dependencies);
     $args = ['@context' => $context, '@id' => $display->id(), '@type' => $type, '@key' => $key];
     $message = $assertion ? new FormattableMarkup("@context display '@id' depends on @type '@key'.", $args) : new FormattableMarkup("@context display '@id' do not depend on @type '@key'.", $args);
-    return $this->assert($value, $message);
+    $this->assertTrue($value, $message);
+    return TRUE;
   }
 
 }

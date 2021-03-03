@@ -2,6 +2,7 @@
 
 namespace Drupal\module_test\Controller;
 
+use Drupal;
 use Drupal\module_autoload_test\SomeClass;
 
 /**
@@ -10,13 +11,13 @@ use Drupal\module_autoload_test\SomeClass;
 class ModuleTestController {
 
   /**
-   * Returns dynamically invoked hook results for the 'module_test' module
+   * Returns dynamically invoked hook results for the 'module_test' module.
    *
    * @return array
    *   Renderable array.
    */
   public function hookDynamicLoadingInvoke() {
-    $result = \Drupal::moduleHandler()->invoke('module_test', 'test_hook');
+    $result = Drupal::moduleHandler()->invoke('module_test', 'test_hook');
     return $result['module_test'];
   }
 
@@ -27,7 +28,7 @@ class ModuleTestController {
    *   Renderable array.
    */
   public function hookDynamicLoadingInvokeAll() {
-    $result = \Drupal::moduleHandler()->invokeAll('test_hook');
+    $result = Drupal::moduleHandler()->invokeAll('test_hook');
     return $result['module_test'];
   }
 

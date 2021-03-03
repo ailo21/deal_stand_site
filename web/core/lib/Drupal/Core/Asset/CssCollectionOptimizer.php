@@ -2,6 +2,7 @@
 
 namespace Drupal\Core\Asset;
 
+use Drupal;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\State\StateInterface;
 
@@ -91,7 +92,7 @@ class CssCollectionOptimizer implements AssetCollectionOptimizerInterface {
     // Drupal contrib can override this default CSS aggregator to keep the same
     // grouping, optimizing and dumping, but change the strategy that is used to
     // determine when the aggregate should be rebuilt (e.g. mtime, HTTPS …).
-    $map = $this->state->get('drupal_css_cache_files') ?: [];
+    $map = $this->state->get('drupal_css_cache_files', []);
     $css_assets = [];
     foreach ($css_groups as $order => $css_group) {
       // We have to return a single asset, not a group of assets. It is now up
@@ -188,7 +189,7 @@ class CssCollectionOptimizer implements AssetCollectionOptimizerInterface {
 
     $delete_stale = function ($uri) {
       // Default stale file threshold is 30 days.
-      if (REQUEST_TIME - filemtime($uri) > \Drupal::config('system.performance')->get('stale_file_threshold')) {
+      if (REQUEST_TIME - filemtime($uri) > Drupal::config('system.performance')->get('stale_file_threshold')) {
         $this->fileSystem->delete($uri);
       }
     };

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\text\Kernel;
 
+use Drupal;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\entity_test\Entity\EntityTest;
@@ -51,6 +52,7 @@ class TextSummaryTest extends KernelTestBase {
    */
   public function testLongSentence() {
     // 125.
+    // cSpell:disable
     $text =
       'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ' .
       // 108.
@@ -62,6 +64,7 @@ class TextSummaryTest extends KernelTestBase {
     $expected = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ' .
                 'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. ' .
                 'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.';
+    // cSpell:enable
     // First three sentences add up to: 336, so add one for space and then 3 to get half-way into next word.
     $this->assertTextSummary($text, $expected, NULL, 340);
   }
@@ -236,10 +239,7 @@ class TextSummaryTest extends KernelTestBase {
    */
   public function assertTextSummary($text, $expected, $format = NULL, $size = NULL) {
     $summary = text_summary($text, $format, $size);
-    $this->assertIdentical($summary, $expected, new FormattableMarkup('<pre style="white-space: pre-wrap">@actual</pre> is identical to <pre style="white-space: pre-wrap">@expected</pre>', [
-      '@actual' => $summary,
-      '@expected' => $expected,
-    ]));
+    $this->assertSame($expected, $summary, new FormattableMarkup('<pre style="white-space: pre-wrap">@actual</pre> is identical to <pre style="white-space: pre-wrap">@expected</pre>', ['@actual' => $summary, '@expected' => $expected]));
   }
 
   /**
@@ -292,7 +292,7 @@ class TextSummaryTest extends KernelTestBase {
       'type' => 'entity_test',
       'test_textwithsummary' => ['value' => $this->randomMachineName()],
     ]);
-    $form = \Drupal::service('entity.form_builder')->getForm($entity);
+    $form = Drupal::service('entity.form_builder')->getForm($entity);
     $this->assertTrue(!empty($form['test_textwithsummary']['widget'][0]['summary']), 'Summary field is shown');
     $this->assertTrue(!empty($form['test_textwithsummary']['widget'][0]['summary']['#required']), 'Summary field is required');
 

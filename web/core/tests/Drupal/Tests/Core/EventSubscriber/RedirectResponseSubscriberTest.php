@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\Core\EventSubscriber;
 
+use Drupal;
 use Drupal\Core\EventSubscriber\RedirectResponseSubscriber;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Core\Utility\UnroutedUrlAssemblerInterface;
@@ -61,7 +62,7 @@ class RedirectResponseSubscriberTest extends UnitTestCase {
 
     $container = new Container();
     $container->set('router.request_context', $this->requestContext);
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
   }
 
   /**
@@ -76,7 +77,7 @@ class RedirectResponseSubscriberTest extends UnitTestCase {
    * @dataProvider providerTestDestinationRedirect
    */
   public function testDestinationRedirect(Request $request, $expected) {
-    $dispatcher = new EventDispatcher(\Drupal::getContainer());
+    $dispatcher = new EventDispatcher(Drupal::getContainer());
     $kernel = $this->createMock('Symfony\Component\HttpKernel\HttpKernelInterface');
     $response = new RedirectResponse('http://example.com/drupal');
     $request->headers->set('HOST', 'example.com');
@@ -84,7 +85,7 @@ class RedirectResponseSubscriberTest extends UnitTestCase {
     $listener = new RedirectResponseSubscriber($this->urlAssembler, $this->requestContext);
     $dispatcher->addListener(KernelEvents::RESPONSE, [$listener, 'checkRedirectUrl']);
     $event = new ResponseEvent($kernel, $request, HttpKernelInterface::SUB_REQUEST, $response);
-    $dispatcher->dispatch(KernelEvents::RESPONSE, $event);
+    $dispatcher->dispatch($event, KernelEvents::RESPONSE);
 
     $target_url = $event->getResponse()->getTargetUrl();
     if ($expected) {
@@ -117,7 +118,7 @@ class RedirectResponseSubscriberTest extends UnitTestCase {
    * @dataProvider providerTestDestinationRedirectToExternalUrl
    */
   public function testDestinationRedirectToExternalUrl($request, $expected) {
-    $dispatcher = new EventDispatcher(\Drupal::getContainer());
+    $dispatcher = new EventDispatcher(Drupal::getContainer());
     $kernel = $this->createMock('Symfony\Component\HttpKernel\HttpKernelInterface');
     $response = new RedirectResponse('http://other-example.com');
 
@@ -125,14 +126,14 @@ class RedirectResponseSubscriberTest extends UnitTestCase {
     $dispatcher->addListener(KernelEvents::RESPONSE, [$listener, 'checkRedirectUrl']);
     $event = new ResponseEvent($kernel, $request, HttpKernelInterface::SUB_REQUEST, $response);
     $this->expectException(Error::class);
-    $dispatcher->dispatch(KernelEvents::RESPONSE, $event);
+    $dispatcher->dispatch($event, KernelEvents::RESPONSE);
   }
 
   /**
    * @covers ::checkRedirectUrl
    */
   public function testRedirectWithOptInExternalUrl() {
-    $dispatcher = new EventDispatcher(\Drupal::getContainer());
+    $dispatcher = new EventDispatcher(Drupal::getContainer());
     $kernel = $this->createMock('Symfony\Component\HttpKernel\HttpKernelInterface');
     $response = new TrustedRedirectResponse('http://external-url.com');
     $request = Request::create('');
@@ -141,7 +142,7 @@ class RedirectResponseSubscriberTest extends UnitTestCase {
     $listener = new RedirectResponseSubscriber($this->urlAssembler, $this->requestContext);
     $dispatcher->addListener(KernelEvents::RESPONSE, [$listener, 'checkRedirectUrl']);
     $event = new ResponseEvent($kernel, $request, HttpKernelInterface::SUB_REQUEST, $response);
-    $dispatcher->dispatch(KernelEvents::RESPONSE, $event);
+    $dispatcher->dispatch($event, KernelEvents::RESPONSE);
 
     $target_url = $event->getResponse()->getTargetUrl();
     $this->assertEquals('http://external-url.com', $target_url);
@@ -165,7 +166,7 @@ class RedirectResponseSubscriberTest extends UnitTestCase {
    * @dataProvider providerTestDestinationRedirectWithInvalidUrl
    */
   public function testDestinationRedirectWithInvalidUrl(Request $request) {
-    $dispatcher = new EventDispatcher(\Drupal::getContainer());
+    $dispatcher = new EventDispatcher(Drupal::getContainer());
     $kernel = $this->createMock('Symfony\Component\HttpKernel\HttpKernelInterface');
     $response = new RedirectResponse('http://example.com/drupal');
 
@@ -173,7 +174,7 @@ class RedirectResponseSubscriberTest extends UnitTestCase {
     $dispatcher->addListener(KernelEvents::RESPONSE, [$listener, 'checkRedirectUrl']);
     $event = new ResponseEvent($kernel, $request, HttpKernelInterface::SUB_REQUEST, $response);
     $this->expectException(Error::class);
-    $dispatcher->dispatch(KernelEvents::RESPONSE, $event);
+    $dispatcher->dispatch($event, KernelEvents::RESPONSE);
   }
 
   /**

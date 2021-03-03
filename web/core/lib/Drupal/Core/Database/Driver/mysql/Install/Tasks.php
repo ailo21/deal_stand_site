@@ -7,6 +7,7 @@ use Drupal\Core\Database\Database;
 use Drupal\Core\Database\Install\Tasks as InstallTasks;
 use Drupal\Core\Database\Driver\mysql\Connection;
 use Drupal\Core\Database\DatabaseNotFoundException;
+use Exception;
 
 /**
  * Specifies installation tasks for MySQL and equivalent databases.
@@ -95,7 +96,7 @@ class Tasks extends InstallTasks {
       try {
         Database::getConnection();
       }
-      catch (\Exception $e) {
+      catch (Exception $e) {
         // Detect utf8mb4 incompatibility.
         if ($e->getCode() == Connection::UNSUPPORTED_CHARSET || ($e->getCode() == Connection::SQLSTATE_SYNTAX_ERROR && $e->errorInfo[1] == Connection::UNKNOWN_CHARSET)) {
           $this->fail(t('Your MySQL server and PHP MySQL driver must support utf8mb4 character encoding. Make sure to use a database system that supports this (such as MySQL/MariaDB/Percona 5.5.3 and up), and that the utf8mb4 character set is compiled in. See the <a href=":documentation" target="_blank">MySQL documentation</a> for more information.', [':documentation' => 'https://dev.mysql.com/doc/refman/5.0/en/cannot-initialize-character-set.html']));
@@ -122,7 +123,7 @@ class Tasks extends InstallTasks {
       }
       $this->pass('Drupal can CONNECT to the database ok.');
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       // Attempt to create the database if it is not found.
       if ($e->getCode() == Connection::DATABASE_NOT_FOUND) {
         // Remove the database string from connection info.
@@ -157,8 +158,8 @@ class Tasks extends InstallTasks {
         }
       }
       else {
-        // Database connection failed for some other reason than the database
-        // not existing.
+        // Database connection failed for some other reason than a non-existent
+        // database.
         $this->fail(t('Failed to connect to your database server. The server reports the following message: %error.<ul><li>Is the database server running?</li><li>Does the database exist or does the database user have sufficient privileges to create the database?</li><li>Have you entered the correct database name?</li><li>Have you entered the correct username and password?</li><li>Have you entered the correct database hostname and port number?</li></ul>', ['%error' => $e->getMessage()]));
         return FALSE;
       }

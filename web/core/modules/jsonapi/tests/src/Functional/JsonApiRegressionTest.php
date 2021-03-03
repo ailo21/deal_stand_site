@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\jsonapi\Functional;
 
+use Drupal;
 use Drupal\comment\Entity\Comment;
 use Drupal\comment\Plugin\Field\FieldType\CommentItemInterface;
 use Drupal\comment\Tests\CommentTestTrait;
@@ -487,13 +488,13 @@ class JsonApiRegressionTest extends JsonApiFunctionalTestBase {
     $node_type_dog = NodeType::create(['type' => 'dog']);
     $node_type_dog->save();
     NodeType::create(['type' => 'cat'])->save();
-    \Drupal::service('router.builder')->rebuildIfNeeded();
+    Drupal::service('router.builder')->rebuildIfNeeded();
 
     $response = $this->request('GET', Url::fromUri('internal:/jsonapi/node/dog'), $request_options);
     $this->assertSame(200, $response->getStatusCode());
 
     $this->createEntityReferenceField('node', 'dog', 'field_test', NULL, 'node');
-    \Drupal::service('router.builder')->rebuildIfNeeded();
+    Drupal::service('router.builder')->rebuildIfNeeded();
 
     $dog = Node::create(['type' => 'dog', 'title' => 'Rosie P. Mosie']);
     $dog->save();
@@ -502,7 +503,7 @@ class JsonApiRegressionTest extends JsonApiFunctionalTestBase {
     $this->assertSame(200, $response->getStatusCode());
 
     $this->createEntityReferenceField('node', 'cat', 'field_test', NULL, 'node');
-    \Drupal::service('router.builder')->rebuildIfNeeded();
+    Drupal::service('router.builder')->rebuildIfNeeded();
 
     $cat = Node::create(['type' => 'cat', 'title' => 'E. Napoleon']);
     $cat->save();
@@ -511,13 +512,13 @@ class JsonApiRegressionTest extends JsonApiFunctionalTestBase {
     $this->assertSame(200, $response->getStatusCode());
 
     FieldConfig::loadByName('node', 'cat', 'field_test')->delete();
-    \Drupal::service('router.builder')->rebuildIfNeeded();
+    Drupal::service('router.builder')->rebuildIfNeeded();
 
     $response = $this->request('GET', Url::fromUri('internal:/jsonapi/node/cat/' . $cat->uuid() . '/field_test'), $request_options);
     $this->assertSame(404, $response->getStatusCode());
 
     $node_type_dog->delete();
-    \Drupal::service('router.builder')->rebuildIfNeeded();
+    Drupal::service('router.builder')->rebuildIfNeeded();
 
     $response = $this->request('GET', Url::fromUri('internal:/jsonapi/node/dog'), $request_options);
     $this->assertSame(404, $response->getStatusCode());
@@ -592,7 +593,7 @@ class JsonApiRegressionTest extends JsonApiFunctionalTestBase {
     $anonymous_role->trustData()->save();
 
     NodeType::create(['type' => 'emu_fact'])->save();
-    \Drupal::service('router.builder')->rebuildIfNeeded();
+    Drupal::service('router.builder')->rebuildIfNeeded();
 
     $node = Node::create([
       'type' => 'emu_fact',
@@ -1263,7 +1264,7 @@ class JsonApiRegressionTest extends JsonApiFunctionalTestBase {
       'taxonomy',
       'jsonapi_test_resource_type_building',
     ], TRUE), 'Installed modules.');
-    \Drupal::state()->set('jsonapi_test_resource_type_builder.resource_type_field_aliases', [
+    Drupal::state()->set('jsonapi_test_resource_type_builder.resource_type_field_aliases', [
       'node--article' => [
         'field_tags' => 'field_aliased',
       ],
@@ -1297,6 +1298,69 @@ class JsonApiRegressionTest extends JsonApiFunctionalTestBase {
     ];
     $response = $this->request('GET', Url::fromUri('internal:/jsonapi/node/article/' . $article_node->uuid()), $request_options);
     $this->assertSame(200, $response->getStatusCode());
+  }
+
+  /**
+   * Tests that caching isn't happening for non-cacheable methods.
+   *
+   * @see https://www.drupal.org/project/drupal/issues/3072076
+   */
+  public function testNonCacheableMethods() {
+    $this->container->get('module_installer')->install([
+      'jsonapi_test_non_cacheable_methods',
+    ], TRUE);
+    $this->config('jsonapi.settings')->set('read_only', FALSE)->save(TRUE);
+
+    $node = Node::create([
+      'type' => 'article',
+      'title' => 'Llama non-cacheable',
+    ]);
+    $node->save();
+
+    $user = $this->drupalCreateUser([
+      'access content',
+      'create article content',
+      'edit any article content',
+      'delete any article content',
+    ]);
+    $base_request_options = [
+      RequestOptions::HEADERS => [
+        'Content-Type' => 'application/vnd.api+json',
+        'Accept' => 'application/vnd.api+json',
+      ],
+      RequestOptions::AUTH => [$user->getAccountName(), $user->pass_raw],
+    ];
+    $methods = [
+      'HEAD',
+      'GET',
+      'PATCH',
+      'DELETE',
+    ];
+    $non_post_request_options = $base_request_options + [
+      RequestOptions::JSON => [
+        'data' => [
+          'type' => 'node--article',
+          'id' => $node->uuid(),
+        ],
+      ],
+    ];
+    foreach ($methods as $method) {
+      $response = $this->request($method, Url::fromUri('internal:/jsonapi/node/article/' . $node->uuid()), $non_post_request_options);
+      $this->assertSame($method === 'DELETE' ? 204 : 200, $response->getStatusCode());
+    }
+
+    $post_request_options = $base_request_options + [
+      RequestOptions::JSON => [
+        'data' => [
+          'type' => 'node--article',
+          'attributes' => [
+            'title' => 'Llama non-cacheable',
+          ],
+        ],
+      ],
+    ];
+    $response = $this->request('POST', Url::fromUri('internal:/jsonapi/node/article'), $post_request_options);
+    $this->assertSame(201, $response->getStatusCode());
   }
 
 }

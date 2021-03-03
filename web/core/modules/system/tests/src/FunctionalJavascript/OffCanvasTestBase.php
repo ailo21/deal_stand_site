@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\system\FunctionalJavascript;
 
+use Drupal;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 
 /**
@@ -52,8 +53,8 @@ abstract class OffCanvasTestBase extends WebDriverTestBase {
    */
   protected function enableTheme($theme) {
     // Enable the theme.
-    \Drupal::service('theme_installer')->install([$theme]);
-    $theme_config = \Drupal::configFactory()->getEditable('system.theme');
+    Drupal::service('theme_installer')->install([$theme]);
+    $theme_config = Drupal::configFactory()->getEditable('system.theme');
     $theme_config->set('default', $theme);
     $theme_config->save();
   }
@@ -122,7 +123,7 @@ abstract class OffCanvasTestBase extends WebDriverTestBase {
   }
 
   /**
-   * Dataprovider that returns theme name as the sole argument.
+   * Data provider that returns theme name as the sole argument.
    */
   public function themeDataProvider() {
     $themes = $this->getTestThemes();

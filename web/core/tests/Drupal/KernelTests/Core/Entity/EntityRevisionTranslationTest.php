@@ -2,9 +2,11 @@
 
 namespace Drupal\KernelTests\Core\Entity;
 
+use Drupal;
 use Drupal\entity_test\Entity\EntityTestMul;
 use Drupal\entity_test\Entity\EntityTestMulRev;
 use Drupal\language\Entity\ConfigurableLanguage;
+use ReflectionMethod;
 
 /**
  * Tests proper revision propagation of entities.
@@ -51,8 +53,11 @@ class EntityRevisionTranslationTest extends EntityKernelTestBase {
     $translation->setNewRevision();
     $translation->save();
 
-    $this->assertTrue($translation->getRevisionId() > $old_rev_id, 'The saved translation in new revision has a newer revision id.');
-    $this->assertTrue($this->reloadEntity($entity)->getRevisionId() > $old_rev_id, 'The entity from the storage has a newer revision id.');
+    // Verify that the saved translation for the new translation has a newer
+    // revision ID.
+    $this->assertGreaterThan($old_rev_id, $translation->getRevisionId());
+    // Verify that the entity from the storage has a newer revision ID.
+    $this->assertGreaterThan($old_rev_id, $this->reloadEntity($entity)->getRevisionId());
   }
 
   /**
@@ -169,7 +174,7 @@ class EntityRevisionTranslationTest extends EntityKernelTestBase {
     // All revisionable entity variations have to have the same results.
     foreach (entity_test_entity_types(ENTITY_TEST_TYPES_REVISABLE) as $entity_type) {
       $this->installEntitySchema($entity_type);
-      $storage = \Drupal::entityTypeManager()->getStorage($entity_type);
+      $storage = Drupal::entityTypeManager()->getStorage($entity_type);
 
       $entity = $storage->create([
         'name' => 'foo',
@@ -198,7 +203,7 @@ class EntityRevisionTranslationTest extends EntityKernelTestBase {
   public function testIsAnyStoredRevisionTranslated() {
     /** @var \Drupal\Core\Entity\ContentEntityStorageInterface $storage */
     $storage = $this->entityTypeManager->getStorage('entity_test_mul');
-    $method = new \ReflectionMethod(get_class($storage), 'isAnyStoredRevisionTranslated');
+    $method = new ReflectionMethod(get_class($storage), 'isAnyStoredRevisionTranslated');
     $method->setAccessible(TRUE);
 
     // Check that a non-revisionable new entity is handled correctly.

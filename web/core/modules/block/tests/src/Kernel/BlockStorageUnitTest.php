@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\block\Kernel;
 
+use Drupal;
 use Drupal\Core\Block\BlockPluginInterface;
 use Drupal\Core\Config\Entity\ConfigEntityStorage;
 use Drupal\KernelTests\KernelTestBase;
@@ -82,7 +83,7 @@ class BlockStorageUnitTest extends KernelTestBase {
 
     // Ensure that default values are filled in.
     $expected_properties = [
-      'langcode' => \Drupal::languageManager()->getDefaultLanguage()->getId(),
+      'langcode' => Drupal::languageManager()->getDefaultLanguage()->getId(),
       'status' => TRUE,
       'dependencies' => ['module' => ['block_test'], 'theme' => ['stark']],
       'id' => 'test_block',
@@ -100,7 +101,7 @@ class BlockStorageUnitTest extends KernelTestBase {
       'visibility' => [],
     ];
 
-    $this->assertIdentical($actual_properties, $expected_properties);
+    $this->assertSame($expected_properties, $actual_properties);
 
     $this->assertInstanceOf(TestHtmlBlock::class, $entity->getPlugin());
   }
@@ -116,7 +117,7 @@ class BlockStorageUnitTest extends KernelTestBase {
     // Verify several properties of the block.
     $this->assertSame('content', $entity->getRegion());
     $this->assertTrue($entity->status());
-    $this->assertEqual($entity->getTheme(), 'stark');
+    $this->assertEqual('stark', $entity->getTheme());
     $this->assertNotEmpty($entity->uuid());
   }
 
@@ -143,7 +144,7 @@ class BlockStorageUnitTest extends KernelTestBase {
    * Tests the installation of default blocks.
    */
   public function testDefaultBlocks() {
-    \Drupal::service('theme_installer')->install(['classy']);
+    Drupal::service('theme_installer')->install(['classy']);
     $entities = $this->controller->loadMultiple();
     $this->assertTrue(empty($entities), 'There are no blocks initially.');
 
@@ -152,7 +153,7 @@ class BlockStorageUnitTest extends KernelTestBase {
 
     $entities = $this->controller->loadMultiple();
     $entity = reset($entities);
-    $this->assertEqual($entity->id(), 'test_block', 'The default test block was loaded.');
+    $this->assertEqual('test_block', $entity->id(), 'The default test block was loaded.');
   }
 
 }

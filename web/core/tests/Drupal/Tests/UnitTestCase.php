@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests;
 
+use Drupal;
 use Drupal\Component\FileCache\FileCacheFactory;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Component\Utility\Random;
@@ -9,8 +10,9 @@ use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\StringTranslation\PluralTranslatableMarkup;
-use Drupal\Tests\Traits\PHPUnit8Warnings;
+use Drupal\Tests\Traits\PhpUnitWarnings;
 use PHPUnit\Framework\TestCase;
+use Symfony\Bridge\PhpUnit\ExpectDeprecationTrait;
 
 /**
  * Provides a base class and helpers for Drupal unit tests.
@@ -19,7 +21,9 @@ use PHPUnit\Framework\TestCase;
  */
 abstract class UnitTestCase extends TestCase {
 
-  use PHPUnit8Warnings;
+  use PhpUnitWarnings;
+  use PhpUnitCompatibilityTrait;
+  use ExpectDeprecationTrait;
 
   /**
    * The random generator.
@@ -42,7 +46,7 @@ abstract class UnitTestCase extends TestCase {
     parent::setUp();
     // Ensure that an instantiated container in the global state of \Drupal from
     // a previous test does not leak into this test.
-    \Drupal::unsetContainer();
+    Drupal::unsetContainer();
 
     // Ensure that the NullFileCache implementation is used for the FileCache as
     // unit tests should not be relying on caches implicitly.
@@ -87,8 +91,14 @@ abstract class UnitTestCase extends TestCase {
    * @param array $expected
    * @param array $actual
    * @param string $message
+   *
+   * @deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Use
+   *   ::assertEquals, ::assertEqualsCanonicalizing, or ::assertSame instead.
+   *
+   * @see https://www.drupal.org/node/3136304
    */
   protected function assertArrayEquals(array $expected, array $actual, $message = NULL) {
+    @trigger_error(__METHOD__ . "() is deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Use ::assertEquals(), ::assertEqualsCanonicalizing(), or ::assertSame() instead. See https://www.drupal.org/node/3136304", E_USER_DEPRECATED);
     ksort($expected);
     ksort($actual);
     $this->assertEquals($expected, $actual, !empty($message) ? $message : '');
@@ -229,7 +239,7 @@ abstract class UnitTestCase extends TestCase {
       ->with('cache_tags.invalidator')
       ->will($this->returnValue($cache_tags_validator));
 
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
     return $container;
   }
 

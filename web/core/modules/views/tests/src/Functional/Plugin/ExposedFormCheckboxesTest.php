@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\views\Functional\Plugin;
 
+use Drupal;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\Entity\Vocabulary;
@@ -84,7 +85,7 @@ class ExposedFormCheckboxesTest extends ViewTestBase {
    */
   public function testExposedFormRenderCheckboxes() {
     // Use a test theme to convert multi-select elements into checkboxes.
-    \Drupal::service('theme_installer')->install(['views_test_checkboxes_theme']);
+    Drupal::service('theme_installer')->install(['views_test_checkboxes_theme']);
     $this->config('system.theme')
       ->set('default', 'views_test_checkboxes_theme')
       ->save();
@@ -147,7 +148,7 @@ class ExposedFormCheckboxesTest extends ViewTestBase {
     ]);
 
     // Use a test theme to convert multi-select elements into checkboxes.
-    \Drupal::service('theme_installer')->install(['views_test_checkboxes_theme']);
+    Drupal::service('theme_installer')->install(['views_test_checkboxes_theme']);
     $this->config('system.theme')
       ->set('default', 'views_test_checkboxes_theme')
       ->save();
@@ -161,7 +162,7 @@ class ExposedFormCheckboxesTest extends ViewTestBase {
 
     // Select one option and ensure we still have results.
     $tid = $this->terms[0]->id();
-    $this->drupalPostForm(NULL, ["tid[$tid]" => $tid], t('Apply'));
+    $this->submitForm(["tid[$tid]" => $tid], 'Apply');
 
     // Ensure only nodes tagged with $tid are displayed.
     $rows = $this->xpath("//div[contains(@class, 'views-row')]");

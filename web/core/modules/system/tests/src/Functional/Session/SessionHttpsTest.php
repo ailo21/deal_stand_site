@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\system\Functional\Session;
 
+use Drupal;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Tests\BrowserTestBase;
@@ -87,12 +88,12 @@ class SessionHttpsTest extends BrowserTestBase {
 
     // Verify that user is logged in on secure URL.
     $this->drupalGet($this->httpsUrl('admin/config'));
-    $this->assertText(t('Configuration'));
+    $this->assertText('Configuration');
     $this->assertSession()->statusCodeEquals(200);
 
     // Verify that user is not logged in on non-secure URL.
     $this->drupalGet($this->httpUrl('admin/config'));
-    $this->assertNoText(t('Configuration'));
+    $this->assertNoText('Configuration');
     $this->assertSession()->statusCodeEquals(403);
 
     // Verify that empty SID cannot be used on the non-secure site.
@@ -254,7 +255,7 @@ class SessionHttpsTest extends BrowserTestBase {
    *   has the given insecure and secure session IDs.
    */
   protected function assertSessionIds($sid, $assertion_text) {
-    return $this->assertNotEmpty(\Drupal::database()->select('sessions', 's')->fields('s', ['timestamp'])->condition('sid', Crypt::hashBase64($sid))->execute()->fetchField(), $assertion_text);
+    return $this->assertNotEmpty(Drupal::database()->select('sessions', 's')->fields('s', ['timestamp'])->condition('sid', Crypt::hashBase64($sid))->execute()->fetchField(), $assertion_text);
   }
 
   /**
@@ -291,7 +292,7 @@ class SessionHttpsTest extends BrowserTestBase {
    */
   protected function getGuzzleCookieJar() {
     // @todo Add xdebug cookie.
-    $cookies = $this->extractCookiesFromRequest(\Drupal::request());
+    $cookies = $this->extractCookiesFromRequest(Drupal::request());
     foreach ($cookies as $cookie_name => $values) {
       $cookies[$cookie_name] = $values[0];
     }

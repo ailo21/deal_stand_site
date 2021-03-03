@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\node\Functional;
 
+use Drupal;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 
@@ -74,7 +75,7 @@ class NodeAccessFieldTest extends NodeTestBase {
       'bundle' => 'page',
     ])->save();
     /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $display_repository */
-    $display_repository = \Drupal::service('entity_display.repository');
+    $display_repository = Drupal::service('entity_display.repository');
     $display_repository->getViewDisplay('node', 'page')
       ->setComponent($this->fieldName)
       ->save();
@@ -95,12 +96,12 @@ class NodeAccessFieldTest extends NodeTestBase {
     // Log in as the administrator and confirm that the field value is present.
     $this->drupalLogin($this->adminUser);
     $this->drupalGet('node/' . $node->id());
-    $this->assertText($value, 'The saved field value is visible to an administrator.');
+    $this->assertText($value);
 
     // Log in as the content admin and try to view the node.
     $this->drupalLogin($this->contentAdminUser);
     $this->drupalGet('node/' . $node->id());
-    $this->assertText('Access denied', 'Access is denied for the content admin.');
+    $this->assertText('Access denied');
 
     // Modify the field default as the content admin.
     $edit = [];
@@ -109,7 +110,7 @@ class NodeAccessFieldTest extends NodeTestBase {
     $this->drupalPostForm(
       "admin/structure/types/manage/page/fields/node.page.{$this->fieldName}",
       $edit,
-      t('Save settings')
+      'Save settings'
     );
 
     // Log in as the administrator.
@@ -117,11 +118,11 @@ class NodeAccessFieldTest extends NodeTestBase {
 
     // Confirm that the existing node still has the correct field value.
     $this->drupalGet('node/' . $node->id());
-    $this->assertText($value, 'The original field value is visible to an administrator.');
+    $this->assertText($value);
 
     // Confirm that the new default value appears when creating a new node.
     $this->drupalGet('node/add/page');
-    $this->assertRaw($default, 'The updated default value is displayed when creating a new node.');
+    $this->assertRaw($default);
   }
 
 }

@@ -2,6 +2,7 @@
 
 namespace Drupal\migrate\Plugin\migrate\id_map;
 
+use Drupal;
 use Drupal\Core\Database\DatabaseException;
 use Drupal\Core\Database\DatabaseExceptionWrapper;
 use Drupal\Core\Field\BaseFieldDefinition;
@@ -18,6 +19,9 @@ use Drupal\migrate\Row;
 use Drupal\migrate\Event\MigrateEvents;
 use Drupal\migrate\Event\MigrateMapSaveEvent;
 use Drupal\migrate\Event\MigrateMapDeleteEvent;
+use LogicException;
+use PDO;
+use PDOException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
@@ -164,7 +168,7 @@ class Sql extends PluginBase implements MigrateIdMapInterface, ContainerFactoryP
     $this->message = new MigrateMessage();
 
     if (!isset($this->database)) {
-      $this->database = \Drupal::database();
+      $this->database = Drupal::database();
     }
 
     // Default generated table names, limited to 63 characters.
@@ -198,7 +202,7 @@ class Sql extends PluginBase implements MigrateIdMapInterface, ContainerFactoryP
    *   The source identifiers
    *
    * @return string
-   *   An hash containing the hashed values of the source identifiers.
+   *   A hash containing the hashed values of the source identifiers.
    */
   public function getSourceIdsHash(array $source_id_values) {
     // When looking up the destination ID we require an array with both the
@@ -406,7 +410,7 @@ class Sql extends PluginBase implements MigrateIdMapInterface, ContainerFactoryP
         }
         catch (DatabaseException $e) {
           $pdo_exception = $e->getPrevious();
-          $mysql_index_error = $pdo_exception instanceof \PDOException && $pdo_exception->getCode() === '42000' && $pdo_exception->errorInfo[1] === 1071;
+          $mysql_index_error = $pdo_exception instanceof PDOException && $pdo_exception->getCode() === '42000' && $pdo_exception->errorInfo[1] === 1071;
           $chunk_size--;
           // Rethrow the exception if the source IDs can not be in smaller
           // groups.
@@ -628,7 +632,7 @@ class Sql extends PluginBase implements MigrateIdMapInterface, ContainerFactoryP
     }
 
     try {
-      return $query->execute()->fetchAll(\PDO::FETCH_NUM);
+      return $query->execute()->fetchAll(PDO::FETCH_NUM);
     }
     catch (DatabaseExceptionWrapper $e) {
       // It's possible that the query will cause an exception to be thrown. For
@@ -680,7 +684,7 @@ class Sql extends PluginBase implements MigrateIdMapInterface, ContainerFactoryP
     }
     $keys = [$this::SOURCE_IDS_HASH => $this->getSourceIdsHash($source_id_values)];
     // Notify anyone listening of the map row we're about to save.
-    $this->eventDispatcher->dispatch(MigrateEvents::MAP_SAVE, new MigrateMapSaveEvent($this, $fields));
+    $this->eventDispatcher->dispatch(new MigrateMapSaveEvent($this, $fields), MigrateEvents::MAP_SAVE);
     $this->getDatabase()->merge($this->mapTableName())
       ->key($keys)
       ->fields($fields)
@@ -705,8 +709,7 @@ class Sql extends PluginBase implements MigrateIdMapInterface, ContainerFactoryP
       ->execute();
 
     // Notify anyone listening of the message we've saved.
-    $this->eventDispatcher->dispatch(MigrateEvents::IDMAP_MESSAGE,
-      new MigrateIdMapMessageEvent($this->migration, $source_id_values, $message, $level));
+    $this->eventDispatcher->dispatch(new MigrateIdMapMessageEvent($this->migration, $source_id_values, $message, $level), MigrateEvents::IDMAP_MESSAGE);
   }
 
   /**
@@ -820,7 +823,7 @@ class Sql extends PluginBase implements MigrateIdMapInterface, ContainerFactoryP
       $map_query = $this->getDatabase()->delete($this->mapTableName());
       $map_query->condition($this::SOURCE_IDS_HASH, $this->getSourceIdsHash($source_id_values));
       // Notify anyone listening of the map row we're about to delete.
-      $this->eventDispatcher->dispatch(MigrateEvents::MAP_DELETE, new MigrateMapDeleteEvent($this, $source_id_values));
+      $this->eventDispatcher->dispatch(new MigrateMapDeleteEvent($this, $source_id_values), MigrateEvents::MAP_DELETE);
       $map_query->execute();
     }
     $message_query = $this->getDatabase()->delete($this->messageTableName());
@@ -840,7 +843,7 @@ class Sql extends PluginBase implements MigrateIdMapInterface, ContainerFactoryP
         $map_query->condition($destination_id, $destination_id_values[$field_name]);
       }
       // Notify anyone listening of the map row we're about to delete.
-      $this->eventDispatcher->dispatch(MigrateEvents::MAP_DELETE, new MigrateMapDeleteEvent($this, $source_id_values));
+      $this->eventDispatcher->dispatch(new MigrateMapDeleteEvent($this, $source_id_values), MigrateEvents::MAP_DELETE);
       $map_query->execute();
 
       $message_query->condition($this::SOURCE_IDS_HASH, $this->getSourceIdsHash($source_id_values));
@@ -992,7 +995,7 @@ class Sql extends PluginBase implements MigrateIdMapInterface, ContainerFactoryP
    *   The migration plugin manager.
    */
   protected function getMigrationPluginManager() {
-    return \Drupal::service('plugin.manager.migration');
+    return Drupal::service('plugin.manager.migration');
   }
 
   /**
@@ -1002,7 +1005,7 @@ class Sql extends PluginBase implements MigrateIdMapInterface, ContainerFactoryP
     // Ensure that the first ID is an integer.
     $keys = $this->migration->getDestinationPlugin()->getIds();
     if (reset($keys)['type'] !== 'integer') {
-      throw new \LogicException('To determine the highest migrated ID the first ID must be an integer');
+      throw new LogicException('To determine the highest migrated ID the first ID must be an integer');
     }
 
     // List of mapping tables to look in for the highest ID.

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\editor\Kernel;
 
+use Drupal;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\EventSubscriber\AjaxResponseSubscriber;
 use Drupal\Core\Language\LanguageInterface;
@@ -125,7 +126,7 @@ class QuickEditIntegrationTest extends QuickEditTestBase {
     $storage->resetCache([$entity_id]);
     $entity = $storage->load($entity_id);
     $items = $entity->get($field_name);
-    $options = \Drupal::service('entity_display.repository')
+    $options = Drupal::service('entity_display.repository')
       ->getViewDisplay('entity_test', 'entity_test', $view_mode)
       ->getComponent($field_name);
     return $this->editorSelector->getEditor($options['type'], $items);
@@ -201,7 +202,7 @@ class QuickEditIntegrationTest extends QuickEditTestBase {
 
     $editors = ['editor'];
     $attachments = $this->editorSelector->getEditorAttachments($editors);
-    $this->assertIdentical($attachments, ['library' => ['editor/quickedit.inPlaceEditor.formattedText']], "Expected attachments for Editor module's in-place editor found.");
+    $this->assertSame(['library' => ['editor/quickedit.inPlaceEditor.formattedText']], $attachments, "Expected attachments for Editor module's in-place editor found.");
   }
 
   /**
@@ -226,10 +227,10 @@ class QuickEditIntegrationTest extends QuickEditTestBase {
       ],
     ];
 
-    $ajax_response_attachments_processor = \Drupal::service('ajax_response.attachments_processor');
+    $ajax_response_attachments_processor = Drupal::service('ajax_response.attachments_processor');
     $subscriber = new AjaxResponseSubscriber($ajax_response_attachments_processor);
     $event = new ResponseEvent(
-      \Drupal::service('http_kernel'),
+      Drupal::service('http_kernel'),
       $request,
       HttpKernelInterface::MASTER_REQUEST,
       $response

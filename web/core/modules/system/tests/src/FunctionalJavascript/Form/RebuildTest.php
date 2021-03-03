@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\system\FunctionalJavascript\Form;
 
+use Drupal;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
@@ -83,7 +84,7 @@ class RebuildTest extends WebDriverTestBase {
       'required' => TRUE,
     ])->save();
 
-    \Drupal::service('entity_display.repository')->getFormDisplay('node', 'page', 'default')
+    Drupal::service('entity_display.repository')->getFormDisplay('node', 'page', 'default')
       ->setComponent($field_name, ['type' => 'text_textfield'])
       ->setComponent($field_file_name, ['type' => 'file_generic'])
       ->save();
@@ -108,8 +109,8 @@ class RebuildTest extends WebDriverTestBase {
     $edit = [
       'title[0][value]' => $this->randomString(),
     ];
-    $this->drupalPostForm(NULL, $edit, 'Save');
-    $this->assertSession()->pageTextContains('Test file field is required.', 'Non-AJAX submission correctly triggered a validation error.');
+    $this->submitForm($edit, 'Save');
+    $this->assertSession()->pageTextContains('Test file field is required.');
 
     // Ensure that the form contains two items in the multi-valued field, so we
     // know we're testing a form that was correctly retrieved from cache.

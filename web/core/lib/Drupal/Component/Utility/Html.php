@@ -2,6 +2,11 @@
 
 namespace Drupal\Component\Utility;
 
+use DOMCdataSection;
+use DOMDocument;
+use DOMNode;
+use DOMXpath;
+
 /**
  * Provides DOMDocument helpers for parsing and serializing HTML strings.
  *
@@ -45,8 +50,8 @@ class Html {
    *   <command> tag anymore.
    *  See https://developer.mozilla.org/en-US/docs/Web/HTML/Element/command.
    * - The 'manifest' attribute is omitted because it only exists for the <html>
-   *   tag. That tag only makes sense in a HTML-served-as-HTML context, in which
-   *   case relative URLs are guaranteed to work.
+   *   tag. That tag only makes sense in an HTML-served-as-HTML context, in
+   *   which case relative URLs are guaranteed to work.
    *
    * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes
    * @see https://stackoverflow.com/questions/2725156/complete-list-of-html-tag-attributes-which-have-a-url-value
@@ -284,7 +289,7 @@ EOD;
     // newlines before injecting the actual HTML body to be processed.
     $document = strtr($document, ["\n" => '', '!html' => $html]);
 
-    $dom = new \DOMDocument();
+    $dom = new DOMDocument();
     // Ignore warnings during HTML soup loading.
     @$dom->loadHTML($document);
 
@@ -305,7 +310,7 @@ EOD;
    * @return string
    *   A valid (X)HTML snippet, as a string.
    */
-  public static function serialize(\DOMDocument $document) {
+  public static function serialize(DOMDocument $document) {
     $body_node = $document->getElementsByTagName('body')->item(0);
     $html = '';
 
@@ -342,9 +347,9 @@ EOD;
    *   (optional) A string to use as a comment end marker to escape the CDATA
    *   declaration. Defaults to an empty string.
    */
-  public static function escapeCdataElement(\DOMNode $node, $comment_start = '//', $comment_end = '') {
+  public static function escapeCdataElement(DOMNode $node, $comment_start = '//', $comment_end = '') {
     foreach ($node->childNodes as $child_node) {
-      if ($child_node instanceof \DOMCdataSection) {
+      if ($child_node instanceof DOMCdataSection) {
         $embed_prefix = "\n<!--{$comment_start}--><![CDATA[{$comment_start} ><!--{$comment_end}\n";
         $embed_suffix = "\n{$comment_start}--><!]]>{$comment_end}\n";
 
@@ -457,7 +462,7 @@ EOD;
     assert(isset(parse_url($scheme_and_host)["host"]), '$base_url is absolute and hence has a host.');
 
     $html_dom = Html::load($html);
-    $xpath = new \DOMXpath($html_dom);
+    $xpath = new DOMXpath($html_dom);
 
     // Update all root-relative URLs to absolute URLs in the given HTML.
     foreach (static::$uriAttributes as $attr) {

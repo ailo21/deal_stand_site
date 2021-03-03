@@ -9,6 +9,7 @@ namespace Drupal\Tests\Core\ProxyBuilder;
 
 use Drupal\Core\ProxyBuilder\ProxyBuilder;
 use Drupal\Tests\UnitTestCase;
+use ReflectionClass;
 
 /**
  * @coversDefaultClass \Drupal\Core\ProxyBuilder\ProxyBuilder
@@ -48,7 +49,7 @@ class ProxyBuilderTest extends UnitTestCase {
 /**
  * {@inheritdoc}
  */
-public function complexMethod($parameter, callable $function, \Drupal\Tests\Core\ProxyBuilder\TestServiceNoMethod $test_service = NULL, array &$elements = array (
+public function complexMethod($parameter, callable $function, ?\Drupal\Tests\Core\ProxyBuilder\TestServiceNoMethod $test_service = NULL, array &$elements = array (
 ))
 {
     return $this->lazyLoadItself()->complexMethod($parameter, $function, $test_service, $elements);
@@ -69,7 +70,7 @@ EOS;
    *   The code of the entire proxy.
    */
   protected function buildExpectedClass($class, $expected_methods_body, $interface_string = '') {
-    $reflection = new \ReflectionClass($class);
+    $reflection = new ReflectionClass($class);
     $namespace = ProxyBuilder::buildProxyNamespace($class);
     $proxy_class = $reflection->getShortName();
     $expected_string = <<<'EOS'

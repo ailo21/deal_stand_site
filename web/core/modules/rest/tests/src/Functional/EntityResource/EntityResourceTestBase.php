@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\rest\Functional\EntityResource;
 
+use Drupal;
 use Drupal\Component\Assertion\Inspector;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Component\Utility\Random;
@@ -295,23 +296,6 @@ abstract class EntityResourceTestBase extends ResourceTestBase {
    * @return array
    */
   protected function getNormalizedPatchEntity() {
-    return $this->getNormalizedPostEntity();
-  }
-
-  /**
-   * Gets the second normalized POST entity.
-   *
-   * Entity types can have non-sequential IDs, and in that case the second
-   * entity created for POST testing needs to be able to specify a different ID.
-   *
-   * @see ::testPost
-   * @see ::getNormalizedPostEntity
-   *
-   * @return array
-   *   An array structure as returned by ::getNormalizedPostEntity().
-   */
-  protected function getSecondNormalizedPostEntity() {
-    // Return the values of the "parent" method by default.
     return $this->getNormalizedPostEntity();
   }
 
@@ -718,7 +702,6 @@ abstract class EntityResourceTestBase extends ResourceTestBase {
     // Try with all of the following request bodies.
     $unparseable_request_body = '!{>}<';
     $parseable_valid_request_body = $this->serializer->encode($this->getNormalizedPostEntity(), static::$format);
-    $parseable_valid_request_body_2 = $this->serializer->encode($this->getSecondNormalizedPostEntity(), static::$format);
     $parseable_invalid_request_body = $this->serializer->encode($this->makeNormalizationInvalid($this->getNormalizedPostEntity(), 'label'), static::$format);
     $parseable_invalid_request_body_2 = $this->serializer->encode($this->getNormalizedPostEntity() + ['uuid' => [$this->randomMachineName(129)]], static::$format);
     $parseable_invalid_request_body_3 = $this->serializer->encode($this->getNormalizedPostEntity() + ['field_rest_test' => [['value' => $this->randomString()]]], static::$format);
@@ -862,7 +845,7 @@ abstract class EntityResourceTestBase extends ResourceTestBase {
 
       // 201 when successfully creating an entity with a new UUID.
       $normalized_entity = $this->getModifiedEntityForPostTesting();
-      $new_uuid = \Drupal::service('uuid')->generate();
+      $new_uuid = Drupal::service('uuid')->generate();
       $normalized_entity[$created_entity->getEntityType()->getKey('uuid')] = [['value' => $new_uuid]];
       if ($label_field) {
         $normalized_entity[$label_field] = [['value' => $this->randomMachineName()]];
@@ -897,7 +880,6 @@ abstract class EntityResourceTestBase extends ResourceTestBase {
     // Try with all of the following request bodies.
     $unparseable_request_body         = '!{>}<';
     $parseable_valid_request_body     = $this->serializer->encode($this->getNormalizedPatchEntity(), static::$format);
-    $parseable_valid_request_body_2   = $this->serializer->encode($this->getNormalizedPatchEntity(), static::$format);
     $parseable_invalid_request_body   = $this->serializer->encode($this->makeNormalizationInvalid($this->getNormalizedPatchEntity(), 'label'), static::$format);
     $parseable_invalid_request_body_2 = $this->serializer->encode($this->getNormalizedPatchEntity() + ['field_rest_test' => [['value' => $this->randomString()]]], static::$format);
     // The 'field_rest_test' field does not allow 'view' access, so does not end
@@ -1018,7 +1000,7 @@ abstract class EntityResourceTestBase extends ResourceTestBase {
 
     // DX: 403 when sending PATCH request with updated read-only fields.
     $this->assertPatchProtectedFieldNamesStructure();
-    list($modified_entity, $original_values) = static::getModifiedEntityForPatchTesting($this->entity);
+    [$modified_entity, $original_values] = static::getModifiedEntityForPatchTesting($this->entity);
     // Send PATCH request by serializing the modified entity, assert the error
     // response, change the modified entity field that caused the error response
     // back to its original value, repeat.
@@ -1229,9 +1211,14 @@ abstract class EntityResourceTestBase extends ResourceTestBase {
     $is_null_or_string = function ($value) {
       return is_null($value) || is_string($value);
     };
-    $keys_are_field_names = Inspector::assertAllStrings(array_keys(static::$patchProtectedFieldNames));
-    $values_are_expected_access_denied_reasons = Inspector::assertAll($is_null_or_string, static::$patchProtectedFieldNames);
-    $this->assertTrue($keys_are_field_names && $values_are_expected_access_denied_reasons, 'In Drupal 8.6, the structure of $patchProtectedFieldNames changed. It used to be an array with field names as values. Now those values are the keys, and their values should be either NULL or a string: a string containing the reason for why the field cannot be PATCHed, or NULL otherwise.');
+    $this->assertTrue(
+      Inspector::assertAllStrings(array_keys(static::$patchProtectedFieldNames)),
+      'In Drupal 8.6, the structure of $patchProtectedFieldNames changed. It used to be an array with field names as values. Now those values are the keys, and their values should be either NULL or a string: a string containing the reason for why the field cannot be PATCHed, or NULL otherwise.'
+    );
+    $this->assertTrue(
+      Inspector::assertAll($is_null_or_string, static::$patchProtectedFieldNames),
+      'In Drupal 8.6, the structure of $patchProtectedFieldNames changed. It used to be an array with field names as values. Now those values are the keys, and their values should be either NULL or a string: a string containing the reason for why the field cannot be PATCHed, or NULL otherwise.'
+    );
   }
 
   /**

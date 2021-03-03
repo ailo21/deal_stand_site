@@ -2,6 +2,7 @@
 
 namespace Drupal\KernelTests\RequestProcessing;
 
+use Drupal;
 use Drupal\KernelTests\KernelTestBase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,22 +19,13 @@ class RedirectOnExceptionTest extends KernelTestBase {
    */
   protected static $modules = ['system', 'test_page_test'];
 
-  /**
-   * {@inheritdoc}
-   */
-  protected function setUp(): void {
-    parent::setUp();
-
-    \Drupal::service('router.builder')->rebuild();
-  }
-
   public function testRedirectOn404() {
-    \Drupal::configFactory()->getEditable('system.site')
+    Drupal::configFactory()->getEditable('system.site')
       ->set('page.404', '/test-http-response-exception/' . Response::HTTP_PERMANENTLY_REDIRECT)
       ->save();
 
     /** @var \Symfony\Component\HttpKernel\HttpKernelInterface $http_kernel */
-    $http_kernel = \Drupal::service('http_kernel');
+    $http_kernel = Drupal::service('http_kernel');
 
     // Foo doesn't exist, so this triggers the 404 page.
     $request = Request::create('/foo');

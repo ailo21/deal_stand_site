@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\content_translation\Functional;
 
+use Drupal;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\Sql\SqlContentEntityStorage;
 use Drupal\field\Entity\FieldConfig;
@@ -107,7 +108,7 @@ abstract class ContentTranslationTestBase extends BrowserTestBase {
     foreach ($this->langcodes as $langcode) {
       ConfigurableLanguage::createFromLangcode($langcode)->save();
     }
-    array_unshift($this->langcodes, \Drupal::languageManager()->getDefaultLanguage()->getId());
+    array_unshift($this->langcodes, Drupal::languageManager()->getDefaultLanguage()->getId());
   }
 
   /**
@@ -121,7 +122,7 @@ abstract class ContentTranslationTestBase extends BrowserTestBase {
    * Returns the translate permissions for the current entity and bundle.
    */
   protected function getTranslatePermission() {
-    $entity_type = \Drupal::entityTypeManager()->getDefinition($this->entityTypeId);
+    $entity_type = Drupal::entityTypeManager()->getDefinition($this->entityTypeId);
     if ($permission_granularity = $entity_type->getPermissionGranularity()) {
       return $permission_granularity == 'bundle' ? "translate {$this->bundle} {$this->entityTypeId}" : "translate {$this->entityTypeId}";
     }
@@ -167,9 +168,7 @@ abstract class ContentTranslationTestBase extends BrowserTestBase {
   protected function enableTranslation() {
     // Enable translation for the current entity type and ensure the change is
     // picked up.
-    \Drupal::service('content_translation.manager')->setEnabled($this->entityTypeId, $this->bundle, TRUE);
-
-    \Drupal::service('router.builder')->rebuild();
+    Drupal::service('content_translation.manager')->setEnabled($this->entityTypeId, $this->bundle, TRUE);
   }
 
   /**
@@ -192,7 +191,7 @@ abstract class ContentTranslationTestBase extends BrowserTestBase {
       'label' => 'Test translatable text-field',
     ])->save();
     /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $display_repository */
-    $display_repository = \Drupal::service('entity_display.repository');
+    $display_repository = Drupal::service('entity_display.repository');
     $display_repository->getFormDisplay($this->entityTypeId, $this->bundle, 'default')
       ->setComponent($this->fieldName, [
         'type' => 'string_textfield',
@@ -218,7 +217,7 @@ abstract class ContentTranslationTestBase extends BrowserTestBase {
   protected function createEntity($values, $langcode, $bundle_name = NULL) {
     $entity_values = $values;
     $entity_values['langcode'] = $langcode;
-    $entity_type = \Drupal::entityTypeManager()->getDefinition($this->entityTypeId);
+    $entity_type = Drupal::entityTypeManager()->getDefinition($this->entityTypeId);
     if ($bundle_key = $entity_type->getKey('bundle')) {
       $entity_values[$bundle_key] = $bundle_name ?: $this->bundle;
     }

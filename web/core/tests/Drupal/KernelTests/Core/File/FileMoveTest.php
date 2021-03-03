@@ -2,6 +2,7 @@
 
 namespace Drupal\KernelTests\Core\File;
 
+use Drupal;
 use Drupal\Core\File\Exception\FileException;
 use Drupal\Core\File\Exception\FileNotExistsException;
 use Drupal\Core\File\FileSystemInterface;
@@ -25,10 +26,10 @@ class FileMoveTest extends FileTestBase {
     // Moving to a new name.
     $desired_filepath = 'public://' . $this->randomMachineName();
     /** @var \Drupal\Core\File\FileSystemInterface $file_system */
-    $file_system = \Drupal::service('file_system');
+    $file_system = Drupal::service('file_system');
     $new_filepath = $file_system->move($uri, $desired_filepath, FileSystemInterface::EXISTS_ERROR);
     $this->assertNotFalse($new_filepath, 'Move was successful.');
-    $this->assertEqual($new_filepath, $desired_filepath, 'Returned expected filepath.');
+    $this->assertEqual($desired_filepath, $new_filepath, 'Returned expected filepath.');
     $this->assertFileExists($new_filepath);
     $this->assertFileNotExists($uri);
     $this->assertFilePermissions($new_filepath, Settings::get('file_chmod_file', FileSystem::CHMOD_FILE));
@@ -39,7 +40,7 @@ class FileMoveTest extends FileTestBase {
     $this->assertNotFalse(file_put_contents($desired_filepath, ' '), 'Created a file so a rename will have to happen.');
     $newer_filepath = $file_system->move($new_filepath, $desired_filepath, FileSystemInterface::EXISTS_RENAME);
     $this->assertNotFalse($newer_filepath, 'Move was successful.');
-    $this->assertNotEqual($newer_filepath, $desired_filepath, 'Returned expected filepath.');
+    $this->assertNotEquals($desired_filepath, $newer_filepath, 'Returned expected filepath.');
     $this->assertFileExists($newer_filepath);
     $this->assertFileNotExists($new_filepath);
     $this->assertFilePermissions($newer_filepath, Settings::get('file_chmod_file', FileSystem::CHMOD_FILE));
@@ -54,7 +55,7 @@ class FileMoveTest extends FileTestBase {
   public function testMissing() {
     // Move non-existent file.
     $this->expectException(FileNotExistsException::class);
-    \Drupal::service('file_system')->move($this->randomMachineName(), $this->randomMachineName());
+    Drupal::service('file_system')->move($this->randomMachineName(), $this->randomMachineName());
   }
 
   /**
@@ -66,7 +67,7 @@ class FileMoveTest extends FileTestBase {
 
     // Move the file onto itself without renaming shouldn't make changes.
     /** @var \Drupal\Core\File\FileSystemInterface $file_system */
-    $file_system = \Drupal::service('file_system');
+    $file_system = Drupal::service('file_system');
     $this->expectException(FileException::class);
     $new_filepath = $file_system->move($uri, $uri, FileSystemInterface::EXISTS_REPLACE);
     $this->assertFalse($new_filepath, 'Moving onto itself without renaming fails.');

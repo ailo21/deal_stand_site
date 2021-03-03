@@ -5,6 +5,7 @@ namespace Drupal\Tests\layout_builder\Kernel;
 use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
 use Drupal\layout_builder\Section;
 use Drupal\layout_builder\SectionComponent;
+use OutOfBoundsException;
 
 /**
  * Provides a base class for testing implementations of section storage.
@@ -32,8 +33,6 @@ abstract class SectionStorageTestBase extends EntityKernelTestBase {
    */
   protected function setUp() {
     parent::setUp();
-
-    $this->installSchema('system', ['key_value_expire']);
 
     $section_data = [
       new Section('layout_test_plugin', [], [
@@ -83,7 +82,7 @@ abstract class SectionStorageTestBase extends EntityKernelTestBase {
    * @covers ::getSection
    */
   public function testGetSectionInvalidDelta() {
-    $this->expectException(\OutOfBoundsException::class);
+    $this->expectException(OutOfBoundsException::class);
     $this->expectExceptionMessage('Invalid delta "2"');
     $this->sectionStorage->getSection(2);
   }

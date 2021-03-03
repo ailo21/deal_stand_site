@@ -2,11 +2,13 @@
 
 namespace Drupal\Core\Extension;
 
+use Drupal;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\DrupalKernelInterface;
 use Drupal\Core\Entity\EntityStorageException;
 use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Installer\InstallerKernel;
 use Drupal\Core\Serialization\Yaml;
 
 /**
@@ -80,12 +82,12 @@ class ModuleInstaller implements ModuleInstallerInterface {
    * {@inheritdoc}
    */
   public function install(array $module_list, $enable_dependencies = TRUE) {
-    $extension_config = \Drupal::configFactory()->getEditable('core.extension');
+    $extension_config = Drupal::configFactory()->getEditable('core.extension');
     // Get all module data so we can find dependencies and sort and find the
     // core requirements. The module list needs to be reset so that it can
     // re-scan and include any new modules that may have been added directly
     // into the filesystem.
-    $module_data = \Drupal::service('extension.list.module')->reset()->getList();
+    $module_data = Drupal::service('extension.list.module')->reset()->getList();
     foreach ($module_list as $module) {
       if (!empty($module_data[$module]->info['core_incompatible'])) {
         throw new MissingDependencyException("Unable to install modules: module '$module' is incompatible with this version of Drupal core.");
@@ -138,7 +140,7 @@ class ModuleInstaller implements ModuleInstallerInterface {
     include_once $this->root . '/core/includes/install.inc';
 
     /** @var \Drupal\Core\Config\ConfigInstaller $config_installer */
-    $config_installer = \Drupal::service('config.installer');
+    $config_installer = Drupal::service('config.installer');
     $sync_status = $config_installer->isSyncing();
     if ($sync_status) {
       $source_storage = $config_installer->getSourceStorage();
@@ -154,7 +156,7 @@ class ModuleInstaller implements ModuleInstallerInterface {
 
         // Load a new config object for each iteration, otherwise changes made
         // in hook_install() are not reflected in $extension_config.
-        $extension_config = \Drupal::configFactory()->getEditable('core.extension');
+        $extension_config = Drupal::configFactory()->getEditable('core.extension');
 
         // Check the validity of the default configuration. This will throw
         // exceptions if the configuration is not valid.
@@ -186,7 +188,7 @@ class ModuleInstaller implements ModuleInstallerInterface {
             $module_filenames[$name] = $current_module_filenames[$name];
           }
           else {
-            $module_path = \Drupal::service('extension.list.module')->getPath($name);
+            $module_path = Drupal::service('extension.list.module')->getPath($name);
             $pathname = "$module_path/$name.info.yml";
             $filename = file_exists($module_path . "/$name.module") ? "$name.module" : NULL;
             $module_filenames[$name] = new Extension($this->root, 'module', $pathname, $filename);
@@ -200,7 +202,7 @@ class ModuleInstaller implements ModuleInstallerInterface {
         // Clear the static cache of the "extension.list.module" service to pick
         // up the new module, since it merges the installation status of modules
         // into its statically cached list.
-        \Drupal::service('extension.list.module')->reset();
+        Drupal::service('extension.list.module')->reset();
 
         // Update the kernel to include it.
         $this->updateKernel($module_filenames);
@@ -209,16 +211,18 @@ class ModuleInstaller implements ModuleInstallerInterface {
         $this->moduleHandler->load($module);
         module_load_install($module);
 
-        // Replace the route provider service with a version that will rebuild
-        // if routes used during installation. This ensures that a module's
-        // routes are available during installation. This has to occur before
-        // any services that depend on it are instantiated otherwise those
-        // services will have the old route provider injected. Note that, since
-        // the container is rebuilt by updating the kernel, the route provider
-        // service is the regular one even though we are in a loop and might
-        // have replaced it before.
-        \Drupal::getContainer()->set('router.route_provider.old', \Drupal::service('router.route_provider'));
-        \Drupal::getContainer()->set('router.route_provider', \Drupal::service('router.route_provider.lazy_builder'));
+        if (!InstallerKernel::installationAttempted()) {
+          // Replace the route provider service with a version that will rebuild
+          // if routes used during installation. This ensures that a module's
+          // routes are available during installation. This has to occur before
+          // any services that depend on it are instantiated otherwise those
+          // services will have the old route provider injected. Note that, since
+          // the container is rebuilt by updating the kernel, the route provider
+          // service is the regular one even though we are in a loop and might
+          // have replaced it before.
+          Drupal::getContainer()->set('router.route_provider.old', Drupal::service('router.route_provider'));
+          Drupal::getContainer()->set('router.route_provider', Drupal::service('router.route_provider.lazy_builder'));
+        }
 
         // Allow modules to react prior to the installation of a module.
         $this->moduleHandler->invokeAll('module_preinstall', [$module]);
@@ -227,11 +231,11 @@ class ModuleInstaller implements ModuleInstallerInterface {
         drupal_install_schema($module);
 
         // Clear plugin manager caches.
-        \Drupal::getContainer()->get('plugin.cache_clearer')->clearCachedDefinitions();
+        Drupal::getContainer()->get('plugin.cache_clearer')->clearCachedDefinitions();
 
         // Set the schema version to the number of the last update provided by
         // the module, or the minimum core schema version.
-        $version = \Drupal::CORE_MINIMUM_SCHEMA_VERSION;
+        $version = Drupal::CORE_MINIMUM_SCHEMA_VERSION;
         $versions = drupal_get_schema_versions($module);
         if ($versions) {
           $version = max(max($versions), $version);
@@ -242,10 +246,10 @@ class ModuleInstaller implements ModuleInstallerInterface {
         // handler can use this as an opportunity to create the necessary
         // database tables.
         // @todo Clean this up in https://www.drupal.org/node/2350111.
-        $entity_type_manager = \Drupal::entityTypeManager();
-        $update_manager = \Drupal::entityDefinitionUpdateManager();
+        $entity_type_manager = Drupal::entityTypeManager();
+        $update_manager = Drupal::entityDefinitionUpdateManager();
         /** @var \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager */
-        $entity_field_manager = \Drupal::service('entity_field.manager');
+        $entity_field_manager = Drupal::service('entity_field.manager');
         foreach ($entity_type_manager->getDefinitions() as $entity_type) {
           $is_fieldable_entity_type = $entity_type->entityClassImplements(FieldableEntityInterface::class);
 
@@ -278,13 +282,13 @@ class ModuleInstaller implements ModuleInstallerInterface {
         }
 
         // Install default configuration of the module.
-        $config_installer = \Drupal::service('config.installer');
+        $config_installer = Drupal::service('config.installer');
         if ($sync_status) {
           $config_installer
             ->setSyncing(TRUE)
             ->setSourceStorage($source_storage);
         }
-        \Drupal::service('config.installer')->installDefaultConfig('module', $module);
+        Drupal::service('config.installer')->installDefaultConfig('module', $module);
 
         // If the module has no current updates, but has some that were
         // previously removed, set the version to the value of
@@ -299,7 +303,7 @@ class ModuleInstaller implements ModuleInstallerInterface {
         // having been previously removed, to ensure that newly installed and
         // updated sites have the same entries in the registry.
         /** @var \Drupal\Core\Update\UpdateRegistry $post_update_registry */
-        $post_update_registry = \Drupal::service('update.post_update_registry');
+        $post_update_registry = Drupal::service('update.post_update_registry');
         $post_update_registry->registerInvokedUpdates(array_merge($post_update_registry->getModuleUpdateFunctions($module), array_keys($post_update_registry->getRemovedPostUpdates($module))));
 
         // Record the fact that it was installed.
@@ -310,7 +314,7 @@ class ModuleInstaller implements ModuleInstallerInterface {
         // particular, this happens when installing Drupal via Drush, as the
         // 'translations' stream wrapper is provided by Interface Translation
         // module and is later used to import translations.
-        \Drupal::service('stream_wrapper_manager')->register();
+        Drupal::service('stream_wrapper_manager')->register();
 
         // Update the theme registry to include it.
         drupal_theme_rebuild();
@@ -319,29 +323,31 @@ class ModuleInstaller implements ModuleInstallerInterface {
         // @todo ThemeHandler cannot be injected into ModuleHandler, since that
         //   causes a circular service dependency.
         // @see https://www.drupal.org/node/2208429
-        \Drupal::service('theme_handler')->refreshInfo();
+        Drupal::service('theme_handler')->refreshInfo();
 
         // Allow the module to perform install tasks.
         $this->moduleHandler->invoke($module, 'install', [$sync_status]);
 
         // Record the fact that it was installed.
-        \Drupal::logger('system')->info('%module module installed.', ['%module' => $module]);
+        Drupal::logger('system')->info('%module module installed.', ['%module' => $module]);
       }
     }
 
     // If any modules were newly installed, invoke hook_modules_installed().
     if (!empty($modules_installed)) {
-      // If the container was rebuilt during hook_install() it might not have
-      // the 'router.route_provider.old' service.
-      if (\Drupal::hasService('router.route_provider.old')) {
-        \Drupal::getContainer()->set('router.route_provider', \Drupal::service('router.route_provider.old'));
-      }
-      if (!\Drupal::service('router.route_provider.lazy_builder')->hasRebuilt()) {
-        // Rebuild routes after installing module. This is done here on top of
-        // \Drupal\Core\Routing\RouteBuilder::destruct to not run into errors on
-        // fastCGI which executes ::destruct() after the module installation
-        // page was sent already.
-        \Drupal::service('router.builder')->rebuild();
+      if (!InstallerKernel::installationAttempted()) {
+        // If the container was rebuilt during hook_install() it might not have
+        // the 'router.route_provider.old' service.
+        if (Drupal::hasService('router.route_provider.old')) {
+          Drupal::getContainer()->set('router.route_provider', Drupal::service('router.route_provider.old'));
+        }
+        if (!Drupal::service('router.route_provider.lazy_builder')->hasRebuilt()) {
+          // Rebuild routes after installing module. This is done here on top of
+          // \Drupal\Core\Routing\RouteBuilder::destruct to not run into errors on
+          // fastCGI which executes ::destruct() after the module installation
+          // page was sent already.
+          Drupal::service('router.builder')->rebuild();
+        }
       }
 
       $this->moduleHandler->invokeAll('modules_installed', [$modules_installed, $sync_status]);
@@ -355,15 +361,15 @@ class ModuleInstaller implements ModuleInstallerInterface {
    */
   public function uninstall(array $module_list, $uninstall_dependents = TRUE) {
     // Get all module data so we can find dependencies and sort.
-    $module_data = \Drupal::service('extension.list.module')->getList();
-    $sync_status = \Drupal::service('config.installer')->isSyncing();
+    $module_data = Drupal::service('extension.list.module')->getList();
+    $sync_status = Drupal::service('config.installer')->isSyncing();
     $module_list = $module_list ? array_combine($module_list, $module_list) : [];
     if (array_diff_key($module_list, $module_data)) {
       // One or more of the given modules doesn't exist.
       return FALSE;
     }
 
-    $extension_config = \Drupal::configFactory()->getEditable('core.extension');
+    $extension_config = Drupal::configFactory()->getEditable('core.extension');
     $installed_modules = $extension_config->get('module') ?: [];
     if (!$module_list = array_intersect_key($module_list, $installed_modules)) {
       // Nothing to do. All modules already uninstalled.
@@ -371,7 +377,7 @@ class ModuleInstaller implements ModuleInstallerInterface {
     }
 
     if ($uninstall_dependents) {
-      $theme_list = \Drupal::service('extension.list.theme')->getList();
+      $theme_list = Drupal::service('extension.list.theme')->getList();
 
       // Add dependent modules to the list. The new modules will be processed as
       // the foreach loop continues.
@@ -415,12 +421,12 @@ class ModuleInstaller implements ModuleInstallerInterface {
       // Clean up all entity bundles (including fields) of every entity type
       // provided by the module that is being uninstalled.
       // @todo Clean this up in https://www.drupal.org/node/2350111.
-      $entity_type_manager = \Drupal::entityTypeManager();
-      $entity_type_bundle_info = \Drupal::service('entity_type.bundle.info');
+      $entity_type_manager = Drupal::entityTypeManager();
+      $entity_type_bundle_info = Drupal::service('entity_type.bundle.info');
       foreach ($entity_type_manager->getDefinitions() as $entity_type_id => $entity_type) {
         if ($entity_type->getProvider() == $module) {
           foreach (array_keys($entity_type_bundle_info->getBundleInfo($entity_type_id)) as $bundle) {
-            \Drupal::service('entity_bundle.listener')->onBundleDelete($bundle, $entity_type_id);
+            Drupal::service('entity_bundle.listener')->onBundleDelete($bundle, $entity_type_id);
           }
         }
       }
@@ -433,19 +439,19 @@ class ModuleInstaller implements ModuleInstallerInterface {
       $this->moduleHandler->invoke($module, 'uninstall', [$sync_status]);
 
       // Remove all configuration belonging to the module.
-      \Drupal::service('config.manager')->uninstall('module', $module);
+      Drupal::service('config.manager')->uninstall('module', $module);
 
       // In order to make uninstalling transactional if anything uses routes.
-      \Drupal::getContainer()->set('router.route_provider.old', \Drupal::service('router.route_provider'));
-      \Drupal::getContainer()->set('router.route_provider', \Drupal::service('router.route_provider.lazy_builder'));
+      Drupal::getContainer()->set('router.route_provider.old', Drupal::service('router.route_provider'));
+      Drupal::getContainer()->set('router.route_provider', Drupal::service('router.route_provider.lazy_builder'));
 
       // Notify interested components that this module's entity types are being
       // deleted. For example, a SQL-based storage handler can use this as an
       // opportunity to drop the corresponding database tables.
       // @todo Clean this up in https://www.drupal.org/node/2350111.
-      $update_manager = \Drupal::entityDefinitionUpdateManager();
+      $update_manager = Drupal::entityDefinitionUpdateManager();
       /** @var \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager */
-      $entity_field_manager = \Drupal::service('entity_field.manager');
+      $entity_field_manager = Drupal::service('entity_field.manager');
       foreach ($entity_type_manager->getDefinitions() as $entity_type) {
         if ($entity_type->getProvider() == $module) {
           $update_manager->uninstallEntityType($entity_type);
@@ -467,7 +473,7 @@ class ModuleInstaller implements ModuleInstallerInterface {
 
       // Remove the module's entry from the config. Don't check schema when
       // uninstalling a module since we are only clearing a key.
-      \Drupal::configFactory()->getEditable('core.extension')->clear("module.$module")->save(TRUE);
+      Drupal::configFactory()->getEditable('core.extension')->clear("module.$module")->save(TRUE);
 
       // Update the module handler to remove the module.
       // The current ModuleHandler instance is obsolete with the kernel rebuild
@@ -482,10 +488,10 @@ class ModuleInstaller implements ModuleInstallerInterface {
       // Clear the static cache of the "extension.list.module" service to pick
       // up the new module, since it merges the installation status of modules
       // into its statically cached list.
-      \Drupal::service('extension.list.module')->reset();
+      Drupal::service('extension.list.module')->reset();
 
       // Clear plugin manager caches.
-      \Drupal::getContainer()->get('plugin.cache_clearer')->clearCachedDefinitions();
+      Drupal::getContainer()->get('plugin.cache_clearer')->clearCachedDefinitions();
 
       // Update the kernel to exclude the uninstalled modules.
       $this->updateKernel($module_filenames);
@@ -497,22 +503,22 @@ class ModuleInstaller implements ModuleInstallerInterface {
       // @todo ThemeHandler cannot be injected into ModuleHandler, since that
       //   causes a circular service dependency.
       // @see https://www.drupal.org/node/2208429
-      \Drupal::service('theme_handler')->refreshInfo();
+      Drupal::service('theme_handler')->refreshInfo();
 
-      \Drupal::logger('system')->info('%module module uninstalled.', ['%module' => $module]);
+      Drupal::logger('system')->info('%module module uninstalled.', ['%module' => $module]);
 
-      $schema_store = \Drupal::keyValue('system.schema');
+      $schema_store = Drupal::keyValue('system.schema');
       $schema_store->delete($module);
 
       /** @var \Drupal\Core\Update\UpdateRegistry $post_update_registry */
-      $post_update_registry = \Drupal::service('update.post_update_registry');
+      $post_update_registry = Drupal::service('update.post_update_registry');
       $post_update_registry->filterOutInvokedUpdatesByModule($module);
     }
     // Rebuild routes after installing module. This is done here on top of
     // \Drupal\Core\Routing\RouteBuilder::destruct to not run into errors on
     // fastCGI which executes ::destruct() after the Module uninstallation page
     // was sent already.
-    \Drupal::service('router.builder')->rebuild();
+    Drupal::service('router.builder')->rebuild();
     drupal_get_installed_schema_version(NULL, TRUE);
 
     // Let other modules react.

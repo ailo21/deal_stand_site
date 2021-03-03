@@ -2,7 +2,7 @@
 
 namespace Drupal\search;
 
-use Drupal\Core\Database\Query\Condition;
+use Drupal;
 use Drupal\Core\Database\Query\SelectExtender;
 use Drupal\Core\Database\Query\SelectInterface;
 
@@ -205,7 +205,7 @@ class SearchQuery extends SelectExtender {
     $this->addTag('search_' . $type);
 
     // Initialize conditions and status.
-    $this->conditions = new Condition('AND');
+    $this->conditions = $this->connection->condition('AND');
     $this->status = 0;
 
     return $this;
@@ -232,7 +232,9 @@ class SearchQuery extends SelectExtender {
 
     // Classify tokens.
     $in_or = FALSE;
-    $limit_combinations = \Drupal::config('search.settings')->get('and_or_limit');
+    $limit_combinations = Drupal::config('search.settings')->get('and_or_limit');
+    /** @var \Drupal\search\SearchTextProcessorInterface $text_processor */
+    $text_processor = Drupal::service('search.text_processor');
     // The first search expression does not count as AND.
     $and_count = -1;
     $or_count = 0;
@@ -255,7 +257,7 @@ class SearchQuery extends SelectExtender {
       // Simplify keyword according to indexing rules and external
       // preprocessors. Use same process as during search indexing, so it
       // will match search index.
-      $words = search_simplify($match[2]);
+      $words = $text_processor->analyze($match[2]);
       // Re-explode in case simplification added more words, except when
       // matching a phrase.
       $words = $phrase ? [$words] : preg_split('/ /', $words, -1, PREG_SPLIT_NO_EMPTY);
@@ -264,7 +266,7 @@ class SearchQuery extends SelectExtender {
         $this->keys['negative'] = array_merge($this->keys['negative'], $words);
       }
       // OR operator: instead of a single keyword, we store an array of all
-      // OR'd keywords.
+      // ORed keywords.
       elseif ($match[2] == 'OR' && count($this->keys['positive'])) {
         $last = array_pop($this->keys['positive']);
         // Starting a new OR?
@@ -306,16 +308,16 @@ class SearchQuery extends SelectExtender {
     foreach ($this->keys['positive'] as $key) {
       // Group of ORed terms.
       if (is_array($key) && count($key)) {
-        // If we had already found one OR, this is another one AND-ed with the
+        // If we had already found one OR, this is another one ANDed with the
         // first, meaning it is not a simple query.
         if ($has_or) {
           $this->simple = FALSE;
         }
         $has_or = TRUE;
         $has_new_scores = FALSE;
-        $queryor = new Condition('OR');
+        $queryor = $this->connection->condition('OR');
         foreach ($key as $or) {
-          list($num_new_scores) = $this->parseWord($or);
+          [$num_new_scores] = $this->parseWord($or);
           $has_new_scores |= $num_new_scores;
           $queryor->condition('d.data', "% $or %", 'LIKE');
         }
@@ -328,7 +330,7 @@ class SearchQuery extends SelectExtender {
       // Single ANDed term.
       else {
         $has_and = TRUE;
-        list($num_new_scores, $num_valid_words) = $this->parseWord($key);
+        [$num_new_scores, $num_valid_words] = $this->parseWord($key);
         $this->conditions->condition('d.data', "% $key %", 'LIKE');
         if (!$num_valid_words) {
           $this->simple = FALSE;
@@ -363,7 +365,7 @@ class SearchQuery extends SelectExtender {
     $split = explode(' ', $word);
     foreach ($split as $s) {
       $num = is_numeric($s);
-      if ($num || mb_strlen($s) >= \Drupal::config('search.settings')->get('index.minimum_word_size')) {
+      if ($num || mb_strlen($s) >= Drupal::config('search.settings')->get('index.minimum_word_size')) {
         if (!isset($this->words[$s])) {
           $this->words[$s] = $s;
           $num_new_scores++;
@@ -401,7 +403,7 @@ class SearchQuery extends SelectExtender {
     }
 
     // Build the basic search query: match the entered keywords.
-    $or = new Condition('OR');
+    $or = $this->connection->condition('OR');
     foreach ($this->words as $word) {
       $or->condition('i.word', $word);
     }

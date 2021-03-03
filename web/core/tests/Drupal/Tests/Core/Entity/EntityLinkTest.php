@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\Core\Entity;
 
+use Drupal;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\Language;
@@ -49,11 +50,11 @@ class EntityLinkTest extends UnitTestCase {
     $container->set('entity_type.manager', $this->entityTypeManager);
     $container->set('link_generator', $this->linkGenerator);
     $container->set('language_manager', $this->languageManager);
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
   }
 
   /**
-   * Tests for the Entity::toLink() method
+   * Tests for the Entity::toLink() method.
    *
    * @covers ::toLink
    *
@@ -74,7 +75,6 @@ class EntityLinkTest extends UnitTestCase {
     $route_name = $route_name_map[$link_rel];
     $entity_id = 'test_entity_id';
     $entity_type_id = 'test_entity_type';
-    $expected = '<a href="/test_entity_type/test_entity_id">' . $expected_text . '</a>';
 
     $entity_type = $this->createMock('Drupal\Core\Entity\EntityTypeInterface');
     $entity_type->expects($this->once())

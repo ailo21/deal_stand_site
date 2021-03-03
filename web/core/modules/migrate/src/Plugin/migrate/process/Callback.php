@@ -5,6 +5,7 @@ namespace Drupal\migrate\Plugin\migrate\process;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\ProcessPluginBase;
 use Drupal\migrate\Row;
+use InvalidArgumentException;
 
 /**
  * Passes the source value to a callback.
@@ -22,7 +23,7 @@ use Drupal\migrate\Row;
  * process:
  *   destination_field:
  *     plugin: callback
- *     callable: strtolower
+ *     callable: mb_strtolower
  *     source: source_field
  * @endcode
  *
@@ -34,7 +35,7 @@ use Drupal\migrate\Row;
  *     plugin: callback
  *     callable:
  *       - '\Drupal\Component\Utility\Unicode'
- *       - strtolower
+ *       - ucfirst
  *     source: source_field
  * @endcode
  *
@@ -51,10 +52,10 @@ class Callback extends ProcessPluginBase {
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition) {
     if (!isset($configuration['callable'])) {
-      throw new \InvalidArgumentException('The "callable" must be set.');
+      throw new InvalidArgumentException('The "callable" must be set.');
     }
     elseif (!is_callable($configuration['callable'])) {
-      throw new \InvalidArgumentException('The "callable" must be a valid function or method.');
+      throw new InvalidArgumentException('The "callable" must be a valid function or method.');
     }
     parent::__construct($configuration, $plugin_id, $plugin_definition);
   }

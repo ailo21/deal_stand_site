@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\content_moderation\Kernel;
 
+use Drupal;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\node\Entity\Node;
 use Drupal\Tests\content_moderation\Traits\ContentModerationTestTrait;
@@ -43,7 +44,7 @@ class WorkspacesContentModerationStateTest extends ContentModerationStateTest {
   protected function setUp(): void {
     parent::setUp();
 
-    $this->installSchema('system', ['key_value_expire', 'sequences']);
+    $this->installSchema('system', ['sequences']);
 
     $this->initializeWorkspacesModule();
     $this->switchToWorkspace('stage');
@@ -56,7 +57,7 @@ class WorkspacesContentModerationStateTest extends ContentModerationStateTest {
    */
   public function testContentModerationIntegrationWithWorkspaces() {
     $editorial = $this->createEditorialWorkflow();
-    $access_handler = \Drupal::entityTypeManager()->getAccessControlHandler('workspace');
+    $access_handler = Drupal::entityTypeManager()->getAccessControlHandler('workspace');
 
     // Create another workflow which has the same states as the 'editorial' one,
     // but it doesn't create default revisions for the 'archived' state. This

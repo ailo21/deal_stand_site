@@ -54,14 +54,11 @@ function drupal_error_levels() {
  *   The filename that the error was raised in.
  * @param $line
  *   The line number the error was raised at.
- * @param $context
- *   An array that points to the active symbol table at the point the error
- *   occurred.
  */
-function _drupal_error_handler_real($error_level, $message, $filename, $line, $context) {
+function _drupal_error_handler_real($error_level, $message, $filename, $line) {
   if ($error_level & error_reporting()) {
     $types = drupal_error_levels();
-    list($severity_msg, $severity_level) = $types[$error_level];
+    [$severity_msg, $severity_level] = $types[$error_level];
     $backtrace = debug_backtrace();
     $caller = Error::getLastCaller($backtrace);
 
@@ -81,7 +78,7 @@ function _drupal_error_handler_real($error_level, $message, $filename, $line, $c
       '%line' => $caller['line'],
       'severity_level' => $severity_level,
       'backtrace' => $backtrace,
-      '@backtrace_string' => (new \Exception())->getTraceAsString(),
+      '@backtrace_string' => (new Exception())->getTraceAsString(),
     ], $recoverable || $to_string);
   }
   // If the site is a test site then fail for user deprecations so they can be
@@ -149,6 +146,10 @@ function error_displayable($error = NULL) {
 function _drupal_log_error($error, $fatal = FALSE) {
   $is_installer = InstallerKernel::installationAttempted();
 
+  // Remove 'severity_level' as is not a valid replacement for t().
+  $severity = $error['severity_level'];
+  unset($error['severity_level']);
+
   // Backtrace array is not a valid replacement value for t().
   $backtrace = $error['backtrace'];
   unset($error['backtrace']);
@@ -164,12 +165,14 @@ function _drupal_log_error($error, $fatal = FALSE) {
   // Only call the logger if there is a logger factory available. This can occur
   // if there is an error while rebuilding the container or during the
   // installer.
-  if (\Drupal::hasService('logger.factory')) {
+  if (Drupal::hasService('logger.factory')) {
     try {
-      // Provide the PHP backtrace to logger implementations.
-      \Drupal::logger('php')->log($error['severity_level'], '%type: @message in %function (line %line of %file) @backtrace_string.', $error + ['backtrace' => $backtrace]);
+      // Provide the PHP backtrace to logger implementations. Add
+      // 'severity_level' to the context to maintain BC and allow logging
+      // implementations to use it.
+      Drupal::logger('php')->log($severity, '%type: @message in %function (line %line of %file) @backtrace_string.', $error + ['backtrace' => $backtrace, 'severity_level' => $severity]);
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       // We can't log, for example because the database connection is not
       // available. At least try to log to PHP error log.
       error_log(strtr('Failed to log error: %type: @message in %function (line %line of %file). @backtrace_string', $error));
@@ -191,7 +194,7 @@ function _drupal_log_error($error, $fatal = FALSE) {
     }
   }
 
-  if (\Drupal::hasRequest() && \Drupal::request()->isXmlHttpRequest()) {
+  if (Drupal::hasRequest() && Drupal::request()->isXmlHttpRequest()) {
     if ($fatal) {
       if (error_displayable($error)) {
         // When called from JavaScript, simply output the error message.
@@ -220,9 +223,9 @@ function _drupal_log_error($error, $fatal = FALSE) {
 
       // Attempt to reduce verbosity by removing DRUPAL_ROOT from the file path
       // in the message. This does not happen for (false) security.
-      if (\Drupal::hasService('kernel')) {
-        $root_length = strlen(\Drupal::root());
-        if (substr($error['%file'], 0, $root_length) == \Drupal::root()) {
+      if (Drupal::hasService('kernel')) {
+        $root_length = strlen(Drupal::root());
+        if (substr($error['%file'], 0, $root_length) == Drupal::root()) {
           $error['%file'] = substr($error['%file'], $root_length + 1);
         }
       }
@@ -277,9 +280,9 @@ function _drupal_log_error($error, $fatal = FALSE) {
     }
 
     if ($message) {
-      if (\Drupal::hasService('session')) {
+      if (Drupal::hasService('session')) {
         // Message display is dependent on sessions being available.
-        \Drupal::messenger()->addMessage($message, $class, TRUE);
+        Drupal::messenger()->addMessage($message, $class, TRUE);
       }
       else {
         print $message;
@@ -316,9 +319,9 @@ function _drupal_get_error_level() {
   // for example if the database connection is not there, try to read it from
   // settings.php.
   try {
-    $error_level = \Drupal::config('system.logging')->get('error_level');
+    $error_level = Drupal::config('system.logging')->get('error_level');
   }
-  catch (\Exception $e) {
+  catch (Exception $e) {
     $error_level = isset($GLOBALS['config']['system.logging']['error_level']) ? $GLOBALS['config']['system.logging']['error_level'] : ERROR_REPORTING_HIDE;
   }
 

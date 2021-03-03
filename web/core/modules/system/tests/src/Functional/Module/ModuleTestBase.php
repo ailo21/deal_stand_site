@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\system\Functional\Module;
 
+use Drupal;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Config\InstallStorage;
 use Drupal\Core\Database\Database;
@@ -116,7 +117,7 @@ abstract class ModuleTestBase extends BrowserTestBase {
     }
     $this->assertNotEmpty($all_names);
 
-    $module_config_dependencies = \Drupal::service('config.manager')->findConfigEntityDependents('module', [$module]);
+    $module_config_dependencies = Drupal::service('config.manager')->findConfigEntityDependents('module', [$module]);
     // Look up each default configuration object name in the active
     // configuration, and if it exists, remove it from the stack.
     $names = $module_file_storage->listAll();
@@ -144,7 +145,7 @@ abstract class ModuleTestBase extends BrowserTestBase {
    *   TRUE if no configuration was found, FALSE otherwise.
    */
   public function assertNoModuleConfig($module) {
-    $names = \Drupal::configFactory()->listAll($module . '.');
+    $names = Drupal::configFactory()->listAll($module . '.');
     return $this->assertEmpty($names, new FormattableMarkup('No configuration found for @module module.', ['@module' => $module]));
   }
 
@@ -165,7 +166,7 @@ abstract class ModuleTestBase extends BrowserTestBase {
       else {
         $message = 'Module "@module" is not enabled.';
       }
-      $this->assertEqual($this->container->get('module_handler')->moduleExists($module), $enabled, new FormattableMarkup($message, ['@module' => $module]));
+      $this->assertEqual($enabled, $this->container->get('module_handler')->moduleExists($module), new FormattableMarkup($message, ['@module' => $module]));
     }
   }
 
@@ -190,7 +191,7 @@ abstract class ModuleTestBase extends BrowserTestBase {
    *   A link to associate with the message.
    */
   public function assertLogMessage($type, $message, $variables = [], $severity = RfcLogLevel::NOTICE, $link = '') {
-    $count = Database::getConnection()->select('watchdog', 'w')
+    $this->assertNotEmpty(Database::getConnection()->select('watchdog', 'w')
       ->condition('type', $type)
       ->condition('message', $message)
       ->condition('variables', serialize($variables))
@@ -198,8 +199,8 @@ abstract class ModuleTestBase extends BrowserTestBase {
       ->condition('link', $link)
       ->countQuery()
       ->execute()
-      ->fetchField();
-    $this->assertTrue($count > 0, new FormattableMarkup('watchdog table contains @count rows for @message', ['@count' => $count, '@message' => new FormattableMarkup($message, $variables)]));
+      ->fetchField()
+    );
   }
 
 }

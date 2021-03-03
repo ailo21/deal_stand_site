@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\block\Functional;
 
+use Drupal;
 use Drupal\Tests\BrowserTestBase;
 
 /**
@@ -40,9 +41,9 @@ class BlockAdminThemeTest extends BrowserTestBase {
     $this->assertSession()->statusCodeEquals(403);
 
     // Install admin theme and confirm that tab is accessible.
-    \Drupal::service('theme_installer')->install(['bartik']);
+    Drupal::service('theme_installer')->install(['bartik']);
     $edit['admin_theme'] = 'bartik';
-    $this->drupalPostForm('admin/appearance', $edit, t('Save configuration'));
+    $this->drupalPostForm('admin/appearance', $edit, 'Save configuration');
     $this->drupalGet('admin/structure/block/list/bartik');
     $this->assertSession()->statusCodeEquals(200);
   }
@@ -61,9 +62,9 @@ class BlockAdminThemeTest extends BrowserTestBase {
     $this->drupalLogin($admin_user);
 
     // Install admin theme and confirm that tab is accessible.
-    \Drupal::service('theme_installer')->install(['seven']);
+    Drupal::service('theme_installer')->install(['seven']);
     $edit['admin_theme'] = 'seven';
-    $this->drupalPostForm('admin/appearance', $edit, t('Save configuration'));
+    $this->drupalPostForm('admin/appearance', $edit, 'Save configuration');
 
     // Define our block settings.
     $settings = [

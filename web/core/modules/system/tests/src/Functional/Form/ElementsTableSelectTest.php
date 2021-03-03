@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\system\Functional\Form;
 
+use Drupal;
 use Drupal\Core\Form\FormState;
 use Drupal\Tests\BrowserTestBase;
 
@@ -31,7 +32,7 @@ class ElementsTableSelectTest extends BrowserTestBase {
 
     $this->drupalGet('form_test/tableselect/multiple-true');
 
-    $this->assertSession()->responseNotContains('Empty text.', 'Empty text should not be displayed.');
+    $this->assertSession()->responseNotContains('Empty text.');
 
     // Test for the presence of the Select all rows tableheader.
     $this->assertNotEmpty($this->xpath('//th[@class="select-all"]'), 'Presence of the "Select all" checkbox.');
@@ -65,8 +66,9 @@ class ElementsTableSelectTest extends BrowserTestBase {
   public function testTableSelectColSpan() {
     $this->drupalGet('form_test/tableselect/colspan');
 
-    $this->assertSession()->pageTextContains('Three', 'Presence of the third column');
-    $this->assertSession()->pageTextNotContains('Four', 'Absence of a fourth column');
+    // Verify presence of column three and absence of column four.
+    $this->assertSession()->pageTextContains('Three');
+    $this->assertSession()->pageTextNotContains('Four');
 
     // There should be three labeled column headers and 1 for the input.
     $table_head = $this->xpath('//thead/tr/th');
@@ -88,7 +90,7 @@ class ElementsTableSelectTest extends BrowserTestBase {
    */
   public function testEmptyText() {
     $this->drupalGet('form_test/tableselect/empty-text');
-    $this->assertSession()->pageTextContains('Empty text.', 'Empty text should be displayed.');
+    $this->assertSession()->pageTextContains('Empty text.');
   }
 
   /**
@@ -102,18 +104,18 @@ class ElementsTableSelectTest extends BrowserTestBase {
     $this->drupalPostForm('form_test/tableselect/multiple-true', $edit, 'Submit');
 
     $assert_session = $this->assertSession();
-    $assert_session->pageTextContains('Submitted: row1 = row1', 'Checked checkbox row1');
-    $assert_session->pageTextContains('Submitted: row2 = 0', 'Unchecked checkbox row2.');
-    $assert_session->pageTextContains('Submitted: row3 = 0', 'Unchecked checkbox row3.');
+    $assert_session->pageTextContains('Submitted: row1 = row1');
+    $assert_session->pageTextContains('Submitted: row2 = 0');
+    $assert_session->pageTextContains('Submitted: row3 = 0');
 
     // Test a submission with multiple checkboxes checked.
     $edit['tableselect[row1]'] = TRUE;
     $edit['tableselect[row3]'] = TRUE;
     $this->drupalPostForm('form_test/tableselect/multiple-true', $edit, 'Submit');
 
-    $assert_session->pageTextContains('Submitted: row1 = row1', 'Checked checkbox row1.');
-    $assert_session->pageTextContains('Submitted: row2 = 0', 'Unchecked checkbox row2.');
-    $assert_session->pageTextContains('Submitted: row3 = row3', 'Checked checkbox row3.');
+    $assert_session->pageTextContains('Submitted: row1 = row1');
+    $assert_session->pageTextContains('Submitted: row2 = 0');
+    $assert_session->pageTextContains('Submitted: row3 = row3');
 
   }
 
@@ -123,7 +125,7 @@ class ElementsTableSelectTest extends BrowserTestBase {
   public function testMultipleFalseSubmit() {
     $edit['tableselect'] = 'row1';
     $this->drupalPostForm('form_test/tableselect/multiple-false', $edit, 'Submit');
-    $this->assertSession()->pageTextContains('Submitted: row1', 'Selected radio button');
+    $this->assertSession()->pageTextContains('Submitted: row1');
   }
 
   /**
@@ -151,7 +153,7 @@ class ElementsTableSelectTest extends BrowserTestBase {
    */
   public function testMultipleTrueOptionchecker() {
 
-    list($header, $options) = _form_test_tableselect_get_data();
+    [$header, $options] = _form_test_tableselect_get_data();
 
     $form['tableselect'] = [
       '#type' => 'tableselect',
@@ -160,11 +162,11 @@ class ElementsTableSelectTest extends BrowserTestBase {
     ];
 
     // Test with a valid value.
-    list(, , $errors) = $this->formSubmitHelper($form, ['tableselect' => ['row1' => 'row1']]);
+    [, , $errors] = $this->formSubmitHelper($form, ['tableselect' => ['row1' => 'row1']]);
     $this->assertFalse(isset($errors['tableselect']), 'Option checker allows valid values for checkboxes.');
 
     // Test with an invalid value.
-    list(, , $errors) = $this->formSubmitHelper($form, ['tableselect' => ['non_existing_value' => 'non_existing_value']]);
+    [, , $errors] = $this->formSubmitHelper($form, ['tableselect' => ['non_existing_value' => 'non_existing_value']]);
     $this->assertTrue(isset($errors['tableselect']), 'Option checker disallows invalid values for checkboxes.');
 
   }
@@ -174,7 +176,7 @@ class ElementsTableSelectTest extends BrowserTestBase {
    */
   public function testMultipleFalseOptionchecker() {
 
-    list($header, $options) = _form_test_tableselect_get_data();
+    [$header, $options] = _form_test_tableselect_get_data();
 
     $form['tableselect'] = [
       '#type' => 'tableselect',
@@ -184,11 +186,11 @@ class ElementsTableSelectTest extends BrowserTestBase {
     ];
 
     // Test with a valid value.
-    list(, , $errors) = $this->formSubmitHelper($form, ['tableselect' => 'row1']);
+    [, , $errors] = $this->formSubmitHelper($form, ['tableselect' => 'row1']);
     $this->assertFalse(isset($errors['tableselect']), 'Option checker allows valid values for radio buttons.');
 
     // Test with an invalid value.
-    list(, , $errors) = $this->formSubmitHelper($form, ['tableselect' => 'non_existing_value']);
+    [, , $errors] = $this->formSubmitHelper($form, ['tableselect' => 'non_existing_value']);
     $this->assertTrue(isset($errors['tableselect']), 'Option checker disallows invalid values for radio buttons.');
   }
 
@@ -221,14 +223,14 @@ class ElementsTableSelectTest extends BrowserTestBase {
     $form_state->setUserInput($edit);
     $form_state->setFormObject(new StubForm($form_id, $form));
 
-    \Drupal::formBuilder()->prepareForm($form_id, $form, $form_state);
+    Drupal::formBuilder()->prepareForm($form_id, $form, $form_state);
 
-    \Drupal::formBuilder()->processForm($form_id, $form, $form_state);
+    Drupal::formBuilder()->processForm($form_id, $form, $form_state);
 
     $errors = $form_state->getErrors();
 
     // Clear errors and messages.
-    \Drupal::messenger()->deleteAll();
+    Drupal::messenger()->deleteAll();
     $form_state->clearErrors();
 
     // Return the processed form together with form_state and errors

@@ -2,6 +2,7 @@
 
 namespace Drupal\KernelTests\Core\Theme;
 
+use Drupal;
 use Drupal\Core\Config\InstallStorage;
 use Drupal\Core\Extension\ExtensionDiscovery;
 use Drupal\KernelTests\KernelTestBase;
@@ -46,7 +47,7 @@ class ThemeSettingsTest extends KernelTestBase {
     $path = $this->availableThemes[$name]->getPath();
     $this->assertFileExists("$path/" . InstallStorage::CONFIG_INSTALL_DIRECTORY . "/$name.settings.yml");
     $this->container->get('theme_installer')->install([$name]);
-    $this->assertIdentical(theme_get_setting('base', $name), 'only');
+    $this->assertSame('only', theme_get_setting('base', $name));
   }
 
   /**
@@ -101,7 +102,7 @@ class ThemeSettingsTest extends KernelTestBase {
     $this->assertEquals($expected, theme_get_setting('logo.url', 'stark'));
 
     $theme_installer->install(['test_theme']);
-    \Drupal::configFactory()
+    Drupal::configFactory()
       ->getEditable('system.theme')
       ->set('default', 'test_theme')
       ->save();

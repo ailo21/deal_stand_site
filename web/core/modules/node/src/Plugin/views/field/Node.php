@@ -2,6 +2,7 @@
 
 namespace Drupal\node\Plugin\views\field;
 
+use Drupal;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\views\ResultRow;
@@ -42,7 +43,7 @@ class Node extends FieldPluginBase {
   }
 
   /**
-   * Provide link to node option
+   * Provide link to node option.
    */
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     $form['link_to_node'] = [
@@ -72,7 +73,7 @@ class Node extends FieldPluginBase {
         $this->options['alter']['make_link'] = TRUE;
         $this->options['alter']['url'] = Url::fromRoute('entity.node.canonical', ['node' => $this->getValue($values, 'nid')]);
         if (isset($this->aliases['langcode'])) {
-          $languages = \Drupal::languageManager()->getLanguages();
+          $languages = Drupal::languageManager()->getLanguages();
           $langcode = $this->getValue($values, 'langcode');
           if (isset($languages[$langcode])) {
             $this->options['alter']['language'] = $languages[$langcode];

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\update\Functional;
 
+use Drupal;
 use Drupal\Core\DrupalKernel;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
@@ -62,10 +63,10 @@ abstract class UpdateTestBase extends BrowserTestBase {
     // projects to be inside the testing site directory. See
     // \Drupal\update\UpdateRootFactory::get() for equivalent changes to the
     // test child site.
-    $request = \Drupal::request();
+    $request = Drupal::request();
     $update_root = $this->container->get('update.root') . '/' . DrupalKernel::findSitePath($request);
     $this->container->set('update.root', $update_root);
-    \Drupal::setContainer($this->container);
+    Drupal::setContainer($this->container);
 
     // Create the directories within the root path within which the Update
     // Manager will install projects.
@@ -106,9 +107,10 @@ abstract class UpdateTestBase extends BrowserTestBase {
    * Runs a series of assertions that are applicable to all update statuses.
    */
   protected function standardTests() {
-    $this->assertRaw('<h3>' . t('Drupal core') . '</h3>');
-    $this->assertRaw(Link::fromTextAndUrl(t('Drupal'), Url::fromUri('http://example.com/project/drupal'))->toString(), 'Link to the Drupal project appears.');
-    $this->assertNoText(t('No available releases found'));
+    $this->assertSession()->responseContains('<h3>Drupal core</h3>');
+    // Verify that the link to the Drupal project appears.
+    $this->assertRaw(Link::fromTextAndUrl(t('Drupal'), Url::fromUri('http://example.com/project/drupal'))->toString());
+    $this->assertNoText('No available releases found');
   }
 
   /**
@@ -140,7 +142,8 @@ abstract class UpdateTestBase extends BrowserTestBase {
       if ($expected_update_message_type === static::SECURITY_UPDATE_REQUIRED) {
         $assert_session->elementTextNotContains('css', $update_element_css_locator, 'Update available');
         $assert_session->elementTextContains('css', $update_element_css_locator, 'Security update required!');
-        $assert_session->responseContains('error.svg', 'Error icon was found.');
+        // Verify that the error icon is found.
+        $assert_session->responseContains('error.svg');
       }
       else {
         $assert_session->elementTextContains('css', $update_element_css_locator, 'Update available');

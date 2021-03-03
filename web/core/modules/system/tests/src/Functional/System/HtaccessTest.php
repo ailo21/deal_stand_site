@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\system\Functional\System;
 
+use Drupal;
 use Drupal\Tests\BrowserTestBase;
 
 /**
@@ -113,7 +114,7 @@ class HtaccessTest extends BrowserTestBase {
     // Test that it is possible to have path aliases containing .php.
     $type = $this->drupalCreateContentType();
 
-    // Create an node aliased to test.php.
+    // Create a node aliased to test.php.
     $node = $this->drupalCreateNode([
       'title' => 'This is a node',
       'type' => $type->id(),
@@ -141,7 +142,7 @@ class HtaccessTest extends BrowserTestBase {
    *   The expected response code. For example: 200, 403 or 404.
    */
   protected function assertFileAccess($path, $response_code) {
-    $this->assertFileExists(\Drupal::root() . '/' . $path);
+    $this->assertFileExists(Drupal::root() . '/' . $path);
     $this->drupalGet($path);
     $this->assertEquals($response_code, $this->getSession()->getStatusCode(), "Response code to $path should be $response_code");
   }
@@ -155,8 +156,7 @@ class HtaccessTest extends BrowserTestBase {
 
     // Use x-encoded-content-encoding because of Content-Encoding responses
     // (gzip, deflate, etc.) are automatically decoded by Guzzle.
-    $header = $this->drupalGetHeader('x-encoded-content-encoding');
-    $this->assertEqual($header, 'gzip');
+    $this->assertSession()->responseHeaderEquals('x-encoded-content-encoding', 'gzip');
   }
 
 }

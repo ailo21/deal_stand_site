@@ -58,7 +58,7 @@ function hook_file_download($uri) {
  *   shipped file.
  */
 function hook_file_url_alter(&$uri) {
-  $user = \Drupal::currentUser();
+  $user = Drupal::currentUser();
 
   // User 1 will always see the local file in this example.
   if ($user->id() == 1) {
@@ -74,7 +74,7 @@ function hook_file_url_alter(&$uri) {
   $schemes = ['public'];
 
   /** @var \Drupal\Core\StreamWrapper\StreamWrapperManagerInterface $stream_wrapper_manager */
-  $stream_wrapper_manager = \Drupal::service('stream_wrapper_manager');
+  $stream_wrapper_manager = Drupal::service('stream_wrapper_manager');
 
   $scheme = $stream_wrapper_manager::getScheme($uri);
 
@@ -108,8 +108,9 @@ function hook_file_url_alter(&$uri) {
 /**
  * Alter MIME type mappings used to determine MIME type from a file extension.
  *
- * Invoked by \Drupal\Core\File\MimeType\ExtensionMimeTypeGuesser::guess(). It
- * is used to allow modules to add to or modify the default mapping from
+ * Invoked by
+ * \Drupal\Core\File\MimeType\ExtensionMimeTypeGuesser::guessMimeType(). It is
+ * used to allow modules to add to or modify the default mapping from
  * \Drupal\Core\File\MimeType\ExtensionMimeTypeGuesser::$defaultMapping.
  *
  * @param $mapping
@@ -117,7 +118,7 @@ function hook_file_url_alter(&$uri) {
  *   The array has 'mimetypes' and 'extensions' elements, each of which is an
  *   array.
  *
- * @see \Drupal\Core\File\MimeType\ExtensionMimeTypeGuesser::guess()
+ * @see \Drupal\Core\File\MimeType\ExtensionMimeTypeGuesser::guessMimeType()
  * @see \Drupal\Core\File\MimeType\ExtensionMimeTypeGuesser::$defaultMapping
  */
 function hook_file_mimetype_mapping_alter(&$mapping) {

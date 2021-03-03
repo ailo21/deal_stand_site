@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\system\Kernel\Migrate\d6;
 
+use Drupal;
 use Drupal\Core\Datetime\Entity\DateFormat;
 use Drupal\Core\Database\Database;
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
@@ -26,13 +27,13 @@ class MigrateDateFormatTest extends MigrateDrupal6TestBase {
    */
   public function testDateFormats() {
     $short_date_format = DateFormat::load('short');
-    $this->assertIdentical('\S\H\O\R\T m/d/Y - H:i', $short_date_format->getPattern());
+    $this->assertSame('\S\H\O\R\T m/d/Y - H:i', $short_date_format->getPattern());
 
     $medium_date_format = DateFormat::load('medium');
-    $this->assertIdentical('\M\E\D\I\U\M D, m/d/Y - H:i', $medium_date_format->getPattern());
+    $this->assertSame('\M\E\D\I\U\M D, m/d/Y - H:i', $medium_date_format->getPattern());
 
     $long_date_format = DateFormat::load('long');
-    $this->assertIdentical('\L\O\N\G l, F j, Y - H:i', $long_date_format->getPattern());
+    $this->assertSame('\L\O\N\G l, F j, Y - H:i', $long_date_format->getPattern());
 
     // Test that we can re-import using the EntityDateFormat destination.
     Database::getConnection('default', 'migrate')
@@ -42,14 +43,14 @@ class MigrateDateFormatTest extends MigrateDrupal6TestBase {
       ->execute();
 
     $migration = $this->getMigration('d6_date_formats');
-    \Drupal::database()
+    Drupal::database()
       ->truncate($migration->getIdMap()->mapTableName())
       ->execute();
 
     $this->executeMigration($migration);
 
     $short_date_format = DateFormat::load('short');
-    $this->assertIdentical('\S\H\O\R\T d/m/Y - H:i', $short_date_format->getPattern());
+    $this->assertSame('\S\H\O\R\T d/m/Y - H:i', $short_date_format->getPattern());
 
   }
 

@@ -18,7 +18,7 @@ require_once __DIR__ . '/locale.translation.inc';
  * Clear the project data table.
  */
 function locale_translation_flush_projects() {
-  \Drupal::service('locale.project')->deleteAll();
+  Drupal::service('locale.project')->deleteAll();
 }
 
 /**
@@ -47,7 +47,7 @@ function locale_translation_build_projects() {
   $projects = locale_translation_project_list();
 
   // Mark all previous projects as disabled and store new project data.
-  \Drupal::service('locale.project')->disableAll();
+  Drupal::service('locale.project')->disableAll();
 
   $default_server = locale_translation_default_translation_server();
 
@@ -80,7 +80,7 @@ function locale_translation_build_projects() {
     $projects[$name] = $project;
 
     // Create or update the project record.
-    \Drupal::service('locale.project')->set($project->name, $data);
+    Drupal::service('locale.project')->set($project->name, $data);
 
     // Invalidate the cache of translatable projects.
     locale_translation_clear_cache_projects();
@@ -103,14 +103,14 @@ function locale_translation_project_list() {
       'interface translation project',
       'interface translation server pattern',
     ];
-    $module_data = _locale_translation_prepare_project_list(\Drupal::service('extension.list.module')->getList(), 'module');
-    $theme_data = _locale_translation_prepare_project_list(\Drupal::service('theme_handler')->rebuildThemeData(), 'theme');
+    $module_data = _locale_translation_prepare_project_list(Drupal::service('extension.list.module')->getList(), 'module');
+    $theme_data = _locale_translation_prepare_project_list(Drupal::service('theme_handler')->rebuildThemeData(), 'theme');
     $project_info = new ProjectInfo();
     $project_info->processInfoList($projects, $module_data, 'module', TRUE, $additional_whitelist);
     $project_info->processInfoList($projects, $theme_data, 'theme', TRUE, $additional_whitelist);
 
     // Allow other modules to alter projects before fetching and comparing.
-    \Drupal::moduleHandler()->alter('locale_translation_projects', $projects);
+    Drupal::moduleHandler()->alter('locale_translation_projects', $projects);
   }
   return $projects;
 }
@@ -125,8 +125,8 @@ function locale_translation_project_list() {
  *
  * Custom modules or themes can bring their own gettext translation file. To
  * enable import of this file the module or theme defines "interface translation
- * project = myproject" in its .info.yml file. This function will add a project
- * "myproject" to the info data.
+ * project = my_project" in its .info.yml file. This function will add a project
+ * "my_project" to the info data.
  *
  * @param \Drupal\Core\Extension\Extension[] $data
  *   Array of .info.yml file data.
@@ -157,7 +157,7 @@ function _locale_translation_prepare_project_list($data, $type) {
  *   - "pattern": URI containing po file pattern.
  */
 function locale_translation_default_translation_server() {
-  $pattern = \Drupal::config('locale.settings')->get('translation.default_server_pattern');
+  $pattern = Drupal::config('locale.settings')->get('translation.default_server_pattern');
   // An additional check is required here. During the upgrade process
   // \Drupal::config()->get() returns NULL. We use the defined value as
   // fallback.
@@ -190,7 +190,7 @@ function locale_translation_check_projects($projects = [], $langcodes = []) {
   else {
     // Retrieve and save the status of local translations only.
     locale_translation_check_projects_local($projects, $langcodes);
-    \Drupal::state()->set('locale.translation_last_checked', REQUEST_TIME);
+    Drupal::state()->set('locale.translation_last_checked', REQUEST_TIME);
   }
 }
 

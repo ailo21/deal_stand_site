@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\config\Functional;
 
+use Drupal;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Component\Uuid\Uuid;
 use Drupal\Core\Config\InstallStorage;
@@ -61,17 +62,16 @@ class ConfigInstallProfileOverrideTest extends BrowserTestBase {
     $this->assertDirectoryExists($config_dir);
     $source_storage = new FileStorage($config_dir);
     $data = $source_storage->read($config_name);
-    $this->assertIdentical($data, $expected_original_data);
+    $this->assertSame($expected_original_data, $data);
 
     // Verify that active configuration matches the expected data, which was
     // created from the testing install profile's system.cron.yml file.
     $config = $this->config($config_name);
-    $this->assertIdentical($config->get(), $expected_profile_data);
+    $this->assertSame($expected_profile_data, $config->get());
 
     $config = $this->config('system.site');
     // Verify the system.site config has a valid UUID.
-    $site_uuid = $config->get('uuid');
-    $this->assertTrue(Uuid::isValid($site_uuid) && strlen($site_uuid) > 0, "Site UUID '$site_uuid' is valid");
+    $this->assertTrue(Uuid::isValid($config->get('uuid')));
     // Verify the profile overrides have been used.
     $this->assertEquals(91, $config->get('weight_select_max'));
     // Ensure the site configure form is used.
@@ -105,7 +105,7 @@ class ConfigInstallProfileOverrideTest extends BrowserTestBase {
     $optional_dir = drupal_get_path('module', 'testing_config_overrides') . '/' . InstallStorage::CONFIG_OPTIONAL_DIRECTORY;
     $optional_storage = new FileStorage($optional_dir);
     foreach (['config_test.dynamic.dotted.default', 'config_test.dynamic.override', 'config_test.dynamic.override_unmet'] as $id) {
-      $this->assertTrue(\Drupal::config($id)->isNew(), "The config_test entity $id contained in the profile's optional directory does not exist.");
+      $this->assertTrue(Drupal::config($id)->isNew(), "The config_test entity $id contained in the profile's optional directory does not exist.");
       // Make that we don't get false positives from the assertion above.
       $this->assertTrue($optional_storage->exists($id), "The config_test entity $id does exist in the profile's optional directory.");
     }
@@ -115,7 +115,7 @@ class ConfigInstallProfileOverrideTest extends BrowserTestBase {
     // configuration in a modules config/install directory.
     $this->container->get('module_installer')->install(['config_test']);
     $this->rebuildContainer();
-    $config_test_storage = \Drupal::entityTypeManager()->getStorage('config_test');
+    $config_test_storage = Drupal::entityTypeManager()->getStorage('config_test');
     $this->assertEquals('Default install profile override', $config_test_storage->load('dotted.default')->label(), 'The config_test entity is overridden by the profile optional configuration.');
     // Test that override of optional configuration does work.
     $this->assertEquals('Override', $config_test_storage->load('override')->label(), 'The optional config_test entity is overridden by the profile optional configuration.');
@@ -136,7 +136,7 @@ class ConfigInstallProfileOverrideTest extends BrowserTestBase {
     // that deleted profile configuration is not re-created.
     $this->container->get('module_installer')->install(['config_other_module_config_test']);
     $this->rebuildContainer();
-    $config_test_storage = \Drupal::entityTypeManager()->getStorage('config_test');
+    $config_test_storage = Drupal::entityTypeManager()->getStorage('config_test');
     $this->assertNull($config_test_storage->load('completely_new'));
 
     // Ensure the authenticated role has the access tour permission.

@@ -51,13 +51,13 @@ function locale_translate_batch_import_files(array $options, $force = FALSE) {
   else {
     // If langcode was not provided, make sure to only import files for the
     // languages we have added.
-    $langcodes = array_keys(\Drupal::languageManager()->getLanguages());
+    $langcodes = array_keys(Drupal::languageManager()->getLanguages());
   }
 
   $files = locale_translate_get_interface_translation_files([], $langcodes);
 
   if (!$force) {
-    $result = \Drupal::database()->select('locale_file', 'lf')
+    $result = Drupal::database()->select('locale_file', 'lf')
       ->fields('lf', ['langcode', 'uri', 'timestamp'])
       ->condition('langcode', $langcodes)
       ->execute()
@@ -96,10 +96,10 @@ function locale_translate_get_interface_translation_files(array $projects = [], 
   // containing a project name and language code: {project}.{langcode}.po or
   // {project}-{version}.{langcode}.po.
   // Only files of known projects and languages will be returned.
-  $directory = \Drupal::config('locale.settings')->get('translation.path');
+  $directory = Drupal::config('locale.settings')->get('translation.path');
   $result = [];
   if (is_dir($directory)) {
-    $result = \Drupal::service('file_system')->scanDirectory($directory, '![a-z_]+(\-[0-9a-z\.\-\+]+|)\.[^\./]+\.po$!', ['recurse' => FALSE]);
+    $result = Drupal::service('file_system')->scanDirectory($directory, '![a-z_]+(\-[0-9a-z\.\-\+]+|)\.[^\./]+\.po$!', ['recurse' => FALSE]);
   }
 
   foreach ($result as $file) {
@@ -205,7 +205,7 @@ function locale_translate_batch_import($file, array $options, &$context) {
     try {
       if (empty($context['sandbox'])) {
         $context['sandbox']['parse_state'] = [
-          'filesize' => filesize(\Drupal::service('file_system')->realpath($file->uri)),
+          'filesize' => filesize(Drupal::service('file_system')->realpath($file->uri)),
           'chunk_size' => 200,
           'seek' => 0,
         ];
@@ -263,7 +263,7 @@ function locale_translate_batch_import($file, array $options, &$context) {
     catch (Exception $exception) {
       // Import failed. Store the data of the failing file.
       $context['results']['failed_files'][] = $file;
-      \Drupal::logger('locale')->notice('Unable to import translations file: @file', ['@file' => $file->uri]);
+      Drupal::logger('locale')->notice('Unable to import translations file: @file', ['@file' => $file->uri]);
     }
   }
 }
@@ -367,17 +367,17 @@ function locale_translate_batch_refresh(&$context) {
  *   Batch results.
  */
 function locale_translate_batch_finished($success, array $results) {
-  $logger = \Drupal::logger('locale');
+  $logger = Drupal::logger('locale');
   if ($success) {
-    $additions = $updates = $deletes = $skips = $config = 0;
+    $additions = $updates = $deletes = $skips = 0;
     if (isset($results['failed_files'])) {
-      if (\Drupal::moduleHandler()->moduleExists('dblog') && \Drupal::currentUser()->hasPermission('access site reports')) {
-        $message = \Drupal::translation()->formatPlural(count($results['failed_files']), 'One translation file could not be imported. <a href=":url">See the log</a> for details.', '@count translation files could not be imported. <a href=":url">See the log</a> for details.', [':url' => Url::fromRoute('dblog.overview')->toString()]);
+      if (Drupal::moduleHandler()->moduleExists('dblog') && Drupal::currentUser()->hasPermission('access site reports')) {
+        $message = Drupal::translation()->formatPlural(count($results['failed_files']), 'One translation file could not be imported. <a href=":url">See the log</a> for details.', '@count translation files could not be imported. <a href=":url">See the log</a> for details.', [':url' => Url::fromRoute('dblog.overview')->toString()]);
       }
       else {
-        $message = \Drupal::translation()->formatPlural(count($results['failed_files']), 'One translation file could not be imported. See the log for details.', '@count translation files could not be imported. See the log for details.');
+        $message = Drupal::translation()->formatPlural(count($results['failed_files']), 'One translation file could not be imported. See the log for details.', '@count translation files could not be imported. See the log for details.');
       }
-      \Drupal::messenger()->addError($message);
+      Drupal::messenger()->addError($message);
     }
     if (isset($results['files'])) {
       $skipped_files = [];
@@ -399,7 +399,7 @@ function locale_translate_batch_finished($success, array $results) {
           }
         }
       }
-      \Drupal::messenger()->addStatus(\Drupal::translation()->formatPlural(count($results['files']),
+      Drupal::messenger()->addStatus(Drupal::translation()->formatPlural(count($results['files']),
         'One translation file imported. %number translations were added, %update translations were updated and %delete translations were removed.',
         '@count translation files imported. %number translations were added, %update translations were updated and %delete translations were removed.',
         ['%number' => $additions, '%update' => $updates, '%delete' => $deletes]
@@ -407,13 +407,13 @@ function locale_translate_batch_finished($success, array $results) {
       $logger->notice('Translations imported: %number added, %update updated, %delete removed.', ['%number' => $additions, '%update' => $updates, '%delete' => $deletes]);
 
       if ($skips) {
-        if (\Drupal::moduleHandler()->moduleExists('dblog') && \Drupal::currentUser()->hasPermission('access site reports')) {
-          $message = \Drupal::translation()->formatPlural($skips, 'One translation string was skipped because of disallowed or malformed HTML. <a href=":url">See the log</a> for details.', '@count translation strings were skipped because of disallowed or malformed HTML. <a href=":url">See the log</a> for details.', [':url' => Url::fromRoute('dblog.overview')->toString()]);
+        if (Drupal::moduleHandler()->moduleExists('dblog') && Drupal::currentUser()->hasPermission('access site reports')) {
+          $message = Drupal::translation()->formatPlural($skips, 'One translation string was skipped because of disallowed or malformed HTML. <a href=":url">See the log</a> for details.', '@count translation strings were skipped because of disallowed or malformed HTML. <a href=":url">See the log</a> for details.', [':url' => Url::fromRoute('dblog.overview')->toString()]);
         }
         else {
-          $message = \Drupal::translation()->formatPlural($skips, 'One translation string was skipped because of disallowed or malformed HTML. See the log for details.', '@count translation strings were skipped because of disallowed or malformed HTML. See the log for details.');
+          $message = Drupal::translation()->formatPlural($skips, 'One translation string was skipped because of disallowed or malformed HTML. See the log for details.', '@count translation strings were skipped because of disallowed or malformed HTML. See the log for details.');
         }
-        \Drupal::messenger()->addWarning($message);
+        Drupal::messenger()->addWarning($message);
         $logger->warning('@count disallowed HTML string(s) in files: @files.', ['@count' => $skips, '@files' => implode(',', $skipped_files)]);
       }
     }
@@ -435,7 +435,7 @@ function locale_translate_batch_finished($success, array $results) {
  */
 function locale_translate_file_create($filepath) {
   $file = new stdClass();
-  $file->filename = \Drupal::service('file_system')->basename($filepath);
+  $file->filename = Drupal::service('file_system')->basename($filepath);
   $file->uri = $filepath;
   $file->timestamp = filemtime($file->uri);
   return $file;
@@ -517,7 +517,7 @@ function locale_translate_delete_translation_files(array $projects = [], array $
   if ($files = locale_translate_get_interface_translation_files($projects, $langcodes)) {
     foreach ($files as $file) {
       try {
-        \Drupal::service('file_system')->delete($file->uri);
+        Drupal::service('file_system')->delete($file->uri);
       }
       catch (FileException $e) {
         $fail = TRUE;
@@ -544,7 +544,7 @@ function locale_translate_delete_translation_files(array $projects = [], array $
  *   The batch definition.
  */
 function locale_config_batch_update_components(array $options, array $langcodes = [], array $components = []) {
-  $langcodes = $langcodes ? $langcodes : array_keys(\Drupal::languageManager()->getLanguages());
+  $langcodes = $langcodes ? $langcodes : array_keys(Drupal::languageManager()->getLanguages());
   if ($langcodes && $names = Locale::config()->getComponentNames($components)) {
     return locale_config_batch_build($names, $langcodes, $options);
   }
@@ -642,12 +642,12 @@ function locale_config_batch_finished($success, array $results) {
   if ($success) {
     $configuration = isset($results['stats']['config']) ? $results['stats']['config'] : 0;
     if ($configuration) {
-      \Drupal::messenger()->addStatus(t('The configuration was successfully updated. There are %number configuration objects updated.', ['%number' => $configuration]));
-      \Drupal::logger('locale')->notice('The configuration was successfully updated. %number configuration objects updated.', ['%number' => $configuration]);
+      Drupal::messenger()->addStatus(t('The configuration was successfully updated. There are %number configuration objects updated.', ['%number' => $configuration]));
+      Drupal::logger('locale')->notice('The configuration was successfully updated. %number configuration objects updated.', ['%number' => $configuration]);
     }
     else {
-      \Drupal::messenger()->addStatus(t('No configuration objects have been updated.'));
-      \Drupal::logger('locale')->warning('No configuration objects have been updated.');
+      Drupal::messenger()->addStatus(t('No configuration objects have been updated.'));
+      Drupal::logger('locale')->warning('No configuration objects have been updated.');
     }
   }
 }

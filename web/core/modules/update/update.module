@@ -8,7 +8,7 @@
  * contributed modules and themes. It warns site administrators if newer
  * releases are available via the system status report (admin/reports/status),
  * the module and theme pages, and optionally via email. It also provides the
- * ability to install contributed modules and themes via an user interface.
+ * ability to install contributed modules and themes via a user interface.
  */
 
 use Drupal\Core\File\Exception\FileException;
@@ -66,10 +66,10 @@ function update_help($route_name, RouteMatchInterface $route_match) {
  */
 function update_page_top() {
   /** @var \Drupal\Core\Routing\AdminContext $admin_context */
-  $admin_context = \Drupal::service('router.admin_context');
-  $route_match = \Drupal::routeMatch();
-  if ($admin_context->isAdminRoute($route_match->getRouteObject()) && \Drupal::currentUser()->hasPermission('administer site configuration')) {
-    $route_name = \Drupal::routeMatch()->getRouteName();
+  $admin_context = Drupal::service('router.admin_context');
+  $route_match = Drupal::routeMatch();
+  if ($admin_context->isAdminRoute($route_match->getRouteObject()) && Drupal::currentUser()->hasPermission('administer site configuration')) {
+    $route_name = Drupal::routeMatch()->getRouteName();
     switch ($route_name) {
       // These pages don't need additional nagging.
       case 'update.theme_update':
@@ -100,15 +100,15 @@ function update_page_top() {
       // them before using
       // \Drupal\Core\Messenger\MessengerInterface::addStatus().
       if (isset($status[$type]['description']) && is_array($status[$type]['description'])) {
-        $status[$type]['description'] = \Drupal::service('renderer')->renderPlain($status[$type]['description']);
+        $status[$type]['description'] = Drupal::service('renderer')->renderPlain($status[$type]['description']);
       }
       if (!empty($verbose)) {
         if (isset($status[$type]['severity'])) {
           if ($status[$type]['severity'] == REQUIREMENT_ERROR) {
-            \Drupal::messenger()->addError($status[$type]['description']);
+            Drupal::messenger()->addError($status[$type]['description']);
           }
           elseif ($status[$type]['severity'] == REQUIREMENT_WARNING) {
-            \Drupal::messenger()->addWarning($status[$type]['description']);
+            Drupal::messenger()->addWarning($status[$type]['description']);
           }
         }
       }
@@ -118,7 +118,7 @@ function update_page_top() {
         if (isset($status[$type])
             && isset($status[$type]['reason'])
             && $status[$type]['reason'] === UpdateManagerInterface::NOT_SECURE) {
-          \Drupal::messenger()->addError($status[$type]['description']);
+          Drupal::messenger()->addError($status[$type]['description']);
         }
       }
     }
@@ -136,7 +136,7 @@ function update_page_top() {
  *   otherwise.
  */
 function _update_manager_access() {
-  return Settings::get('allow_authorize_operations', TRUE) && \Drupal::currentUser()->hasPermission('administer software updates');
+  return Settings::get('allow_authorize_operations', TRUE) && Drupal::currentUser()->hasPermission('administer software updates');
 }
 
 /**
@@ -161,6 +161,11 @@ function update_theme() {
       'variables' => ['version' => NULL, 'title' => NULL, 'attributes' => []],
       'file' => 'update.report.inc',
     ],
+    'update_fetch_error_message' => [
+      'file' => 'update.report.inc',
+      'render element' => 'element',
+      'variables' => ['error_message' => []],
+    ],
   ];
 }
 
@@ -168,10 +173,10 @@ function update_theme() {
  * Implements hook_cron().
  */
 function update_cron() {
-  $update_config = \Drupal::config('update.settings');
+  $update_config = Drupal::config('update.settings');
   $frequency = $update_config->get('check.interval_days');
   $interval = 60 * 60 * 24 * $frequency;
-  $last_check = \Drupal::state()->get('update.last_check') ?: 0;
+  $last_check = Drupal::state()->get('update.last_check', 0);
   if ((REQUEST_TIME - $last_check) > $interval) {
     // If the configured update interval has elapsed, we want to invalidate
     // the data for all projects, attempt to re-fetch, and trigger any
@@ -184,7 +189,7 @@ function update_cron() {
     // missing data, and if so, try to fetch the data.
     update_get_available(TRUE);
   }
-  $last_email_notice = \Drupal::state()->get('update.last_email_notification') ?: 0;
+  $last_email_notice = Drupal::state()->get('update.last_email_notification', 0);
   if ((REQUEST_TIME - $last_email_notice) > $interval) {
     // If configured time between notifications elapsed, send email about
     // updates possibly available.
@@ -242,7 +247,7 @@ function update_storage_clear_submit($form, FormStateInterface $form_state) {
  * Returns a warning message when there is no data about available updates.
  */
 function _update_no_data() {
-  $destination = \Drupal::destination()->getAsArray();
+  $destination = Drupal::destination()->getAsArray();
   return t('No update information available. <a href=":run_cron">Run cron</a> or <a href=":check_manually">check manually</a>.', [
     ':run_cron' => Url::fromRoute('system.run_cron', [], ['query' => $destination])->toString(),
     ':check_manually' => Url::fromRoute('update.manual_status', [], ['query' => $destination])->toString(),
@@ -275,13 +280,13 @@ function update_get_available($refresh = FALSE) {
   $needs_refresh = FALSE;
 
   // Grab whatever data we currently have.
-  $available = \Drupal::keyValueExpirable('update_available_releases')->getAll();
-  $projects = \Drupal::service('update.manager')->getProjects();
+  $available = Drupal::keyValueExpirable('update_available_releases')->getAll();
+  $projects = Drupal::service('update.manager')->getProjects();
   foreach ($projects as $key => $project) {
     // If there's no data at all, we clearly need to fetch some.
     if (empty($available[$key])) {
       // update_create_fetch_task($project);
-      \Drupal::service('update.processor')->createFetchTask($project);
+      Drupal::service('update.processor')->createFetchTask($project);
       $needs_refresh = TRUE;
       continue;
     }
@@ -304,7 +309,7 @@ function update_get_available($refresh = FALSE) {
     // If we think this project needs to fetch, actually create the task now
     // and remember that we think we're missing some data.
     if (!empty($available[$key]['fetch_status']) && $available[$key]['fetch_status'] == UpdateFetcherInterface::FETCH_PENDING) {
-      \Drupal::service('update.processor')->createFetchTask($project);
+      Drupal::service('update.processor')->createFetchTask($project);
       $needs_refresh = TRUE;
     }
   }
@@ -314,7 +319,7 @@ function update_get_available($refresh = FALSE) {
     update_fetch_data();
     // After processing the queue, we've (hopefully) got better data, so pull
     // the latest data again and use that directly.
-    $available = \Drupal::keyValueExpirable('update_available_releases')->getAll();
+    $available = Drupal::keyValueExpirable('update_available_releases')->getAll();
   }
 
   return $available;
@@ -335,14 +340,14 @@ function update_get_available($refresh = FALSE) {
  * @see \Drupal\update\UpdateFetcher::createFetchTask()
  */
 function update_create_fetch_task($project) {
-  \Drupal::service('update.processor')->createFetchTask($project);
+  Drupal::service('update.processor')->createFetchTask($project);
 }
 
 /**
  * Refreshes the release data after loading the necessary include file.
  */
 function update_refresh() {
-  \Drupal::service('update.manager')->refreshUpdateData();
+  Drupal::service('update.manager')->refreshUpdateData();
 }
 
 /**
@@ -351,7 +356,7 @@ function update_refresh() {
  * @see \Drupal\update\UpdateProcessor::fetchData()
  */
 function update_fetch_data() {
-  \Drupal::service('update.processor')->fetchData();
+  Drupal::service('update.processor')->fetchData();
 }
 
 /**
@@ -368,15 +373,15 @@ function update_fetch_data_finished($success, $results) {
   if ($success) {
     if (!empty($results)) {
       if (!empty($results['updated'])) {
-        \Drupal::messenger()->addStatus(\Drupal::translation()->formatPlural($results['updated'], 'Checked available update data for one project.', 'Checked available update data for @count projects.'));
+        Drupal::messenger()->addStatus(Drupal::translation()->formatPlural($results['updated'], 'Checked available update data for one project.', 'Checked available update data for @count projects.'));
       }
       if (!empty($results['failures'])) {
-        \Drupal::messenger()->addError(\Drupal::translation()->formatPlural($results['failures'], 'Failed to get available update data for one project.', 'Failed to get available update data for @count projects.'));
+        Drupal::messenger()->addError(Drupal::translation()->formatPlural($results['failures'], 'Failed to get available update data for one project.', 'Failed to get available update data for @count projects.'));
       }
     }
   }
   else {
-    \Drupal::messenger()->addError(t('An error occurred trying to get available update data.'), 'error');
+    Drupal::messenger()->addError(t('An error occurred trying to get available update data.'), 'error');
   }
 }
 
@@ -402,8 +407,8 @@ function update_fetch_data_finished($success, $results) {
  */
 function update_mail($key, &$message, $params) {
   $langcode = $message['langcode'];
-  $language = \Drupal::languageManager()->getLanguage($langcode);
-  $message['subject'] .= t('New release(s) available for @site_name', ['@site_name' => \Drupal::config('system.site')->get('name')], ['langcode' => $langcode]);
+  $language = Drupal::languageManager()->getLanguage($langcode);
+  $message['subject'] .= t('New release(s) available for @site_name', ['@site_name' => Drupal::config('system.site')->get('name')], ['langcode' => $langcode]);
   foreach ($params as $msg_type => $msg_reason) {
     $message['body'][] = _update_message_text($msg_type, $msg_reason, $langcode);
   }
@@ -412,7 +417,7 @@ function update_mail($key, &$message, $params) {
     $message['body'][] = t('You can automatically install your missing updates using the Update manager:', [], ['langcode' => $langcode]) . "\n" . Url::fromRoute('update.report_update', [], ['absolute' => TRUE, 'language' => $language])->toString();
   }
   $settings_url = Url::fromRoute('update.settings', [], ['absolute' => TRUE])->toString();
-  if (\Drupal::config('update.settings')->get('notification.threshold') == 'all') {
+  if (Drupal::config('update.settings')->get('notification.threshold') == 'all') {
     $message['body'][] = t('Your site is currently configured to send these emails when any updates are available. To get notified only for security updates, @url.', ['@url' => $settings_url]);
   }
   else {
@@ -524,8 +529,8 @@ function _update_project_status_sort($a, $b) {
  * @see theme_update_report()
  */
 function template_preprocess_update_last_check(&$variables) {
-  $variables['time'] = \Drupal::service('date.formatter')->formatTimeDiffSince($variables['last']);
-  $variables['link'] = Link::fromTextAndUrl(t('Check manually'), Url::fromRoute('update.manual_status', [], ['query' => \Drupal::destination()->getAsArray()]))->toString();
+  $variables['time'] = Drupal::service('date.formatter')->formatTimeDiffSince($variables['last']);
+  $variables['link'] = Link::fromTextAndUrl(t('Check manually'), Url::fromRoute('update.manual_status', [], ['query' => Drupal::destination()->getAsArray()]))->toString();
 }
 
 /**
@@ -564,11 +569,11 @@ function update_verify_update_archive($project, $archive_file, $directory) {
   $compatible_project = FALSE;
   $incompatible = [];
   /** @var \Drupal\Core\File\FileSystemInterface $file_system */
-  $file_system = \Drupal::service('file_system');
+  $file_system = Drupal::service('file_system');
   $files = $file_system->scanDirectory("$directory/$project", '/.*\.info.yml$/', ['key' => 'name', 'min_depth' => 0]);
   foreach ($files as $file) {
     // Get the .info.yml file for the module or theme this file belongs to.
-    $info = \Drupal::service('info_parser')->parse($file->uri);
+    $info = Drupal::service('info_parser')->parse($file->uri);
 
     // If the module or theme is incompatible with Drupal core, set an error.
     if ($info['core_incompatible']) {
@@ -584,12 +589,12 @@ function update_verify_update_archive($project, $archive_file, $directory) {
     $errors[] = t('%archive_file does not contain any .info.yml files.', ['%archive_file' => $file_system->basename($archive_file)]);
   }
   elseif (!$compatible_project) {
-    $errors[] = \Drupal::translation()->formatPlural(
+    $errors[] = Drupal::translation()->formatPlural(
       count($incompatible),
       '%archive_file contains a version of %names that is not compatible with Drupal @version.',
       '%archive_file contains versions of modules or themes that are not compatible with Drupal @version: %names',
       [
-        '@version' => \Drupal::VERSION,
+        '@version' => Drupal::VERSION,
         '%archive_file' => $file_system->basename($archive_file),
         '%names' => implode(', ', $incompatible),
       ]
@@ -603,8 +608,8 @@ function update_verify_update_archive($project, $archive_file, $directory) {
  * Invalidates stored data relating to update status.
  */
 function update_storage_clear() {
-  \Drupal::keyValueExpirable('update')->deleteAll();
-  \Drupal::keyValueExpirable('update_available_release')->deleteAll();
+  Drupal::keyValueExpirable('update')->deleteAll();
+  Drupal::keyValueExpirable('update_available_release')->deleteAll();
 }
 
 /**
@@ -679,7 +684,7 @@ function update_clear_update_disk_cache() {
   // Search for files and directories in base folder only without recursion.
   foreach ($directories as $directory) {
     if (is_dir($directory)) {
-      \Drupal::service('file_system')->scanDirectory($directory, '/.*/', ['callback' => 'update_delete_file_if_stale', 'recurse' => FALSE]);
+      Drupal::service('file_system')->scanDirectory($directory, '/.*/', ['callback' => 'update_delete_file_if_stale', 'recurse' => FALSE]);
     }
   }
 }
@@ -701,19 +706,25 @@ function update_clear_update_disk_cache() {
  *
  * @param $path
  *   A string containing a file path or (streamwrapper) URI.
+ *
+ * @return bool
+ *   TRUE if the file is stale and deleted successfully, FALSE otherwise.
  */
 function update_delete_file_if_stale($path) {
   if (file_exists($path)) {
     $filectime = filectime($path);
-    $max_age = \Drupal::config('system.file')->get('temporary_maximum_age');
+    $max_age = Drupal::config('system.file')->get('temporary_maximum_age');
 
     if (REQUEST_TIME - $filectime > $max_age || (preg_match('/.*-dev\.(tar\.gz|zip)/i', $path) && REQUEST_TIME - $filectime > 300)) {
       try {
-        \Drupal::service('file_system')->deleteRecursive($path);
+        Drupal::service('file_system')->deleteRecursive($path);
+        return TRUE;
       }
       catch (FileException $e) {
         // Ignore failed deletes.
       }
     }
   }
+
+  return FALSE;
 }

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\system\Kernel\Common;
 
+use Drupal;
 use Drupal\Core\Url;
 use Drupal\KernelTests\KernelTestBase;
 
@@ -93,8 +94,8 @@ class AddFeedTest extends KernelTestBase {
       '#url' => 'node',
       '#title' => '<>&"\'',
     ];
-    $text = \Drupal::service('renderer')->renderRoot($variables);
-    $this->assertEqual(trim(strip_tags($text)), 'Subscribe to &lt;&gt;&amp;&quot;&#039;', 'feed_icon template escapes reserved HTML characters.');
+    $text = Drupal::service('renderer')->renderRoot($variables);
+    $this->assertEqual('Subscribe to &lt;&gt;&amp;&quot;&#039;', trim(strip_tags($text)), 'feed_icon template escapes reserved HTML characters.');
   }
 
 }

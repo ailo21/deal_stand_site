@@ -2,16 +2,16 @@
 
 namespace Drupal\Tests\entity_test\Functional\Rest;
 
+use DateTime;
+use DateTimeZone;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\Tests\rest\Functional\EntityResource\EntityResourceTestBase;
 use Drupal\Tests\system\Functional\Entity\Traits\EntityDefinitionTestTrait;
-use Drupal\Tests\Traits\ExpectDeprecationTrait;
 use Drupal\user\Entity\User;
 
 abstract class EntityTestResourceTestBase extends EntityResourceTestBase {
 
   use EntityDefinitionTestTrait;
-  use ExpectDeprecationTrait;
 
   /**
    * {@inheritdoc}
@@ -111,8 +111,8 @@ abstract class EntityTestResourceTestBase extends EntityResourceTestBase {
       ],
       'created' => [
         [
-          'value' => (new \DateTime())->setTimestamp((int) $this->entity->get('created')->value)->setTimezone(new \DateTimeZone('UTC'))->format(\DateTime::RFC3339),
-          'format' => \DateTime::RFC3339,
+          'value' => (new DateTime())->setTimestamp((int) $this->entity->get('created')->value)->setTimezone(new DateTimeZone('UTC'))->format(DateTime::RFC3339),
+          'format' => DateTime::RFC3339,
         ],
       ],
       'user_id' => [

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\node\Functional;
 
+use Drupal;
 use Drupal\language\Entity\ConfigurableLanguage;
 
 /**
@@ -31,7 +32,7 @@ class NodeViewLanguageTest extends NodeTestBase {
     ConfigurableLanguage::createFromLangcode('es')->save();
 
     // Set language field visible.
-    \Drupal::service('entity_display.repository')
+    Drupal::service('entity_display.repository')
       ->getViewDisplay('node', 'page', 'full')
       ->setComponent('langcode')
       ->save();
@@ -40,7 +41,7 @@ class NodeViewLanguageTest extends NodeTestBase {
     $node = $this->drupalCreateNode(['langcode' => 'es']);
 
     $this->drupalGet($node->toUrl());
-    $this->assertText('Spanish', 'The language field is displayed properly.');
+    $this->assertText('Spanish');
   }
 
 }

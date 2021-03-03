@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\rdf\Functional;
 
+use Drupal;
 use Drupal\Core\Url;
 use Drupal\comment\CommentInterface;
 use Drupal\comment\CommentManagerInterface;
@@ -156,7 +157,7 @@ class CommentAttributesTest extends CommentTestBase {
    */
   public function testCommentRdfAuthorMarkup() {
     // Set to test the altered display name.
-    \Drupal::state()->set('user_hooks_test_user_format_name_alter', TRUE);
+    Drupal::state()->set('user_hooks_test_user_format_name_alter', TRUE);
 
     // Post a comment as a registered user.
     $this->saveComment($this->node->id(), $this->webUser->id());
@@ -169,7 +170,7 @@ class CommentAttributesTest extends CommentTestBase {
     // is modified by the RDF module.
     $this->drupalGet('node/' . $this->node->id());
     $this->assertSession()->linkExistsExact($this->webUser->getDisplayName());
-    $this->assertLinkByHref('user/' . $this->webUser->id());
+    $this->assertSession()->linkByHrefExists('user/' . $this->webUser->id());
   }
 
   /**
@@ -180,7 +181,7 @@ class CommentAttributesTest extends CommentTestBase {
    */
   public function testCommentRdfaMarkup() {
     // Set to test the altered display name.
-    \Drupal::state()->set('user_hooks_test_user_format_name_alter', TRUE);
+    Drupal::state()->set('user_hooks_test_user_format_name_alter', TRUE);
 
     // Posts comment #1 on behalf of registered user.
     $comment1 = $this->saveComment($this->node->id(), $this->webUser->id());

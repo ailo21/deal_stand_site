@@ -2,10 +2,12 @@
 
 namespace Drupal\Core\FileTransfer;
 
+use RuntimeException;
+
 /**
- * FileTransferException class.
+ * Exception thrown for file transfer errors.
  */
-class FileTransferException extends \RuntimeException {
+class FileTransferException extends RuntimeException {
 
   /**
    * Arguments to be used in this exception.

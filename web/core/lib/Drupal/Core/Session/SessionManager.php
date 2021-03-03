@@ -5,6 +5,7 @@ namespace Drupal\Core\Session;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
+use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\Storage\NativeSessionStorage;
 
@@ -213,7 +214,7 @@ class SessionManager extends NativeSessionStorage implements SessionManagerInter
     // We do not support the optional $destroy and $lifetime parameters as long
     // as #2238561 remains open.
     if ($destroy || isset($lifetime)) {
-      throw new \InvalidArgumentException('The optional parameters $destroy and $lifetime of SessionManager::regenerate() are not supported currently');
+      throw new InvalidArgumentException('The optional parameters $destroy and $lifetime of SessionManager::regenerate() are not supported currently');
     }
 
     if ($this->isStarted()) {
@@ -257,6 +258,10 @@ class SessionManager extends NativeSessionStorage implements SessionManagerInter
    * {@inheritdoc}
    */
   public function destroy() {
+    if ($this->isCli()) {
+      return;
+    }
+
     session_destroy();
 
     // Unset the session cookies.

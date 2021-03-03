@@ -2,6 +2,7 @@
 
 namespace Drupal\hal\Normalizer;
 
+use Drupal;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
@@ -41,7 +42,7 @@ class ContentEntityNormalizer extends NormalizerBase {
   protected $moduleHandler;
 
   /**
-   * Constructs an ContentEntityNormalizer object.
+   * Constructs a ContentEntityNormalizer object.
    *
    * @param \Drupal\hal\LinkManager\LinkManagerInterface $link_manager
    *   The hypermedia link manager.
@@ -207,7 +208,7 @@ class ContentEntityNormalizer extends NormalizerBase {
     if ($entity->hasLinkTemplate('canonical')) {
       $url = $entity->toUrl('canonical');
     }
-    elseif (\Drupal::service('router.route_provider')->getRoutesByNames([$route_name])) {
+    elseif (Drupal::service('router.route_provider')->getRoutesByNames([$route_name])) {
       $url = Url::fromRoute('rest.entity.' . $entity->getEntityTypeId() . '.GET', [$entity->getEntityTypeId() => $entity->id()]);
     }
     else {

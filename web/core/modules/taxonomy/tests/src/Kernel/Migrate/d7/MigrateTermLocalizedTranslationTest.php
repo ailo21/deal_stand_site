@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\taxonomy\Kernel\Migrate\d7;
 
+use Drupal;
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\TermInterface;
@@ -94,7 +95,7 @@ class MigrateTermLocalizedTranslationTest extends MigrateDrupal7TestBase {
    */
   protected function assertHierarchy($vid, $tid, array $parent_ids) {
     if (!isset($this->treeData[$vid])) {
-      $tree = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadTree($vid);
+      $tree = Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadTree($vid);
       $this->treeData[$vid] = [];
       foreach ($tree as $item) {
         $this->treeData[$vid][$item->tid] = $item;
@@ -112,6 +113,7 @@ class MigrateTermLocalizedTranslationTest extends MigrateDrupal7TestBase {
   public function testTranslatedLocalizedTaxonomyTerms() {
     $this->assertEntity(19, 'en', 'Jupiter Station', 'vocablocalized', 'Holographic research.', 'filtered_html', '0', []);
     $this->assertEntity(20, 'en', 'DS9', 'vocablocalized', 'Terok Nor', 'filtered_html', '0', []);
+    $this->assertEntity(25, 'en', 'Emissary', 'vocablocalized2', 'Pilot episode', 'filtered_html', '0', []);
 
     /** @var \Drupal\taxonomy\TermInterface $entity */
     $entity = Term::load(19);
@@ -128,6 +130,13 @@ class MigrateTermLocalizedTranslationTest extends MigrateDrupal7TestBase {
     $this->assertSame('fr - DS9 (localized)', $translation->label());
     $this->assertSame('fr - Terok Nor (localized)', $translation->getDescription());
     $this->assertFALSE($entity->hasTranslation('is'));
+
+    $entity = Term::load(25);
+    $this->assertFalse($entity->hasTranslation('is'));
+    $this->assertTrue($entity->hasTranslation('fr'));
+    $translation = $entity->getTranslation('fr');
+    $this->assertSame('fr - Emissary', $translation->label());
+    $this->assertSame('fr - Pilot episode', $translation->getDescription());
   }
 
 }

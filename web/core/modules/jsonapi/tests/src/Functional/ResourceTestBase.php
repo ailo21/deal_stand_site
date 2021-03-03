@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\jsonapi\Functional;
 
+use Drupal;
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Component\Utility\Random;
@@ -27,6 +28,7 @@ use Drupal\Core\TypedData\TypedDataInternalPropertiesHelper;
 use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\jsonapi\CacheableResourceResponse;
 use Drupal\jsonapi\JsonApiResource\LinkCollection;
 use Drupal\jsonapi\JsonApiResource\NullIncludedData;
 use Drupal\jsonapi\JsonApiResource\Link;
@@ -271,7 +273,6 @@ abstract class ResourceTestBase extends BrowserTestBase {
     }
 
     $entity_bundle = $entity->bundle();
-    $account_bundle = $account->bundle();
 
     // Add access-protected field.
     FieldStorageConfig::create([
@@ -328,7 +329,7 @@ abstract class ResourceTestBase extends BrowserTestBase {
       ->setTranslatable(FALSE)
       ->save();
 
-    \Drupal::service('router.builder')->rebuildIfNeeded();
+    Drupal::service('router.builder')->rebuildIfNeeded();
 
     // Reload entity so that it has the new field.
     $reloaded_entity = $this->entityLoadUnchanged($entity->id());
@@ -726,7 +727,7 @@ abstract class ResourceTestBase extends BrowserTestBase {
     // Expected cache contexts: X-Drupal-Cache-Contexts header.
     $this->assertSame($expected_cache_contexts !== FALSE, $response->hasHeader('X-Drupal-Cache-Contexts'));
     if (is_array($expected_cache_contexts)) {
-      $optimized_expected_cache_contexts = \Drupal::service('cache_contexts_manager')->optimizeTokens($expected_cache_contexts);
+      $optimized_expected_cache_contexts = Drupal::service('cache_contexts_manager')->optimizeTokens($expected_cache_contexts);
       $this->assertSame($optimized_expected_cache_contexts, explode(' ', $response->getHeader('X-Drupal-Cache-Contexts')[0]));
     }
 
@@ -980,7 +981,7 @@ abstract class ResourceTestBase extends BrowserTestBase {
       ->condition('cid', '%[route]=jsonapi.%', 'LIKE')
       ->execute()
       ->fetchAllAssoc('cid');
-    $this->assertTrue(count($cache_items) >= 2);
+    $this->assertGreaterThanOrEqual(2, count($cache_items));
     $found_cache_redirect = FALSE;
     $found_cached_200_response = FALSE;
     $other_cached_responses_are_4xx = TRUE;
@@ -1045,7 +1046,7 @@ abstract class ResourceTestBase extends BrowserTestBase {
     $this->doTestIncluded($url, $request_options);
 
     // DX: 404 when GETting non-existing entity.
-    $random_uuid = \Drupal::service('uuid')->generate();
+    $random_uuid = Drupal::service('uuid')->generate();
     $url = Url::fromRoute(sprintf('jsonapi.%s.individual', static::$resourceTypeName), ['entity' => $random_uuid]);
     $response = $this->request('GET', $url, $request_options);
     $message_url = clone $url;
@@ -1254,7 +1255,7 @@ abstract class ResourceTestBase extends BrowserTestBase {
     $cacheability = static::getExpectedCollectionCacheability($this->account, $collection, NULL, $filtered);
     $cacheability->setCacheMaxAge($merged_response->getCacheableMetadata()->getCacheMaxAge());
 
-    $collection_response = new ResourceResponse($merged_document);
+    $collection_response = new CacheableResourceResponse($merged_document);
     $collection_response->addCacheableDependency($cacheability);
 
     if (is_null($included_paths)) {
@@ -1669,7 +1670,7 @@ abstract class ResourceTestBase extends BrowserTestBase {
    * @param \Drupal\Core\Entity\EntityInterface|null $entity
    *   (optional) The entity for which to get expected relationship response.
    *
-   * @return \Drupal\jsonapi\ResourceResponse
+   * @return \Drupal\jsonapi\CacheableResourceResponse
    *   The expected ResourceResponse.
    */
   protected function getExpectedGetRelationshipResponse($relationship_field_name, EntityInterface $entity = NULL) {
@@ -1694,7 +1695,7 @@ abstract class ResourceTestBase extends BrowserTestBase {
       ->addCacheableDependency($entity)
       ->addCacheableDependency($access);
     $status_code = isset($expected_document['errors'][0]['status']) ? $expected_document['errors'][0]['status'] : 200;
-    $resource_response = new ResourceResponse($expected_document, $status_code);
+    $resource_response = new CacheableResourceResponse($expected_document, $status_code);
     $resource_response->addCacheableDependency($expected_cacheability);
     return $resource_response;
   }
@@ -1839,9 +1840,13 @@ abstract class ResourceTestBase extends BrowserTestBase {
           'url.site',
         ], $this->entity->getEntityType()->isRevisionable() ? ['url.query_args:resourceVersion'] : []);
         $cacheability = (new CacheableMetadata())->addCacheContexts($cache_contexts)->addCacheTags(['http_response']);
-        $related_response = isset($relationship_document['errors'])
-          ? $relationship_response
-          : (new ResourceResponse(static::getEmptyCollectionResponse(!is_null($relationship_document['data']), $self_link)->getResponseData()))->addCacheableDependency($cacheability);
+        if (isset($relationship_document['errors'])) {
+          $related_response = $relationship_response;
+        }
+        else {
+          $cardinality = is_null($relationship_document['data']) ? 1 : -1;
+          $related_response = (new CacheableResourceResponse(static::getEmptyCollectionResponse($cardinality, $self_link)->getResponseData()))->addCacheableDependency($cacheability);
+        }
       }
       else {
         $is_to_one_relationship = static::isResourceIdentifier($relationship_document['data']);
@@ -1857,7 +1862,8 @@ abstract class ResourceTestBase extends BrowserTestBase {
           $related_response = static::toCollectionResourceResponse($individual_responses, $self_link, !$is_to_one_relationship);
         }
         else {
-          $related_response = static::getEmptyCollectionResponse(!$is_to_one_relationship, $self_link);
+          $cardinality = $is_to_one_relationship ? 1 : -1;
+          $related_response = static::getEmptyCollectionResponse($cardinality, $self_link);
         }
       }
       $related_response->addCacheableDependency($relationship_response->getCacheableMetadata());
@@ -1878,7 +1884,6 @@ abstract class ResourceTestBase extends BrowserTestBase {
     // Try with all of the following request bodies.
     $unparseable_request_body = '!{>}<';
     $parseable_valid_request_body = Json::encode($this->getPostDocument());
-    /* $parseable_valid_request_body_2 = Json::encode($this->getNormalizedPostEntity()); */
     $parseable_invalid_request_body_missing_type = Json::encode($this->removeResourceTypeFromDocument($this->getPostDocument()));
     if ($this->entity->getEntityType()->hasKey('label')) {
       $parseable_invalid_request_body = Json::encode($this->makeNormalizationInvalid($this->getPostDocument(), 'label'));
@@ -2063,7 +2068,7 @@ abstract class ResourceTestBase extends BrowserTestBase {
 
       // 201 when successfully creating an entity with a new UUID.
       $doc = $this->getModifiedEntityForPostTesting();
-      $new_uuid = \Drupal::service('uuid')->generate();
+      $new_uuid = Drupal::service('uuid')->generate();
       $doc['data']['id'] = $new_uuid;
       if (isset($label_field)) {
         $doc['data']['attributes'][$label_field] = [['value' => $this->randomMachineName()]];
@@ -2100,7 +2105,6 @@ abstract class ResourceTestBase extends BrowserTestBase {
     // Try with all of the following request bodies.
     $unparseable_request_body = '!{>}<';
     $parseable_valid_request_body = Json::encode($this->getPatchDocument());
-    /* $parseable_valid_request_body_2 = Json::encode($this->getNormalizedPatchEntity()); */
     if ($this->entity->getEntityType()->hasKey('label')) {
       $parseable_invalid_request_body = Json::encode($this->makeNormalizationInvalid($this->getPatchDocument(), 'label'));
     }
@@ -2194,7 +2198,7 @@ abstract class ResourceTestBase extends BrowserTestBase {
     $this->assertResourceErrorResponse(403, "The current user is not allowed to PATCH the selected field (field_rest_test).", $url, $response, '/data/attributes/field_rest_test');
 
     // DX: 403 when sending PATCH request with updated read-only fields.
-    list($modified_entity, $original_values) = static::getModifiedEntityForPatchTesting($this->entity);
+    [$modified_entity, $original_values] = static::getModifiedEntityForPatchTesting($this->entity);
     // Send PATCH request by serializing the modified entity, assert the error
     // response, change the modified entity field that caused the error response
     // back to its original value, repeat.
@@ -2323,7 +2327,7 @@ abstract class ResourceTestBase extends BrowserTestBase {
     }
     $this->assertTrue($this->container->get('module_installer')->install(['content_moderation'], TRUE), 'Installed modules.');
 
-    if (!\Drupal::service('content_moderation.moderation_information')->canModerateEntitiesOfEntityType($this->entity->getEntityType())) {
+    if (!Drupal::service('content_moderation.moderation_information')->canModerateEntitiesOfEntityType($this->entity->getEntityType())) {
       return;
     }
 
@@ -3068,7 +3072,7 @@ abstract class ResourceTestBase extends BrowserTestBase {
       ],
     ];
     foreach ($test_relationship_urls as $revision_case) {
-      list($revision_id, $relationship_url, $related_url) = $revision_case;
+      [$revision_id, $relationship_url, $related_url] = $revision_case;
       // Load the revision that will be requested.
       $this->entityStorage->resetCache([$entity->id()]);
       $revision = is_null($revision_id)
@@ -3093,7 +3097,7 @@ abstract class ResourceTestBase extends BrowserTestBase {
     }
     $this->grantPermissionsToTestedRole(['field_jsonapi_test_entity_ref view access']);
     foreach ($test_relationship_urls as $revision_case) {
-      list($revision_id, $relationship_url, $related_url) = $revision_case;
+      [$revision_id, $relationship_url, $related_url] = $revision_case;
       // Load the revision that will be requested.
       $this->entityStorage->resetCache([$entity->id()]);
       $revision = is_null($revision_id)
@@ -3172,15 +3176,15 @@ abstract class ResourceTestBase extends BrowserTestBase {
    * the expected cacheability for those includes. It does so based of responses
    * from the related routes for individual relationships.
    *
-   * @param \Drupal\jsonapi\ResourceResponse $expected_response
+   * @param \Drupal\jsonapi\CacheableResourceResponse $expected_response
    *   The expected ResourceResponse.
    * @param \Drupal\jsonapi\ResourceResponse[] $related_responses
    *   The related ResourceResponses, keyed by relationship field names.
    *
-   * @return \Drupal\jsonapi\ResourceResponse
+   * @return \Drupal\jsonapi\CacheableResourceResponse
    *   The decorated ResourceResponse.
    */
-  protected static function decorateExpectedResponseForIncludedFields(ResourceResponse $expected_response, array $related_responses) {
+  protected static function decorateExpectedResponseForIncludedFields(CacheableResourceResponse $expected_response, array $related_responses) {
     $expected_document = $expected_response->getResponseData();
     $expected_cacheability = $expected_response->getCacheableMetadata();
     foreach ($related_responses as $related_response) {
@@ -3207,17 +3211,17 @@ abstract class ResourceTestBase extends BrowserTestBase {
         }
       }
     }
-    return (new ResourceResponse($expected_document))->addCacheableDependency($expected_cacheability);
+    return (new CacheableResourceResponse($expected_document))->addCacheableDependency($expected_cacheability);
   }
 
   /**
    * Gets the expected individual ResourceResponse for GET.
    *
-   * @return \Drupal\jsonapi\ResourceResponse
+   * @return \Drupal\jsonapi\CacheableResourceResponse
    *   The expected individual ResourceResponse.
    */
   protected function getExpectedGetIndividualResourceResponse($status_code = 200) {
-    $resource_response = new ResourceResponse($this->getExpectedDocument(), $status_code);
+    $resource_response = new CacheableResourceResponse($this->getExpectedDocument(), $status_code);
     $cacheability = new CacheableMetadata();
     $cacheability->setCacheContexts($this->getExpectedCacheContexts());
     $cacheability->setCacheTags($this->getExpectedCacheTags());
@@ -3309,7 +3313,7 @@ abstract class ResourceTestBase extends BrowserTestBase {
     // change during the lifetime of a request and caches access results.
     // However, we're changing permissions during a test run and need fresh
     // results, so reset the cache.
-    \Drupal::entityTypeManager()->getAccessControlHandler($entity->getEntityTypeId())->resetCache();
+    Drupal::entityTypeManager()->getAccessControlHandler($entity->getEntityTypeId())->resetCache();
     return $entity->access($operation, $account, TRUE);
   }
 

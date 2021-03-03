@@ -7,6 +7,7 @@
 
 namespace Drupal\Tests\Core\Access;
 
+use Drupal;
 use Drupal\Core\Access\AccessCheckInterface;
 use Drupal\Core\Access\AccessException;
 use Drupal\Core\Access\AccessResult;
@@ -17,7 +18,7 @@ use Drupal\Core\Access\AccessManager;
 use Drupal\Core\Access\DefaultAccessCheck;
 use Drupal\Tests\UnitTestCase;
 use Drupal\router_test\Access\DefinedTestAccessCheck;
-use Symfony\Cmf\Component\Routing\RouteObjectInterface;
+use Drupal\Core\Routing\RouteObjectInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Symfony\Component\Routing\Route;
@@ -97,7 +98,7 @@ class AccessManagerTest extends UnitTestCase {
     $this->container = new ContainerBuilder();
     $cache_contexts_manager = $this->prophesize(CacheContextsManager::class)->reveal();
     $this->container->set('cache_contexts_manager', $cache_contexts_manager);
-    \Drupal::setContainer($this->container);
+    Drupal::setContainer($this->container);
 
     $this->routeCollection = new RouteCollection();
     $this->routeCollection->add('test_route_1', new Route('/test-route-1'));

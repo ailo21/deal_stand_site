@@ -2,6 +2,7 @@
 
 namespace Drupal\Core\Extension;
 
+use Drupal;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Extension\Exception\UnknownExtensionException;
 
@@ -46,7 +47,7 @@ class ThemeHandler implements ThemeHandlerInterface {
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The config factory to get the installed themes.
    * @param \Drupal\Core\Extension\ThemeExtensionList $theme_list
-   *   A extension discovery instance.
+   *   An extension discovery instance.
    */
   public function __construct($root, ConfigFactoryInterface $config_factory, ThemeExtensionList $theme_list) {
     $this->root = $root;
@@ -83,7 +84,7 @@ class ThemeHandler implements ThemeHandlerInterface {
     // Register the namespaces of installed themes.
     // @todo Implement proper theme registration
     // https://www.drupal.org/project/drupal/issues/2941757
-    \Drupal::service('class_loader')->addPsr4('Drupal\\' . $theme->getName() . '\\', $this->root . '/' . $theme->getPath() . '/src');
+    Drupal::service('class_loader')->addPsr4('Drupal\\' . $theme->getName() . '\\', $this->root . '/' . $theme->getPath() . '/src');
 
     if (!empty($theme->info['libraries'])) {
       foreach ($theme->info['libraries'] as $library => $name) {

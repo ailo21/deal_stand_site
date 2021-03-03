@@ -7,6 +7,7 @@
 
 namespace Drupal\Tests\Core\Config\Entity;
 
+use Drupal;
 use Drupal\Component\Plugin\PluginManagerInterface;
 use Drupal\Core\Config\Schema\SchemaIncompleteException;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
@@ -18,6 +19,7 @@ use Drupal\Core\Plugin\DefaultLazyPluginCollection;
 use Drupal\Tests\Core\Config\Entity\Fixtures\ConfigEntityBaseWithPluginCollections;
 use Drupal\Tests\Core\Plugin\Fixtures\TestConfigurablePlugin;
 use Drupal\Tests\UnitTestCase;
+use ReflectionMethod;
 
 /**
  * @coversDefaultClass \Drupal\Core\Config\Entity\ConfigEntityBase
@@ -157,7 +159,7 @@ class ConfigEntityBaseUnitTest extends UnitTestCase {
     $container->set('config.typed', $this->typedConfigManager);
     $container->set('module_handler', $this->moduleHandler->reveal());
     $container->set('theme_handler', $this->themeHandler->reveal());
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
 
     $this->entity = $this->getMockForAbstractClass('\Drupal\Core\Config\Entity\ConfigEntityBase', [$values, $this->entityTypeId]);
   }
@@ -218,7 +220,7 @@ class ConfigEntityBaseUnitTest extends UnitTestCase {
    * @covers ::addDependency
    */
   public function testAddDependency() {
-    $method = new \ReflectionMethod('\Drupal\Core\Config\Entity\ConfigEntityBase', 'addDependency');
+    $method = new ReflectionMethod('\Drupal\Core\Config\Entity\ConfigEntityBase', 'addDependency');
     $method->setAccessible(TRUE);
     $method->invoke($this->entity, 'module', $this->provider);
     $method->invoke($this->entity, 'module', 'core');
@@ -359,7 +361,7 @@ class ConfigEntityBaseUnitTest extends UnitTestCase {
     // that the plugin manager itself is also not serialized.
     $container = new ContainerBuilder();
     $container->set('plugin.manager.foo', $plugin_manager);
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
 
     $entity_values = ['the_plugin_collection_config' => [$instance_id => ['foo' => 'original_value']]];
     $entity = new TestConfigEntityWithPluginCollections($entity_values, $this->entityTypeId);
@@ -635,8 +637,11 @@ class ConfigEntityBaseUnitTest extends UnitTestCase {
     $this->entityType->expects($this->any())
       ->method('getPropertiesToExport')
       ->willReturn(NULL);
+    $this->entityType->expects($this->any())
+      ->method('getClass')
+      ->willReturn("FooConfigEntity");
     $this->expectException(SchemaIncompleteException::class);
-    $this->expectExceptionMessageMatches("/Entity type 'Mock_ConfigEntityTypeInterface_[^']*' is missing 'config_export' definition in its annotation/");
+    $this->expectExceptionMessage("Entity type 'FooConfigEntity' is missing 'config_export' definition in its annotation");
     $this->entity->toArray();
   }
 

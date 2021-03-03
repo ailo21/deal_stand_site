@@ -5,6 +5,7 @@ namespace Drupal\Core\Utility;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Database\DatabaseExceptionWrapper;
+use PDOException;
 
 /**
  * Drupal error utility class.
@@ -19,11 +20,11 @@ class Error {
   const ERROR = 3;
 
   /**
-   * An array of blacklisted functions.
+   * An array of ignored functions.
    *
    * @var array
    */
-  protected static $blacklistFunctions = ['debug', '_drupal_error_handler', '_drupal_exception_handler'];
+  protected static $ignoredFunctions = ['debug', '_drupal_error_handler', '_drupal_exception_handler'];
 
   /**
    * Decodes an exception and retrieves the correct caller.
@@ -43,7 +44,7 @@ class Error {
 
     // For PDOException errors, we try to return the initial caller,
     // skipping internal functions of the database layer.
-    if ($exception instanceof \PDOException || $exception instanceof DatabaseExceptionWrapper) {
+    if ($exception instanceof PDOException || $exception instanceof DatabaseExceptionWrapper) {
       // The first element in the stack is the call, the second element gives us
       // the caller. We skip calls that occurred in one of the classes of the
       // database layer.
@@ -110,9 +111,9 @@ class Error {
    */
   public static function getLastCaller(array &$backtrace) {
     // Errors that occur inside PHP internal functions do not generate
-    // information about file and line. Ignore black listed functions.
+    // information about file and line. Ignore the ignored functions.
     while (($backtrace && !isset($backtrace[0]['line'])) ||
-      (isset($backtrace[1]['function']) && in_array($backtrace[1]['function'], static::$blacklistFunctions))) {
+      (isset($backtrace[1]['function']) && in_array($backtrace[1]['function'], static::$ignoredFunctions))) {
       array_shift($backtrace);
     }
 

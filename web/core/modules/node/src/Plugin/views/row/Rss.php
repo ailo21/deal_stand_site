@@ -2,9 +2,11 @@
 
 namespace Drupal\node\Plugin\views\row;
 
+use Drupal;
 use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\views\Plugin\views\row\RssPluginBase;
+use stdClass;
 
 /**
  * Plugin which performs a node_view on the resulting object
@@ -36,7 +38,7 @@ class Rss extends RssPluginBase {
   protected $entityTypeId = 'node';
 
   /**
-   * The node storage
+   * The node storage.
    *
    * @var \Drupal\node\NodeStorageInterface
    */
@@ -96,7 +98,7 @@ class Rss extends RssPluginBase {
 
     $display_mode = $this->options['view_mode'];
     if ($display_mode == 'default') {
-      $display_mode = \Drupal::config('system.rss')->get('items.view_mode');
+      $display_mode = Drupal::config('system.rss')->get('items.view_mode');
     }
 
     // Load the specified node:
@@ -129,7 +131,7 @@ class Rss extends RssPluginBase {
 
     $build_mode = $display_mode;
 
-    $build = \Drupal::entityTypeManager()
+    $build = Drupal::entityTypeManager()
       ->getViewBuilder('node')
       ->view($node, $build_mode);
     unset($build['#theme']);
@@ -147,7 +149,7 @@ class Rss extends RssPluginBase {
       $this->view->style_plugin->namespaces += $xml_rdf_namespaces;
     }
 
-    $item = new \stdClass();
+    $item = new stdClass();
     if ($display_mode != 'title') {
       // We render node contents.
       $item->description = $build;

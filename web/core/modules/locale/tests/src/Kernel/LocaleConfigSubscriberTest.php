@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\locale\Kernel;
 
+use Drupal;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\locale\Locale;
 use Drupal\locale\StringInterface;
@@ -66,7 +67,7 @@ class LocaleConfigSubscriberTest extends KernelTestBase {
     // @see locale_modules_installed()
     // @see locale_system_update()
     locale_system_set_config_langcodes();
-    $langcodes = array_keys(\Drupal::languageManager()->getLanguages());
+    $langcodes = array_keys(Drupal::languageManager()->getLanguages());
     $names = Locale::config()->getComponentNames();
     Locale::config()->updateConfigTranslations($names, $langcodes);
 
@@ -390,8 +391,8 @@ class LocaleConfigSubscriberTest extends KernelTestBase {
   protected function assertNoConfigOverride($config_name, $langcode) {
     $config_langcode = $this->configFactory->getEditable($config_name)->get('langcode');
     $override = $this->languageManager->getLanguageConfigOverride($langcode, $config_name);
-    $this->assertNotEqual($config_langcode, $langcode);
-    $this->assertEqual($override->isNew(), TRUE);
+    $this->assertNotEquals($langcode, $config_langcode);
+    $this->assertTrue($override->isNew());
   }
 
   /**
@@ -409,8 +410,8 @@ class LocaleConfigSubscriberTest extends KernelTestBase {
   protected function assertConfigOverride($config_name, $key, $value, $langcode) {
     $config_langcode = $this->configFactory->getEditable($config_name)->get('langcode');
     $override = $this->languageManager->getLanguageConfigOverride($langcode, $config_name);
-    $this->assertNotEqual($config_langcode, $langcode);
-    $this->assertEqual($override->get($key), $value);
+    $this->assertNotEquals($langcode, $config_langcode);
+    $this->assertEqual($value, $override->get($key));
   }
 
   /**
@@ -427,8 +428,8 @@ class LocaleConfigSubscriberTest extends KernelTestBase {
    */
   protected function assertActiveConfig($config_name, $key, $value, $langcode) {
     $config = $this->configFactory->getEditable($config_name);
-    $this->assertEqual($config->get('langcode'), $langcode);
-    $this->assertIdentical($config->get($key), $value);
+    $this->assertEqual($langcode, $config->get('langcode'));
+    $this->assertSame($value, $config->get($key));
   }
 
   /**
@@ -446,7 +447,7 @@ class LocaleConfigSubscriberTest extends KernelTestBase {
       'language' => $langcode,
       'translated' => TRUE,
     ]);
-    $this->assertIdentical([], $strings);
+    $this->assertSame([], $strings);
   }
 
   /**
@@ -474,7 +475,7 @@ class LocaleConfigSubscriberTest extends KernelTestBase {
     $string = reset($strings);
     $this->assertInstanceOf(StringInterface::class, $string);
     /** @var \Drupal\locale\StringInterface $string */
-    $this->assertIdentical($translation, $string->getString());
+    $this->assertSame($translation, $string->getString());
     $this->assertTrue($string->isTranslation());
     $this->assertInstanceOf(TranslationString::class, $string);
     /** @var \Drupal\locale\TranslationString $string */

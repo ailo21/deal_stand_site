@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\content_moderation\Functional;
 
+use Drupal;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\content_moderation\Traits\ContentModerationTestTrait;
 
@@ -56,7 +57,7 @@ class ModerationContentTranslationTest extends BrowserTestBase {
       'settings[node][article][translatable]' => TRUE,
       'settings[node][article][settings][language][language_alterable]' => TRUE,
     ];
-    $this->drupalPostForm(NULL, $edit, 'Save configuration');
+    $this->submitForm($edit, 'Save configuration');
     // Adding languages requires a container rebuild in the test running
     // environment so that multilingual services are used.
     $this->rebuildContainer();
@@ -81,11 +82,11 @@ class ModerationContentTranslationTest extends BrowserTestBase {
     $edit = [
       'title[0][value]' => 'Published French node',
     ];
-    $this->drupalPostForm(NULL, $edit, 'Save (this translation)');
+    $this->submitForm($edit, 'Save (this translation)');
     $this->assertSession()->pageTextContains('Article Published French node has been updated.');
 
     // Install content moderation and enable moderation on Article node type.
-    \Drupal::service('module_installer')->install(['content_moderation']);
+    Drupal::service('module_installer')->install(['content_moderation']);
     $workflow = $this->createEditorialWorkflow();
     $workflow->getTypePlugin()->addEntityTypeAndBundle('node', 'article');
     $workflow->save();
@@ -97,7 +98,7 @@ class ModerationContentTranslationTest extends BrowserTestBase {
     $edit = [
       'title[0][value]' => 'Published English new node',
     ];
-    $this->drupalPostForm(NULL, $edit, 'Save');
+    $this->submitForm($edit, 'Save');
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->pageTextContains('Article Published English new node has been updated.');
     // Edit the French translation.
@@ -106,7 +107,7 @@ class ModerationContentTranslationTest extends BrowserTestBase {
     $edit = [
       'title[0][value]' => 'Published French new node',
     ];
-    $this->drupalPostForm(NULL, $edit, 'Save (this translation)');
+    $this->submitForm($edit, 'Save (this translation)');
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->pageTextContains('Article Published French new node has been updated.');
   }

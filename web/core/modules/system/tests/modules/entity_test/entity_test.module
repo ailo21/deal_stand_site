@@ -83,7 +83,7 @@ function entity_test_entity_types($filter = NULL) {
  * Implements hook_entity_type_alter().
  */
 function entity_test_entity_type_alter(array &$entity_types) {
-  $state = \Drupal::state();
+  $state = Drupal::state();
 
   /** @var $entity_types \Drupal\Core\Entity\EntityTypeInterface[] */
   foreach (entity_test_entity_types() as $entity_type) {
@@ -105,7 +105,7 @@ function entity_test_entity_type_alter(array &$entity_types) {
   }
   else {
     // Allow tests to override the entity type definition.
-    $entity_types['entity_test_new'] = \Drupal::state()->get('entity_test_new.entity_type', $entity_types['entity_test_new']);
+    $entity_types['entity_test_new'] = Drupal::state()->get('entity_test_new.entity_type', $entity_types['entity_test_new']);
   }
 
   $entity_test_definition = $entity_types['entity_test'];
@@ -118,18 +118,18 @@ function entity_test_entity_type_alter(array &$entity_types) {
 function entity_test_entity_base_field_info(EntityTypeInterface $entity_type) {
   $fields = [];
 
-  if ($entity_type->id() === 'entity_test' && \Drupal::state()->get('entity_test.internal_field')) {
+  if ($entity_type->id() === 'entity_test' && Drupal::state()->get('entity_test.internal_field')) {
     $fields['internal_string_field'] = BaseFieldDefinition::create('string')
       ->setLabel('Internal field')
       ->setInternal(TRUE);
   }
-  if ($entity_type->id() === 'entity_test_mul' && \Drupal::state()->get('entity_test.required_default_field')) {
+  if ($entity_type->id() === 'entity_test_mul' && Drupal::state()->get('entity_test.required_default_field')) {
     $fields['required_default_field'] = BaseFieldDefinition::create('string')
       ->setLabel('Required field with default value')
       ->setRequired(TRUE)
       ->setDefaultValue('this is a default value');
   }
-  if ($entity_type->id() === 'entity_test_mul' && \Drupal::state()->get('entity_test.required_multi_default_field')) {
+  if ($entity_type->id() === 'entity_test_mul' && Drupal::state()->get('entity_test.required_multi_default_field')) {
     $fields['required_multi_default_field'] = BaseFieldDefinition::create('string')
       ->setLabel('Required field with default value')
       ->setRequired(TRUE)
@@ -140,14 +140,14 @@ function entity_test_entity_base_field_info(EntityTypeInterface $entity_type) {
         ['value' => 'you get the idea...'],
       ]);
   }
-  if ($entity_type->id() == 'entity_test_mulrev' && \Drupal::state()->get('entity_test.field_test_item')) {
+  if ($entity_type->id() == 'entity_test_mulrev' && Drupal::state()->get('entity_test.field_test_item')) {
     $fields['field_test_item'] = BaseFieldDefinition::create('field_test')
       ->setLabel(t('Field test'))
       ->setDescription(t('A field test.'))
       ->setRevisionable(TRUE)
       ->setTranslatable(TRUE);
   }
-  if ($entity_type->id() == 'entity_test_mulrev' && \Drupal::state()->get('entity_test.multi_column')) {
+  if ($entity_type->id() == 'entity_test_mulrev' && Drupal::state()->get('entity_test.multi_column')) {
     $fields['description'] = BaseFieldDefinition::create('shape')
       ->setLabel(t('Some custom description'))
       ->setTranslatable(TRUE);
@@ -160,7 +160,7 @@ function entity_test_entity_base_field_info(EntityTypeInterface $entity_type) {
  * Implements hook_entity_base_field_info_alter().
  */
 function entity_test_entity_base_field_info_alter(&$fields, EntityTypeInterface $entity_type) {
-  $state = \Drupal::state();
+  $state = Drupal::state();
   if ($entity_type->id() == 'entity_test_mulrev' && ($names = $state->get('entity_test.field_definitions.translatable'))) {
     foreach ($names as $name => $value) {
       $fields[$name]->setTranslatable($value);
@@ -194,11 +194,11 @@ function entity_test_entity_base_field_info_alter(&$fields, EntityTypeInterface 
  *   'entity_test'.
  */
 function entity_test_create_bundle($bundle, $text = NULL, $entity_type = 'entity_test') {
-  $bundles = \Drupal::state()->get($entity_type . '.bundles') ?: [$entity_type => ['label' => 'Entity Test Bundle']];
+  $bundles = Drupal::state()->get($entity_type . '.bundles', [$entity_type => ['label' => 'Entity Test Bundle']]);
   $bundles += [$bundle => ['label' => $text ? $text : $bundle]];
-  \Drupal::state()->set($entity_type . '.bundles', $bundles);
+  Drupal::state()->set($entity_type . '.bundles', $bundles);
 
-  \Drupal::service('entity_bundle.listener')->onBundleCreate($bundle, $entity_type);
+  Drupal::service('entity_bundle.listener')->onBundleCreate($bundle, $entity_type);
 }
 
 /**
@@ -211,11 +211,11 @@ function entity_test_create_bundle($bundle, $text = NULL, $entity_type = 'entity
  *   'entity_test'.
  */
 function entity_test_delete_bundle($bundle, $entity_type = 'entity_test') {
-  $bundles = \Drupal::state()->get($entity_type . '.bundles') ?: [$entity_type => ['label' => 'Entity Test Bundle']];
+  $bundles = Drupal::state()->get($entity_type . '.bundles', [$entity_type => ['label' => 'Entity Test Bundle']]);
   unset($bundles[$bundle]);
-  \Drupal::state()->set($entity_type . '.bundles', $bundles);
+  Drupal::state()->set($entity_type . '.bundles', $bundles);
 
-  \Drupal::service('entity_bundle.listener')->onBundleDelete($bundle, $entity_type);
+  Drupal::service('entity_bundle.listener')->onBundleDelete($bundle, $entity_type);
 }
 
 /**
@@ -223,10 +223,10 @@ function entity_test_delete_bundle($bundle, $entity_type = 'entity_test') {
  */
 function entity_test_entity_bundle_info() {
   $bundles = [];
-  $entity_types = \Drupal::entityTypeManager()->getDefinitions();
+  $entity_types = Drupal::entityTypeManager()->getDefinitions();
   foreach ($entity_types as $entity_type_id => $entity_type) {
     if ($entity_type->getProvider() == 'entity_test' && $entity_type_id != 'entity_test_with_bundle') {
-      $bundles[$entity_type_id] = \Drupal::state()->get($entity_type_id . '.bundles') ?: [$entity_type_id => ['label' => 'Entity Test Bundle']];
+      $bundles[$entity_type_id] = Drupal::state()->get($entity_type_id . '.bundles', [$entity_type_id => ['label' => 'Entity Test Bundle']]);
     }
   }
   return $bundles;
@@ -236,8 +236,8 @@ function entity_test_entity_bundle_info() {
  * Implements hook_entity_bundle_info_alter().
  */
 function entity_test_entity_bundle_info_alter(&$bundles) {
-  $entity_info = \Drupal::entityTypeManager()->getDefinitions();
-  $state = \Drupal::state();
+  $entity_info = Drupal::entityTypeManager()->getDefinitions();
+  $state = Drupal::state();
   foreach ($bundles as $entity_type_id => &$all_bundle_info) {
     if ($entity_info[$entity_type_id]->getProvider() == 'entity_test') {
       if ($state->get('entity_test.translation') && $entity_info[$entity_type_id]->isTranslatable()) {
@@ -256,7 +256,7 @@ function entity_test_entity_bundle_info_alter(&$bundles) {
  * Implements hook_entity_view_mode_info_alter().
  */
 function entity_test_entity_view_mode_info_alter(&$view_modes) {
-  $entity_info = \Drupal::entityTypeManager()->getDefinitions();
+  $entity_info = Drupal::entityTypeManager()->getDefinitions();
   foreach ($entity_info as $entity_type => $info) {
     if ($entity_info[$entity_type]->getProvider() == 'entity_test' && !isset($view_modes[$entity_type])) {
       $view_modes[$entity_type] = [
@@ -279,7 +279,7 @@ function entity_test_entity_view_mode_info_alter(&$view_modes) {
  * Implements hook_entity_form_mode_info_alter().
  */
 function entity_test_entity_form_mode_info_alter(&$form_modes) {
-  $entity_info = \Drupal::entityTypeManager()->getDefinitions();
+  $entity_info = Drupal::entityTypeManager()->getDefinitions();
   foreach ($entity_info as $entity_type => $info) {
     if ($entity_info[$entity_type]->getProvider() == 'entity_test') {
       $form_modes[$entity_type]['compact'] = [
@@ -320,7 +320,7 @@ function entity_test_entity_extra_field_info() {
  * Implements hook_form_BASE_FORM_ID_alter().
  */
 function entity_test_form_entity_test_form_alter(&$form) {
-  switch (\Drupal::state()->get('entity_test.form.validate.test')) {
+  switch (Drupal::state()->get('entity_test.form.validate.test')) {
     case 'form-level':
       $form['#validate'][] = 'entity_test_form_entity_test_form_validate';
       $form['#validate'][] = 'entity_test_form_entity_test_form_validate_check';
@@ -343,7 +343,7 @@ function entity_test_form_entity_test_form_validate(array &$form, FormStateInter
  */
 function entity_test_form_entity_test_form_validate_check(array &$form, FormStateInterface $form_state) {
   if (!empty($form['#entity_test_form_validate'])) {
-    \Drupal::state()->set('entity_test.form.validate.result', TRUE);
+    Drupal::state()->set('entity_test.form.validate.result', TRUE);
   }
 }
 
@@ -352,7 +352,7 @@ function entity_test_form_entity_test_form_validate_check(array &$form, FormStat
  */
 function entity_test_form_node_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   $langcode = $form_state->getFormObject()->getFormLangcode($form_state);
-  \Drupal::state()->set('entity_test.form_langcode', $langcode);
+  Drupal::state()->set('entity_test.form_langcode', $langcode);
 }
 
 /**
@@ -379,7 +379,7 @@ function entity_test_entity_insert(EntityInterface $entity) {
  */
 function entity_test_entity_update(EntityInterface $entity) {
   if ($entity instanceof ContentEntityInterface) {
-    \Drupal::state()->set('entity_test.loadedRevisionId', $entity->getLoadedRevisionId());
+    Drupal::state()->set('entity_test.loadedRevisionId', $entity->getLoadedRevisionId());
   }
 }
 
@@ -402,7 +402,7 @@ function entity_test_entity_field_access($operation, FieldDefinitionInterface $f
       }
     }
   }
-  if ($field = \Drupal::state()->get('views_field_access_test-field')) {
+  if ($field = Drupal::state()->get('views_field_access_test-field')) {
     if ($field_definition->getName() === $field) {
       $result = AccessResult::allowedIfHasPermission($account, 'view test entity field');
       // For test purposes we want to actively deny access.
@@ -472,7 +472,7 @@ function entity_test_entity_operation_alter(array &$operations, EntityInterface 
     'block',
   ];
   if (in_array($entity->getEntityTypeId(), $valid_entity_type_ids)) {
-    if (\Drupal::service('router.route_provider')->getRouteByName("entity.{$entity->getEntityTypeId()}.test_operation")) {
+    if (Drupal::service('router.route_provider')->getRouteByName("entity.{$entity->getEntityTypeId()}.test_operation")) {
       $operations['test_operation'] = [
         'title' => new FormattableMarkup('Test Operation: @label', ['@label' => $entity->label()]),
         'url' => Url::fromRoute("entity.{$entity->getEntityTypeId()}.test_operation", [$entity->getEntityTypeId() => $entity->id()]),
@@ -665,7 +665,7 @@ function entity_test_field_default_value(FieldableEntityInterface $entity, Field
  *   Arbitrary data associated with the hook invocation.
  */
 function _entity_test_record_hooks($hook, $data) {
-  $state = \Drupal::state();
+  $state = Drupal::state();
   $key = 'entity_test.hooks';
   $hooks = $state->get($key);
   $hooks[$hook] = $data;
@@ -718,7 +718,7 @@ function entity_test_entity_access(EntityInterface $entity, $operation, AccountI
   if ($entity->getEntityType()->getProvider() != 'entity_test') {
     return AccessResult::neutral();
   }
-  \Drupal::state()->set('entity_test_entity_access', TRUE);
+  Drupal::state()->set('entity_test_entity_access', TRUE);
 
   // Attempt to allow access to entities with the title forbid_access,
   // this will be overridden by
@@ -739,7 +739,7 @@ function entity_test_entity_access(EntityInterface $entity, $operation, AccountI
 
   // Uncacheable because the access result depends on a State key-value pair and
   // might therefore change at any time.
-  $condition = \Drupal::state()->get("entity_test_entity_access.{$operation}." . $entity->id(), FALSE);
+  $condition = Drupal::state()->get("entity_test_entity_access.{$operation}." . $entity->id(), FALSE);
   return AccessResult::allowedIf($condition)->setCacheMaxAge(0);
 }
 
@@ -747,7 +747,7 @@ function entity_test_entity_access(EntityInterface $entity, $operation, AccountI
  * Implements hook_ENTITY_TYPE_access() for 'entity_test'.
  */
 function entity_test_entity_test_access(EntityInterface $entity, $operation, AccountInterface $account) {
-  \Drupal::state()->set('entity_test_entity_test_access', TRUE);
+  Drupal::state()->set('entity_test_entity_test_access', TRUE);
 
   // No opinion.
   return AccessResult::neutral();
@@ -757,8 +757,8 @@ function entity_test_entity_test_access(EntityInterface $entity, $operation, Acc
  * Implements hook_entity_create_access().
  */
 function entity_test_entity_create_access(AccountInterface $account, $context, $entity_bundle) {
-  \Drupal::state()->set('entity_test_entity_create_access', TRUE);
-  \Drupal::state()->set('entity_test_entity_create_access_context', $context);
+  Drupal::state()->set('entity_test_entity_create_access', TRUE);
+  Drupal::state()->set('entity_test_entity_create_access_context', $context);
 
   // No opinion.
   return AccessResult::neutral();
@@ -768,7 +768,7 @@ function entity_test_entity_create_access(AccountInterface $account, $context, $
  * Implements hook_ENTITY_TYPE_create_access() for 'entity_test'.
  */
 function entity_test_entity_test_create_access(AccountInterface $account, $context, $entity_bundle) {
-  \Drupal::state()->set('entity_test_entity_test_create_access', TRUE);
+  Drupal::state()->set('entity_test_entity_test_create_access', TRUE);
 
   // No opinion.
   return AccessResult::neutral();
@@ -778,12 +778,12 @@ function entity_test_entity_test_create_access(AccountInterface $account, $conte
  * Implements hook_query_entity_test_access_alter().
  */
 function entity_test_query_entity_test_access_alter(AlterableInterface $query) {
-  if (!\Drupal::state()->get('entity_test_query_access')) {
+  if (!Drupal::state()->get('entity_test_query_access')) {
     return;
   }
 
   /** @var \Drupal\Core\Database\Query\Select|\Drupal\Core\Database\Query\AlterableInterface $query */
-  if (!\Drupal::currentUser()->hasPermission('view all entity_test_query_access entities')) {
+  if (!Drupal::currentUser()->hasPermission('view all entity_test_query_access entities')) {
     $query->condition('entity_test_query_access.name', 'published entity');
   }
 }

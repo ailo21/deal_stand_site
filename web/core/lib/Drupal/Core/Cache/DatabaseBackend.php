@@ -6,6 +6,7 @@ use Drupal\Component\Assertion\Inspector;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\DatabaseException;
+use Exception;
 
 /**
  * Defines a default cache implementation.
@@ -110,9 +111,9 @@ class DatabaseBackend implements CacheBackendInterface {
     // ::select() is a much smaller proportion of the request.
     $result = [];
     try {
-      $result = $this->connection->query('SELECT cid, data, created, expire, serialized, tags, checksum FROM {' . $this->connection->escapeTable($this->bin) . '} WHERE cid IN ( :cids[] ) ORDER BY cid', [':cids[]' => array_keys($cid_mapping)]);
+      $result = $this->connection->query('SELECT [cid], [data], [created], [expire], [serialized], [tags], [checksum] FROM {' . $this->connection->escapeTable($this->bin) . '} WHERE [cid] IN ( :cids[] ) ORDER BY [cid]', [':cids[]' => array_keys($cid_mapping)]);
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       // Nothing to do.
     }
     $cache = [];
@@ -192,7 +193,7 @@ class DatabaseBackend implements CacheBackendInterface {
       // The bin might not yet exist.
       $this->doSetMultiple($items);
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       // If there was an exception, try to create the bins.
       if (!$try_again = $this->ensureBinExists()) {
         // If the exception happened for other reason than the missing bin
@@ -293,7 +294,7 @@ class DatabaseBackend implements CacheBackendInterface {
           ->execute();
       }
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       // Create the cache table, which will be empty. This fixes cases during
       // core install where a cache table is cleared before it is set
       // with {cache_render} and {cache_data}.
@@ -310,7 +311,7 @@ class DatabaseBackend implements CacheBackendInterface {
     try {
       $this->connection->truncate($this->bin)->execute();
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       // Create the cache table, which will be empty. This fixes cases during
       // core install where a cache table is cleared before it is set
       // with {cache_render} and {cache_data}.
@@ -341,7 +342,7 @@ class DatabaseBackend implements CacheBackendInterface {
           ->execute();
       }
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       $this->catchException($e);
     }
   }
@@ -355,7 +356,7 @@ class DatabaseBackend implements CacheBackendInterface {
         ->fields(['expire' => REQUEST_TIME - 1])
         ->execute();
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       $this->catchException($e);
     }
   }
@@ -386,7 +387,7 @@ class DatabaseBackend implements CacheBackendInterface {
         ->condition('expire', REQUEST_TIME, '<')
         ->execute();
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       // If the table does not exist, it surely does not have garbage in it.
       // If the table exists, the next garbage collection will clean up.
       // There is nothing to do.
@@ -400,7 +401,7 @@ class DatabaseBackend implements CacheBackendInterface {
     try {
       $this->connection->schema()->dropTable($this->bin);
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       $this->catchException($e);
     }
   }
@@ -440,7 +441,7 @@ class DatabaseBackend implements CacheBackendInterface {
    *
    * @throws \Exception
    */
-  protected function catchException(\Exception $e, $table_name = NULL) {
+  protected function catchException(Exception $e, $table_name = NULL) {
     if ($this->connection->schema()->tableExists($table_name ?: $this->bin)) {
       throw $e;
     }

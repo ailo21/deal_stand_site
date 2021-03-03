@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\user\FunctionalJavascript;
 
+use Drupal;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Test\AssertMailTrait;
 use Drupal\Core\Url;
@@ -86,29 +87,29 @@ class UserPasswordResetTest extends WebDriverTestBase {
 
     // Reset the password by username via the password reset page.
     $edit['name'] = $this->account->getAccountName();
-    $this->drupalPostForm(NULL, $edit, t('Submit'));
+    $this->submitForm($edit, 'Submit');
 
     $resetURL = $this->getResetURL();
     $this->drupalGet($resetURL);
 
     // Login
-    $this->drupalPostForm(NULL, NULL, t('Log in'));
+    $this->submitForm([], 'Log in');
 
     // Generate file.
     $image_file = current($this->drupalGetTestFiles('image'));
-    $image_path = \Drupal::service('file_system')->realpath($image_file->uri);
+    $image_path = Drupal::service('file_system')->realpath($image_file->uri);
 
     // Upload file.
     $this->getSession()->getPage()->attachFileToField('Picture', $image_path);
     $this->assertSession()->waitForButton('Remove');
 
     // Change the forgotten password.
-    $password = user_password();
+    $password = Drupal::service('password_generator')->generate();
     $edit = ['pass[pass1]' => $password, 'pass[pass2]' => $password];
-    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->submitForm($edit, 'Save');
 
     // Verify that the password reset session has been destroyed.
-    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->submitForm($edit, 'Save');
     // Password needed to make profile changes.
     $this->assertSession()->pageTextContains("Your current password is missing or incorrect; it's required to change the Password.");
   }

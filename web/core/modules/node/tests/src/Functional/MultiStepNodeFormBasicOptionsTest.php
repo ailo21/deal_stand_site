@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\node\Functional;
 
+use Drupal;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 
@@ -51,7 +52,7 @@ class MultiStepNodeFormBasicOptionsTest extends NodeTestBase {
       'bundle' => 'page',
       'label' => $this->randomMachineName() . '_label',
     ])->save();
-    \Drupal::service('entity_display.repository')
+    Drupal::service('entity_display.repository')
       ->getFormDisplay('node', 'page')
       ->setComponent($this->fieldName, [
         'type' => 'text_textfield',
@@ -64,9 +65,9 @@ class MultiStepNodeFormBasicOptionsTest extends NodeTestBase {
       'sticky[value]' => 1,
       "{$this->fieldName}[0][value]" => $this->randomString(32),
     ];
-    $this->drupalPostForm('node/add/page', $edit, t('Add another item'));
-    $this->assertNoFieldChecked('edit-promote-value', 'Promote stayed unchecked');
-    $this->assertFieldChecked('edit-sticky-value', 'Sticky stayed checked');
+    $this->drupalPostForm('node/add/page', $edit, 'Add another item');
+    $this->assertSession()->checkboxNotChecked('edit-promote-value');
+    $this->assertSession()->checkboxChecked('edit-sticky-value');
   }
 
 }

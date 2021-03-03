@@ -2,6 +2,7 @@
 
 namespace Drupal\Core\Asset;
 
+use Drupal;
 use Drupal\Core\Asset\Exception\IncompleteLibraryDefinitionException;
 use Drupal\Core\Asset\Exception\InvalidLibrariesOverrideSpecificationException;
 use Drupal\Core\Asset\Exception\InvalidLibraryFileException;
@@ -12,6 +13,8 @@ use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
 use Drupal\Core\Theme\ThemeManagerInterface;
 use Drupal\Component\Serialization\Exception\InvalidDataTypeException;
 use Drupal\Component\Utility\NestedArray;
+use LogicException;
+use UnexpectedValueException;
 
 /**
  * Parses library files to get extension data.
@@ -74,7 +77,7 @@ class LibraryDiscoveryParser {
     $this->streamWrapperManager = $stream_wrapper_manager;
     if (!$libraries_directory_file_finder) {
       @trigger_error('Calling LibraryDiscoveryParser::__construct() without the $libraries_directory_file_finder argument is deprecated in drupal:8.9.0. The $libraries_directory_file_finder argument will be required in drupal:10.0.0. See https://www.drupal.org/node/3099614', E_USER_DEPRECATED);
-      $libraries_directory_file_finder = \Drupal::service('library.libraries_directory_file_finder');
+      $libraries_directory_file_finder = Drupal::service('library.libraries_directory_file_finder');
     }
     $this->librariesDirectoryFileFinder = $libraries_directory_file_finder;
   }
@@ -118,13 +121,13 @@ class LibraryDiscoveryParser {
       $library += ['dependencies' => [], 'js' => [], 'css' => []];
 
       if (isset($library['header']) && !is_bool($library['header'])) {
-        throw new \LogicException(sprintf("The 'header' key in the library definition '%s' in extension '%s' is invalid: it must be a boolean.", $id, $extension));
+        throw new LogicException(sprintf("The 'header' key in the library definition '%s' in extension '%s' is invalid: it must be a boolean.", $id, $extension));
       }
 
       if (isset($library['version'])) {
         // @todo Retrieve version of a non-core extension.
         if ($library['version'] === 'VERSION') {
-          $library['version'] = \Drupal::VERSION;
+          $library['version'] = Drupal::VERSION;
         }
         // Remove 'v' prefix from external library versions.
         elseif (is_string($library['version']) && $library['version'][0] === 'v') {
@@ -175,7 +178,7 @@ class LibraryDiscoveryParser {
             $options = [];
           }
           if ($type == 'js' && isset($options['weight']) && $options['weight'] > 0) {
-            throw new \UnexpectedValueException("The $extension/$id library defines a positive weight for '$source'. Only negative weights are allowed (but should be avoided). Instead of a positive weight, specify accurate dependencies for this library.");
+            throw new UnexpectedValueException("The $extension/$id library defines a positive weight for '$source'. Only negative weights are allowed (but should be avoided). Instead of a positive weight, specify accurate dependencies for this library.");
           }
           // Unconditionally apply default groups for the defined asset files.
           // The library system is a dependency management system. Each library
@@ -382,6 +385,11 @@ class LibraryDiscoveryParser {
       foreach ($libraries as $library_name => $library) {
         // Process libraries overrides.
         if (isset($libraries_overrides["$extension/$library_name"])) {
+          if (isset($library['deprecated'])) {
+            $override_message = sprintf('Theme "%s" is overriding a deprecated library.', $extension);
+            $library_deprecation = str_replace('%library_id%', "$extension/$library_name", $library['deprecated']);
+            @trigger_error("$override_message $library_deprecation", E_USER_DEPRECATED);
+          }
           // Active theme defines an override for this library.
           $override_definition = $libraries_overrides["$extension/$library_name"];
           if (is_string($override_definition) || $override_definition === FALSE) {

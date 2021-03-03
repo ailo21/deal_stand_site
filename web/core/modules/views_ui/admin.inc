@@ -59,7 +59,7 @@ function views_ui_add_ajax_trigger(&$wrapping_element, $trigger_key, $refresh_pa
   // Add a submit button for users who do not have JavaScript enabled. It
   // should be displayed next to the triggering element on the form.
   $button_key = $trigger_key . '_trigger_update';
-  $element_info = \Drupal::service('element_info');
+  $element_info = Drupal::service('element_info');
   $wrapping_element[$button_key] = [
     '#type' => 'submit',
     // Hide this button when JavaScript is enabled.
@@ -193,7 +193,7 @@ function views_ui_ajax_update_form($form, FormStateInterface $form_state) {
 }
 
 /**
- * Non-Javascript fallback for updating the add view form.
+ * Non-JavaScript fallback for updating the add view form.
  */
 function views_ui_nojs_submit($form, FormStateInterface $form_state) {
   $form_state->setRebuild();
@@ -230,7 +230,7 @@ function views_ui_standard_display_dropdown(&$form, FormStateInterface $form_sta
   // - this is the default display.
   // - there is no master shown and just one additional display (mostly page)
   //   and the current display is defaulted.
-  if ($current_display->isDefaultDisplay() || ($current_display->isDefaulted($section) && !\Drupal::config('views.settings')->get('ui.show.master_display') && count($displays) <= 2)) {
+  if ($current_display->isDefaultDisplay() || ($current_display->isDefaulted($section) && !Drupal::config('views.settings')->get('ui.show.master_display') && count($displays) <= 2)) {
     return;
   }
 
@@ -248,7 +248,7 @@ function views_ui_standard_display_dropdown(&$form, FormStateInterface $form_sta
 
   $display_dropdown['default'] = ($section_overrides ? t('All displays (except overridden)') : t('All displays'));
   $display_dropdown[$display_id] = t('This @display_type (override)', ['@display_type' => $current_display->getPluginId()]);
-  // Only display the revert option if we are in a overridden section.
+  // Only display the revert option if we are in an overridden section.
   if (!$section_defaulted) {
     $display_dropdown['default_revert'] = t('Revert to default');
   }

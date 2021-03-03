@@ -2,6 +2,7 @@
 
 namespace Drupal\views\Plugin\views\display;
 
+use Drupal;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
@@ -198,7 +199,7 @@ abstract class PathPluginBase extends DisplayPluginBase implements DisplayRouter
     // Set the argument map, in order to support named parameters.
     $route->setOption('_view_argument_map', $argument_map);
     $route->setOption('_view_display_plugin_id', $this->getPluginId());
-    $route->setOption('_view_display_plugin_class', get_called_class());
+    $route->setOption('_view_display_plugin_class', static::class);
     $route->setOption('_view_display_show_admin_links', $this->getOption('show_admin_links'));
 
     // Store whether the view will return a response.
@@ -242,7 +243,7 @@ abstract class PathPluginBase extends DisplayPluginBase implements DisplayRouter
   }
 
   /**
-   * Determines whether a override for the path and method should happen.
+   * Determines whether an override for the path and method should happen.
    *
    * @param string $view_path
    *   The path of the view.
@@ -439,8 +440,7 @@ abstract class PathPluginBase extends DisplayPluginBase implements DisplayRouter
           '#title' => $this->t('Path'),
           '#description' => $this->t('This view will be displayed by visiting this path on your site. You may use "%" in your URL to represent values that will be used for contextual filters: For example, "node/%/feed". If needed you can even specify named route parameters like taxonomy/term/%taxonomy_term'),
           '#default_value' => $this->getOption('path'),
-          '#field_prefix' => '<span dir="ltr">' . Url::fromRoute('<none>', [], ['absolute' => TRUE])->toString(),
-          '#field_suffix' => '</span>&lrm;',
+          '#field_prefix' => '<span dir="ltr">' . Url::fromRoute('<none>', [], ['absolute' => TRUE])->toString() . '</span>&lrm;',
           '#attributes' => ['dir' => LanguageInterface::DIRECTION_LTR],
           // Account for the leading backslash.
           '#maxlength' => 254,
@@ -554,7 +554,7 @@ abstract class PathPluginBase extends DisplayPluginBase implements DisplayRouter
    * {@inheritdoc}
    */
   public function getAlteredRouteNames() {
-    return $this->state->get('views.view_route_names') ?: [];
+    return $this->state->get('views.view_route_names', []);
   }
 
   /**
@@ -563,7 +563,7 @@ abstract class PathPluginBase extends DisplayPluginBase implements DisplayRouter
   public function remove() {
     $menu_links = $this->getMenuLinks();
     /** @var \Drupal\Core\Menu\MenuLinkManagerInterface $menu_link_manager */
-    $menu_link_manager = \Drupal::service('plugin.manager.menu.link');
+    $menu_link_manager = Drupal::service('plugin.manager.menu.link');
     foreach ($menu_links as $menu_link_id => $menu_link) {
       $menu_link_manager->removeDefinition("views_view:$menu_link_id");
     }

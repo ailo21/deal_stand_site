@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\views\Functional\Handler;
 
+use Drupal;
 use Drupal\Core\Url;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\node\Entity\Node;
@@ -70,16 +71,17 @@ class FieldEntityOperationsTest extends ViewTestBase {
       'access administration pages',
       'administer nodes',
       'bypass node access',
+      'administer views',
     ]);
-    $this->drupalLogin($this->rootUser);
+    $this->drupalLogin($admin_user);
     $this->drupalGet('test-entity-operations');
     /** @var $entity \Drupal\entity_test\Entity\EntityTest */
     foreach ($entities as $entity) {
       /** @var \Drupal\Core\Language\LanguageInterface $language */
       foreach ($entity->getTranslationLanguages() as $language) {
         $entity = $entity->getTranslation($language->getId());
-        $operations = \Drupal::service('entity_type.manager')->getListBuilder('node')->getOperations($entity);
-        $this->assertTrue(count($operations) > 0, 'There are operations.');
+        $operations = Drupal::service('entity_type.manager')->getListBuilder('node')->getOperations($entity);
+        $this->assertNotEmpty($operations);
         foreach ($operations as $operation) {
           $expected_destination = Url::fromUri('internal:/test-entity-operations')->toString();
           // Update destination property of the URL as generating it in the
@@ -89,18 +91,18 @@ class FieldEntityOperationsTest extends ViewTestBase {
           $this->assertCount(1, $result, t('Found entity @operation link with destination parameter.', ['@operation' => $operation['title']]));
           // Entities which were created in Hungarian should link to the Hungarian
           // edit form, others to the English one (which has no path prefix here).
-          $base_path = \Drupal::request()->getBasePath();
+          $base_path = Drupal::request()->getBasePath();
           $parts = explode('/', str_replace($base_path, '', $operation['url']->toString()));
           $expected_prefix = ($language->getId() != 'en' ? $language->getId() : 'node');
-          $this->assertEqual($parts[1], $expected_prefix, 'Entity operation links to the correct language for the entity.');
+          $this->assertEqual($expected_prefix, $parts[1], 'Entity operation links to the correct language for the entity.');
         }
       }
     }
 
     // Test that we can't enable click sorting on the operation field.
     $this->drupalGet('admin/structure/views/nojs/display/test_entity_operations/page_2/style_options');
-    $this->assertField('style_options[info][title][sortable]');
-    $this->assertNoField('style_options[info][operations][sortable]');
+    $this->assertSession()->fieldExists('style_options[info][title][sortable]');
+    $this->assertSession()->fieldNotExists('style_options[info][operations][sortable]');
   }
 
 }

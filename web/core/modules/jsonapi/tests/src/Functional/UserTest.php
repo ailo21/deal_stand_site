@@ -2,6 +2,9 @@
 
 namespace Drupal\Tests\jsonapi\Functional;
 
+use DateTime;
+use DateTimeZone;
+use Drupal;
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Cache\Cache;
@@ -145,7 +148,7 @@ class UserTest extends ResourceTestBase {
         'attributes' => [
           'display_name' => 'Llama',
           'created' => '1973-11-29T21:33:09+00:00',
-          'changed' => (new \DateTime())->setTimestamp($this->entity->getChangedTime())->setTimezone(new \DateTimeZone('UTC'))->format(\DateTime::RFC3339),
+          'changed' => (new DateTime())->setTimestamp($this->entity->getChangedTime())->setTimezone(new DateTimeZone('UTC'))->format(DateTime::RFC3339),
           'default_langcode' => TRUE,
           'langcode' => 'en',
           'name' => 'Llama',
@@ -364,7 +367,7 @@ class UserTest extends ResourceTestBase {
   public function testGetMailFieldOnlyVisibleToOwner() {
     // Create user B, with the same roles (and hence permissions) as user A.
     $user_a = $this->account;
-    $pass = user_password();
+    $pass = Drupal::service('password_generator')->generate();
     $user_b = User::create([
       'name' => 'sibling-of-' . $user_a->getAccountName(),
       'mail' => 'sibling-of-' . $user_a->getAccountName() . '@example.com',

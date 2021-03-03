@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\system\Functional\Module;
 
+use Drupal;
 use Drupal\Tests\BrowserTestBase;
 
 /**
@@ -45,12 +46,12 @@ class ExperimentalModuleTest extends BrowserTestBase {
     // There should be no confirmation form and no experimental module warning.
     $edit = [];
     $edit["modules[test_page_test][enable]"] = TRUE;
-    $this->drupalPostForm('admin/modules', $edit, t('Install'));
+    $this->drupalPostForm('admin/modules', $edit, 'Install');
     $this->assertText('Module Test page has been enabled.');
     $this->assertNoText('Experimental modules are provided for testing purposes only.');
 
     // Uninstall the module.
-    \Drupal::service('module_installer')->uninstall(['test_page_test']);
+    Drupal::service('module_installer')->uninstall(['test_page_test']);
 
     // Next, test installing an experimental module with no dependencies.
     // There should be a confirmation form with an experimental warning, but no
@@ -69,11 +70,11 @@ class ExperimentalModuleTest extends BrowserTestBase {
     $this->assertNoText('You must enable');
 
     // Enable the module and confirm that it worked.
-    $this->drupalPostForm(NULL, [], 'Continue');
+    $this->submitForm([], 'Continue');
     $this->assertText('Experimental Test has been enabled.');
 
     // Uninstall the module.
-    \Drupal::service('module_installer')->uninstall(['experimental_module_test']);
+    Drupal::service('module_installer')->uninstall(['experimental_module_test']);
 
     // Test enabling a module that is not itself experimental, but that depends
     // on an experimental module.
@@ -96,11 +97,11 @@ class ExperimentalModuleTest extends BrowserTestBase {
     $this->assertText('You must enable the Experimental Test module to install Experimental Dependency Test');
 
     // Enable the module and confirm that it worked.
-    $this->drupalPostForm(NULL, [], 'Continue');
+    $this->submitForm([], 'Continue');
     $this->assertText('2 modules have been enabled: Experimental Dependency Test, Experimental Test');
 
     // Uninstall the modules.
-    \Drupal::service('module_installer')->uninstall(['experimental_module_test', 'experimental_module_dependency_test']);
+    Drupal::service('module_installer')->uninstall(['experimental_module_test', 'experimental_module_dependency_test']);
 
     // Finally, check both the module and its experimental dependency. There is
     // still a warning about experimental modules, but no message about
@@ -125,16 +126,18 @@ class ExperimentalModuleTest extends BrowserTestBase {
     $this->assertNoText('You must enable');
 
     // Enable the module and confirm that it worked.
-    $this->drupalPostForm(NULL, [], 'Continue');
+    $this->submitForm([], 'Continue');
     $this->assertText('2 modules have been enabled: Experimental Dependency Test, Experimental Test');
 
     // Try to enable an experimental module that can not be due to
     // hook_requirements().
-    \Drupal::state()->set('experimental_module_requirements_test_requirements', TRUE);
+    Drupal::state()->set('experimental_module_requirements_test_requirements', TRUE);
     $edit = [];
     $edit["modules[experimental_module_requirements_test][enable]"] = TRUE;
     $this->drupalPostForm('admin/modules', $edit, 'Install');
-    $this->assertUrl('admin/modules', [], 'If the module can not be installed we are not taken to the confirm form.');
+    // Verify that if the module can not be installed, we are not taken to the
+    // confirm form.
+    $this->assertSession()->addressEquals('admin/modules');
     $this->assertText('The Experimental Test Requirements module can not be installed.');
   }
 

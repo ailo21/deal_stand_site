@@ -2,6 +2,7 @@
 
 namespace Drupal\Core\Asset;
 
+use Drupal;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\State\StateInterface;
 
@@ -91,7 +92,7 @@ class JsCollectionOptimizer implements AssetCollectionOptimizerInterface {
     // Drupal contrib can override this default JS aggregator to keep the same
     // grouping, optimizing and dumping, but change the strategy that is used to
     // determine when the aggregate should be rebuilt (e.g. mtime, HTTPS …).
-    $map = $this->state->get('system.js_cache_files') ?: [];
+    $map = $this->state->get('system.js_cache_files', []);
     $js_assets = [];
     foreach ($js_groups as $order => $js_group) {
       // We have to return a single asset, not a group of assets. It is now up
@@ -190,7 +191,7 @@ class JsCollectionOptimizer implements AssetCollectionOptimizerInterface {
     $this->state->delete('system.js_cache_files');
     $delete_stale = function ($uri) {
       // Default stale file threshold is 30 days.
-      if (REQUEST_TIME - filemtime($uri) > \Drupal::config('system.performance')->get('stale_file_threshold')) {
+      if (REQUEST_TIME - filemtime($uri) > Drupal::config('system.performance')->get('stale_file_threshold')) {
         $this->fileSystem->delete($uri);
       }
     };

@@ -8,6 +8,7 @@ use Drupal\Tests\rest\Functional\ResourceTestBase;
 use Drupal\Core\Test\AssertMailTrait;
 use Drupal\user\UserInterface;
 use GuzzleHttp\RequestOptions;
+use UnexpectedValueException;
 
 /**
  * Tests user registration via REST resource.
@@ -249,7 +250,7 @@ class RestRegisterUserTest extends ResourceTestBase {
         break;
 
       default:
-        throw new \UnexpectedValueException();
+        throw new UnexpectedValueException();
     }
   }
 
@@ -262,11 +263,6 @@ class RestRegisterUserTest extends ResourceTestBase {
    * {@inheritdoc}
    */
   protected function getExpectedUnauthorizedAccessMessage($method) {}
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function getExpectedBcUnauthorizedAccessMessage($method) {}
 
   /**
    * {@inheritdoc}

@@ -2,6 +2,7 @@
 
 namespace Drupal\Core\Test;
 
+use Drupal;
 use Drupal\Component\FileCache\FileCacheFactory;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Environment;
@@ -18,10 +19,11 @@ use Drupal\Core\Session\UserSession;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\StreamWrapper\StreamWrapperInterface;
 use Drupal\Tests\SessionTestTrait;
+use Exception;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Yaml\Yaml as SymfonyYaml;
-use Symfony\Cmf\Component\Routing\RouteObjectInterface;
+use Drupal\Core\Routing\RouteObjectInterface;
 use Symfony\Component\Routing\Route;
 
 /**
@@ -110,7 +112,7 @@ trait FunctionalTestSetupTrait {
       copy($settings_testing_file, $directory . '/settings.testing.php');
       // Add the name of the testing class to settings.php and include the
       // testing specific overrides.
-      file_put_contents($directory . '/settings.php', "\n\$test_class = '" . get_class($this) . "';\n" . 'include DRUPAL_ROOT . \'/\' . $site_path . \'/settings.testing.php\';' . "\n", FILE_APPEND);
+      file_put_contents($directory . '/settings.php', "\n\$test_class = '" . static::class . "';\n" . 'include DRUPAL_ROOT . \'/\' . $site_path . \'/settings.testing.php\';' . "\n", FILE_APPEND);
     }
     $settings_services_file = DRUPAL_ROOT . '/' . $this->originalSite . '/testing.services.yml';
     if (!file_exists($settings_services_file)) {
@@ -211,12 +213,11 @@ trait FunctionalTestSetupTrait {
    *
    * @see \Drupal\Core\Test\FunctionalTestSetupTrait::rebuildAll()
    * @see \Drupal\Tests\BrowserTestBase::installDrupal()
-   * @see \Drupal\simpletest\WebTestBase::setUp()
    */
   protected function resetAll() {
     // Clear all database and static caches and rebuild data structures.
     drupal_flush_all_caches();
-    $this->container = \Drupal::getContainer();
+    $this->container = Drupal::getContainer();
 
     // Reset static variables and reload permissions.
     $this->refreshVariables();
@@ -315,7 +316,7 @@ trait FunctionalTestSetupTrait {
     $config = $container->get('config.factory');
 
     // Manually create the private directory.
-    \Drupal::service('file_system')->prepareDirectory($this->privateFilesDirectory, FileSystemInterface::CREATE_DIRECTORY);
+    Drupal::service('file_system')->prepareDirectory($this->privateFilesDirectory, FileSystemInterface::CREATE_DIRECTORY);
 
     // Manually configure the test mail collector implementation to prevent
     // tests from sending out emails and collect them in state instead.
@@ -423,7 +424,7 @@ trait FunctionalTestSetupTrait {
 
     // Require a default theme to be specified at this point.
     if (!isset($this->defaultTheme)) {
-      throw new \Exception('Drupal\Tests\BrowserTestBase::$defaultTheme is required. See https://www.drupal.org/node/3083055, which includes recommendations on which theme to use.');
+      throw new Exception('Drupal\Tests\BrowserTestBase::$defaultTheme is required. See https://www.drupal.org/node/3083055, which includes recommendations on which theme to use.');
     }
 
     // Ensure the default theme is installed.
@@ -450,7 +451,7 @@ trait FunctionalTestSetupTrait {
    *   The container.
    */
   protected function installModulesFromClassProperty(ContainerInterface $container) {
-    $class = get_class($this);
+    $class = static::class;
     $modules = [];
     while ($class) {
       if (property_exists($class, 'modules')) {
@@ -469,7 +470,7 @@ trait FunctionalTestSetupTrait {
         $this->fail($e->getMessage());
       }
       // The container was already rebuilt by the ModuleInstaller.
-      $this->container = \Drupal::getContainer();
+      $this->container = Drupal::getContainer();
     }
   }
 
@@ -567,7 +568,7 @@ trait FunctionalTestSetupTrait {
     // coverage against.
     $base_url = getenv('SIMPLETEST_BASE_URL');
     if (!$base_url) {
-      throw new \Exception(
+      throw new Exception(
         'You must provide a SIMPLETEST_BASE_URL environment variable to run some PHPUnit based functional tests.'
       );
     }
@@ -625,7 +626,7 @@ trait FunctionalTestSetupTrait {
 
     // Create test directory ahead of installation so fatal errors and debug
     // information can be logged during installation process.
-    \Drupal::service('file_system')->prepareDirectory($this->siteDirectory, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
+    Drupal::service('file_system')->prepareDirectory($this->siteDirectory, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
 
     // Prepare filesystem directory paths.
     $this->publicFilesDirectory = $this->siteDirectory . '/files';
@@ -637,7 +638,7 @@ trait FunctionalTestSetupTrait {
     $this->configImporter = NULL;
 
     // Unregister all custom stream wrappers of the parent site.
-    $wrappers = \Drupal::service('stream_wrapper_manager')->getWrappers(StreamWrapperInterface::ALL);
+    $wrappers = Drupal::service('stream_wrapper_manager')->getWrappers(StreamWrapperInterface::ALL);
     foreach ($wrappers as $scheme => $info) {
       stream_wrapper_unregister($scheme);
     }
@@ -689,11 +690,11 @@ trait FunctionalTestSetupTrait {
    */
   protected function getDatabaseTypes() {
     if (isset($this->originalContainer) && $this->originalContainer) {
-      \Drupal::setContainer($this->originalContainer);
+      Drupal::setContainer($this->originalContainer);
     }
     $database_types = drupal_get_database_types();
     if (isset($this->originalContainer) && $this->originalContainer) {
-      \Drupal::unsetContainer();
+      Drupal::unsetContainer();
     }
     return $database_types;
   }

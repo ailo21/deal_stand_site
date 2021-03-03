@@ -2,9 +2,12 @@
 
 namespace Drupal\FunctionalTests\Update;
 
+use Drupal;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Database\Database;
+use ErrorException;
+use Exception;
 
 /**
  * Tests the update path base class.
@@ -22,7 +25,7 @@ class UpdatePathTestBaseTest extends UpdatePathTestBase {
    * {@inheritdoc}
    */
   protected function setDatabaseDumpFiles() {
-    $this->databaseDumpFiles[] = __DIR__ . '/../../../../modules/system/tests/fixtures/update/drupal-8.8.0.bare.standard.php.gz';
+    $this->databaseDumpFiles[] = __DIR__ . '/../../../../modules/system/tests/fixtures/update/drupal-9.0.0.bare.standard.php.gz';
     $this->databaseDumpFiles[] = __DIR__ . '/../../../../modules/system/tests/fixtures/update/drupal-8.update-test-schema-enabled.php';
     $this->databaseDumpFiles[] = __DIR__ . '/../../../../modules/system/tests/fixtures/update/drupal-8.update-test-semver-update-n-enabled.php';
   }
@@ -32,26 +35,29 @@ class UpdatePathTestBaseTest extends UpdatePathTestBase {
    */
   public function testDatabaseLoaded() {
     // Set a value in the cache to prove caches are cleared.
-    \Drupal::service('cache.default')->set(__CLASS__, 'Test');
+    Drupal::service('cache.default')->set(__CLASS__, 'Test');
 
-    foreach (['user' => 8100, 'node' => 8700, 'system' => 8805, 'update_test_schema' => 8000] as $module => $schema) {
-      $this->assertEqual(drupal_get_installed_schema_version($module), $schema, new FormattableMarkup('Module @module schema is @schema', ['@module' => $module, '@schema' => $schema]));
+    foreach (['user' => 8100, 'node' => 8700, 'system' => 8901, 'update_test_schema' => 8000] as $module => $schema) {
+      $this->assertEqual($schema, drupal_get_installed_schema_version($module), new FormattableMarkup('Module @module schema is @schema', ['@module' => $module, '@schema' => $schema]));
     }
 
     // Ensure that all {router} entries can be unserialized. If they cannot be
     // unserialized a notice will be thrown by PHP.
 
-    $result = \Drupal::database()->query("SELECT name, route from {router}")->fetchAllKeyed(0, 1);
+    $result = Drupal::database()->select('router', 'r')
+      ->fields('r', ['name', 'route'])
+      ->execute()
+      ->fetchAllKeyed(0, 1);
     // For the purpose of fetching the notices and displaying more helpful error
     // messages, let's override the error handler temporarily.
     set_error_handler(function ($severity, $message, $filename, $lineno) {
-      throw new \ErrorException($message, 0, $severity, $filename, $lineno);
+      throw new ErrorException($message, 0, $severity, $filename, $lineno);
     });
     foreach ($result as $route_name => $route) {
       try {
         unserialize($route);
       }
-      catch (\Exception $e) {
+      catch (Exception $e) {
         $this->fail(sprintf('Error "%s" while unserializing route %s', $e->getMessage(), Html::escape($route_name)));
       }
     }
@@ -60,8 +66,8 @@ class UpdatePathTestBaseTest extends UpdatePathTestBase {
     // Before accessing the site we need to run updates first or the site might
     // be broken.
     $this->runUpdates();
-    $this->assertEquals('standard', \Drupal::config('core.extension')->get('profile'));
-    $this->assertEqual(\Drupal::config('system.site')->get('name'), 'Site-Install');
+    $this->assertEquals('standard', Drupal::config('core.extension')->get('profile'));
+    $this->assertEqual('Site-Install', Drupal::config('system.site')->get('name'));
     $this->drupalGet('<front>');
     $this->assertText('Site-Install');
 
@@ -73,7 +79,7 @@ class UpdatePathTestBaseTest extends UpdatePathTestBase {
       $this->assertEqual('escape', $database->query("SHOW bytea_output")->fetchField());
     }
     // Ensure the test runners cache has been cleared.
-    $this->assertFalse(\Drupal::service('cache.default')->get(__CLASS__));
+    $this->assertFalse(Drupal::service('cache.default')->get(__CLASS__));
   }
 
   /**
@@ -83,7 +89,7 @@ class UpdatePathTestBaseTest extends UpdatePathTestBase {
     $connection = Database::getConnection();
 
     // Increment the schema version.
-    \Drupal::state()->set('update_test_schema_version', 8001);
+    Drupal::state()->set('update_test_schema_version', 8001);
     $this->runUpdates();
 
     $select = $connection->select('watchdog');
@@ -97,12 +103,12 @@ class UpdatePathTestBaseTest extends UpdatePathTestBase {
     $this->assertEqual([], $container_cannot_be_saved_messages);
 
     // Ensure schema has changed.
-    $this->assertEqual(drupal_get_installed_schema_version('update_test_schema', TRUE), 8001);
-    $this->assertEqual(drupal_get_installed_schema_version('update_test_semver_update_n', TRUE), 8001);
+    $this->assertEqual(8001, drupal_get_installed_schema_version('update_test_schema', TRUE));
+    $this->assertEqual(8001, drupal_get_installed_schema_version('update_test_semver_update_n', TRUE));
     // Ensure the index was added for column a.
     $this->assertTrue($connection->schema()->indexExists('update_test_schema_table', 'test'), 'Version 8001 of the update_test_schema module is installed.');
     // Ensure update_test_semver_update_n_update_8001 was run.
-    $this->assertEquals(\Drupal::state()->get('update_test_semver_update_n_update_8001'), 'Yes, I was run. Thanks for testing!');
+    $this->assertEquals(Drupal::state()->get('update_test_semver_update_n_update_8001'), 'Yes, I was run. Thanks for testing!');
   }
 
   /**
@@ -117,9 +123,9 @@ class UpdatePathTestBaseTest extends UpdatePathTestBase {
       'status' => 1,
     ];
 
-    $database = \Drupal::database();
+    $database = Drupal::database();
     $id = $database->insert('path_alias')
-      ->fields($values + ['uuid' => \Drupal::service('uuid')->generate()])
+      ->fields($values + ['uuid' => Drupal::service('uuid')->generate()])
       ->execute();
 
     $revision_id = $database->insert('path_alias_revision')
@@ -132,7 +138,7 @@ class UpdatePathTestBaseTest extends UpdatePathTestBase {
       ->execute();
 
     // Increment the schema version.
-    \Drupal::state()->set('update_test_schema_version', 8002);
+    Drupal::state()->set('update_test_schema_version', 8002);
     $this->runUpdates();
 
     // Check that the alias defined earlier is not used during the update
@@ -156,7 +162,7 @@ class UpdatePathTestBaseTest extends UpdatePathTestBase {
    */
   public function testModuleListChange() {
     // Set a value in the cache to prove caches are cleared.
-    \Drupal::service('cache.default')->set(__CLASS__, 'Test');
+    Drupal::service('cache.default')->set(__CLASS__, 'Test');
 
     // Ensure that modules are installed and uninstalled as expected prior to
     // running updates.
@@ -164,17 +170,17 @@ class UpdatePathTestBaseTest extends UpdatePathTestBase {
     $this->assertArrayHasKey('page_cache', $extension_config['module']);
     $this->assertArrayNotHasKey('module_test', $extension_config['module']);
 
-    $module_list = \Drupal::moduleHandler()->getModuleList();
+    $module_list = Drupal::moduleHandler()->getModuleList();
     $this->assertArrayHasKey('page_cache', $module_list);
     $this->assertArrayNotHasKey('module_test', $module_list);
 
-    $namespaces = \Drupal::getContainer()->getParameter('container.namespaces');
+    $namespaces = Drupal::getContainer()->getParameter('container.namespaces');
     $this->assertArrayHasKey('Drupal\page_cache', $namespaces);
     $this->assertArrayNotHasKey('Drupal\module_test', $namespaces);
 
     // Increment the schema version so that update_test_schema_update_8003()
     // runs.
-    \Drupal::state()->set('update_test_schema_version', 8003);
+    Drupal::state()->set('update_test_schema_version', 8003);
     $this->runUpdates();
 
     // Ensure that test running environment has been updated with the changes to
@@ -183,16 +189,16 @@ class UpdatePathTestBaseTest extends UpdatePathTestBase {
     $this->assertArrayNotHasKey('page_cache', $extension_config['module']);
     $this->assertArrayHasKey('module_test', $extension_config['module']);
 
-    $module_list = \Drupal::moduleHandler()->getModuleList();
+    $module_list = Drupal::moduleHandler()->getModuleList();
     $this->assertArrayNotHasKey('page_cache', $module_list);
     $this->assertArrayHasKey('module_test', $module_list);
 
-    $namespaces = \Drupal::getContainer()->getParameter('container.namespaces');
+    $namespaces = Drupal::getContainer()->getParameter('container.namespaces');
     $this->assertArrayNotHasKey('Drupal\page_cache', $namespaces);
     $this->assertArrayHasKey('Drupal\module_test', $namespaces);
 
     // Ensure the test runners cache has been cleared.
-    $this->assertFalse(\Drupal::service('cache.default')->get(__CLASS__));
+    $this->assertFalse(Drupal::service('cache.default')->get(__CLASS__));
   }
 
   /**

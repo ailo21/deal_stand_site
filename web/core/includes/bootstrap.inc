@@ -13,7 +13,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 
 /**
- * Minimum allowed version of PHP.
+ * Minimum allowed version of PHP for Drupal to be bootstrapped.
  *
  * Below this version:
  * - The installer cannot be run.
@@ -22,12 +22,13 @@ use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
  * - If a site managed to bypass all of the above, then an error is shown in
  *   the status report and various fatal errors occur on various pages.
  *
- * @see install.php
+ * @deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Use
+ *   \Drupal::MINIMUM_PHP instead.
  *
- * @todo Move this to an appropriate autoloadable class. See
- *   https://www.drupal.org/project/drupal/issues/2908079
+ * @see https://www.drupal.org/node/2909361
+ * @see install.php
  */
-const DRUPAL_MINIMUM_PHP = '7.3.0';
+const DRUPAL_MINIMUM_PHP = Drupal::MINIMUM_PHP;
 
 /**
  * Minimum supported version of PHP.
@@ -38,10 +39,12 @@ const DRUPAL_MINIMUM_PHP = '7.3.0';
  *   that Drupal no longer supports that PHP version.
  * - An error is shown in the status report that the PHP version is too old.
  *
- * @todo Move this to an appropriate autoloadable class. See
- *   https://www.drupal.org/project/drupal/issues/2908079
+ * @deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Use
+ *   \Drupal::MINIMUM_SUPPORTED_PHP instead.
+ *
+ * @see https://www.drupal.org/node/2909361
  */
-const DRUPAL_MINIMUM_SUPPORTED_PHP = '7.3.0';
+const DRUPAL_MINIMUM_SUPPORTED_PHP = Drupal::MINIMUM_SUPPORTED_PHP;
 
 /**
  * Minimum recommended version of PHP.
@@ -50,10 +53,12 @@ const DRUPAL_MINIMUM_SUPPORTED_PHP = '7.3.0';
  * message, but Drupal can still be installed. Used for (e.g.) PHP versions
  * that have reached their EOL or will in the near future.
  *
- * @todo Move this to an appropriate autoloadable class. See
- *   https://www.drupal.org/project/drupal/issues/2908079
+ * @deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Use
+ *   \Drupal::RECOMMENDED_PHP instead.
+ *
+ * @see https://www.drupal.org/node/2909361
  */
-const DRUPAL_RECOMMENDED_PHP = '7.3';
+const DRUPAL_RECOMMENDED_PHP = Drupal::RECOMMENDED_PHP;
 
 /**
  * Minimum recommended value of PHP memory_limit.
@@ -62,10 +67,12 @@ const DRUPAL_RECOMMENDED_PHP = '7.3';
  * contributed modules to be installed prior to hitting the limit. However,
  * 40M is the target for the Standard installation profile.
  *
- * @todo Move this to an appropriate autoloadable class. See
- *   https://www.drupal.org/project/drupal/issues/2908079
+ * @deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Use
+ *   \Drupal::MINIMUM_PHP_MEMORY_LIMIT instead.
+ *
+ * @see https://www.drupal.org/node/2909361
  */
-const DRUPAL_MINIMUM_PHP_MEMORY_LIMIT = '64M';
+const DRUPAL_MINIMUM_PHP_MEMORY_LIMIT = Drupal::MINIMUM_PHP_MEMORY_LIMIT;
 
 /**
  * Error reporting level: display no errors.
@@ -158,7 +165,7 @@ function drupal_get_filename($type, $name, $filename = NULL) {
 
   try {
     /** @var \Drupal\Core\Extension\ExtensionList $extension_list */
-    $extension_list = \Drupal::service("extension.list.$type");
+    $extension_list = Drupal::service("extension.list.$type");
     if (isset($filename)) {
       // Manually add the info file path of an extension.
       $extension_list->setPathname($name, $filename);
@@ -173,7 +180,7 @@ function drupal_get_filename($type, $name, $filename = NULL) {
       E_USER_WARNING
     );
   }
-  catch (\InvalidArgumentException $e) {
+  catch (InvalidArgumentException $e) {
     // Catch the exception. This will result in triggering an error.
     // If the filename is still unknown, create a user-level error message.
     trigger_error(
@@ -278,7 +285,7 @@ function watchdog_exception($type, Exception $exception, $message = NULL, $varia
 
   $variables += Error::decodeException($exception);
 
-  \Drupal::logger($type)->log($severity, $message, $variables);
+  Drupal::logger($type)->log($severity, $message, $variables);
 }
 
 /**
@@ -292,13 +299,10 @@ function watchdog_exception($type, Exception $exception, $message = NULL, $varia
  *   (optional) The filename that the error was raised in.
  * @param $line
  *   (optional) The line number the error was raised at.
- * @param $context
- *   (optional) An array that points to the active symbol table at the point the
- *   error occurred.
  */
-function _drupal_error_handler($error_level, $message, $filename = NULL, $line = NULL, $context = NULL) {
+function _drupal_error_handler($error_level, $message, $filename = NULL, $line = NULL) {
   require_once __DIR__ . '/errors.inc';
-  _drupal_error_handler_real($error_level, $message, $filename, $line, $context);
+  _drupal_error_handler_real($error_level, $message, $filename, $line);
 }
 
 /**
@@ -319,7 +323,7 @@ function _drupal_exception_handler($exception) {
     _drupal_log_error(Error::decodeException($exception), TRUE);
   }
   // Catch \Throwable, which covers both Error and Exception throwables.
-  catch (\Throwable $error) {
+  catch (Throwable $error) {
     _drupal_exception_handler_additional($exception, $error);
   }
 }
@@ -373,7 +377,7 @@ function drupal_valid_test_ua($new_prefix = NULL) {
   $http_user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : NULL;
   $user_agent = isset($_COOKIE['SIMPLETEST_USER_AGENT']) ? $_COOKIE['SIMPLETEST_USER_AGENT'] : $http_user_agent;
   if (isset($user_agent) && preg_match("/^simple(\w+\d+):(.+):(.+):(.+)$/", $user_agent, $matches)) {
-    list(, $prefix, $time, $salt, $hmac) = $matches;
+    [, $prefix, $time, $salt, $hmac] = $matches;
     $check_string = $prefix . ':' . $time . ':' . $salt;
     // Read the hash salt prepared by drupal_generate_test_ua().
     // This function is called before settings.php is read and Drupal's error
@@ -427,7 +431,7 @@ function drupal_generate_test_ua($prefix) {
     // @see \Drupal\Core\Test\HttpClientMiddleware\TestHttpClientMiddleware
     if (DRUPAL_TEST_IN_CHILD_SITE && $parent_prefix = drupal_valid_test_ua()) {
       if ($parent_prefix != $prefix) {
-        throw new \RuntimeException("Malformed User-Agent: Expected '$parent_prefix' but got '$prefix'.");
+        throw new RuntimeException("Malformed User-Agent: Expected '$parent_prefix' but got '$prefix'.");
       }
       // If the file is not readable, a PHP warning is expected in this case.
       $private_key = file_get_contents($key_file);
@@ -673,7 +677,7 @@ function _drupal_shutdown_function() {
     }
   }
   // Catch \Throwable, which covers both Error and Exception throwables.
-  catch (\Throwable $error) {
+  catch (Throwable $error) {
     _drupal_shutdown_function_handle_exception($error);
   }
 }

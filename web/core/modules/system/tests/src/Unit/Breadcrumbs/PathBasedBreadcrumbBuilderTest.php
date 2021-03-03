@@ -7,6 +7,7 @@
 
 namespace Drupal\Tests\system\Unit\Breadcrumbs;
 
+use Drupal;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Link;
@@ -17,7 +18,7 @@ use Drupal\Core\Url;
 use Drupal\Core\Utility\LinkGeneratorInterface;
 use Drupal\system\PathBasedBreadcrumbBuilder;
 use Drupal\Tests\UnitTestCase;
-use Symfony\Cmf\Component\Routing\RouteObjectInterface;
+use Drupal\Core\Routing\RouteObjectInterface;
 use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\HttpFoundation\Request;
@@ -136,7 +137,7 @@ class PathBasedBreadcrumbBuilderTest extends UnitTestCase {
     $cache_contexts_manager->method('assertValidTokens')->willReturn(TRUE);
     $container = new Container();
     $container->set('cache_contexts_manager', $cache_contexts_manager);
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
   }
 
   /**

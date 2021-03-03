@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\user\Functional;
 
+use Drupal;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\user\RoleInterface;
 use Drupal\user\Entity\Role;
@@ -66,32 +67,32 @@ class UserPermissionsTest extends BrowserTestBase {
     $rid = $this->rid;
     $account = $this->adminUser;
     $previous_permissions_hash = $permissions_hash_generator->generate($account);
-    $this->assertIdentical($previous_permissions_hash, $permissions_hash_generator->generate($this->loggedInUser));
+    $this->assertSame($previous_permissions_hash, $permissions_hash_generator->generate($this->loggedInUser));
 
     // Add a permission.
     $this->assertFalse($account->hasPermission('administer users'), 'User does not have "administer users" permission.');
     $edit = [];
     $edit[$rid . '[administer users]'] = TRUE;
-    $this->drupalPostForm('admin/people/permissions', $edit, t('Save permissions'));
-    $this->assertText(t('The changes have been saved.'), 'Successful save message displayed.');
+    $this->drupalPostForm('admin/people/permissions', $edit, 'Save permissions');
+    $this->assertText('The changes have been saved.');
     $storage->resetCache();
     $this->assertTrue($account->hasPermission('administer users'), 'User now has "administer users" permission.');
     $current_permissions_hash = $permissions_hash_generator->generate($account);
-    $this->assertIdentical($current_permissions_hash, $permissions_hash_generator->generate($this->loggedInUser));
-    $this->assertNotEqual($previous_permissions_hash, $current_permissions_hash, 'Permissions hash has changed.');
+    $this->assertSame($current_permissions_hash, $permissions_hash_generator->generate($this->loggedInUser));
+    $this->assertNotEquals($previous_permissions_hash, $current_permissions_hash, 'Permissions hash has changed.');
     $previous_permissions_hash = $current_permissions_hash;
 
     // Remove a permission.
     $this->assertTrue($account->hasPermission('access user profiles'), 'User has "access user profiles" permission.');
     $edit = [];
     $edit[$rid . '[access user profiles]'] = FALSE;
-    $this->drupalPostForm('admin/people/permissions', $edit, t('Save permissions'));
-    $this->assertText(t('The changes have been saved.'), 'Successful save message displayed.');
+    $this->drupalPostForm('admin/people/permissions', $edit, 'Save permissions');
+    $this->assertText('The changes have been saved.');
     $storage->resetCache();
     $this->assertFalse($account->hasPermission('access user profiles'), 'User no longer has "access user profiles" permission.');
     $current_permissions_hash = $permissions_hash_generator->generate($account);
-    $this->assertIdentical($current_permissions_hash, $permissions_hash_generator->generate($this->loggedInUser));
-    $this->assertNotEqual($previous_permissions_hash, $current_permissions_hash, 'Permissions hash has changed.');
+    $this->assertSame($current_permissions_hash, $permissions_hash_generator->generate($this->loggedInUser));
+    $this->assertNotEquals($previous_permissions_hash, $current_permissions_hash, 'Permissions hash has changed.');
 
     // Ensure that the admin role doesn't have any checkboxes.
     $this->drupalGet('admin/people/permissions');
@@ -109,31 +110,31 @@ class UserPermissionsTest extends BrowserTestBase {
     $this->drupalGet('admin/config/people/accounts');
 
     // Verify that the administration role is none by default.
-    $this->assertOptionSelected('edit-user-admin-role', '', 'Administration role defaults to none.');
+    $this->assertTrue($this->assertSession()->optionExists('edit-user-admin-role', '')->isSelected());
 
     $this->assertFalse(Role::load($this->rid)->isAdmin());
 
     // Set the user's role to be the administrator role.
     $edit = [];
     $edit['user_admin_role'] = $this->rid;
-    $this->drupalPostForm('admin/config/people/accounts', $edit, t('Save configuration'));
+    $this->drupalPostForm('admin/config/people/accounts', $edit, 'Save configuration');
 
-    \Drupal::entityTypeManager()->getStorage('user_role')->resetCache();
+    Drupal::entityTypeManager()->getStorage('user_role')->resetCache();
     $this->assertTrue(Role::load($this->rid)->isAdmin());
 
     // Enable aggregator module and ensure the 'administer news feeds'
     // permission is assigned by default.
-    \Drupal::service('module_installer')->install(['aggregator']);
+    Drupal::service('module_installer')->install(['aggregator']);
 
     $this->assertTrue($this->adminUser->hasPermission('administer news feeds'), 'The permission was automatically assigned to the administrator role');
 
     // Ensure that selecting '- None -' removes the admin role.
     $edit = [];
     $edit['user_admin_role'] = '';
-    $this->drupalPostForm('admin/config/people/accounts', $edit, t('Save configuration'));
+    $this->drupalPostForm('admin/config/people/accounts', $edit, 'Save configuration');
 
-    \Drupal::entityTypeManager()->getStorage('user_role')->resetCache();
-    \Drupal::configFactory()->reset();
+    Drupal::entityTypeManager()->getStorage('user_role')->resetCache();
+    Drupal::configFactory()->reset();
     $this->assertFalse(Role::load($this->rid)->isAdmin());
 
     // Manually create two admin roles, in that case the single select should be
@@ -141,7 +142,7 @@ class UserPermissionsTest extends BrowserTestBase {
     Role::create(['id' => 'admin_role_0', 'is_admin' => TRUE, 'label' => 'Admin role 0'])->save();
     Role::create(['id' => 'admin_role_1', 'is_admin' => TRUE, 'label' => 'Admin role 1'])->save();
     $this->drupalGet('admin/config/people/accounts');
-    $this->assertNoFieldByName('user_admin_role');
+    $this->assertSession()->fieldNotExists('user_admin_role');
   }
 
   /**
@@ -173,7 +174,7 @@ class UserPermissionsTest extends BrowserTestBase {
 
     // Verify the permissions hash has changed.
     $current_permissions_hash = $permissions_hash_generator->generate($account);
-    $this->assertNotEqual($previous_permissions_hash, $current_permissions_hash, 'Permissions hash has changed.');
+    $this->assertNotEquals($previous_permissions_hash, $current_permissions_hash, 'Permissions hash has changed.');
   }
 
   /**
@@ -190,7 +191,7 @@ class UserPermissionsTest extends BrowserTestBase {
 
     // When Node is installed the 'access content' permission is listed next to
     // to 'view own unpublished content'.
-    \Drupal::service('module_installer')->install(['node']);
+    Drupal::service('module_installer')->install(['node']);
     $this->drupalGet('admin/people/permissions');
     $next_row = $this->xpath('//tr[@data-drupal-selector=\'edit-permissions-access-content\']/following-sibling::tr[1]');
     $this->assertEqual('edit-permissions-view-own-unpublished-content', $next_row[0]->getAttribute('data-drupal-selector'));

@@ -2,9 +2,11 @@
 
 namespace Drupal\KernelTests\Core\Entity;
 
+use Drupal;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\user\Traits\UserCreationTrait;
+use ReflectionProperty;
 
 /**
  * Defines an abstract test base for entity kernel tests.
@@ -71,11 +73,11 @@ abstract class EntityKernelTestBase extends KernelTestBase {
     // field configurations are installed. This is because the entity tables
     // need to be created before the body field storage tables. This prevents
     // trying to create the body field tables twice.
-    $class = get_class($this);
+    $class = static::class;
     while ($class) {
       if (property_exists($class, 'modules')) {
         // Only check the modules, if the $modules property was not inherited.
-        $rp = new \ReflectionProperty($class, 'modules');
+        $rp = new ReflectionProperty($class, 'modules');
         if ($rp->class == $class) {
           foreach (array_intersect(['node', 'comment'], $class::$modules) as $module) {
             $this->installEntitySchema($module);
@@ -166,7 +168,7 @@ abstract class EntityKernelTestBase extends KernelTestBase {
    * Refresh services.
    */
   protected function refreshServices() {
-    $this->container = \Drupal::getContainer();
+    $this->container = Drupal::getContainer();
 
     $this->entityTypeManager = $this->container->get('entity_type.manager');
     $this->state = $this->container->get('state');

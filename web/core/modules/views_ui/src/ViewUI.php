@@ -2,6 +2,7 @@
 
 namespace Drupal\views_ui;
 
+use Drupal;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Timer;
 use Drupal\Core\EventSubscriber\AjaxResponseSubscriber;
@@ -16,7 +17,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\views\Plugin\views\query\Sql;
 use Drupal\views\Entity\View;
 use Drupal\views\ViewEntityInterface;
-use Symfony\Cmf\Component\Routing\RouteObjectInterface;
+use Drupal\Core\Routing\RouteObjectInterface;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -215,7 +216,7 @@ class ViewUI implements ViewEntityInterface {
     // Determine whether the values the user entered are intended to apply to
     // the current display or the default display.
 
-    list($was_defaulted, $is_defaulted, $revert) = $this->getOverrideValues($form, $form_state);
+    [$was_defaulted, $is_defaulted, $revert] = $this->getOverrideValues($form, $form_state);
 
     // Based on the user's choice in the display dropdown, determine which display
     // these changes apply to.
@@ -257,7 +258,7 @@ class ViewUI implements ViewEntityInterface {
   }
 
   /**
-   * Submit handler for cancel button
+   * Submit handler for cancel button.
    */
   public function standardCancel($form, FormStateInterface $form_state) {
     if (!empty($this->changed) && isset($this->form_cache)) {
@@ -315,7 +316,7 @@ class ViewUI implements ViewEntityInterface {
       // button labels.
       if (isset($names)) {
         $form['actions']['submit']['#values'] = $names;
-        $form['actions']['submit']['#process'] = array_merge(['views_ui_form_button_was_clicked'], \Drupal::service('element_info')->getInfoProperty($form['actions']['submit']['#type'], '#process', []));
+        $form['actions']['submit']['#process'] = array_merge(['views_ui_form_button_was_clicked'], Drupal::service('element_info')->getInfoProperty($form['actions']['submit']['#type'], '#process', []));
       }
       // If a validation handler exists for the form, assign it to this button.
       $form['actions']['submit']['#validate'][] = [$form_state->getFormObject(), 'validateForm'];
@@ -429,7 +430,7 @@ class ViewUI implements ViewEntityInterface {
     $display_id = $form_state->get('display_id');
 
     // Handle the override select.
-    list($was_defaulted, $is_defaulted) = $this->getOverrideValues($form, $form_state);
+    [$was_defaulted, $is_defaulted] = $this->getOverrideValues($form, $form_state);
     if ($was_defaulted && !$is_defaulted) {
       // We were using the default display's values, but we're now overriding
       // the default display and saving values specific to this display.
@@ -450,7 +451,7 @@ class ViewUI implements ViewEntityInterface {
     if (!$form_state->isValueEmpty('name') && is_array($form_state->getValue('name'))) {
       // Loop through each of the items that were checked and add them to the view.
       foreach (array_keys(array_filter($form_state->getValue('name'))) as $field) {
-        list($table, $field) = explode('.', $field, 2);
+        [$table, $field] = explode('.', $field, 2);
 
         if ($cut = strpos($field, '$')) {
           $field = substr($field, 0, $cut);
@@ -514,12 +515,12 @@ class ViewUI implements ViewEntityInterface {
 
   public function renderPreview($display_id, $args = []) {
     // Save the current path so it can be restored before returning from this function.
-    $request_stack = \Drupal::requestStack();
+    $request_stack = Drupal::requestStack();
     $current_request = $request_stack->getCurrentRequest();
     $executable = $this->getExecutable();
 
     // Determine where the query and performance statistics should be output.
-    $config = \Drupal::config('views.settings');
+    $config = Drupal::config('views.settings');
     $show_query = $config->get('ui.show.sql_query.enabled');
     $show_info = $config->get('ui.show.preview_information');
     $show_location = $config->get('ui.show.sql_query.where');
@@ -544,7 +545,7 @@ class ViewUI implements ViewEntityInterface {
       // If we're clicking on links in a preview, though, we could actually
       // have some input in the query parameters, so we merge request() and
       // query() to ensure we get it all.
-      $exposed_input = array_merge(\Drupal::request()->request->all(), \Drupal::request()->query->all());
+      $exposed_input = array_merge(Drupal::request()->request->all(), Drupal::request()->query->all());
       foreach (['view_name', 'view_display_id', 'view_args', 'view_path', 'view_dom_id', 'pager_element', 'view_base_path', AjaxResponseSubscriber::AJAX_REQUEST_PARAMETER, 'ajax_page_state', 'form_id', 'form_build_id', 'form_token'] as $key) {
         if (isset($exposed_input[$key])) {
           unset($exposed_input[$key]);
@@ -571,7 +572,7 @@ class ViewUI implements ViewEntityInterface {
       // Request object gets all of the proper values from $_SERVER.
       $request = Request::createFromGlobals();
       $request->attributes->set(RouteObjectInterface::ROUTE_NAME, 'entity.view.preview_form');
-      $request->attributes->set(RouteObjectInterface::ROUTE_OBJECT, \Drupal::service('router.route_provider')->getRouteByName('entity.view.preview_form'));
+      $request->attributes->set(RouteObjectInterface::ROUTE_OBJECT, Drupal::service('router.route_provider')->getRouteByName('entity.view.preview_form'));
       $request->attributes->set('view', $this->storage);
       $request->attributes->set('display_id', $display_id);
       $raw_parameters = new ParameterBag();
@@ -748,7 +749,7 @@ class ViewUI implements ViewEntityInterface {
               t('@time ms', ['@time' => intval($this->render_time * 100) / 100]),
             ];
           }
-          \Drupal::moduleHandler()->alter('views_preview_info', $rows, $executable);
+          Drupal::moduleHandler()->alter('views_preview_info', $rows, $executable);
         }
         else {
           // No query was run. Display that information in place of either the
@@ -791,7 +792,7 @@ class ViewUI implements ViewEntityInterface {
     else {
       foreach ($errors as $display_errors) {
         foreach ($display_errors as $error) {
-          \Drupal::messenger()->addError($error);
+          Drupal::messenger()->addError($error);
         }
       }
       $preview = ['#markup' => t('Unable to preview due to validation errors.')];
@@ -860,7 +861,7 @@ class ViewUI implements ViewEntityInterface {
    */
   public function cacheSet() {
     if ($this->isLocked()) {
-      \Drupal::messenger()->addError(t('Changes cannot be made to a locked view.'));
+      Drupal::messenger()->addError(t('Changes cannot be made to a locked view.'));
       return;
     }
 
@@ -879,7 +880,7 @@ class ViewUI implements ViewEntityInterface {
     $executable->default_display = NULL;
     $executable->query = NULL;
     $executable->displayHandlers = NULL;
-    \Drupal::service('tempstore.shared')->get('views')->set($this->id(), $this);
+    Drupal::service('tempstore.shared')->get('views')->set($this->id(), $this);
   }
 
   /**
@@ -890,7 +891,7 @@ class ViewUI implements ViewEntityInterface {
    */
   public function isLocked() {
     $lock = $this->getLock();
-    return $lock && $lock->getOwnerId() != \Drupal::currentUser()->id();
+    return $lock && $lock->getOwnerId() != Drupal::currentUser()->id();
   }
 
   /**

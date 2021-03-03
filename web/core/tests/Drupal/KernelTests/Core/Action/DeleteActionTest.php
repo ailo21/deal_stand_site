@@ -2,6 +2,7 @@
 
 namespace Drupal\KernelTests\Core\Action;
 
+use Drupal;
 use Drupal\Core\Action\Plugin\Action\Derivative\EntityDeleteActionDeriver;
 use Drupal\entity_test\Entity\EntityTestMulRevPub;
 use Drupal\KernelTests\KernelTestBase;
@@ -27,21 +28,21 @@ class DeleteActionTest extends KernelTestBase {
     parent::setUp();
     $this->installEntitySchema('entity_test_mulrevpub');
     $this->installEntitySchema('user');
-    $this->installSchema('system', ['sequences', 'key_value_expire']);
+    $this->installSchema('system', ['sequences']);
 
     $this->testUser = User::create([
       'name' => 'foobar',
       'mail' => 'foobar@example.com',
     ]);
     $this->testUser->save();
-    \Drupal::service('current_user')->setAccount($this->testUser);
+    Drupal::service('current_user')->setAccount($this->testUser);
   }
 
   /**
    * @covers \Drupal\Core\Action\Plugin\Action\Derivative\EntityDeleteActionDeriver::getDerivativeDefinitions
    */
   public function testGetDerivativeDefinitions() {
-    $deriver = new EntityDeleteActionDeriver(\Drupal::entityTypeManager(), \Drupal::translation());
+    $deriver = new EntityDeleteActionDeriver(Drupal::entityTypeManager(), Drupal::translation());
     $this->assertEquals([
       'entity_test_mulrevpub' => [
         'type' => 'entity_test_mulrevpub',
@@ -83,7 +84,7 @@ class DeleteActionTest extends KernelTestBase {
     $this->assertSame(['module' => ['entity_test']], $action->getDependencies());
 
     /** @var \Drupal\Core\TempStore\PrivateTempStoreFactory $temp_store */
-    $temp_store = \Drupal::service('tempstore.private');
+    $temp_store = Drupal::service('tempstore.private');
     $store_entries = $temp_store->get('entity_delete_multiple_confirm')->get($this->testUser->id() . ':entity_test_mulrevpub');
     $this->assertSame([$this->testUser->id() => ['en' => 'en']], $store_entries);
   }

@@ -5,6 +5,7 @@ namespace Drupal\Tests\Core\Test;
 use Drupal\Core\Test\JUnitConverter;
 use Drupal\Tests\UnitTestCase;
 use org\bovigo\vfs\vfsStream;
+use SimpleXMLElement;
 
 /**
  * Tests Drupal\Core\Test\JUnitConverter.
@@ -49,7 +50,7 @@ class JUnitConverterTest extends UnitTestCase {
   public function testXmlToRowsEmptyFile() {
     // File system with an empty XML file.
     vfsStream::setup('junit_test', NULL, ['empty.xml' => '']);
-    $this->assertArrayEquals([], JUnitConverter::xmlToRows(23, vfsStream::url('junit_test/empty.xml')));
+    $this->assertSame([], JUnitConverter::xmlToRows(23, vfsStream::url('junit_test/empty.xml')));
   }
 
   /**
@@ -76,7 +77,7 @@ EOD;
         'file' => '/Users/paul/projects/drupal/core/modules/simpletest/tests/src/Unit/TestDiscoveryTest.php',
       ],
     ];
-    $this->assertArrayEquals($simpletest, JUnitConverter::xmlElementToRows(23, new \SimpleXMLElement($junit)));
+    $this->assertEquals($simpletest, JUnitConverter::xmlElementToRows(23, new SimpleXMLElement($junit)));
   }
 
   /**
@@ -96,7 +97,7 @@ EOD;
       'line' => 108,
       'file' => '/Users/paul/projects/drupal/core/modules/simpletest/tests/src/Unit/TestDiscoveryTest.php',
     ];
-    $this->assertArrayEquals($simpletest, JUnitConverter::convertTestCaseToSimpletestRow(23, new \SimpleXMLElement($junit)));
+    $this->assertEquals($simpletest, JUnitConverter::convertTestCaseToSimpletestRow(23, new SimpleXMLElement($junit)));
   }
 
 }

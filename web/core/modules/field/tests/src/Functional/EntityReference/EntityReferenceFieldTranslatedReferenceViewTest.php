@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\field\Functional\EntityReference;
 
+use Drupal;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
@@ -107,7 +108,7 @@ class EntityReferenceFieldTranslatedReferenceViewTest extends BrowserTestBase {
   protected $translatedLabel;
 
   /**
-   * An user with permission to edit the referrer entity.
+   * A user with permission to edit the referrer entity.
    *
    * @var \Drupal\user\UserInterface
    */
@@ -163,7 +164,7 @@ class EntityReferenceFieldTranslatedReferenceViewTest extends BrowserTestBase {
 
     // Disable translation for referrer content type.
     $this->drupalLogin($this->rootUser);
-    $this->drupalPostForm('admin/config/regional/content-language', ['settings[node][referrer][translatable]' => FALSE], t('Save configuration'));
+    $this->drupalPostForm('admin/config/regional/content-language', ['settings[node][referrer][translatable]' => FALSE], 'Save configuration');
     $this->drupalLogout();
 
     // Create a referrer entity without translation.
@@ -180,13 +181,13 @@ class EntityReferenceFieldTranslatedReferenceViewTest extends BrowserTestBase {
     $translation_url = $this->referrerEntity->toUrl('canonical', ['language' => ConfigurableLanguage::load($this->translateToLangcode)]);
 
     $this->drupalGet($url);
-    $this->assertText($this->labelOfNotTranslatedReference, 'The label of not translated reference is displayed.');
-    $this->assertText($this->originalLabel, 'The default label of translated reference is displayed.');
-    $this->assertNoText($this->translatedLabel, 'The translated label of translated reference is not displayed.');
+    $this->assertText($this->labelOfNotTranslatedReference);
+    $this->assertText($this->originalLabel);
+    $this->assertNoText($this->translatedLabel);
     $this->drupalGet($translation_url);
-    $this->assertText($this->labelOfNotTranslatedReference, 'The label of not translated reference is displayed.');
-    $this->assertNoText($this->originalLabel, 'The default label of translated reference is not displayed.');
-    $this->assertText($this->translatedLabel, 'The translated label of translated reference is displayed.');
+    $this->assertText($this->labelOfNotTranslatedReference);
+    $this->assertNoText($this->originalLabel);
+    $this->assertText($this->translatedLabel);
   }
 
   /**
@@ -227,10 +228,8 @@ class EntityReferenceFieldTranslatedReferenceViewTest extends BrowserTestBase {
   protected function enableTranslation() {
     // Enable translation for the entity types and ensure the change is picked
     // up.
-    \Drupal::service('content_translation.manager')->setEnabled($this->testEntityTypeName, $this->referrerType->id(), TRUE);
-    \Drupal::service('content_translation.manager')->setEnabled($this->testEntityTypeName, $this->referencedType->id(), TRUE);
-
-    \Drupal::service('router.builder')->rebuild();
+    Drupal::service('content_translation.manager')->setEnabled($this->testEntityTypeName, $this->referrerType->id(), TRUE);
+    Drupal::service('content_translation.manager')->setEnabled($this->testEntityTypeName, $this->referencedType->id(), TRUE);
   }
 
   /**
@@ -260,7 +259,7 @@ class EntityReferenceFieldTranslatedReferenceViewTest extends BrowserTestBase {
       ->save();
 
     /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $display_repository */
-    $display_repository = \Drupal::service('entity_display.repository');
+    $display_repository = Drupal::service('entity_display.repository');
 
     $display_repository->getFormDisplay($this->testEntityTypeName, $this->referrerType->id())
       ->setComponent($this->referenceFieldName, [
@@ -293,7 +292,7 @@ class EntityReferenceFieldTranslatedReferenceViewTest extends BrowserTestBase {
    */
   protected function createReferencedEntityWithTranslation() {
     /** @var \Drupal\node\Entity\Node $node */
-    $node = \Drupal::entityTypeManager()->getStorage($this->testEntityTypeName)->create([
+    $node = Drupal::entityTypeManager()->getStorage($this->testEntityTypeName)->create([
       'title' => $this->originalLabel,
       'type' => $this->referencedType->id(),
       'description' => [
@@ -316,7 +315,7 @@ class EntityReferenceFieldTranslatedReferenceViewTest extends BrowserTestBase {
    */
   protected function createNotTranslatedReferencedEntity() {
     /** @var \Drupal\node\Entity\Node $node */
-    $node = \Drupal::entityTypeManager()->getStorage($this->testEntityTypeName)->create([
+    $node = Drupal::entityTypeManager()->getStorage($this->testEntityTypeName)->create([
       'title' => $this->labelOfNotTranslatedReference,
       'type' => $this->referencedType->id(),
       'description' => [
@@ -335,7 +334,7 @@ class EntityReferenceFieldTranslatedReferenceViewTest extends BrowserTestBase {
    */
   protected function createReferrerEntity($translatable = TRUE) {
     /** @var \Drupal\node\Entity\Node $node */
-    $node = \Drupal::entityTypeManager()->getStorage($this->testEntityTypeName)->create([
+    $node = Drupal::entityTypeManager()->getStorage($this->testEntityTypeName)->create([
       'title' => $this->randomMachineName(),
       'type' => $this->referrerType->id(),
       'description' => [

@@ -2,6 +2,7 @@
 
 namespace Drupal\layout_builder;
 
+use Drupal;
 use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Core\Plugin\ContextAwarePluginInterface;
 use Drupal\layout_builder\Event\SectionComponentBuildRenderArrayEvent;
@@ -87,7 +88,7 @@ class SectionComponent {
    */
   public function toRenderArray(array $contexts = [], $in_preview = FALSE) {
     $event = new SectionComponentBuildRenderArrayEvent($this, $contexts, $in_preview);
-    $this->eventDispatcher()->dispatch(LayoutBuilderEvents::SECTION_COMPONENT_BUILD_RENDER_ARRAY, $event);
+    $this->eventDispatcher()->dispatch($event, LayoutBuilderEvents::SECTION_COMPONENT_BUILD_RENDER_ARRAY);
     $output = $event->getBuild();
     $event->getCacheableMetadata()->applyTo($output);
     return $output;
@@ -256,7 +257,7 @@ class SectionComponent {
   protected function pluginManager() {
     // @todo Figure out the best way to unify fields and blocks and components
     //   in https://www.drupal.org/node/1875974.
-    return \Drupal::service('plugin.manager.block');
+    return Drupal::service('plugin.manager.block');
   }
 
   /**
@@ -266,7 +267,7 @@ class SectionComponent {
    *   The context handler.
    */
   protected function contextHandler() {
-    return \Drupal::service('context.handler');
+    return Drupal::service('context.handler');
   }
 
   /**
@@ -276,7 +277,7 @@ class SectionComponent {
    *   The event dispatcher.
    */
   protected function eventDispatcher() {
-    return \Drupal::service('event_dispatcher');
+    return Drupal::service('event_dispatcher');
   }
 
   /**

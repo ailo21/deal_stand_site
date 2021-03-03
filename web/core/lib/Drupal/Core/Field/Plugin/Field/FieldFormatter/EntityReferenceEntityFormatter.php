@@ -2,13 +2,13 @@
 
 namespace Drupal\Core\Field\Plugin\Field\FieldFormatter;
 
+use Drupal;
 use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -23,7 +23,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   }
  * )
  */
-class EntityReferenceEntityFormatter extends EntityReferenceFormatterBase implements ContainerFactoryPluginInterface {
+class EntityReferenceEntityFormatter extends EntityReferenceFormatterBase {
 
   /**
    * The number of times this formatter allows rendering the same entity.
@@ -66,7 +66,7 @@ class EntityReferenceEntityFormatter extends EntityReferenceFormatterBase implem
   protected static $recursiveRenderDepth = [];
 
   /**
-   * Constructs a EntityReferenceEntityFormatter instance.
+   * Constructs an EntityReferenceEntityFormatter instance.
    *
    * @param string $plugin_id
    *   The plugin_id for the formatter.
@@ -215,7 +215,7 @@ class EntityReferenceEntityFormatter extends EntityReferenceFormatterBase implem
     // This formatter is only available for entity types that have a view
     // builder.
     $target_type = $field_definition->getFieldStorageDefinition()->getSetting('target_type');
-    return \Drupal::entityTypeManager()->getDefinition($target_type)->hasViewBuilderClass();
+    return Drupal::entityTypeManager()->getDefinition($target_type)->hasViewBuilderClass();
   }
 
 }

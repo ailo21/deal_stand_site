@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\search\Functional;
 
+use DateTime;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Tests\BrowserTestBase;
 
@@ -50,8 +51,8 @@ class SearchDateIntervalTest extends BrowserTestBase {
     // Set up times to be applied to the English and Spanish translations of the
     // node create time, so that they are filtered in/out in the
     // search_date_query_alter test module.
-    $created_time_en = new \DateTime('February 10 2016 10PM');
-    $created_time_es = new \DateTime('March 19 2016 10PM');
+    $created_time_en = new DateTime('February 10 2016 10PM');
+    $created_time_es = new DateTime('March 19 2016 10PM');
     $default_format = filter_default_format();
 
     $node = $this->drupalCreateNode([
@@ -82,7 +83,7 @@ class SearchDateIntervalTest extends BrowserTestBase {
   public function testDateIntervalQueryAlter() {
     // Search for keyword node.
     $edit = ['keys' => 'node'];
-    $this->drupalPostForm('search/node', $edit, t('Search'));
+    $this->drupalPostForm('search/node', $edit, 'Search');
 
     // The nodes must have the same node ID but the created date is different.
     // So only the Spanish translation must appear.

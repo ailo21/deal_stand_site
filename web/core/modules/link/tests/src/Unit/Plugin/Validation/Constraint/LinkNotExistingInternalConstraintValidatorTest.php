@@ -6,6 +6,7 @@ use Drupal\Core\Url;
 use Drupal\link\Plugin\Validation\Constraint\LinkNotExistingInternalConstraint;
 use Drupal\link\Plugin\Validation\Constraint\LinkNotExistingInternalConstraintValidator;
 use Drupal\Tests\UnitTestCase;
+use InvalidArgumentException;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
@@ -39,7 +40,7 @@ class LinkNotExistingInternalConstraintValidatorTest extends UnitTestCase {
   }
 
   /**
-   * Data provider for ::testValidate
+   * Data provider for ::testValidate.
    */
   public function providerValidate() {
     $data = [];
@@ -59,7 +60,7 @@ class LinkNotExistingInternalConstraintValidatorTest extends UnitTestCase {
 
     $data[] = [$url, TRUE];
 
-    // Not existing routed URL.
+    // Non-existent routed URL.
     $url = Url::fromRoute('example.not_existing_route');
 
     $url_generator = $this->createMock('Drupal\Core\Routing\UrlGeneratorInterface');
@@ -92,7 +93,7 @@ class LinkNotExistingInternalConstraintValidatorTest extends UnitTestCase {
     $link = $this->createMock('Drupal\link\LinkItemInterface');
     $link->expects($this->any())
       ->method('getUrl')
-      ->willThrowException(new \InvalidArgumentException());
+      ->willThrowException(new InvalidArgumentException());
 
     $context = $this->createMock(ExecutionContextInterface::class);
     $context->expects($this->never())

@@ -2,6 +2,7 @@
 
 namespace Drupal\views_ui;
 
+use Drupal;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Plugin\views\wizard\WizardPluginBase;
 use Drupal\views\Plugin\views\wizard\WizardException;
@@ -123,9 +124,10 @@ class ViewAddForm extends ViewFormBase {
       '#type' => 'select',
       '#title' => $this->t('Show'),
       '#options' => $options,
+      '#sort_options' => TRUE,
     ];
     $show_form = &$form['displays']['show'];
-    $default_value = \Drupal::moduleHandler()->moduleExists('node') ? 'node' : 'users';
+    $default_value = Drupal::moduleHandler()->moduleExists('node') ? 'node' : 'users';
     $show_form['wizard_key']['#default_value'] = WizardPluginBase::getSelected($form_state, ['show', 'wizard_key'], $default_value, $show_form['wizard_key']);
     // Changing this dropdown updates the entire content of $form['displays'] via
     // AJAX.

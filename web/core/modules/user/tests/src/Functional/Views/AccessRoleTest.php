@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\user\Functional\Views;
 
+use Drupal;
 use Drupal\Core\Cache\Cache;
 use Drupal\Tests\system\Functional\Cache\AssertPageCacheContextsAndTagsTrait;
 use Drupal\user\Plugin\views\access\Role;
@@ -35,7 +36,7 @@ class AccessRoleTest extends AccessTestBase {
    */
   public function testAccessRole() {
     /** @var \Drupal\views\ViewEntityInterface $view */
-    $view = \Drupal::entityTypeManager()->getStorage('view')->load('test_access_role');
+    $view = Drupal::entityTypeManager()->getStorage('view')->load('test_access_role');
     $display = &$view->getDisplay('default');
     $display['display_options']['access']['options']['role'] = [
       $this->normalRole => $this->normalRole,
@@ -46,7 +47,7 @@ class AccessRoleTest extends AccessTestBase {
       'config' => ['user.role.' . $this->normalRole],
       'module' => ['user', 'views_test_data'],
     ];
-    $this->assertIdentical($expected, $view->calculateDependencies()->getDependencies());
+    $this->assertSame($expected, $view->calculateDependencies()->getDependencies());
 
     $executable = Views::executableFactory()->get($view);
     $executable->setDisplay('page_1');
@@ -86,7 +87,7 @@ class AccessRoleTest extends AccessTestBase {
       'config' => $roles,
       'module' => ['user', 'views_test_data'],
     ];
-    $this->assertIdentical($expected, $view->calculateDependencies()->getDependencies());
+    $this->assertSame($expected, $view->calculateDependencies()->getDependencies());
     $this->drupalLogin($this->webUser);
     $this->drupalGet('test-role');
     $this->assertSession()->statusCodeEquals(403);
@@ -116,9 +117,9 @@ class AccessRoleTest extends AccessTestBase {
     $view->save();
 
     /** @var \Drupal\Core\Render\RendererInterface $renderer */
-    $renderer = \Drupal::service('renderer');
+    $renderer = Drupal::service('renderer');
     /** @var \Drupal\Core\Session\AccountSwitcherInterface $account_switcher */
-    $account_switcher = \Drupal::service('account_switcher');
+    $account_switcher = Drupal::service('account_switcher');
 
     // First access as user with access.
     $build = DisplayPluginBase::buildBasicRenderable('test_access_role', 'default');
@@ -127,7 +128,7 @@ class AccessRoleTest extends AccessTestBase {
     $this->assertContains('user.roles', $build['#cache']['contexts']);
     $this->assertEqual(['config:views.view.test_access_role'], $build['#cache']['tags']);
     $this->assertEqual(Cache::PERMANENT, $build['#cache']['max-age']);
-    $this->assertNotEqual($result, '');
+    $this->assertNotSame('', $result);
 
     // Then without access.
     $build = DisplayPluginBase::buildBasicRenderable('test_access_role', 'default');
@@ -139,7 +140,7 @@ class AccessRoleTest extends AccessTestBase {
     // $this->assertContains('user.roles', $build['#cache']['contexts']);
     // $this->assertEqual([], $build['#cache']['tags']);
     $this->assertEqual(Cache::PERMANENT, $build['#cache']['max-age']);
-    $this->assertEqual($result, '');
+    $this->assertEqual('', $result);
   }
 
 }

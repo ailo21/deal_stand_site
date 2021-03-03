@@ -2,10 +2,12 @@
 
 namespace Drupal\KernelTests\Core\Entity;
 
+use Drupal;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Tests\system\Functional\Entity\Traits\EntityDefinitionTestTrait;
+use ReflectionMethod;
 
 /**
  * Tests the default entity storage schema handler.
@@ -46,13 +48,13 @@ class EntitySchemaTest extends EntityKernelTestBase {
   public function testCustomFieldCreateDelete() {
     // Install the module which adds the field.
     $this->installModule('entity_schema_test');
-    $storage_definitions = \Drupal::service('entity_field.manager')->getFieldStorageDefinitions('entity_test_update');
+    $storage_definitions = Drupal::service('entity_field.manager')->getFieldStorageDefinitions('entity_test_update');
     $this->assertNotNull($storage_definitions['custom_base_field'], 'Base field definition found.');
     $this->assertNotNull($storage_definitions['custom_bundle_field'], 'Bundle field definition found.');
 
     // Make sure the field schema can be created.
-    \Drupal::service('field_storage_definition.listener')->onFieldStorageDefinitionCreate($storage_definitions['custom_base_field']);
-    \Drupal::service('field_storage_definition.listener')->onFieldStorageDefinitionCreate($storage_definitions['custom_bundle_field']);
+    Drupal::service('field_storage_definition.listener')->onFieldStorageDefinitionCreate($storage_definitions['custom_base_field']);
+    Drupal::service('field_storage_definition.listener')->onFieldStorageDefinitionCreate($storage_definitions['custom_bundle_field']);
     /** @var \Drupal\Core\Entity\Sql\DefaultTableMapping $table_mapping */
     $table_mapping = $this->entityTypeManager->getStorage('entity_test_update')->getTableMapping();
     $base_table = current($table_mapping->getTableNames());
@@ -62,8 +64,8 @@ class EntitySchemaTest extends EntityKernelTestBase {
     $this->assertTrue($this->database->schema()->tableExists($table), 'Table created');
 
     // Make sure the field schema can be deleted.
-    \Drupal::service('field_storage_definition.listener')->onFieldStorageDefinitionDelete($storage_definitions['custom_base_field']);
-    \Drupal::service('field_storage_definition.listener')->onFieldStorageDefinitionDelete($storage_definitions['custom_bundle_field']);
+    Drupal::service('field_storage_definition.listener')->onFieldStorageDefinitionDelete($storage_definitions['custom_base_field']);
+    Drupal::service('field_storage_definition.listener')->onFieldStorageDefinitionDelete($storage_definitions['custom_bundle_field']);
     $this->assertFalse($this->database->schema()->fieldExists($base_table, $base_column), 'Table column dropped');
     $this->assertFalse($this->database->schema()->tableExists($table), 'Table dropped');
   }
@@ -86,9 +88,9 @@ class EntitySchemaTest extends EntityKernelTestBase {
    */
   public function testEntitySchemaUpdate() {
     $this->installModule('entity_schema_test');
-    $storage_definitions = \Drupal::service('entity_field.manager')->getFieldStorageDefinitions('entity_test_update');
-    \Drupal::service('field_storage_definition.listener')->onFieldStorageDefinitionCreate($storage_definitions['custom_base_field']);
-    \Drupal::service('field_storage_definition.listener')->onFieldStorageDefinitionCreate($storage_definitions['custom_bundle_field']);
+    $storage_definitions = Drupal::service('entity_field.manager')->getFieldStorageDefinitions('entity_test_update');
+    Drupal::service('field_storage_definition.listener')->onFieldStorageDefinitionCreate($storage_definitions['custom_base_field']);
+    Drupal::service('field_storage_definition.listener')->onFieldStorageDefinitionCreate($storage_definitions['custom_bundle_field']);
     $schema_handler = $this->database->schema();
     $tables = ['entity_test_update', 'entity_test_update_revision', 'entity_test_update_data', 'entity_test_update_revision_data'];
     $dedicated_tables = ['entity_test_update__custom_bundle_field', 'entity_test_update_revision__custom_bundle_field'];
@@ -96,7 +98,7 @@ class EntitySchemaTest extends EntityKernelTestBase {
     // Initially only the base table and the dedicated field data table should
     // exist.
     foreach ($tables as $index => $table) {
-      $this->assertEqual($schema_handler->tableExists($table), !$index, new FormattableMarkup('Entity schema correct for the @table table.', ['@table' => $table]));
+      $this->assertEqual(!$index, $schema_handler->tableExists($table), new FormattableMarkup('Entity schema correct for the @table table.', ['@table' => $table]));
     }
     $this->assertTrue($schema_handler->tableExists($dedicated_tables[0]), new FormattableMarkup('Field schema correct for the @table table.', ['@table' => $table]));
 
@@ -114,7 +116,7 @@ class EntitySchemaTest extends EntityKernelTestBase {
     // neither translations nor revisions.
     $this->updateEntityType(FALSE);
     foreach ($tables as $index => $table) {
-      $this->assertEqual($schema_handler->tableExists($table), !$index, new FormattableMarkup('Entity schema correct for the @table table.', ['@table' => $table]));
+      $this->assertEqual(!$index, $schema_handler->tableExists($table), new FormattableMarkup('Entity schema correct for the @table table.', ['@table' => $table]));
     }
     $this->assertTrue($schema_handler->tableExists($dedicated_tables[0]), new FormattableMarkup('Field schema correct for the @table table.', ['@table' => $table]));
   }
@@ -243,7 +245,7 @@ class EntitySchemaTest extends EntityKernelTestBase {
     $revision_data_table = $entity_type->getRevisionDataTable();
 
     $schema = $this->database->schema();
-    $find_primary_key_columns = new \ReflectionMethod(get_class($schema), 'findPrimaryKeyColumns');
+    $find_primary_key_columns = new ReflectionMethod(get_class($schema), 'findPrimaryKeyColumns');
     $find_primary_key_columns->setAccessible(TRUE);
 
     // Build up a map of primary keys depending on the entity type
@@ -306,7 +308,7 @@ class EntitySchemaTest extends EntityKernelTestBase {
     $this->installModule('entity_schema_test');
     $this->updateEntityType(TRUE);
     $fields = ['revision_log', 'uuid'];
-    $entity_field_manager = \Drupal::service('entity_field.manager');
+    $entity_field_manager = Drupal::service('entity_field.manager');
     foreach ($fields as $field_name) {
       $original_definition = $entity_field_manager->getBaseFieldDefinitions('entity_test_update')[$field_name];
       $new_definition = clone $original_definition;
@@ -323,7 +325,7 @@ class EntitySchemaTest extends EntityKernelTestBase {
     // Find all the entity types provided by the entity_test module and install
     // the schema for them.
     $entity_type_ids = [];
-    $entities = \Drupal::entityTypeManager()->getDefinitions();
+    $entities = Drupal::entityTypeManager()->getDefinitions();
     foreach ($entities as $entity_type_id => $definition) {
       if ($definition->getProvider() == 'entity_test') {
         $this->installEntitySchema($entity_type_id);
@@ -332,7 +334,7 @@ class EntitySchemaTest extends EntityKernelTestBase {
     }
 
     // Get a list of all the entities in the schema.
-    $key_value_store = \Drupal::keyValue('entity.storage_schema.sql');
+    $key_value_store = Drupal::keyValue('entity.storage_schema.sql');
     $schema = $key_value_store->getAll();
 
     // Count the storage definitions provided by the entity_test module, so that
@@ -340,20 +342,20 @@ class EntitySchemaTest extends EntityKernelTestBase {
     $entity_type_id_count = 0;
 
     foreach (array_keys($schema) as $storage_definition_name) {
-      list($entity_type_id, ,) = explode('.', $storage_definition_name);
+      [$entity_type_id, ,] = explode('.', $storage_definition_name);
       if (in_array($entity_type_id, $entity_type_ids)) {
         $entity_type_id_count++;
       }
     }
 
     // Ensure that there are storage definitions from the entity_test module.
-    $this->assertNotEqual($entity_type_id_count, 0, 'There are storage definitions provided by the entity_test module in the schema.');
+    $this->assertNotEquals(0, $entity_type_id_count, 'There are storage definitions provided by the entity_test module in the schema.');
 
     // Uninstall the entity_test module.
     $this->container->get('module_installer')->uninstall(['entity_test']);
 
     // Get a list of all the entities in the schema.
-    $key_value_store = \Drupal::keyValue('entity.storage_schema.sql');
+    $key_value_store = Drupal::keyValue('entity.storage_schema.sql');
     $schema = $key_value_store->getAll();
 
     // Count the storage definitions that come from entity types provided by
@@ -361,14 +363,14 @@ class EntitySchemaTest extends EntityKernelTestBase {
     $entity_type_id_count = 0;
 
     foreach (array_keys($schema) as $storage_definition_name) {
-      list($entity_type_id, ,) = explode('.', $storage_definition_name);
+      [$entity_type_id, ,] = explode('.', $storage_definition_name);
       if (in_array($entity_type_id, $entity_type_ids)) {
         $entity_type_id_count++;
       }
     }
 
     // Ensure that all storage definitions have been removed from the schema.
-    $this->assertEqual($entity_type_id_count, 0, 'After uninstalling entity_test module the schema should not contains fields from entities provided by the module.');
+    $this->assertEqual(0, $entity_type_id_count, 'After uninstalling entity_test module the schema should not contains fields from entities provided by the module.');
   }
 
   /**
@@ -377,7 +379,7 @@ class EntitySchemaTest extends EntityKernelTestBase {
   public function testIdentifierSchema() {
     $this->installEntitySchema('entity_test_rev');
 
-    $key_value_store = \Drupal::keyValue('entity.storage_schema.sql');
+    $key_value_store = Drupal::keyValue('entity.storage_schema.sql');
     $id_schema = $key_value_store->get('entity_test_rev.field_schema_data.id', []);
     $revision_id_schema = $key_value_store->get('entity_test_rev.field_schema_data.revision_id', []);
 

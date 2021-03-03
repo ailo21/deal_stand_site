@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\field\Functional\Email;
 
+use Drupal;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
@@ -69,7 +70,7 @@ class EmailFieldTest extends BrowserTestBase {
     $this->field->save();
 
     /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $display_repository */
-    $display_repository = \Drupal::service('entity_display.repository');
+    $display_repository = Drupal::service('entity_display.repository');
 
     // Create a form display for the default form mode.
     $display_repository->getFormDisplay('entity_test', 'entity_test')
@@ -89,7 +90,7 @@ class EmailFieldTest extends BrowserTestBase {
 
     // Display creation form.
     $this->drupalGet('entity_test/add');
-    $this->assertFieldByName("{$field_name}[0][value]", '', 'Widget found.');
+    $this->assertSession()->fieldValueEquals("{$field_name}[0][value]", '');
     $this->assertRaw('placeholder="example@example.com"');
 
     // Submit a valid email address and ensure it is accepted.
@@ -97,17 +98,17 @@ class EmailFieldTest extends BrowserTestBase {
     $edit = [
       "{$field_name}[0][value]" => $value,
     ];
-    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->submitForm($edit, 'Save');
     preg_match('|entity_test/manage/(\d+)|', $this->getUrl(), $match);
     $id = $match[1];
-    $this->assertText(t('entity_test @id has been created.', ['@id' => $id]));
+    $this->assertText('entity_test ' . $id . ' has been created.');
     $this->assertRaw($value);
 
     // Verify that a mailto link is displayed.
     $entity = EntityTest::load($id);
     $display = $display_repository->getViewDisplay($entity->getEntityTypeId(), $entity->bundle(), 'full');
     $content = $display->build($entity);
-    $rendered_content = (string) \Drupal::service('renderer')->renderRoot($content);
+    $rendered_content = (string) Drupal::service('renderer')->renderRoot($content);
     $this->assertStringContainsString('href="mailto:test@example.com"', $rendered_content);
   }
 

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\field\Functional\EntityReference\Views;
 
+use Drupal;
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Component\Utility\Html;
@@ -82,7 +83,7 @@ class SelectionTest extends BrowserTestBase {
    */
   public function testAutocompleteOutput() {
     // Reset any internal static caching.
-    \Drupal::service('entity_type.manager')->getStorage('node')->resetCache();
+    Drupal::service('entity_type.manager')->getStorage('node')->resetCache();
 
     $view = Views::getView('test_entity_reference');
     $view->setDisplay();
@@ -100,7 +101,7 @@ class SelectionTest extends BrowserTestBase {
     $selection_handler = 'views';
     $selection_settings = $this->handlerSettings;
     $selection_settings_key = Crypt::hmacBase64(serialize($selection_settings) . $target_type . $selection_handler, Settings::getHashSalt());
-    \Drupal::keyValue('entity_autocomplete')->set($selection_settings_key, $selection_settings);
+    Drupal::keyValue('entity_autocomplete')->set($selection_settings_key, $selection_settings);
 
     $result = Json::decode($this->drupalGet('entity_reference_autocomplete/' . $target_type . '/' . $selection_handler . '/' . $selection_settings_key, ['query' => ['q' => 't']]));
 
@@ -118,7 +119,7 @@ class SelectionTest extends BrowserTestBase {
         'label' => '<span class="views-field views-field-type"><span class="field-content">' . $this->nodes[3]->bundle() . '</span></span>: <span class="views-field views-field-title"><span class="field-content">' . Html::escape($this->nodes[3]->label()) . '</span></span>',
       ],
     ];
-    $this->assertEqual($result, $expected, 'The autocomplete result of the Views entity reference selection handler contains the proper output.');
+    $this->assertEqual($expected, $result, 'The autocomplete result of the Views entity reference selection handler contains the proper output.');
   }
 
 }

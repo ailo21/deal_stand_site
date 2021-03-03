@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\views\Functional;
 
+use Drupal;
+
 /**
  * Tests the Views theme integration.
  *
@@ -25,13 +27,13 @@ class ViewsThemeIntegrationTest extends ViewTestBase {
 
 
   /**
-   * Used by WebTestBase::setup()
+   * {@inheritdoc}
    *
    * We need theme_test for testing against test_basetheme and test_subtheme.
    *
    * @var array
    *
-   * @see \Drupal\simpletest\WebTestBase::setup()
+   * {@inheritdoc}
    */
   protected static $modules = ['views', 'theme_test'];
 
@@ -50,37 +52,38 @@ class ViewsThemeIntegrationTest extends ViewTestBase {
    */
   public function testThemedViewPage() {
 
-    \Drupal::service('theme_installer')->install(['test_basetheme', 'test_subtheme']);
+    Drupal::service('theme_installer')->install(['test_basetheme', 'test_subtheme']);
 
     // Make base theme default then test for hook invocations.
     $this->config('system.theme')
       ->set('default', 'test_basetheme')
       ->save();
-    $this->assertEqual($this->config('system.theme')->get('default'), 'test_basetheme');
+    $this->assertEqual('test_basetheme', $this->config('system.theme')->get('default'));
 
     // Make sure a views rendered page is touched.
     $this->drupalGet('test_page_display_200');
 
-    $this->assertRaw("test_basetheme_views_pre_render", "Views title changed by test_basetheme.test_basetheme_views_pre_render");
-    $this->assertRaw("test_basetheme_views_post_render", "Views title changed by test_basetheme.test_basetheme_views_post_render");
+    $this->assertRaw("test_basetheme_views_pre_render");
+    $this->assertRaw("test_basetheme_views_post_render");
 
     // Make sub theme default to test for hook invocation
     // from both sub and base theme.
     $this->config('system.theme')
       ->set('default', 'test_subtheme')
       ->save();
-    $this->assertEqual($this->config('system.theme')->get('default'), 'test_subtheme');
+    $this->assertEqual('test_subtheme', $this->config('system.theme')->get('default'));
 
     // Make sure a views rendered page is touched.
     $this->drupalGet('test_page_display_200');
 
-    $this->assertRaw("test_subtheme_views_pre_render", "Views title changed by test_subtheme.test_subtheme_views_pre_render");
-    $this->assertRaw("test_subtheme_views_post_render", "Views title changed by test_subtheme.test_subtheme_views_post_render");
+    $this->assertRaw("test_subtheme_views_pre_render");
+    $this->assertRaw("test_subtheme_views_post_render");
 
-    $this->assertRaw("test_basetheme_views_pre_render", "Views title changed by test_basetheme.test_basetheme_views_pre_render");
-    $this->assertRaw("test_basetheme_views_post_render", "Views title changed by test_basetheme.test_basetheme_views_post_render");
+    $this->assertRaw("test_basetheme_views_pre_render");
+    $this->assertRaw("test_basetheme_views_post_render");
 
-    $this->assertRaw('<em class="placeholder">' . count($this->dataSet()) . '</em> items found.', 'Views group title added by test_subtheme.test_subtheme_views_post_render');
+    // Verify that the views group title is added.
+    $this->assertRaw('<em class="placeholder">' . count($this->dataSet()) . '</em> items found.');
   }
 
 }

@@ -2,6 +2,7 @@
 
 namespace Drupal\filter\Element;
 
+use Drupal;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element\RenderElement;
 use Drupal\Core\Render\Element;
@@ -39,7 +40,7 @@ class TextFormat extends RenderElement {
    * {@inheritdoc}
    */
   public function getInfo() {
-    $class = get_class($this);
+    $class = static::class;
     return [
       '#process' => [
         [$class, 'processFormat'],
@@ -283,7 +284,7 @@ class TextFormat extends RenderElement {
    * \Drupal\Core\Session\AccountInterface
    */
   protected static function currentUser() {
-    return \Drupal::currentUser();
+    return Drupal::currentUser();
   }
 
   /**
@@ -292,7 +293,7 @@ class TextFormat extends RenderElement {
    * @return \Drupal\Core\Config\ConfigFactoryInterface
    */
   protected static function configFactory() {
-    return \Drupal::configFactory();
+    return Drupal::configFactory();
   }
 
   /**
@@ -301,7 +302,7 @@ class TextFormat extends RenderElement {
    * @return \Drupal\Core\Render\ElementInfoManagerInterface
    */
   protected static function elementInfo() {
-    return \Drupal::service('element_info');
+    return Drupal::service('element_info');
   }
 
 }

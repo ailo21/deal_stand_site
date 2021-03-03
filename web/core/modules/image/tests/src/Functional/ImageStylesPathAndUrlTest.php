@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\image\Functional;
 
+use Drupal;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\StreamWrapper\StreamWrapperManager;
 use Drupal\image\Entity\ImageStyle;
@@ -63,11 +64,11 @@ class ImageStylesPathAndUrlTest extends BrowserTestBase {
     $scheme = 'public';
     $actual = $this->style->buildUri("$scheme://foo/bar.gif");
     $expected = "$scheme://styles/" . $this->style->id() . "/$scheme/foo/bar.gif";
-    $this->assertEqual($actual, $expected, 'Got the path for a file URI.');
+    $this->assertEqual($expected, $actual, 'Got the path for a file URI.');
 
     $actual = $this->style->buildUri('foo/bar.gif');
     $expected = "$scheme://styles/" . $this->style->id() . "/$scheme/foo/bar.gif";
-    $this->assertEqual($actual, $expected, 'Got the path for a relative file path.');
+    $this->assertEqual($expected, $actual, 'Got the path for a relative file path.');
   }
 
   /**
@@ -141,12 +142,12 @@ class ImageStylesPathAndUrlTest extends BrowserTestBase {
 
     // Create the directories for the styles.
     $directory = $scheme . '://styles/' . $this->style->id();
-    $status = \Drupal::service('file_system')->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY);
+    $status = Drupal::service('file_system')->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY);
     $this->assertNotFalse($status, 'Created the directory for the generated images for the test style.');
 
     // Override the language to build the URL for the correct language.
     if ($langcode) {
-      $language_manager = \Drupal::service('language_manager');
+      $language_manager = Drupal::service('language_manager');
       $language = $language_manager->getLanguage($langcode);
       $language_manager->setConfigOverrideLanguage($language);
     }
@@ -155,11 +156,11 @@ class ImageStylesPathAndUrlTest extends BrowserTestBase {
     $files = $this->drupalGetTestFiles('image');
     $file = array_shift($files);
     /** @var \Drupal\Core\File\FileSystemInterface $file_system */
-    $file_system = \Drupal::service('file_system');
+    $file_system = Drupal::service('file_system');
     $original_uri = $file_system->copy($file->uri, $scheme . '://', FileSystemInterface::EXISTS_RENAME);
     // Let the image_module_test module know about this file, so it can claim
     // ownership in hook_file_download().
-    \Drupal::state()->set('image.test_file_download', $original_uri);
+    Drupal::state()->set('image.test_file_download', $original_uri);
     $this->assertNotFalse($original_uri, 'Created the generated image file.');
 
     // Get the URL of a file that has not been generated and try to create it.
@@ -177,7 +178,7 @@ class ImageStylesPathAndUrlTest extends BrowserTestBase {
     // in it.
     if ($extra_slash) {
       $modified_uri = str_replace('://', ':///', $original_uri);
-      $this->assertNotEqual($original_uri, $modified_uri, 'An extra slash was added to the generated file URI.');
+      $this->assertNotEquals($original_uri, $modified_uri, 'An extra slash was added to the generated file URI.');
       $generate_url = $this->style->buildUrl($modified_uri, $clean_url);
     }
     if (!$clean_url) {
@@ -207,19 +208,19 @@ class ImageStylesPathAndUrlTest extends BrowserTestBase {
     // assertRaw can't be used with string containing non UTF-8 chars.
     $this->assertNotEmpty(file_get_contents($generated_uri), 'URL returns expected file.');
     $image = $this->container->get('image.factory')->get($generated_uri);
-    $this->assertEqual($this->drupalGetHeader('Content-Type'), $image->getMimeType(), 'Expected Content-Type was reported.');
-    $this->assertEqual($this->drupalGetHeader('Content-Length'), $image->getFileSize(), 'Expected Content-Length was reported.');
+    $this->assertSession()->responseHeaderEquals('Content-Type', $image->getMimeType());
+    $this->assertSession()->responseHeaderEquals('Content-Length', (string) $image->getFileSize());
 
     // Check that we did not download the original file.
     $original_image = $this->container->get('image.factory')
       ->get($original_uri);
-    $this->assertNotEqual($this->drupalGetHeader('Content-Length'), $original_image->getFileSize());
+    $this->assertSession()->responseHeaderNotEquals('Content-Length', (string) $original_image->getFileSize());
 
     if ($scheme == 'private') {
-      $this->assertEqual($this->drupalGetHeader('Expires'), 'Sun, 19 Nov 1978 05:00:00 GMT', 'Expires header was sent.');
+      $this->assertSession()->responseHeaderEquals('Expires', 'Sun, 19 Nov 1978 05:00:00 GMT');
       // Check that Cache-Control header contains 'no-cache' to prevent caching.
       $this->assertSession()->responseHeaderContains('Cache-Control', 'no-cache');
-      $this->assertEqual($this->drupalGetHeader('X-Image-Owned-By'), 'image_module_test', 'Expected custom header has been added.');
+      $this->assertSession()->responseHeaderEquals('X-Image-Owned-By', 'image_module_test');
 
       // Make sure that a second request to the already existing derivative
       // works too.
@@ -227,14 +228,14 @@ class ImageStylesPathAndUrlTest extends BrowserTestBase {
       $this->assertSession()->statusCodeEquals(200);
 
       // Check that the second request also returned the generated image.
-      $this->assertEqual($this->drupalGetHeader('Content-Length'), $image->getFileSize());
+      $this->assertSession()->responseHeaderEquals('Content-Length', (string) $image->getFileSize());
 
       // Check that we did not download the original file.
-      $this->assertNotEqual($this->drupalGetHeader('Content-Length'), $original_image->getFileSize());
+      $this->assertSession()->responseHeaderNotEquals('Content-Length', (string) $original_image->getFileSize());
 
       // Make sure that access is denied for existing style files if we do not
       // have access.
-      \Drupal::state()->delete('image.test_file_download');
+      Drupal::state()->delete('image.test_file_download');
       $this->drupalGet($generate_url);
       $this->assertSession()->statusCodeEquals(403);
 
@@ -262,8 +263,8 @@ class ImageStylesPathAndUrlTest extends BrowserTestBase {
       }
     }
     else {
-      $this->assertEqual($this->drupalGetHeader('Expires'), 'Sun, 19 Nov 1978 05:00:00 GMT', 'Expires header was sent.');
-      $this->assertStringNotContainsString('no-cache', $this->drupalGetHeader('Cache-Control'), 'Cache-Control header contains \'no-cache\' to prevent caching.');
+      $this->assertSession()->responseHeaderEquals('Expires', 'Sun, 19 Nov 1978 05:00:00 GMT');
+      $this->assertSession()->responseHeaderNotContains('Cache-Control', 'no-cache');
 
       if ($clean_url) {
         // Add some extra chars to the token.
@@ -284,7 +285,7 @@ class ImageStylesPathAndUrlTest extends BrowserTestBase {
     $original_uri = $file_system->copy($file->uri, $scheme . '://', FileSystemInterface::EXISTS_RENAME);
     // Let the image_module_test module know about this file, so it can claim
     // ownership in hook_file_download().
-    \Drupal::state()->set('image.test_file_download', $original_uri);
+    Drupal::state()->set('image.test_file_download', $original_uri);
 
     // Suppress the security token in the URL, then get the URL of a file that
     // has not been created and try to create it. Check that the security token
@@ -300,8 +301,7 @@ class ImageStylesPathAndUrlTest extends BrowserTestBase {
     // Stop suppressing the security token in the URL.
     $this->config('image.settings')->set('suppress_itok_output', FALSE)->save();
     // Ensure allow_insecure_derivatives is enabled.
-    $this->assertEqual($this->config('image.settings')
-      ->get('allow_insecure_derivatives'), TRUE);
+    $this->assertEqual(TRUE, $this->config('image.settings')->get('allow_insecure_derivatives'));
     // Check that a security token is still required when generating a second
     // image derivative using the first one as a source.
     $nested_url = $this->style->buildUrl($generated_uri, $clean_url);

@@ -2,6 +2,7 @@
 
 namespace Drupal\comment;
 
+use Drupal;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
@@ -179,7 +180,7 @@ class CommentStatistics implements CommentStatisticsInterface {
         // values in as strings instead of numbers in complex expressions like
         // this.
         'score' => '2.0 - 2.0 / (1.0 + ces.comment_count * (ROUND(:comment_scale, 4)))',
-        'arguments' => [':comment_scale' => \Drupal::state()->get('comment.node_comment_statistics_scale') ?: 0],
+        'arguments' => [':comment_scale' => Drupal::state()->get('comment.node_comment_statistics_scale', 0)],
       ],
     ];
   }

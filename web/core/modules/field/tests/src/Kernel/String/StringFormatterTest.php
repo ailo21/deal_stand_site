@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\field\Kernel\String;
 
+use Drupal;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
@@ -66,7 +67,6 @@ class StringFormatterTest extends KernelTestBase {
 
     // Configure the theme system.
     $this->installConfig(['system', 'field']);
-    \Drupal::service('router.builder')->rebuild();
     $this->installEntitySchema('entity_test_rev');
 
     $this->entityType = 'entity_test_rev';
@@ -87,7 +87,7 @@ class StringFormatterTest extends KernelTestBase {
     ]);
     $instance->save();
 
-    $this->display = \Drupal::service('entity_display.repository')
+    $this->display = Drupal::service('entity_display.repository')
       ->getViewDisplay($this->entityType, $this->bundle)
       ->setComponent($this->fieldName, [
         'type' => 'string',
@@ -95,7 +95,7 @@ class StringFormatterTest extends KernelTestBase {
       ]);
     $this->display->save();
 
-    $this->entityTypeManager = \Drupal::entityTypeManager();
+    $this->entityTypeManager = Drupal::entityTypeManager();
   }
 
   /**
@@ -178,7 +178,7 @@ class StringFormatterTest extends KernelTestBase {
     $link_templates = $entity_type->getLinkTemplates();
     unset($link_templates['revision']);
     $entity_type->set('links', $link_templates);
-    \Drupal::state()->set('entity_test_rev.entity_type', $entity_type);
+    Drupal::state()->set('entity_test_rev.entity_type', $entity_type);
     $this->entityTypeManager->clearCachedDefinitions();
 
     $this->renderEntityFields($entity_new_revision, $this->display);

@@ -2,12 +2,15 @@
 
 namespace Drupal\KernelTests\Core\Theme;
 
+use Drupal;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Extension\ExtensionNameLengthException;
 use Drupal\Core\Extension\MissingDependencyException;
 use Drupal\Core\Extension\ModuleUninstallValidatorException;
 use Drupal\Core\Extension\Exception\UnknownExtensionException;
 use Drupal\KernelTests\KernelTestBase;
+use Exception;
+use InvalidArgumentException;
 
 /**
  * Tests installing and uninstalling of themes.
@@ -46,7 +49,7 @@ class ThemeInstallerTest extends KernelTestBase {
     $this->assertEmpty($this->extensionConfig()->get('theme'));
 
     $this->assertEmpty(array_keys($this->themeHandler()->listInfo()));
-    $this->assertEmpty(array_keys(\Drupal::service('theme_handler')->listInfo()));
+    $this->assertEmpty(array_keys(Drupal::service('theme_handler')->listInfo()));
 
     // Rebuilding available themes should always yield results though.
     $this->assertNotEmpty($this->themeHandler()->rebuildThemeData()['stark'], 'ThemeHandler::rebuildThemeData() yields all available themes.');
@@ -66,16 +69,16 @@ class ThemeInstallerTest extends KernelTestBase {
 
     $this->themeInstaller()->install([$name]);
 
-    $this->assertIdentical($this->extensionConfig()->get("theme.$name"), 0);
+    $this->assertSame(0, $this->extensionConfig()->get("theme.{$name}"));
 
     $themes = $this->themeHandler()->listInfo();
     $this->assertTrue(isset($themes[$name]));
-    $this->assertEqual($themes[$name]->getName(), $name);
+    $this->assertEqual($name, $themes[$name]->getName());
 
     // Verify that test_basetheme.settings is active.
     $this->assertFalse(theme_get_setting('features.favicon', $name));
-    $this->assertEqual(theme_get_setting('base', $name), 'only');
-    $this->assertEqual(theme_get_setting('override', $name), 'base');
+    $this->assertEqual('only', theme_get_setting('base', $name));
+    $this->assertEqual('base', theme_get_setting('override', $name));
   }
 
   /**
@@ -115,7 +118,7 @@ class ThemeInstallerTest extends KernelTestBase {
       $this->themeInstaller()->install([$name]);
       $this->fail($message);
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       $this->assertInstanceOf(UnknownExtensionException::class, $e);
     }
 
@@ -134,7 +137,7 @@ class ThemeInstallerTest extends KernelTestBase {
       $this->themeInstaller()->install([$name]);
       $this->fail($message);
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       $this->assertInstanceOf(ExtensionNameLengthException::class, $e);
     }
   }
@@ -230,8 +233,8 @@ class ThemeInstallerTest extends KernelTestBase {
       $this->themeInstaller()->uninstall([$name]);
       $this->fail($message);
     }
-    catch (\Exception $e) {
-      $this->assertInstanceOf(\InvalidArgumentException::class, $e);
+    catch (Exception $e) {
+      $this->assertInstanceOf(InvalidArgumentException::class, $e);
     }
 
     $themes = $this->themeHandler()->listInfo();
@@ -257,8 +260,8 @@ class ThemeInstallerTest extends KernelTestBase {
       $this->themeInstaller()->uninstall([$name]);
       $this->fail($message);
     }
-    catch (\Exception $e) {
-      $this->assertInstanceOf(\InvalidArgumentException::class, $e);
+    catch (Exception $e) {
+      $this->assertInstanceOf(InvalidArgumentException::class, $e);
     }
 
     $themes = $this->themeHandler()->listInfo();
@@ -295,8 +298,8 @@ class ThemeInstallerTest extends KernelTestBase {
       $this->themeInstaller()->uninstall([$name]);
       $this->fail($message);
     }
-    catch (\Exception $e) {
-      $this->assertInstanceOf(\InvalidArgumentException::class, $e);
+    catch (Exception $e) {
+      $this->assertInstanceOf(InvalidArgumentException::class, $e);
     }
 
     $themes = $this->themeHandler()->listInfo();
@@ -325,7 +328,7 @@ class ThemeInstallerTest extends KernelTestBase {
       $this->themeInstaller()->uninstall([$name]);
       $this->fail($message);
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       $this->assertInstanceOf(UnknownExtensionException::class, $e);
     }
 
@@ -352,7 +355,7 @@ class ThemeInstallerTest extends KernelTestBase {
     $this->themeInstaller()->install([$name]);
     $themes = $this->themeHandler()->listInfo();
     $this->assertTrue(isset($themes[$name]));
-    $this->assertEqual($themes[$name]->getName(), $name);
+    $this->assertEqual($name, $themes[$name]->getName());
     $this->assertNotEmpty($this->config("$name.settings")->get());
   }
 
@@ -367,7 +370,7 @@ class ThemeInstallerTest extends KernelTestBase {
       $this->themeInstaller()->uninstall([$name]);
       $this->fail($message);
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       $this->assertInstanceOf(UnknownExtensionException::class, $e);
     }
   }
@@ -396,11 +399,11 @@ class ThemeInstallerTest extends KernelTestBase {
     // Legacy assertions.
     // @todo Remove once theme initialization/info has been modernized.
     // @see https://www.drupal.org/node/2228093
-    $info = \Drupal::service('extension.list.theme')->getExtensionInfo($name);
+    $info = Drupal::service('extension.list.theme')->getExtensionInfo($name);
     $this->assertTrue(isset($info['regions']['test_region']));
     $regions = system_region_list($name);
     $this->assertTrue(isset($regions['test_region']));
-    $theme_list = \Drupal::service('theme_handler')->listInfo();
+    $theme_list = Drupal::service('theme_handler')->listInfo();
     $this->assertTrue(isset($theme_list[$name]->info['regions']['test_region']));
 
     $this->moduleInstaller()->uninstall(['module_test']);
@@ -412,11 +415,11 @@ class ThemeInstallerTest extends KernelTestBase {
     // Legacy assertions.
     // @todo Remove once theme initialization/info has been modernized.
     // @see https://www.drupal.org/node/2228093
-    $info = \Drupal::service('extension.list.theme')->getExtensionInfo($name);
+    $info = Drupal::service('extension.list.theme')->getExtensionInfo($name);
     $this->assertFalse(isset($info['regions']['test_region']));
     $regions = system_region_list($name);
     $this->assertFalse(isset($regions['test_region']));
-    $theme_list = \Drupal::service('theme_handler')->listInfo();
+    $theme_list = Drupal::service('theme_handler')->listInfo();
     $this->assertFalse(isset($theme_list[$name]->info['regions']['test_region']));
   }
 

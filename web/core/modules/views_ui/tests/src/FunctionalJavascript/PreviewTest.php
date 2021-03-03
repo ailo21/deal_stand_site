@@ -3,6 +3,7 @@
 namespace Drupal\Tests\views_ui\FunctionalJavascript;
 
 use Behat\Mink\Element\NodeElement;
+use Drupal;
 use Drupal\Core\Database\Database;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\views\Tests\ViewTestData;
@@ -54,7 +55,7 @@ class PreviewTest extends WebDriverTestBase {
     ]);
 
     // Disable automatic live preview to make the sequence of calls clearer.
-    \Drupal::configFactory()->getEditable('views.settings')->set('ui.always_live_preview', FALSE)->save();
+    Drupal::configFactory()->getEditable('views.settings')->set('ui.always_live_preview', FALSE)->save();
     $this->drupalLogin($admin_user);
   }
 
@@ -66,10 +67,10 @@ class PreviewTest extends WebDriverTestBase {
    */
   protected function enableViewsTestModule() {
     // Define the schema and views data variable before enabling the test module.
-    \Drupal::state()->set('views_test_data_schema', $this->schemaDefinition());
-    \Drupal::state()->set('views_test_data_views_data', $this->viewsData());
+    Drupal::state()->set('views_test_data_schema', $this->schemaDefinition());
+    Drupal::state()->set('views_test_data_views_data', $this->viewsData());
 
-    \Drupal::service('module_installer')->install(['views_test_data']);
+    Drupal::service('module_installer')->install(['views_test_data']);
     $this->resetAll();
     $this->rebuildContainer();
     $this->container->get('module_handler')->reload();
@@ -115,7 +116,7 @@ class PreviewTest extends WebDriverTestBase {
    * @see https://www.drupal.org/node/2452659
    */
   public function testTaxonomyAJAX() {
-    \Drupal::service('module_installer')->install(['taxonomy']);
+    Drupal::service('module_installer')->install(['taxonomy']);
     $this->getPreviewAJAX('taxonomy_term', 'page_1', 0);
   }
 
@@ -235,7 +236,7 @@ class PreviewTest extends WebDriverTestBase {
     $this->assertTrue(!empty($elements), 'The header label is present.');
 
     // Verify link.
-    $this->assertLinkByHref('preview/page_1?_wrapper_format=drupal_ajax&order=name&sort=desc', 0, 'The output URL is as expected.');
+    $this->assertSession()->linkByHrefExists('preview/page_1?_wrapper_format=drupal_ajax&order=name&sort=desc', 0, 'The output URL is as expected.');
 
     // Click link to sort.
     $elements[0]->click();
@@ -244,7 +245,7 @@ class PreviewTest extends WebDriverTestBase {
     $this->assertNotEmpty($sort_link);
 
     // Verify link.
-    $this->assertLinkByHref('preview/page_1?_wrapper_format=drupal_ajax&order=name&sort=asc', 0, 'The output URL is as expected.');
+    $this->assertSession()->linkByHrefExists('preview/page_1?_wrapper_format=drupal_ajax&order=name&sort=asc', 0, 'The output URL is as expected.');
   }
 
   /**

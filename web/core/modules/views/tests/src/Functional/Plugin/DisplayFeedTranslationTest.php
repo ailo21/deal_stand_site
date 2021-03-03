@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\views\Functional\Plugin;
 
+use Drupal;
 use Drupal\Tests\Traits\Core\PathAliasTestTrait;
 use Drupal\Tests\views\Functional\ViewTestBase;
 use Drupal\language\Entity\ConfigurableLanguage;
@@ -76,7 +77,7 @@ class DisplayFeedTranslationTest extends ViewTestBase {
       'settings[node][page][translatable]' => TRUE,
       'settings[node][page][settings][language][language_alterable]' => TRUE,
     ];
-    $this->drupalPostForm('admin/config/regional/content-language', $edit, t('Save configuration'));
+    $this->drupalPostForm('admin/config/regional/content-language', $edit, 'Save configuration');
 
     // Rebuild the container so that the new languages are picked up by services
     // that hold a list of languages.
@@ -134,7 +135,7 @@ class DisplayFeedTranslationTest extends ViewTestBase {
    */
   protected function checkFeedResults($link_style, Node $node) {
     /** @var \Drupal\Core\Language\LanguageManagerInterface $languageManager */
-    $language_manager = \Drupal::languageManager()->reset();
+    $language_manager = Drupal::languageManager()->reset();
 
     $node_links = [];
     $node_links['en'] = $node->toUrl()->setAbsolute()->toString();

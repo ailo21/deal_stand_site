@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\content_translation\Functional;
 
+use Drupal;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\field\Entity\FieldStorageConfig;
@@ -64,7 +65,7 @@ class ContentTranslationContextualLinksTest extends BrowserTestBase {
   protected function setUp(): void {
     parent::setUp();
     // Set up an additional language.
-    $this->langcodes = [\Drupal::languageManager()->getDefaultLanguage()->getId(), 'es'];
+    $this->langcodes = [Drupal::languageManager()->getDefaultLanguage()->getId(), 'es'];
     ConfigurableLanguage::createFromLangcode('es')->save();
 
     // Create a content type.
@@ -120,14 +121,14 @@ class ContentTranslationContextualLinksTest extends BrowserTestBase {
       'settings[node][' . $this->bundle . '][translatable]' => TRUE,
       'settings[node][' . $this->bundle . '][fields][field_test_text]' => TRUE,
     ];
-    $this->drupalPostForm('admin/config/regional/content-language', $edit, t('Save configuration'));
+    $this->drupalPostForm('admin/config/regional/content-language', $edit, 'Save configuration');
     $this->drupalLogout();
 
     // Check that the link leads to the translate page.
     $this->drupalLogin($this->translator);
     $translate_link = 'node/' . $node->id() . '/translations';
     $this->drupalGet($translate_link);
-    $this->assertRaw(t('Translations of %label', ['%label' => $node->label()]), 'The contextual link leads to the translate page.');
+    $this->assertRaw(t('Translations of %label', ['%label' => $node->label()]));
   }
 
 }

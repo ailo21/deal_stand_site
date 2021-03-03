@@ -2,11 +2,13 @@
 
 namespace Drupal\Tests\layout_builder\Kernel;
 
+use Drupal;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
+use SimpleXMLElement;
 
 /**
  * Tests Layout Builder's compatibility with existing systems.
@@ -42,12 +44,11 @@ abstract class LayoutBuilderCompatibilityTestBase extends EntityKernelTestBase {
 
     $this->installEntitySchema('entity_test_base_field_display');
     $this->installConfig(['filter']);
-    $this->installSchema('system', ['key_value_expire']);
 
     // Set up a non-admin user that is allowed to view test entities.
-    \Drupal::currentUser()->setAccount($this->createUser(['uid' => 2], ['view test entity']));
+    Drupal::currentUser()->setAccount($this->createUser(['uid' => 2], ['view test entity']));
 
-    \Drupal::service('theme_installer')->install(['classy']);
+    Drupal::service('theme_installer')->install(['classy']);
     $this->config('system.theme')->set('default', 'classy')->save();
 
     $field_storage = FieldStorageConfig::create([
@@ -118,7 +119,7 @@ abstract class LayoutBuilderCompatibilityTestBase extends EntityKernelTestBase {
     $build = $view_builder->view($entity);
     $this->render($build);
 
-    $actual = array_map(function (\SimpleXMLElement $element) {
+    $actual = array_map(function (SimpleXMLElement $element) {
       return (string) $element->attributes();
     }, $this->cssSelect('.field'));
     $this->assertSame($attributes, $actual);

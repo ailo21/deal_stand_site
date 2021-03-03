@@ -2,9 +2,12 @@
 
 namespace Drupal\Core\Template;
 
+use ArrayAccess;
+use ArrayIterator;
 use Drupal\Component\Render\PlainTextOutput;
 use Drupal\Component\Render\MarkupInterface;
 use Drupal\Component\Utility\NestedArray;
+use IteratorAggregate;
 
 /**
  * Collects, sanitizes, and renders HTML attributes.
@@ -32,13 +35,16 @@ use Drupal\Component\Utility\NestedArray;
  * template, use the "without" filter to prevent attributes that have already
  * been printed from being printed again. For example:
  * @code
- *  <cat class="{{ attributes.class }} my-custom-class"{{ attributes|without('class') }}>
- *  {# Produces <cat class="cat black-cat white-cat black-white-cat my-custom-class" id="socks"> #}
+ * <cat class="{{ attributes.class }} my-custom-class"{{ attributes|without('class') }}>
+ * @endcode
+ * Produces:
+ * @code
+ * <cat class="cat black-cat white-cat black-white-cat my-custom-class" id="socks">
  * @endcode
  *
  * The attribute keys and values are automatically escaped for output with
  * Html::escape(). No protocol filtering is applied, so when using user-entered
- * input as a value for an attribute that expects an URI (href, src, ...),
+ * input as a value for an attribute that expects a URI (href, src, ...),
  * UrlHelper::stripDangerousProtocols() should be used to ensure dangerous
  * protocols (such as 'javascript:') are removed. For example:
  * @code
@@ -63,7 +69,7 @@ use Drupal\Component\Utility\NestedArray;
  * @see \Drupal\Component\Render\PlainTextOutput::renderFromHtml()
  * @see \Drupal\Component\Utility\UrlHelper::stripDangerousProtocols()
  */
-class Attribute implements \ArrayAccess, \IteratorAggregate, MarkupInterface {
+class Attribute implements ArrayAccess, IteratorAggregate, MarkupInterface {
 
   /**
    * Stores the attribute data.
@@ -350,7 +356,7 @@ class Attribute implements \ArrayAccess, \IteratorAggregate, MarkupInterface {
    * {@inheritdoc}
    */
   public function getIterator() {
-    return new \ArrayIterator($this->storage);
+    return new ArrayIterator($this->storage);
   }
 
   /**

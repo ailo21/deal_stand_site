@@ -2,11 +2,13 @@
 
 namespace Drupal\KernelTests\Core\TempStore;
 
+use Drupal;
 use Drupal\Core\KeyValueStore\KeyValueExpirableFactory;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Core\TempStore\SharedTempStoreFactory;
 use Drupal\Core\Lock\DatabaseLockBackend;
 use Drupal\Core\Database\Database;
+use stdClass;
 
 /**
  * Tests the temporary object storage system.
@@ -15,24 +17,6 @@ use Drupal\Core\Database\Database;
  * @see \Drupal\Core\TempStore\SharedTempStore
  */
 class TempStoreDatabaseTest extends KernelTestBase {
-
-  /**
-   * Modules to enable.
-   *
-   * @var array
-   */
-  protected static $modules = ['system'];
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function setUp(): void {
-    parent::setUp();
-
-    // Install system tables to test the key/value storage without installing a
-    // full Drupal environment.
-    $this->installSchema('system', ['key_value_expire']);
-  }
 
   /**
    * Tests the SharedTempStore API.
@@ -46,7 +30,7 @@ class TempStoreDatabaseTest extends KernelTestBase {
 
     // Create a key/value collection.
     $database = Database::getConnection();
-    $factory = new SharedTempStoreFactory(new KeyValueExpirableFactory(\Drupal::getContainer()), new DatabaseLockBackend($database), $this->container->get('request_stack'));
+    $factory = new SharedTempStoreFactory(new KeyValueExpirableFactory(Drupal::getContainer()), new DatabaseLockBackend($database), $this->container->get('request_stack'));
     $collection = $this->randomMachineName();
 
     // Create two mock users.
@@ -89,7 +73,7 @@ class TempStoreDatabaseTest extends KernelTestBase {
     $this->assertEquals($objects[2], $stores[1]->get($key));
 
     // This user should be allowed to get, update, delete.
-    $this->assertInstanceOf(\stdClass::class, $stores[0]->getIfOwner($key));
+    $this->assertInstanceOf(stdClass::class, $stores[0]->getIfOwner($key));
     $this->assertTrue($stores[0]->setIfOwner($key, $objects[1]));
     $this->assertTrue($stores[0]->deleteIfOwner($key));
 

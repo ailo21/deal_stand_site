@@ -5,6 +5,7 @@
  * Hooks related to the Token system.
  */
 
+use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\user\Entity\User;
 
 /**
@@ -71,12 +72,12 @@ use Drupal\user\Entity\User;
  * @see hook_token_info()
  * @see hook_tokens_alter()
  */
-function hook_tokens($type, $tokens, array $data, array $options, \Drupal\Core\Render\BubbleableMetadata $bubbleable_metadata) {
-  $token_service = \Drupal::token();
+function hook_tokens($type, $tokens, array $data, array $options, BubbleableMetadata $bubbleable_metadata) {
+  $token_service = Drupal::token();
 
   $url_options = ['absolute' => TRUE];
   if (isset($options['langcode'])) {
-    $url_options['language'] = \Drupal::languageManager()->getLanguage($options['langcode']);
+    $url_options['language'] = Drupal::languageManager()->getLanguage($options['langcode']);
     $langcode = $options['langcode'];
   }
   else {
@@ -111,7 +112,7 @@ function hook_tokens($type, $tokens, array $data, array $options, \Drupal\Core\R
           break;
 
         case 'created':
-          $replacements[$original] = \Drupal::service('date.formatter')->format($node->getCreatedTime(), 'medium', '', NULL, $langcode);
+          $replacements[$original] = Drupal::service('date.formatter')->format($node->getCreatedTime(), 'medium', '', NULL, $langcode);
           break;
       }
     }
@@ -148,17 +149,7 @@ function hook_tokens($type, $tokens, array $data, array $options, \Drupal\Core\R
  *
  * @see hook_tokens()
  */
-function hook_tokens_alter(array &$replacements, array $context, \Drupal\Core\Render\BubbleableMetadata $bubbleable_metadata) {
-  $options = $context['options'];
-
-  if (isset($options['langcode'])) {
-    $url_options['language'] = \Drupal::languageManager()->getLanguage($options['langcode']);
-    $langcode = $options['langcode'];
-  }
-  else {
-    $langcode = NULL;
-  }
-
+function hook_tokens_alter(array &$replacements, array $context, BubbleableMetadata $bubbleable_metadata) {
   if ($context['type'] == 'node' && !empty($context['data']['node'])) {
     $node = $context['data']['node'];
 
@@ -166,7 +157,7 @@ function hook_tokens_alter(array &$replacements, array $context, \Drupal\Core\Re
     // of a field (field_title).
     if (isset($context['tokens']['title'])) {
       $title = $node->field_title->view('default');
-      $replacements[$context['tokens']['title']] = \Drupal::service('renderer')->render($title);
+      $replacements[$context['tokens']['title']] = Drupal::service('renderer')->render($title);
     }
   }
 }

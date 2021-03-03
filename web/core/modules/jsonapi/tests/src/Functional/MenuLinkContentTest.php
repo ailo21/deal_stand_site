@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\jsonapi\Functional;
 
+use DateTime;
+use DateTimeZone;
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Url;
@@ -106,7 +108,7 @@ class MenuLinkContentTest extends ResourceTestBase {
             'title' => NULL,
             'options' => [],
           ],
-          'changed' => (new \DateTime())->setTimestamp($this->entity->getChangedTime())->setTimezone(new \DateTimeZone('UTC'))->format(\DateTime::RFC3339),
+          'changed' => (new DateTime())->setTimestamp($this->entity->getChangedTime())->setTimezone(new DateTimeZone('UTC'))->format(DateTime::RFC3339),
           'default_langcode' => TRUE,
           'description' => 'Llama Gabilondo',
           'enabled' => TRUE,
@@ -120,7 +122,7 @@ class MenuLinkContentTest extends ResourceTestBase {
           'weight' => 0,
           'drupal_internal__id' => 1,
           'drupal_internal__revision_id' => 1,
-          'revision_created' => (new \DateTime())->setTimestamp($this->entity->getRevisionCreationTime())->setTimezone(new \DateTimeZone('UTC'))->format(\DateTime::RFC3339),
+          'revision_created' => (new DateTime())->setTimestamp($this->entity->getRevisionCreationTime())->setTimezone(new DateTimeZone('UTC'))->format(DateTime::RFC3339),
           'revision_log_message' => NULL,
           // @todo Attempt to remove this in https://www.drupal.org/project/drupal/issues/2933518.
           'revision_translation_affected' => TRUE,
@@ -170,13 +172,6 @@ class MenuLinkContentTest extends ResourceTestBase {
       default:
         return parent::getExpectedUnauthorizedAccessMessage($method);
     }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function testRelated() {
-    $this->markTestSkipped('Remove this in https://www.drupal.org/project/drupal/issues/2940339');
   }
 
   /**

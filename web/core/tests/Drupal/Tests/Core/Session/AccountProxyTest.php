@@ -2,9 +2,13 @@
 
 namespace Drupal\Tests\Core\Session;
 
+use Drupal;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxy;
 use Drupal\Tests\UnitTestCase;
+use LogicException;
+use Prophecy\Argument;
+use Symfony\Contracts\EventDispatcher\Event;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -19,10 +23,11 @@ class AccountProxyTest extends UnitTestCase {
    */
   public function testId() {
     $dispatcher = $this->prophesize(EventDispatcherInterface::class);
+    $dispatcher->dispatch(Argument::any(), Argument::any())->willReturn(new Event());
     $account_proxy = new AccountProxy($dispatcher->reveal());
     $this->assertSame(0, $account_proxy->id());
     $account_proxy->setInitialAccountId(1);
-    $this->assertFalse(\Drupal::hasContainer());
+    $this->assertFalse(Drupal::hasContainer());
     // If the following call loaded the user entity it would call
     // AccountProxy::loadUserEntity() which would fail because the container
     // does not exist.
@@ -37,8 +42,9 @@ class AccountProxyTest extends UnitTestCase {
    * @covers ::setInitialAccountId
    */
   public function testSetInitialAccountIdException() {
-    $this->expectException(\LogicException::class);
+    $this->expectException(LogicException::class);
     $dispatcher = $this->prophesize(EventDispatcherInterface::class);
+    $dispatcher->dispatch(Argument::any(), Argument::any())->willReturn(new Event());
     $account_proxy = new AccountProxy($dispatcher->reveal());
     $current_user = $this->prophesize(AccountInterface::class);
     $account_proxy->setAccount($current_user->reveal());

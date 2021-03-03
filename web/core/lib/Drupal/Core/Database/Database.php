@@ -4,6 +4,8 @@ namespace Drupal\Core\Database;
 
 use Composer\Autoload\ClassLoader;
 use Drupal\Core\Extension\ExtensionDiscovery;
+use InvalidArgumentException;
+use RuntimeException;
 
 /**
  * Primary front-controller for the database system.
@@ -38,7 +40,7 @@ abstract class Database {
   const RETURN_INSERT_ID = 3;
 
   /**
-   * An nested array of all active connections. It is keyed by database name
+   * A nested array of all active connections. It is keyed by database name
    * and target.
    *
    * @var array
@@ -405,26 +407,15 @@ abstract class Database {
     if (!isset($key)) {
       $key = self::$activeKey;
     }
-    // To close a connection, it needs to be set to NULL and removed from the
-    // static variable. In all cases, closeConnection() might be called for a
-    // connection that was not opened yet, in which case the key is not defined
-    // yet and we just ensure that the connection key is undefined.
     if (isset($target)) {
-      if (isset(self::$connections[$key][$target])) {
-        self::$connections[$key][$target]->destroy();
-        self::$connections[$key][$target] = NULL;
-      }
       unset(self::$connections[$key][$target]);
     }
     else {
-      if (isset(self::$connections[$key])) {
-        foreach (self::$connections[$key] as $target => $connection) {
-          self::$connections[$key][$target]->destroy();
-          self::$connections[$key][$target] = NULL;
-        }
-      }
       unset(self::$connections[$key]);
     }
+    // Force garbage collection to run. This ensures that PDO connection objects
+    // and destroyed and results in the connections being closed.
+    gc_collect_cycles();
   }
 
   /**
@@ -464,7 +455,7 @@ abstract class Database {
     // Check that the URL is well formed, starting with 'scheme://', where
     // 'scheme' is a database driver name.
     if (preg_match('/^(.*):\/\//', $url, $matches) !== 1) {
-      throw new \InvalidArgumentException("Missing scheme in URL '$url'");
+      throw new InvalidArgumentException("Missing scheme in URL '$url'");
     }
     $driver = $matches[1];
 
@@ -500,7 +491,7 @@ abstract class Database {
     }
 
     if (!class_exists($connection_class)) {
-      throw new \InvalidArgumentException("Can not convert '$url' to a database connection, class '$custom_connection_class' does not exist");
+      throw new InvalidArgumentException("Can not convert '$url' to a database connection, class '$custom_connection_class' does not exist");
     }
 
     $options = $connection_class::createConnectionOptionsFromUrl($url, $root);
@@ -581,7 +572,7 @@ abstract class Database {
     $extension_discovery = new ExtensionDiscovery($root, FALSE, []);
     $modules = $extension_discovery->scan('module');
     if (!isset($modules[$module])) {
-      throw new \RuntimeException(sprintf("Cannot find the module '%s' for the database driver namespace '%s'", $module, $namespace));
+      throw new RuntimeException(sprintf("Cannot find the module '%s' for the database driver namespace '%s'", $module, $namespace));
     }
     $module_directory = $modules[$module]->getPath();
 
@@ -589,7 +580,7 @@ abstract class Database {
     // PSR-4 layout within the module's "src" directory.
     $driver_directory = $module_directory . '/src/' . str_replace('\\', '/', $module_relative_namespace) . '/';
     if (!is_dir($root . '/' . $driver_directory)) {
-      throw new \RuntimeException(sprintf("Cannot find the database driver namespace '%s' in module '%s'", $namespace, $module));
+      throw new RuntimeException(sprintf("Cannot find the database driver namespace '%s' in module '%s'", $namespace, $module));
     }
     return $driver_directory;
   }
@@ -609,7 +600,7 @@ abstract class Database {
   public static function getConnectionInfoAsUrl($key = 'default') {
     $db_info = static::getConnectionInfo($key);
     if (empty($db_info) || empty($db_info['default'])) {
-      throw new \RuntimeException("Database connection $key not defined or missing the 'default' settings");
+      throw new RuntimeException("Database connection $key not defined or missing the 'default' settings");
     }
     $namespace = $db_info['default']['namespace'];
 
@@ -634,8 +625,14 @@ abstract class Database {
    *
    * @return string
    *   The PHP namespace of the driver's database.
+   *
+   * @deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. There is no
+   *   replacement as $connection_info['namespace'] is always set.
+   *
+   * @see https://www.drupal.org/node/3127769
    */
   protected static function getDatabaseDriverNamespace(array $connection_info) {
+    @trigger_error(__METHOD__ . " is deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. There is no replacement as \$connection_info['namespace'] is always set. See https://www.drupal.org/node/3127769.", E_USER_DEPRECATED);
     if (isset($connection_info['namespace'])) {
       return $connection_info['namespace'];
     }

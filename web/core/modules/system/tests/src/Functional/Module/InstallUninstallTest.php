@@ -2,7 +2,7 @@
 
 namespace Drupal\Tests\system\Functional\Module;
 
-use Drupal\Component\Render\FormattableMarkup;
+use Drupal;
 use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\workspaces\Entity\Workspace;
 
@@ -41,9 +41,9 @@ class InstallUninstallTest extends ModuleTestBase {
     // Install and uninstall module_test to ensure hook_preinstall_module and
     // hook_preuninstall_module are fired as expected.
     $this->container->get('module_installer')->install(['module_test']);
-    $this->assertEqual($this->container->get('state')->get('system_test_preinstall_module'), 'module_test');
+    $this->assertEqual('module_test', $this->container->get('state')->get('system_test_preinstall_module'));
     $this->container->get('module_installer')->uninstall(['module_test']);
-    $this->assertEqual($this->container->get('state')->get('system_test_preuninstall_module'), 'module_test');
+    $this->assertEqual('module_test', $this->container->get('state')->get('system_test_preuninstall_module'));
     $this->resetAll();
 
     $all_modules = $this->container->get('extension.list.module')->getList();
@@ -73,9 +73,9 @@ class InstallUninstallTest extends ModuleTestBase {
     $this->assertModuleNotInstalled('help');
     $edit = [];
     $edit["modules[help][enable]"] = TRUE;
-    $this->drupalPostForm('admin/modules', $edit, t('Install'));
-    $this->assertText('has been enabled', 'Modules status has been updated.');
-    $this->assertText(t('hook_modules_installed fired for help'));
+    $this->drupalPostForm('admin/modules', $edit, 'Install');
+    $this->assertText('has been enabled');
+    $this->assertText('hook_modules_installed fired for help');
     $this->assertModuleSuccessfullyInstalled('help');
 
     // Test help for the required modules.
@@ -86,7 +86,7 @@ class InstallUninstallTest extends ModuleTestBase {
     // Go through each module in the list and try to install and uninstall
     // it with its dependencies.
     foreach ($all_modules as $name => $module) {
-      $was_installed_list = \Drupal::moduleHandler()->getModuleList();
+      $was_installed_list = Drupal::moduleHandler()->getModuleList();
 
       // Start a list of modules that we expect to be installed this time.
       $modules_to_install = [$name];
@@ -106,7 +106,7 @@ class InstallUninstallTest extends ModuleTestBase {
       $edit = [];
       $package = $module->info['package'];
       $edit['modules[' . $name . '][enable]'] = TRUE;
-      $this->drupalPostForm('admin/modules', $edit, t('Install'));
+      $this->drupalPostForm('admin/modules', $edit, 'Install');
 
       // Handle experimental modules, which require a confirmation screen.
       if ($package == 'Core (Experimental)') {
@@ -117,7 +117,7 @@ class InstallUninstallTest extends ModuleTestBase {
           // indicating they need to be enabled.
           $this->assertText('You must enable');
         }
-        $this->drupalPostForm(NULL, [], t('Continue'));
+        $this->submitForm([], 'Continue');
       }
       // Handle the case where modules were installed along with this one and
       // where we therefore hit a confirmation screen.
@@ -126,7 +126,7 @@ class InstallUninstallTest extends ModuleTestBase {
         // about enabling dependencies appears.
         $this->assertText('Some required modules must be enabled');
         $this->assertText('You must enable');
-        $this->drupalPostForm(NULL, [], t('Continue'));
+        $this->submitForm([], 'Continue');
       }
 
       // List the module display names to check the confirmation message.
@@ -134,17 +134,18 @@ class InstallUninstallTest extends ModuleTestBase {
       foreach ($modules_to_install as $module_to_install) {
         $module_names[] = $all_modules[$module_to_install]->info['name'];
       }
-      $expected_text = \Drupal::translation()->formatPlural(count($module_names), 'Module @name has been enabled.', '@count modules have been enabled: @names.', [
-        '@name' => $module_names[0],
-        '@names' => implode(', ', $module_names),
-      ]);
-      $this->assertText($expected_text, 'Modules status has been updated.');
+      if (count($modules_to_install) > 1) {
+        $this->assertText(count($module_names) . ' modules have been enabled: ' . implode(', ', $module_names));
+      }
+      else {
+        $this->assertText('Module ' . $module_names[0] . ' has been enabled.');
+      }
 
       // Check that hook_modules_installed() was invoked with the expected list
       // of modules, that each module's database tables now exist, and that
       // appropriate messages appear in the logs.
       foreach ($modules_to_install as $module_to_install) {
-        $this->assertText(t('hook_modules_installed fired for @module', ['@module' => $module_to_install]));
+        $this->assertText('hook_modules_installed fired for ' . $module_to_install);
         $this->assertLogMessage('system', "%module module installed.", ['%module' => $module_to_install], RfcLogLevel::INFO);
         $this->assertInstallModuleUpdates($module_to_install);
         $this->assertModuleSuccessfullyInstalled($module_to_install);
@@ -163,10 +164,10 @@ class InstallUninstallTest extends ModuleTestBase {
       // Delete all workspaces before uninstall.
       if ($name == 'workspaces') {
         $workspaces = Workspace::loadMultiple();
-        \Drupal::entityTypeManager()->getStorage('workspace')->delete($workspaces);
+        Drupal::entityTypeManager()->getStorage('workspace')->delete($workspaces);
       }
 
-      $now_installed_list = \Drupal::moduleHandler()->getModuleList();
+      $now_installed_list = Drupal::moduleHandler()->getModuleList();
       $added_modules = array_diff(array_keys($now_installed_list), array_keys($was_installed_list));
       while ($added_modules) {
         $initial_count = count($added_modules);
@@ -215,17 +216,14 @@ class InstallUninstallTest extends ModuleTestBase {
         $experimental = TRUE;
       }
     }
-    $this->drupalPostForm('admin/modules', $edit, t('Install'));
+    $this->drupalPostForm('admin/modules', $edit, 'Install');
 
     // If there are experimental modules, click the confirm form.
     if ($experimental) {
       $this->assertText('Are you sure you wish to enable experimental modules?');
-      $this->drupalPostForm(NULL, [], t('Continue'));
+      $this->submitForm([], 'Continue');
     }
-    // The string tested here is translatable but we are only using a part of it
-    // so using a translated string is wrong. Doing so would create a new string
-    // to translate.
-    $this->assertText(new FormattableMarkup('@count modules have been enabled: ', ['@count' => count($all_modules)]), 'Modules status has been updated.');
+    $this->assertText(count($all_modules) . ' modules have been enabled: ');
   }
 
   /**
@@ -263,16 +261,16 @@ class InstallUninstallTest extends ModuleTestBase {
   protected function assertSuccessfulUninstall($module, $package = 'Core') {
     $edit = [];
     $edit['uninstall[' . $module . ']'] = TRUE;
-    $this->drupalPostForm('admin/modules/uninstall', $edit, t('Uninstall'));
-    $this->drupalPostForm(NULL, NULL, t('Uninstall'));
-    $this->assertText(t('The selected modules have been uninstalled.'), 'Modules status has been updated.');
+    $this->drupalPostForm('admin/modules/uninstall', $edit, 'Uninstall');
+    $this->submitForm([], 'Uninstall');
+    $this->assertText('The selected modules have been uninstalled.');
     $this->assertModules([$module], FALSE);
 
     // Check that the appropriate hook was fired and the appropriate log
     // message appears. (But don't check for the log message if the dblog
     // module was just uninstalled, since the {watchdog} table won't be there
     // anymore.)
-    $this->assertText(t('hook_modules_uninstalled fired for @module', ['@module' => $module]));
+    $this->assertText('hook_modules_uninstalled fired for ' . $module);
     $this->assertLogMessage('system', "%module module uninstalled.", ['%module' => $module], RfcLogLevel::INFO);
 
     // Check that the module's database tables no longer exist.
@@ -290,11 +288,11 @@ class InstallUninstallTest extends ModuleTestBase {
    */
   protected function assertInstallModuleUpdates($module) {
     /** @var \Drupal\Core\Update\UpdateRegistry $post_update_registry */
-    $post_update_registry = \Drupal::service('update.post_update_registry');
+    $post_update_registry = Drupal::service('update.post_update_registry');
     $all_update_functions = $post_update_registry->getPendingUpdateFunctions();
     $empty_result = TRUE;
     foreach ($all_update_functions as $function) {
-      list($function_module,) = explode('_post_update_', $function);
+      [$function_module,] = explode('_post_update_', $function);
       if ($module === $function_module) {
         $empty_result = FALSE;
         break;
@@ -302,7 +300,7 @@ class InstallUninstallTest extends ModuleTestBase {
     }
     $this->assertTrue($empty_result, 'Ensures that no pending post update functions are available.');
 
-    $existing_updates = \Drupal::keyValue('post_update')->get('existing_updates', []);
+    $existing_updates = Drupal::keyValue('post_update')->get('existing_updates', []);
     switch ($module) {
       case 'update_test_postupdate':
         $expected = [
@@ -327,14 +325,14 @@ class InstallUninstallTest extends ModuleTestBase {
    */
   protected function assertUninstallModuleUpdates($module) {
     /** @var \Drupal\Core\Update\UpdateRegistry $post_update_registry */
-    $post_update_registry = \Drupal::service('update.post_update_registry');
+    $post_update_registry = Drupal::service('update.post_update_registry');
     $all_update_functions = $post_update_registry->getPendingUpdateFunctions();
 
     switch ($module) {
       case 'update_test_postupdate':
         $this->assertEmpty(array_intersect(['update_test_postupdate_post_update_first'], $all_update_functions), 'Asserts that no pending post update functions are available.');
 
-        $existing_updates = \Drupal::keyValue('post_update')->get('existing_updates', []);
+        $existing_updates = Drupal::keyValue('post_update')->get('existing_updates', []);
         $this->assertEmpty(array_intersect(['update_test_postupdate_post_update_first'], $existing_updates), 'Asserts that no post update functions are stored in keyvalue store.');
         break;
     }
@@ -355,7 +353,7 @@ class InstallUninstallTest extends ModuleTestBase {
   protected function assertHelp($module, $name) {
     $this->drupalGet('admin/help/' . $module);
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertText($name . ' module', "'$name module' is on the help page for $module");
+    $this->assertText($name . ' module');
     $this->assertSession()->linkExists('online documentation for the ' . $name . ' module', 0, "Correct online documentation link is in the help page for $module");
   }
 
@@ -365,10 +363,10 @@ class InstallUninstallTest extends ModuleTestBase {
   protected function preUninstallForum() {
     // There only should be a 'General discussion' term in the 'forums'
     // vocabulary, but just delete any terms there in case the name changes.
-    $query = \Drupal::entityQuery('taxonomy_term');
+    $query = Drupal::entityQuery('taxonomy_term');
     $query->condition('vid', 'forums');
     $ids = $query->execute();
-    $storage = \Drupal::entityTypeManager()->getStorage('taxonomy_term');
+    $storage = Drupal::entityTypeManager()->getStorage('taxonomy_term');
     $terms = $storage->loadMultiple($ids);
     $storage->delete($terms);
   }

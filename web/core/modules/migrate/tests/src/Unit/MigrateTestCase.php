@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\migrate\Unit;
 
+use Drupal;
 use Drupal\Core\Database\Driver\sqlite\Connection;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\migrate\Plugin\MigrationInterface;
@@ -115,7 +116,7 @@ abstract class MigrateTestCase extends UnitTestCase {
     // Initialize the DIC with a fake module handler for alterable queries.
     $container = new ContainerBuilder();
     $container->set('module_handler', $this->createMock('\Drupal\Core\Extension\ModuleHandlerInterface'));
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
 
     // Create the tables and load them up with data, skipping empty ones.
     foreach (array_filter($database_contents) as $table => $rows) {
@@ -200,7 +201,7 @@ abstract class MigrateTestCase extends UnitTestCase {
       if (empty($expected_value && $actual_value)) {
         return;
       }
-      $this->assertArrayEquals($expected_value, $actual_value, $message);
+      $this->assertEquals($expected_value, $actual_value, $message);
     }
     else {
       $this->assertSame((string) $expected_value, (string) $actual_value, $message);

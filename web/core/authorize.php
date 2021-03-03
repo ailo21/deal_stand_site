@@ -27,7 +27,7 @@ use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Drupal\Core\Site\Settings;
-use Symfony\Cmf\Component\Routing\RouteObjectInterface;
+use Drupal\Core\Routing\RouteObjectInterface;
 use Symfony\Component\Routing\Route;
 
 // Change the directory to the Drupal root.
@@ -57,11 +57,11 @@ const MAINTENANCE_MODE = 'update';
  *   TRUE if the current user can run authorize.php, and FALSE if not.
  */
 function authorize_access_allowed(Request $request) {
-  $account = \Drupal::service('authentication')->authenticate($request);
+  $account = Drupal::service('authentication')->authenticate($request);
   if ($account) {
-    \Drupal::currentUser()->setAccount($account);
+    Drupal::currentUser()->setAccount($account);
   }
-  return Settings::get('allow_authorize_operations', TRUE) && \Drupal::currentUser()->hasPermission('administer software updates');
+  return Settings::get('allow_authorize_operations', TRUE) && Drupal::currentUser()->hasPermission('administer software updates');
 }
 
 try {
@@ -85,10 +85,10 @@ catch (HttpExceptionInterface $e) {
 
 // We have to enable the user and system modules, even to check access and
 // display errors via the maintenance theme.
-\Drupal::moduleHandler()->addModule('system', 'core/modules/system');
-\Drupal::moduleHandler()->addModule('user', 'core/modules/user');
-\Drupal::moduleHandler()->load('system');
-\Drupal::moduleHandler()->load('user');
+Drupal::moduleHandler()->addModule('system', 'core/modules/system');
+Drupal::moduleHandler()->addModule('user', 'core/modules/user');
+Drupal::moduleHandler()->load('system');
+Drupal::moduleHandler()->load('user');
 
 // Initialize the maintenance theme for this administrative script.
 drupal_maintenance_theme();
@@ -117,7 +117,7 @@ if ($is_allowed) {
       $page_title = $results['page_title'];
     }
     if (!empty($results['page_message'])) {
-      \Drupal::messenger()->addMessage($results['page_message']['message'], $results['page_message']['type']);
+      Drupal::messenger()->addMessage($results['page_message']['message'], $results['page_message']['type']);
     }
 
     $content['authorize_report'] = [
@@ -175,7 +175,7 @@ if ($is_allowed) {
     elseif (!$batch = batch_get()) {
       // We have a batch to process, show the filetransfer form.
       try {
-        $content = \Drupal::formBuilder()->getForm('Drupal\Core\FileTransfer\Form\FileTransferAuthorizeForm');
+        $content = Drupal::formBuilder()->getForm('Drupal\Core\FileTransfer\Form\FileTransferAuthorizeForm');
       }
       catch (EnforcedResponseException $e) {
         $e->getResponse()->send();
@@ -187,12 +187,12 @@ if ($is_allowed) {
   $show_messages = !(($batch = batch_get()) && isset($batch['running']));
 }
 else {
-  \Drupal::logger('access denied')->warning('authorize.php');
+  Drupal::logger('access denied')->warning('authorize.php');
   $page_title = t('Access denied');
   $content = ['#markup' => t('You are not allowed to access this page.')];
 }
 
-$bare_html_page_renderer = \Drupal::service('bare_html_page_renderer');
+$bare_html_page_renderer = Drupal::service('bare_html_page_renderer');
 $response = $bare_html_page_renderer->renderBarePage($content, $page_title, 'maintenance_page', [
   '#show_messages' => $show_messages,
 ]);

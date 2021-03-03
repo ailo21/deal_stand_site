@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\media_library\Kernel;
 
+use Drupal;
 use Drupal\Core\Form\FormState;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\media_library\Form\FileUploadForm;
@@ -10,6 +11,7 @@ use Drupal\media_library\MediaLibraryState;
 use Drupal\media_library_form_overwrite_test\Form\TestAddForm;
 use Drupal\Tests\media\Traits\MediaTypeCreationTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
+use InvalidArgumentException;
 
 /**
  * Tests the media library add form.
@@ -44,7 +46,7 @@ class MediaLibraryAddFormTest extends KernelTestBase {
     $this->installEntitySchema('user');
     $this->installEntitySchema('file');
     $this->installSchema('file', 'file_usage');
-    $this->installSchema('system', ['sequences', 'key_value_expire']);
+    $this->installSchema('system', ['sequences']);
     $this->installEntitySchema('media');
     $this->installConfig([
       'field',
@@ -66,7 +68,7 @@ class MediaLibraryAddFormTest extends KernelTestBase {
    * Tests the media library add form.
    */
   public function testMediaTypeAddForm() {
-    $entity_type_manager = \Drupal::entityTypeManager();
+    $entity_type_manager = Drupal::entityTypeManager();
     $image = $entity_type_manager->getStorage('media_type')->load('image');
     $remote_video = $entity_type_manager->getStorage('media_type')->load('remote_video');
     $image_source_definition = $image->getSource()->getPluginDefinition();
@@ -113,7 +115,7 @@ class MediaLibraryAddFormTest extends KernelTestBase {
    */
   protected function buildLibraryUi($selected_type_id) {
     $state = MediaLibraryState::create('test', ['image', 'remote_video'], $selected_type_id, -1);
-    return \Drupal::service('media_library.ui_builder')->buildUi($state);
+    return Drupal::service('media_library.ui_builder')->buildUi($state);
   }
 
   /**
@@ -121,9 +123,9 @@ class MediaLibraryAddFormTest extends KernelTestBase {
    */
   public function testFormStateValidation() {
     $form_state = new FormState();
-    $this->expectException(\InvalidArgumentException::class);
+    $this->expectException(InvalidArgumentException::class);
     $this->expectExceptionMessage('The media library state is not present in the form state.');
-    \Drupal::formBuilder()->buildForm(FileUploadForm::class, $form_state);
+    Drupal::formBuilder()->buildForm(FileUploadForm::class, $form_state);
   }
 
   /**
@@ -133,9 +135,9 @@ class MediaLibraryAddFormTest extends KernelTestBase {
     $state = MediaLibraryState::create('test', ['image', 'remote_video', 'header_image'], 'header_image', -1);
     $form_state = new FormState();
     $form_state->set('media_library_state', $state);
-    $this->expectException(\InvalidArgumentException::class);
+    $this->expectException(InvalidArgumentException::class);
     $this->expectExceptionMessage("The 'header_image' media type does not exist.");
-    \Drupal::formBuilder()->buildForm(FileUploadForm::class, $form_state);
+    Drupal::formBuilder()->buildForm(FileUploadForm::class, $form_state);
   }
 
   /**
@@ -144,7 +146,7 @@ class MediaLibraryAddFormTest extends KernelTestBase {
   public function testDifferentAddForm() {
     $this->enableModules(['media_library_form_overwrite_test']);
 
-    $entity_type_manager = \Drupal::entityTypeManager();
+    $entity_type_manager = Drupal::entityTypeManager();
     $image = $entity_type_manager->getStorage('media_type')->load('image');
 
     $image_source_definition = $image->getSource()->getPluginDefinition();

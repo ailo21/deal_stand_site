@@ -7,6 +7,7 @@
 
 namespace Drupal\KernelTests\Core\Theme;
 
+use Drupal;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Render\MarkupInterface;
 use Drupal\Component\Render\MarkupTrait;
@@ -84,7 +85,7 @@ class TwigMarkupInterfaceTest extends KernelTestBase {
    */
   protected function renderObjectWithTwig($variable) {
     /** @var \Drupal\Core\Render\RendererInterface $renderer */
-    $renderer = \Drupal::service('renderer');
+    $renderer = Drupal::service('renderer');
     $context = new RenderContext();
     return $renderer->executeInRenderContext($context, function () use ($renderer, $variable) {
       $elements = [
@@ -99,7 +100,7 @@ class TwigMarkupInterfaceTest extends KernelTestBase {
 }
 
 /**
- * Implements MarkupInterface without implementing \Countable
+ * Implements MarkupInterface without implementing \Countable.
  */
 class SafeMarkupTestMarkup implements MarkupInterface {
   use MarkupTrait;

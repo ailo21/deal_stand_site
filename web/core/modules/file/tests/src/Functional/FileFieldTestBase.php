@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\file\Functional;
 
+use Drupal;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\field\Entity\FieldConfig;
@@ -26,7 +27,7 @@ abstract class FileFieldTestBase extends BrowserTestBase {
   protected static $modules = ['node', 'file', 'file_module_test', 'field_ui'];
 
   /**
-   * An user with administration permissions.
+   * A user with administration permissions.
    *
    * @var \Drupal\user\UserInterface
    */
@@ -74,7 +75,7 @@ abstract class FileFieldTestBase extends BrowserTestBase {
    * Retrieves the fid of the last inserted file.
    */
   public function getLastFileId() {
-    return (int) \Drupal::entityQueryAggregate('file')->aggregate('fid', 'max')->execute()[0]['fid_max'];
+    return (int) Drupal::entityQueryAggregate('file')->aggregate('fid', 'max')->execute()[0]['fid_max'];
   }
 
   /**
@@ -85,7 +86,7 @@ abstract class FileFieldTestBase extends BrowserTestBase {
     $field->setSettings(array_merge($field->getSettings(), $field_settings));
     $field->save();
 
-    \Drupal::service('entity_display.repository')->getFormDisplay('node', $type_name)
+    Drupal::service('entity_display.repository')->getFormDisplay('node', $type_name)
       ->setComponent($name, [
         'settings' => $widget_settings,
       ])
@@ -154,7 +155,7 @@ abstract class FileFieldTestBase extends BrowserTestBase {
       $node->save();
       $node_storage->resetCache([$nid]);
       $node = $node_storage->load($nid);
-      $this->assertNotEqual($nid, $node->getRevisionId(), 'Node revision exists.');
+      $this->assertNotEquals($nid, $node->getRevisionId(), 'Node revision exists.');
     }
     $this->drupalGet("node/$nid/edit");
     $page = $this->getSession()->getPage();
@@ -175,11 +176,11 @@ abstract class FileFieldTestBase extends BrowserTestBase {
       }
       else {
         $page->attachFileToField($name, $file_path);
-        $this->drupalPostForm(NULL, [], t('Upload'));
+        $this->submitForm([], 'Upload');
       }
     }
 
-    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->submitForm($edit, 'Save');
 
     return $nid;
   }
@@ -194,8 +195,8 @@ abstract class FileFieldTestBase extends BrowserTestBase {
       'revision' => (string) (int) $new_revision,
     ];
 
-    $this->drupalPostForm('node/' . $nid . '/edit', [], t('Remove'));
-    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->drupalPostForm('node/' . $nid . '/edit', [], 'Remove');
+    $this->submitForm($edit, 'Save');
   }
 
   /**
@@ -203,12 +204,12 @@ abstract class FileFieldTestBase extends BrowserTestBase {
    */
   public function replaceNodeFile($file, $field_name, $nid, $new_revision = TRUE) {
     $edit = [
-      'files[' . $field_name . '_0]' => \Drupal::service('file_system')->realpath($file->getFileUri()),
+      'files[' . $field_name . '_0]' => Drupal::service('file_system')->realpath($file->getFileUri()),
       'revision' => (string) (int) $new_revision,
     ];
 
-    $this->drupalPostForm('node/' . $nid . '/edit', [], t('Remove'));
-    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->drupalPostForm('node/' . $nid . '/edit', [], 'Remove');
+    $this->submitForm($edit, 'Save');
   }
 
   /**
@@ -218,7 +219,7 @@ abstract class FileFieldTestBase extends BrowserTestBase {
     $this->container->get('entity_type.manager')->getStorage('file')->resetCache();
     $db_file = File::load($file->id());
     $message = isset($message) ? $message : new FormattableMarkup('File %file exists in database at the correct path.', ['%file' => $file->getFileUri()]);
-    $this->assertEqual($db_file->getFileUri(), $file->getFileUri(), $message);
+    $this->assertEqual($file->getFileUri(), $db_file->getFileUri(), $message);
   }
 
   /**

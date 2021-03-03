@@ -2,6 +2,7 @@
 
 namespace Drupal\Core\Field\Plugin\Field\FieldType;
 
+use Drupal;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Entity\ContentEntityStorageInterface;
@@ -22,6 +23,7 @@ use Drupal\Core\TypedData\DataReferenceDefinition;
 use Drupal\Core\TypedData\DataReferenceTargetDefinition;
 use Drupal\Core\TypedData\OptionsProviderInterface;
 use Drupal\Core\Validation\Plugin\Validation\Constraint\AllowedValuesConstraint;
+use InvalidArgumentException;
 
 /**
  * Defines the 'entity_reference' entity field type.
@@ -46,7 +48,7 @@ class EntityReferenceItem extends FieldItemBase implements OptionsProviderInterf
    */
   public static function defaultStorageSettings() {
     return [
-      'target_type' => \Drupal::moduleHandler()->moduleExists('node') ? 'node' : 'user',
+      'target_type' => Drupal::moduleHandler()->moduleExists('node') ? 'node' : 'user',
     ] + parent::defaultStorageSettings();
   }
 
@@ -65,11 +67,11 @@ class EntityReferenceItem extends FieldItemBase implements OptionsProviderInterf
    */
   public static function propertyDefinitions(FieldStorageDefinitionInterface $field_definition) {
     $settings = $field_definition->getSettings();
-    $target_type_info = \Drupal::entityTypeManager()->getDefinition($settings['target_type']);
+    $target_type_info = Drupal::entityTypeManager()->getDefinition($settings['target_type']);
 
     $target_id_data_type = 'string';
     if ($target_type_info->entityClassImplements(FieldableEntityInterface::class)) {
-      $id_definition = \Drupal::service('entity_field.manager')->getBaseFieldDefinitions($settings['target_type'])[$target_type_info->getKey('id')];
+      $id_definition = Drupal::service('entity_field.manager')->getBaseFieldDefinitions($settings['target_type'])[$target_type_info->getKey('id')];
       if ($id_definition->getType() === 'integer') {
         $target_id_data_type = 'integer';
       }
@@ -114,7 +116,7 @@ class EntityReferenceItem extends FieldItemBase implements OptionsProviderInterf
    */
   public static function schema(FieldStorageDefinitionInterface $field_definition) {
     $target_type = $field_definition->getSetting('target_type');
-    $target_type_info = \Drupal::entityTypeManager()->getDefinition($target_type);
+    $target_type_info = Drupal::entityTypeManager()->getDefinition($target_type);
     $properties = static::propertyDefinitions($field_definition)['target_id'];
     if ($target_type_info->entityClassImplements(FieldableEntityInterface::class) && $properties->getDataType() === 'integer') {
       $columns = [
@@ -195,7 +197,7 @@ class EntityReferenceItem extends FieldItemBase implements OptionsProviderInterf
         // provided target_id might be an integer - therefore we have to do a
         // non-strict comparison.
         if (!$this->entity->isNew() && $values['target_id'] !== NULL && ($entity_id != $values['target_id'])) {
-          throw new \InvalidArgumentException('The target id and entity passed to the entity reference item do not match.');
+          throw new InvalidArgumentException('The target id and entity passed to the entity reference item do not match.');
         }
       }
       // Notify the parent if necessary.
@@ -276,7 +278,7 @@ class EntityReferenceItem extends FieldItemBase implements OptionsProviderInterf
     // bundle.
     static $recursion_tracker = [];
 
-    $manager = \Drupal::service('plugin.manager.entity_reference_selection');
+    $manager = Drupal::service('plugin.manager.entity_reference_selection');
 
     // Instead of calling $manager->getSelectionHandler($field_definition)
     // replicate the behavior to be able to override the sorting settings.
@@ -286,7 +288,7 @@ class EntityReferenceItem extends FieldItemBase implements OptionsProviderInterf
       'entity' => NULL,
     ] + $field_definition->getSetting('handler_settings') ?: [];
 
-    $entity_type = \Drupal::entityTypeManager()->getDefinition($options['target_type']);
+    $entity_type = Drupal::entityTypeManager()->getDefinition($options['target_type']);
     $options['sort'] = [
       'field' => $entity_type->getKey('id'),
       'direction' => 'DESC',
@@ -302,7 +304,7 @@ class EntityReferenceItem extends FieldItemBase implements OptionsProviderInterf
     }
 
     // Attempt to create a sample entity, avoiding recursion.
-    $entity_storage = \Drupal::entityTypeManager()->getStorage($options['target_type']);
+    $entity_storage = Drupal::entityTypeManager()->getStorage($options['target_type']);
     if ($entity_storage instanceof ContentEntityStorageInterface) {
       $bundle = static::getRandomBundle($entity_type, $options);
 
@@ -343,7 +345,7 @@ class EntityReferenceItem extends FieldItemBase implements OptionsProviderInterf
         $bundle_ids = $selection_settings['target_bundles'];
       }
       else {
-        $bundle_ids = \Drupal::service('entity_type.bundle.info')->getBundleInfo($entity_type->id());
+        $bundle_ids = Drupal::service('entity_type.bundle.info')->getBundleInfo($entity_type->id());
       }
       return array_rand($bundle_ids);
     }
@@ -356,7 +358,7 @@ class EntityReferenceItem extends FieldItemBase implements OptionsProviderInterf
     $element['target_type'] = [
       '#type' => 'select',
       '#title' => t('Type of item to reference'),
-      '#options' => \Drupal::service('entity_type.repository')->getEntityTypeLabels(TRUE),
+      '#options' => Drupal::service('entity_type.repository')->getEntityTypeLabels(TRUE),
       '#default_value' => $this->getSetting('target_type'),
       '#required' => TRUE,
       '#disabled' => $has_data,
@@ -373,7 +375,7 @@ class EntityReferenceItem extends FieldItemBase implements OptionsProviderInterf
     $field = $form_state->getFormObject()->getEntity();
 
     // Get all selection plugins for this entity type.
-    $selection_plugins = \Drupal::service('plugin.manager.entity_reference_selection')->getSelectionGroups($this->getSetting('target_type'));
+    $selection_plugins = Drupal::service('plugin.manager.entity_reference_selection')->getSelectionGroups($this->getSetting('target_type'));
     $handlers_options = [];
     foreach (array_keys($selection_plugins) as $selection_group_id) {
       // We only display base plugins (e.g. 'default', 'views', ...) and not
@@ -390,8 +392,8 @@ class EntityReferenceItem extends FieldItemBase implements OptionsProviderInterf
 
     $form = [
       '#type' => 'container',
-      '#process' => [[get_class($this), 'fieldSettingsAjaxProcess']],
-      '#element_validate' => [[get_class($this), 'fieldSettingsFormValidate']],
+      '#process' => [[static::class, 'fieldSettingsAjaxProcess']],
+      '#element_validate' => [[static::class, 'fieldSettingsFormValidate']],
 
     ];
     $form['handler'] = [
@@ -399,7 +401,7 @@ class EntityReferenceItem extends FieldItemBase implements OptionsProviderInterf
       '#title' => t('Reference type'),
       '#open' => TRUE,
       '#tree' => TRUE,
-      '#process' => [[get_class($this), 'formProcessMergeParent']],
+      '#process' => [[static::class, 'formProcessMergeParent']],
     ];
 
     $form['handler']['handler'] = [
@@ -418,7 +420,7 @@ class EntityReferenceItem extends FieldItemBase implements OptionsProviderInterf
       '#attributes' => [
         'class' => ['js-hide'],
       ],
-      '#submit' => [[get_class($this), 'settingsAjaxSubmit']],
+      '#submit' => [[static::class, 'settingsAjaxSubmit']],
     ];
 
     $form['handler']['handler_settings'] = [
@@ -426,7 +428,7 @@ class EntityReferenceItem extends FieldItemBase implements OptionsProviderInterf
       '#attributes' => ['class' => ['entity_reference-settings']],
     ];
 
-    $handler = \Drupal::service('plugin.manager.entity_reference_selection')->getSelectionHandler($field);
+    $handler = Drupal::service('plugin.manager.entity_reference_selection')->getSelectionHandler($field);
     $form['handler']['handler_settings'] += $handler->buildConfigurationForm([], $form_state);
 
     return $form;
@@ -442,7 +444,7 @@ class EntityReferenceItem extends FieldItemBase implements OptionsProviderInterf
    */
   public static function fieldSettingsFormValidate(array $form, FormStateInterface $form_state) {
     $field = $form_state->getFormObject()->getEntity();
-    $handler = \Drupal::service('plugin.manager.entity_reference_selection')->getSelectionHandler($field);
+    $handler = Drupal::service('plugin.manager.entity_reference_selection')->getSelectionHandler($field);
     $handler->validateConfigurationForm($form, $form_state);
   }
 
@@ -465,12 +467,12 @@ class EntityReferenceItem extends FieldItemBase implements OptionsProviderInterf
    */
   public static function calculateDependencies(FieldDefinitionInterface $field_definition) {
     $dependencies = parent::calculateDependencies($field_definition);
-    $entity_type_manager = \Drupal::entityTypeManager();
+    $entity_type_manager = Drupal::entityTypeManager();
     $target_entity_type = $entity_type_manager->getDefinition($field_definition->getFieldStorageDefinition()->getSetting('target_type'));
 
     // Depend on default values entity types configurations.
     if ($default_value = $field_definition->getDefaultValueLiteral()) {
-      $entity_repository = \Drupal::service('entity.repository');
+      $entity_repository = Drupal::service('entity.repository');
       foreach ($default_value as $value) {
         if (is_array($value) && isset($value['target_uuid'])) {
           $entity = $entity_repository->loadEntityByUuid($target_entity_type->id(), $value['target_uuid']);
@@ -505,7 +507,7 @@ class EntityReferenceItem extends FieldItemBase implements OptionsProviderInterf
    */
   public static function calculateStorageDependencies(FieldStorageDefinitionInterface $field_definition) {
     $dependencies = parent::calculateStorageDependencies($field_definition);
-    $target_entity_type = \Drupal::entityTypeManager()->getDefinition($field_definition->getSetting('target_type'));
+    $target_entity_type = Drupal::entityTypeManager()->getDefinition($field_definition->getSetting('target_type'));
     $dependencies['module'][] = $target_entity_type->getProvider();
     return $dependencies;
   }
@@ -515,12 +517,12 @@ class EntityReferenceItem extends FieldItemBase implements OptionsProviderInterf
    */
   public static function onDependencyRemoval(FieldDefinitionInterface $field_definition, array $dependencies) {
     $changed = parent::onDependencyRemoval($field_definition, $dependencies);
-    $entity_type_manager = \Drupal::entityTypeManager();
+    $entity_type_manager = Drupal::entityTypeManager();
     $target_entity_type = $entity_type_manager->getDefinition($field_definition->getFieldStorageDefinition()->getSetting('target_type'));
 
     // Try to update the default value config dependency, if possible.
     if ($default_value = $field_definition->getDefaultValueLiteral()) {
-      $entity_repository = \Drupal::service('entity.repository');
+      $entity_repository = Drupal::service('entity.repository');
       foreach ($default_value as $key => $value) {
         if (is_array($value) && isset($value['target_uuid'])) {
           $entity = $entity_repository->loadEntityByUuid($target_entity_type->id(), $value['target_uuid']);
@@ -598,13 +600,13 @@ class EntityReferenceItem extends FieldItemBase implements OptionsProviderInterf
    */
   public function getSettableOptions(AccountInterface $account = NULL) {
     $field_definition = $this->getFieldDefinition();
-    if (!$options = \Drupal::service('plugin.manager.entity_reference_selection')->getSelectionHandler($field_definition, $this->getEntity())->getReferenceableEntities()) {
+    if (!$options = Drupal::service('plugin.manager.entity_reference_selection')->getSelectionHandler($field_definition, $this->getEntity())->getReferenceableEntities()) {
       return [];
     }
 
     // Rebuild the array by changing the bundle key into the bundle label.
     $target_type = $field_definition->getSetting('target_type');
-    $bundles = \Drupal::service('entity_type.bundle.info')->getBundleInfo($target_type);
+    $bundles = Drupal::service('entity_type.bundle.info')->getBundleInfo($target_type);
 
     $return = [];
     foreach ($options as $bundle => $entity_ids) {
@@ -637,7 +639,7 @@ class EntityReferenceItem extends FieldItemBase implements OptionsProviderInterf
   public static function fieldSettingsAjaxProcessElement(&$element, $main_form) {
     if (!empty($element['#ajax'])) {
       $element['#ajax'] = [
-        'callback' => [get_called_class(), 'settingsAjax'],
+        'callback' => [static::class, 'settingsAjax'],
         'wrapper' => $main_form['#id'],
         'element' => $main_form['#array_parents'],
       ];
@@ -688,7 +690,7 @@ class EntityReferenceItem extends FieldItemBase implements OptionsProviderInterf
 
     // Add all the commonly referenced entity types as distinct pre-configured
     // options.
-    $entity_types = \Drupal::entityTypeManager()->getDefinitions();
+    $entity_types = Drupal::entityTypeManager()->getDefinitions();
     $common_references = array_filter($entity_types, function (EntityTypeInterface $entity_type) {
       return $entity_type->isCommonReferenceTarget();
     });

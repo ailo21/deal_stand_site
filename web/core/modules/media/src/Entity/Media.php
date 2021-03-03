@@ -2,6 +2,7 @@
 
 namespace Drupal\media\Entity;
 
+use Drupal;
 use Drupal\Core\Entity\EditorialContentEntityBase;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
@@ -11,6 +12,7 @@ use Drupal\media\MediaInterface;
 use Drupal\media\MediaSourceEntityConstraintsInterface;
 use Drupal\media\MediaSourceFieldConstraintsInterface;
 use Drupal\user\EntityOwnerTrait;
+use stdClass;
 
 /**
  * Defines the media entity class.
@@ -210,7 +212,7 @@ class Media extends EditorialContentEntityBase implements MediaInterface {
    */
   protected function getDefaultThumbnailUri() {
     $default_thumbnail_filename = $this->getSource()->getPluginDefinition()['default_thumbnail_filename'];
-    return \Drupal::config('media.settings')->get('icon_base_uri') . '/' . $default_thumbnail_filename;
+    return Drupal::config('media.settings')->get('icon_base_uri') . '/' . $default_thumbnail_filename;
   }
 
   /**
@@ -261,15 +263,19 @@ class Media extends EditorialContentEntityBase implements MediaInterface {
   /**
    * Determines if the source field value has changed.
    *
+   * The comparison uses MediaSourceInterface::getSourceFieldValue() to ensure
+   * that the correct property from the source field is used.
+   *
    * @return bool
    *   TRUE if the source field value changed, FALSE otherwise.
+   *
+   * @see \Drupal\media\MediaSourceInterface::getSourceFieldValue()
    *
    * @internal
    */
   protected function hasSourceFieldChanged() {
-    $source_field_name = $this->getSource()->getConfiguration()['source_field'];
-    $current_items = $this->get($source_field_name);
-    return isset($this->original) && !$current_items->equals($this->original->get($source_field_name));
+    $source = $this->getSource();
+    return isset($this->original) && $source->getSourceFieldValue($this) !== $source->getSourceFieldValue($this->original);
   }
 
   /**
@@ -309,7 +315,7 @@ class Media extends EditorialContentEntityBase implements MediaInterface {
       if ($this->hasTranslation($langcode)) {
         $translation = $this->getTranslation($langcode);
         if ($translation->bundle->entity->thumbnailDownloadsAreQueued() && $translation->shouldUpdateThumbnail($is_new)) {
-          \Drupal::queue('media_entity_thumbnail')->createItem(['id' => $translation->id()]);
+          Drupal::queue('media_entity_thumbnail')->createItem(['id' => $translation->id()]);
         }
       }
     }
@@ -318,7 +324,7 @@ class Media extends EditorialContentEntityBase implements MediaInterface {
   /**
    * {@inheritdoc}
    */
-  public function preSaveRevision(EntityStorageInterface $storage, \stdClass $record) {
+  public function preSaveRevision(EntityStorageInterface $storage, stdClass $record) {
     parent::preSaveRevision($storage, $record);
 
     $is_new_revision = $this->isNewRevision();
@@ -511,7 +517,7 @@ class Media extends EditorialContentEntityBase implements MediaInterface {
    * {@inheritdoc}
    */
   public static function getRequestTime() {
-    return \Drupal::time()->getRequestTime();
+    return Drupal::time()->getRequestTime();
   }
 
 }

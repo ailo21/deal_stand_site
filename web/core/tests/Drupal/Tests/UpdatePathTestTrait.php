@@ -2,10 +2,11 @@
 
 namespace Drupal\Tests;
 
+use Drupal;
 use Drupal\Core\Url;
 
 /**
- * Trait UpdatePathTestTrait
+ * Trait UpdatePathTestTrait.
  *
  * For use on \Drupal\Tests\BrowserTestBase tests.
  */
@@ -68,7 +69,7 @@ trait UpdatePathTestTrait {
             break;
 
           case 'post_update':
-            $all_updates = \Drupal::service('update.post_update_registry')->getPendingUpdateInformation();
+            $all_updates = Drupal::service('update.post_update_registry')->getPendingUpdateInformation();
             break;
         }
         foreach ($all_updates as $module => $updates) {
@@ -132,10 +133,10 @@ trait UpdatePathTestTrait {
       }
 
       // Ensure that the update hooks updated all entity schema.
-      $needs_updates = \Drupal::entityDefinitionUpdateManager()->needsUpdates();
+      $needs_updates = Drupal::entityDefinitionUpdateManager()->needsUpdates();
       if ($needs_updates) {
-        foreach (\Drupal::entityDefinitionUpdateManager()->getChangeSummary() as $entity_type_id => $summary) {
-          $entity_type_label = \Drupal::entityTypeManager()->getDefinition($entity_type_id)->getLabel();
+        foreach (Drupal::entityDefinitionUpdateManager()->getChangeSummary() as $entity_type_id => $summary) {
+          $entity_type_label = Drupal::entityTypeManager()->getDefinition($entity_type_id)->getLabel();
           foreach ($summary as $message) {
             $this->fail("$entity_type_label: $message");
           }
@@ -160,9 +161,9 @@ trait UpdatePathTestTrait {
    * Installs the update_script_test module and makes an update available.
    */
   protected function ensureUpdatesToRun() {
-    \Drupal::service('module_installer')->install(['update_script_test']);
+    Drupal::service('module_installer')->install(['update_script_test']);
     // Reset the schema so there is an update to run.
-    \Drupal::database()->update('key_value')
+    Drupal::database()->update('key_value')
       ->fields(['value' => serialize(8000)])
       ->condition('collection', 'system.schema')
       ->condition('name', 'update_script_test')

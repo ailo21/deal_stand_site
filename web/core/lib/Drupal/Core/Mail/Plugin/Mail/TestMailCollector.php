@@ -2,6 +2,7 @@
 
 namespace Drupal\Core\Mail\Plugin\Mail;
 
+use Drupal;
 use Drupal\Core\Mail\MailInterface;
 
 /**
@@ -21,9 +22,9 @@ class TestMailCollector extends PhpMail implements MailInterface {
    * {@inheritdoc}
    */
   public function mail(array $message) {
-    $captured_emails = \Drupal::state()->get('system.test_mail_collector') ?: [];
+    $captured_emails = Drupal::state()->get('system.test_mail_collector', []);
     $captured_emails[] = $message;
-    \Drupal::state()->set('system.test_mail_collector', $captured_emails);
+    Drupal::state()->set('system.test_mail_collector', $captured_emails);
 
     return TRUE;
   }

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\taxonomy\Kernel\Views;
 
+use Drupal;
 use Drupal\Core\Render\RenderContext;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
@@ -72,7 +73,7 @@ class TaxonomyFieldVidTest extends ViewsKernelTestBase {
     $this->adminUser->save();
     $this->container->get('current_user')->setAccount($this->adminUser);
 
-    ViewTestData::createTestViews(get_class($this), ['taxonomy_test_views']);
+    ViewTestData::createTestViews(static::class, ['taxonomy_test_views']);
   }
 
   /**
@@ -80,7 +81,7 @@ class TaxonomyFieldVidTest extends ViewsKernelTestBase {
    */
   public function testViewsHandlerVidField() {
     /** @var \Drupal\Core\Render\RendererInterface $renderer */
-    $renderer = \Drupal::service('renderer');
+    $renderer = Drupal::service('renderer');
 
     $view = Views::getView('test_taxonomy_vid_field');
     $this->executeView($view);

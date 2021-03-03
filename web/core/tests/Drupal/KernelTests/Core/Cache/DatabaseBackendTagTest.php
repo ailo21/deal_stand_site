@@ -2,6 +2,7 @@
 
 namespace Drupal\KernelTests\Core\Cache;
 
+use Drupal;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Database\Database;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
@@ -39,7 +40,7 @@ class DatabaseBackendTagTest extends KernelTestBase {
     $tags = ['test_tag:1', 'test_tag:2', 'test_tag:3'];
     $bins = ['data', 'bootstrap', 'render'];
     foreach ($bins as $bin) {
-      $bin = \Drupal::cache($bin);
+      $bin = Drupal::cache($bin);
       $bin->set('test', 'value', Cache::PERMANENT, $tags);
       $this->assertNotEmpty($bin->get('test'), 'Cache item was set in bin.');
     }
@@ -50,13 +51,13 @@ class DatabaseBackendTagTest extends KernelTestBase {
 
     // Test that cache entry has been invalidated in multiple bins.
     foreach ($bins as $bin) {
-      $bin = \Drupal::cache($bin);
+      $bin = Drupal::cache($bin);
       $this->assertFalse($bin->get('test'), 'Tag invalidation affected item in bin.');
     }
 
     // Test that only one tag invalidation has occurred.
     $invalidations_after = intval($connection->select('cachetags')->fields('cachetags', ['invalidations'])->condition('tag', 'test_tag:2')->execute()->fetchField());
-    $this->assertEqual($invalidations_after, $invalidations_before + 1, 'Only one addition cache tag invalidation has occurred after invalidating a tag used in multiple bins.');
+    $this->assertEqual($invalidations_before + 1, $invalidations_after, 'Only one addition cache tag invalidation has occurred after invalidating a tag used in multiple bins.');
   }
 
 }

@@ -2,6 +2,7 @@
 
 namespace Drupal\file\Plugin\Field\FieldType;
 
+use Drupal;
 use Drupal\Component\Utility\Bytes;
 use Drupal\Component\Render\PlainTextOutput;
 use Drupal\Component\Utility\Environment;
@@ -38,7 +39,7 @@ class FileItem extends EntityReferenceItem {
       'target_type' => 'file',
       'display_field' => FALSE,
       'display_default' => FALSE,
-      'uri_scheme' => \Drupal::config('system.file')->get('default_scheme'),
+      'uri_scheme' => Drupal::config('system.file')->get('default_scheme'),
     ] + parent::defaultStorageSettings();
   }
 
@@ -131,7 +132,7 @@ class FileItem extends EntityReferenceItem {
       ],
     ];
 
-    $scheme_options = \Drupal::service('stream_wrapper_manager')->getNames(StreamWrapperInterface::WRITE_VISIBLE);
+    $scheme_options = Drupal::service('stream_wrapper_manager')->getNames(StreamWrapperInterface::WRITE_VISIBLE);
     $element['uri_scheme'] = [
       '#type' => 'radios',
       '#title' => t('Upload destination'),
@@ -156,7 +157,7 @@ class FileItem extends EntityReferenceItem {
       '#title' => t('File directory'),
       '#default_value' => $settings['file_directory'],
       '#description' => t('Optional subdirectory within the upload destination where files will be stored. Do not include preceding or trailing slashes.'),
-      '#element_validate' => [[get_class($this), 'validateDirectory']],
+      '#element_validate' => [[static::class, 'validateDirectory']],
       '#weight' => 3,
     ];
 
@@ -167,7 +168,7 @@ class FileItem extends EntityReferenceItem {
       '#title' => t('Allowed file extensions'),
       '#default_value' => $extensions,
       '#description' => t('Separate extensions with a space or comma and do not include the leading dot.'),
-      '#element_validate' => [[get_class($this), 'validateExtensions']],
+      '#element_validate' => [[static::class, 'validateExtensions']],
       '#weight' => 1,
       '#maxlength' => 256,
       // By making this field required, we prevent a potential security issue
@@ -181,7 +182,7 @@ class FileItem extends EntityReferenceItem {
       '#default_value' => $settings['max_filesize'],
       '#description' => t('Enter a value like "512" (bytes), "80 KB" (kilobytes) or "50 MB" (megabytes) in order to restrict the allowed file size. If left empty the file sizes will be limited only by PHP\'s maximum post and file upload sizes (current limit <strong>%limit</strong>).', ['%limit' => format_size(Environment::getUploadMaxSize())]),
       '#size' => 10,
-      '#element_validate' => [[get_class($this), 'validateMaxFilesize']],
+      '#element_validate' => [[static::class, 'validateMaxFilesize']],
       '#weight' => 5,
     ];
 
@@ -197,7 +198,7 @@ class FileItem extends EntityReferenceItem {
   }
 
   /**
-   * Form API callback
+   * Form API callback.
    *
    * Removes slashes from the beginning and end of the destination value and
    * ensures that the file directory path is not included at the beginning of the
@@ -240,13 +241,13 @@ class FileItem extends EntityReferenceItem {
    * Form API callback.
    *
    * Ensures that a size has been entered and that it can be parsed by
-   * \Drupal\Component\Utility\Bytes::toInt().
+   * \Drupal\Component\Utility\Bytes::toNumber().
    *
    * This function is assigned as an #element_validate callback in
    * fieldSettingsForm().
    */
   public static function validateMaxFilesize($element, FormStateInterface $form_state) {
-    if (!empty($element['#value']) && !is_numeric(Bytes::toInt($element['#value']))) {
+    if (!empty($element['#value']) && !is_numeric(Bytes::toNumber($element['#value']))) {
       $form_state->setError($element, t('The "@name" option must contain a valid value. You may either leave the text field empty or enter a string like "512" (bytes), "80 KB" (kilobytes) or "50 MB" (megabytes).', ['@name' => $element['title']]));
     }
   }
@@ -286,7 +287,7 @@ class FileItem extends EntityReferenceItem {
 
     // Replace tokens. As the tokens might contain HTML we convert it to plain
     // text.
-    $destination = PlainTextOutput::renderFromHtml(\Drupal::token()->replace($destination, $data));
+    $destination = PlainTextOutput::renderFromHtml(Drupal::token()->replace($destination, $data));
     return $settings['uri_scheme'] . '://' . $destination;
   }
 
@@ -302,9 +303,9 @@ class FileItem extends EntityReferenceItem {
     $settings = $this->getSettings();
 
     // Cap the upload size according to the PHP limit.
-    $max_filesize = Bytes::toInt(Environment::getUploadMaxSize());
+    $max_filesize = Bytes::toNumber(Environment::getUploadMaxSize());
     if (!empty($settings['max_filesize'])) {
-      $max_filesize = min($max_filesize, Bytes::toInt($settings['max_filesize']));
+      $max_filesize = min($max_filesize, Bytes::toNumber($settings['max_filesize']));
     }
 
     // There is always a file size limit due to the PHP server limit.
@@ -327,7 +328,7 @@ class FileItem extends EntityReferenceItem {
 
     // Prepare destination.
     $dirname = static::doGetUploadLocation($settings);
-    \Drupal::service('file_system')->prepareDirectory($dirname, FileSystemInterface::CREATE_DIRECTORY);
+    Drupal::service('file_system')->prepareDirectory($dirname, FileSystemInterface::CREATE_DIRECTORY);
 
     // Generate a file entity.
     $destination = $dirname . '/' . $random->name(10, TRUE) . '.txt';

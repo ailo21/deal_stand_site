@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\system\Kernel\Token;
 
+use Drupal;
 use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
 
 /**
@@ -34,10 +35,9 @@ abstract class TokenReplaceKernelTestBase extends EntityKernelTestBase {
     parent::setUp();
     // Install default system configuration.
     $this->installConfig(['system']);
-    \Drupal::service('router.builder')->rebuild();
 
-    $this->interfaceLanguage = \Drupal::languageManager()->getCurrentLanguage();
-    $this->tokenService = \Drupal::token();
+    $this->interfaceLanguage = Drupal::languageManager()->getCurrentLanguage();
+    $this->tokenService = Drupal::token();
   }
 
 }

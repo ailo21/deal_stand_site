@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\field\Functional\String;
 
+use Drupal;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\field\Entity\FieldConfig;
@@ -74,7 +75,7 @@ class StringFieldTest extends BrowserTestBase {
     ])->save();
 
     /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $display_repository */
-    $display_repository = \Drupal::service('entity_display.repository');
+    $display_repository = Drupal::service('entity_display.repository');
 
     $display_repository->getFormDisplay('entity_test', 'entity_test')
       ->setComponent($field_name, [
@@ -90,8 +91,8 @@ class StringFieldTest extends BrowserTestBase {
 
     // Display creation form.
     $this->drupalGet('entity_test/add');
-    $this->assertFieldByName("{$field_name}[0][value]", '', 'Widget is displayed');
-    $this->assertNoFieldByName("{$field_name}[0][format]", '1', 'Format selector is not displayed');
+    $this->assertSession()->fieldValueEquals("{$field_name}[0][value]", '');
+    $this->assertSession()->fieldNotExists("{$field_name}[0][format]");
     $this->assertRaw(new FormattableMarkup('placeholder="A placeholder on @widget_type"', ['@widget_type' => $widget_type]));
 
     // Submit with some value.
@@ -99,16 +100,16 @@ class StringFieldTest extends BrowserTestBase {
     $edit = [
       "{$field_name}[0][value]" => $value,
     ];
-    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->submitForm($edit, 'Save');
     preg_match('|entity_test/manage/(\d+)|', $this->getUrl(), $match);
     $id = $match[1];
-    $this->assertText(t('entity_test @id has been created.', ['@id' => $id]), 'Entity was created');
+    $this->assertText('entity_test ' . $id . ' has been created.');
 
     // Display the entity.
     $entity = EntityTest::load($id);
     $display = $display_repository->getViewDisplay($entity->getEntityTypeId(), $entity->bundle(), 'full');
     $content = $display->build($entity);
-    $rendered_entity = \Drupal::service('renderer')->renderRoot($content);
+    $rendered_entity = Drupal::service('renderer')->renderRoot($content);
     $this->assertStringContainsString($value, (string) $rendered_entity);
   }
 

@@ -2,12 +2,15 @@
 
 namespace Drupal\Tests\content_moderation\Kernel;
 
+use Drupal;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\Tests\content_moderation\Traits\ContentModerationTestTrait;
+use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\workflows\Entity\Workflow;
+use InvalidArgumentException;
 
 /**
  * @coversDefaultClass \Drupal\content_moderation\Plugin\Field\ModerationStateFieldItemList
@@ -17,6 +20,7 @@ use Drupal\workflows\Entity\Workflow;
 class ModerationStateFieldItemListTest extends KernelTestBase {
 
   use ContentModerationTestTrait;
+  use UserCreationTrait;
 
   /**
    * {@inheritdoc}
@@ -42,6 +46,7 @@ class ModerationStateFieldItemListTest extends KernelTestBase {
     parent::setUp();
 
     $this->installSchema('node', 'node_access');
+    $this->installSchema('system', 'sequences');
     $this->installEntitySchema('node');
     $this->installEntitySchema('user');
     $this->installEntitySchema('content_moderation_state');
@@ -64,7 +69,7 @@ class ModerationStateFieldItemListTest extends KernelTestBase {
       'title' => 'Test title',
     ]);
     $this->testNode->save();
-    \Drupal::entityTypeManager()->getStorage('node')->resetCache();
+    Drupal::entityTypeManager()->getStorage('node')->resetCache();
     $this->testNode = Node::load($this->testNode->id());
 
     ConfigurableLanguage::createFromLangcode('de')->save();
@@ -101,7 +106,7 @@ class ModerationStateFieldItemListTest extends KernelTestBase {
    */
   public function testGet() {
     $this->assertEquals('draft', $this->testNode->moderation_state->get(0)->value);
-    $this->expectException(\InvalidArgumentException::class);
+    $this->expectException(InvalidArgumentException::class);
     $this->testNode->moderation_state->get(2);
   }
 
@@ -205,7 +210,7 @@ class ModerationStateFieldItemListTest extends KernelTestBase {
   }
 
   /**
-   * Data provider for ::testModerationStateChanges
+   * Data provider for ::testModerationStateChanges.
    */
   public function moderationStateChangesTestCases() {
     return [
@@ -259,7 +264,7 @@ class ModerationStateFieldItemListTest extends KernelTestBase {
     $test_node->save();
 
     /** @var \Drupal\content_moderation\ModerationInformationInterface $content_moderation_info */
-    $content_moderation_info = \Drupal::service('content_moderation.moderation_information');
+    $content_moderation_info = Drupal::service('content_moderation.moderation_information');
     $workflow = $content_moderation_info->getWorkflowForEntity($test_node);
     $this->assertNull($workflow);
 
@@ -399,6 +404,23 @@ class ModerationStateFieldItemListTest extends KernelTestBase {
     $translation = $node->getTranslation('de');
     $this->assertEquals('published', $node->moderation_state->value);
     $this->assertEquals('published', $translation->moderation_state->value);
+  }
+
+  /**
+   * Test generating sample values for entities with a moderation state.
+   */
+  public function testModerationStateSampleValues() {
+    $this->container->get('current_user')->setAccount(
+      $this->createUser([
+        'use editorial transition create_new_draft',
+        'use editorial transition publish',
+      ])
+    );
+    $sample = $this->container->get('entity_type.manager')
+      ->getStorage('node')
+      ->createWithSampleValues('example');
+    $this->assertCount(0, $sample->validate());
+    $this->assertEquals('draft', $sample->moderation_state->value);
   }
 
   /**

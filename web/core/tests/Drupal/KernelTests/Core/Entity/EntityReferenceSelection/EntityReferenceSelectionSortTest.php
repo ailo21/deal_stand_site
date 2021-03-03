@@ -2,6 +2,7 @@
 
 namespace Drupal\KernelTests\Core\Entity\EntityReferenceSelection;
 
+use Drupal;
 use Drupal\Component\Utility\Html;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
@@ -34,7 +35,7 @@ class EntityReferenceSelectionSortTest extends EntityKernelTestBase {
 
     // Test as a non-admin.
     $normal_user = $this->createUser([], ['access content']);
-    \Drupal::currentUser()->setAccount($normal_user);
+    Drupal::currentUser()->setAccount($normal_user);
   }
 
   /**
@@ -112,7 +113,7 @@ class EntityReferenceSelectionSortTest extends EntityKernelTestBase {
       $nodes['published2']->id() => $node_labels['published2'],
       $nodes['published1']->id() => $node_labels['published1'],
     ];
-    $this->assertIdentical($result['article'], $expected_result, 'Query sorted by field returned expected values.');
+    $this->assertSame($expected_result, $result['article'], 'Query sorted by field returned expected values.');
 
     // Assert sort by base field.
     $selection_options['sort'] = [
@@ -125,7 +126,7 @@ class EntityReferenceSelectionSortTest extends EntityKernelTestBase {
       $nodes['published1']->id() => $node_labels['published1'],
       $nodes['published2']->id() => $node_labels['published2'],
     ];
-    $this->assertIdentical($result['article'], $expected_result, 'Query sorted by property returned expected values.');
+    $this->assertSame($expected_result, $result['article'], 'Query sorted by property returned expected values.');
   }
 
 }

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\block_content\Kernel;
 
+use Drupal;
 use Drupal\block_content\BlockContentAccessControlHandler;
 use Drupal\block_content\Entity\BlockContent;
 use Drupal\block_content\Entity\BlockContentType;
@@ -85,7 +86,7 @@ class BlockContentAccessHandlerTest extends KernelTestBase {
       'label' => 'roly poly',
     ]);
     $this->role->save();
-    $this->accessControlHandler = new BlockContentAccessControlHandler(\Drupal::entityTypeManager()->getDefinition('block_content'), \Drupal::service('event_dispatcher'));
+    $this->accessControlHandler = new BlockContentAccessControlHandler(Drupal::entityTypeManager()->getDefinition('block_content'), Drupal::service('event_dispatcher'));
   }
 
   /**
@@ -156,7 +157,7 @@ class BlockContentAccessHandlerTest extends KernelTestBase {
   }
 
   /**
-   * Dataprovider for testAccess().
+   * Data provider for testAccess().
    */
   public function providerTestAccess() {
     $cases = [

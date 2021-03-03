@@ -2,6 +2,7 @@
 
 namespace Drupal\file\Entity;
 
+use Drupal;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityStorageInterface;
@@ -10,6 +11,7 @@ use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\File\Exception\FileException;
 use Drupal\file\FileInterface;
 use Drupal\user\EntityOwnerTrait;
+use Symfony\Component\Mime\MimeTypeGuesserInterface;
 
 /**
  * Defines the file entity class.
@@ -155,12 +157,19 @@ class File extends ContentEntityBase implements FileInterface {
   public static function preCreate(EntityStorageInterface $storage, array &$values) {
     // Automatically detect filename if not set.
     if (!isset($values['filename']) && isset($values['uri'])) {
-      $values['filename'] = \Drupal::service('file_system')->basename($values['uri']);
+      $values['filename'] = Drupal::service('file_system')->basename($values['uri']);
     }
 
     // Automatically detect filemime if not set.
     if (!isset($values['filemime']) && isset($values['uri'])) {
-      $values['filemime'] = \Drupal::service('file.mime_type.guesser')->guess($values['uri']);
+      $guesser = Drupal::service('file.mime_type.guesser');
+      if ($guesser instanceof MimeTypeGuesserInterface) {
+        $values['filemime'] = $guesser->guessMimeType($values['uri']);
+      }
+      else {
+        $values['filemime'] = $guesser->guess($values['uri']);
+        @trigger_error('\Symfony\Component\HttpFoundation\File\MimeType\MimeTypeGuesserInterface is deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Implement \Symfony\Component\Mime\MimeTypeGuesserInterface instead. See https://www.drupal.org/node/3133341', E_USER_DEPRECATED);
+      }
     }
   }
 
@@ -188,17 +197,17 @@ class File extends ContentEntityBase implements FileInterface {
 
     foreach ($entities as $entity) {
       // Delete all remaining references to this file.
-      $file_usage = \Drupal::service('file.usage')->listUsage($entity);
+      $file_usage = Drupal::service('file.usage')->listUsage($entity);
       if (!empty($file_usage)) {
         foreach ($file_usage as $module => $usage) {
-          \Drupal::service('file.usage')->delete($entity, $module);
+          Drupal::service('file.usage')->delete($entity, $module);
         }
       }
       // Delete the actual file. Failures due to invalid files and files that
       // were already deleted are logged to watchdog but ignored, the
       // corresponding file entity will be deleted.
       try {
-        \Drupal::service('file_system')->delete($entity->getFileUri());
+        Drupal::service('file_system')->delete($entity->getFileUri());
       }
       catch (FileException $e) {
         // Ignore and continue.

@@ -7,6 +7,7 @@
 
 namespace Drupal\Tests\Core\Entity\Sql;
 
+use Drupal;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Cache\MemoryCache\MemoryCache;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
@@ -20,6 +21,7 @@ use Drupal\Core\Entity\Sql\DefaultTableMapping;
 use Drupal\Core\Entity\Sql\SqlContentEntityStorage;
 use Drupal\Core\Language\Language;
 use Drupal\Tests\UnitTestCase;
+use ReflectionMethod;
 
 /**
  * @coversDefaultClass \Drupal\Core\Entity\Sql\SqlContentEntityStorage
@@ -121,7 +123,7 @@ class SqlContentEntityStorageTest extends UnitTestCase {
       ->will($this->returnValue($this->entityTypeId));
 
     $this->container = new ContainerBuilder();
-    \Drupal::setContainer($this->container);
+    Drupal::setContainer($this->container);
 
     $this->entityTypeManager = $this->createMock(EntityTypeManager::class);
     $this->entityTypeBundleInfo = $this->createMock(EntityTypeBundleInfoInterface::class);
@@ -168,7 +170,7 @@ class SqlContentEntityStorageTest extends UnitTestCase {
    * Provides test data for testGetBaseTable().
    *
    * @return array[]
-   *   An nested array where each inner array has the base table to be returned
+   *   A nested array where each inner array has the base table to be returned
    *   by the mocked entity type as the first value and the expected return
    *   value of SqlContentEntityStorage::getBaseTable() as the second
    *   value.
@@ -216,7 +218,7 @@ class SqlContentEntityStorageTest extends UnitTestCase {
    * Provides test data for testGetRevisionTable().
    *
    * @return array[]
-   *   An nested array where each inner array has the revision table to be
+   *   A nested array where each inner array has the revision table to be
    *   returned by the mocked entity type as the first value and the expected
    *   return value of SqlContentEntityStorage::getRevisionTable() as the
    *   second value.
@@ -294,7 +296,7 @@ class SqlContentEntityStorageTest extends UnitTestCase {
    * Provides test data for testGetRevisionDataTable().
    *
    * @return array[]
-   *   An nested array where each inner array has the revision data table to be
+   *   A nested array where each inner array has the revision data table to be
    *   returned by the mocked entity type as the first value and the expected
    *   return value of SqlContentEntityStorage::getRevisionDataTable() as
    *   the second value.
@@ -1428,7 +1430,7 @@ class SqlContentEntityStorageTest extends UnitTestCase {
         [['id', 'id']]
       ));
 
-    $method = new \ReflectionMethod($this->entityStorage, 'cleanIds');
+    $method = new ReflectionMethod($this->entityStorage, 'cleanIds');
     $method->setAccessible(TRUE);
     $this->assertEquals($valid_ids, $method->invoke($this->entityStorage, $valid_ids));
 

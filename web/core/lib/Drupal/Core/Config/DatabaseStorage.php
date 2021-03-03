@@ -6,6 +6,7 @@ use Drupal\Core\Database\Database;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\DatabaseException;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
+use Exception;
 
 /**
  * Defines the Database storage.
@@ -66,12 +67,12 @@ class DatabaseStorage implements StorageInterface {
    */
   public function exists($name) {
     try {
-      return (bool) $this->connection->queryRange('SELECT 1 FROM {' . $this->connection->escapeTable($this->table) . '} WHERE collection = :collection AND name = :name', 0, 1, [
+      return (bool) $this->connection->queryRange('SELECT 1 FROM {' . $this->connection->escapeTable($this->table) . '} WHERE [collection] = :collection AND [name] = :name', 0, 1, [
         ':collection' => $this->collection,
         ':name' => $name,
       ], $this->options)->fetchField();
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       // If we attempt a read without actually having the database or the table
       // available, just return FALSE so the caller can handle it.
       return FALSE;
@@ -84,12 +85,12 @@ class DatabaseStorage implements StorageInterface {
   public function read($name) {
     $data = FALSE;
     try {
-      $raw = $this->connection->query('SELECT data FROM {' . $this->connection->escapeTable($this->table) . '} WHERE collection = :collection AND name = :name', [':collection' => $this->collection, ':name' => $name], $this->options)->fetchField();
+      $raw = $this->connection->query('SELECT [data] FROM {' . $this->connection->escapeTable($this->table) . '} WHERE [collection] = :collection AND [name] = :name', [':collection' => $this->collection, ':name' => $name], $this->options)->fetchField();
       if ($raw !== FALSE) {
         $data = $this->decode($raw);
       }
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       // If we attempt a read without actually having the database or the table
       // available, just return FALSE so the caller can handle it.
     }
@@ -102,12 +103,12 @@ class DatabaseStorage implements StorageInterface {
   public function readMultiple(array $names) {
     $list = [];
     try {
-      $list = $this->connection->query('SELECT name, data FROM {' . $this->connection->escapeTable($this->table) . '} WHERE collection = :collection AND name IN ( :names[] )', [':collection' => $this->collection, ':names[]' => $names], $this->options)->fetchAllKeyed();
+      $list = $this->connection->query('SELECT [name], [data] FROM {' . $this->connection->escapeTable($this->table) . '} WHERE [collection] = :collection AND [name] IN ( :names[] )', [':collection' => $this->collection, ':names[]' => $names], $this->options)->fetchAllKeyed();
       foreach ($list as &$data) {
         $data = $this->decode($data);
       }
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       // If we attempt a read without actually having the database or the table
       // available, just return an empty array so the caller can handle it.
     }
@@ -122,7 +123,7 @@ class DatabaseStorage implements StorageInterface {
     try {
       return $this->doWrite($name, $data);
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       // If there was an exception, try to create the table.
       if ($this->ensureTableExists()) {
         return $this->doWrite($name, $data);
@@ -172,7 +173,7 @@ class DatabaseStorage implements StorageInterface {
     catch (DatabaseException $e) {
       return TRUE;
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       throw new StorageException($e->getMessage(), NULL, $e);
     }
     return FALSE;
@@ -273,7 +274,7 @@ class DatabaseStorage implements StorageInterface {
       $query->orderBy('collection')->orderBy('name');
       return $query->execute()->fetchCol();
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       return [];
     }
   }
@@ -289,7 +290,7 @@ class DatabaseStorage implements StorageInterface {
         ->condition('collection', $this->collection)
         ->execute();
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       return FALSE;
     }
   }
@@ -318,12 +319,12 @@ class DatabaseStorage implements StorageInterface {
    */
   public function getAllCollectionNames() {
     try {
-      return $this->connection->query('SELECT DISTINCT collection FROM {' . $this->connection->escapeTable($this->table) . '} WHERE collection <> :collection ORDER by collection', [
+      return $this->connection->query('SELECT DISTINCT [collection] FROM {' . $this->connection->escapeTable($this->table) . '} WHERE [collection] <> :collection ORDER by [collection]', [
           ':collection' => StorageInterface::DEFAULT_COLLECTION,
         ]
       )->fetchCol();
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       return [];
     }
   }

@@ -2,6 +2,7 @@
 
 namespace Drupal\KernelTests\Core\Extension;
 
+use Drupal;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Extension\MissingDependencyException;
 use Drupal\KernelTests\KernelTestBase;
@@ -81,7 +82,7 @@ class ModuleInstallerTest extends KernelTestBase {
    * Ensure that rebuilding the container in hook_install() works.
    */
   public function testKernelRebuildDuringHookInstall() {
-    \Drupal::state()->set('module_test_install:rebuild_container', TRUE);
+    Drupal::state()->set('module_test_install:rebuild_container', TRUE);
     $module_installer = $this->container->get('module_installer');
     $this->assertTrue($module_installer->install(['module_test']));
   }
@@ -99,7 +100,7 @@ class ModuleInstallerTest extends KernelTestBase {
   }
 
   /**
-   * Dataprovider for testInvalidCoreInstall().
+   * Data provider for testInvalidCoreInstall().
    */
   public function providerTestInvalidCoreInstall() {
     return [

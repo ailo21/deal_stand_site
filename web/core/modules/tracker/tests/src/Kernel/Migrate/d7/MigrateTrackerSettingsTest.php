@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\tracker\Kernel\Migrate\d7;
 
+use Drupal;
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
 
 /**
@@ -26,7 +27,7 @@ class MigrateTrackerSettingsTest extends MigrateDrupal7TestBase {
    * Tests migration of tracker's variables to configuration.
    */
   public function testMigration() {
-    $this->assertIdentical(999, \Drupal::config('tracker.settings')->get('cron_index_limit'));
+    $this->assertSame(999, Drupal::config('tracker.settings')->get('cron_index_limit'));
   }
 
 }

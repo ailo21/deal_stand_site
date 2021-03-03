@@ -2,6 +2,8 @@
 
 namespace Drupal\Core\Extension;
 
+use Drupal;
+
 /**
  * Provides a list of available theme engines.
  *
@@ -21,7 +23,7 @@ class ThemeEngineExtensionList extends ExtensionList {
     'description' => '',
     'package' => 'Other',
     'version' => NULL,
-    'php' => DRUPAL_MINIMUM_PHP,
+    'php' => Drupal::MINIMUM_PHP,
   ];
 
   /**

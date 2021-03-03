@@ -30,24 +30,24 @@ use Symfony\Component\HttpFoundation\Request;
 function system_requirements($phase) {
   global $install_state;
   // Reset the extension lists.
-  \Drupal::service('extension.list.module')->reset();
-  \Drupal::service('extension.list.theme')->reset();
+  Drupal::service('extension.list.module')->reset();
+  Drupal::service('extension.list.theme')->reset();
   $requirements = [];
 
   // Report Drupal version
   if ($phase == 'runtime') {
     $requirements['drupal'] = [
       'title' => t('Drupal'),
-      'value' => \Drupal::VERSION,
+      'value' => Drupal::VERSION,
       'severity' => REQUIREMENT_INFO,
       'weight' => -10,
     ];
 
     // Display the currently active installation profile, if the site
     // is not running the default installation profile.
-    $profile = \Drupal::installProfile();
+    $profile = Drupal::installProfile();
     if ($profile != 'standard') {
-      $info = \Drupal::service('extension.list.module')->getExtensionInfo($profile);
+      $info = Drupal::service('extension.list.module')->getExtensionInfo($profile);
       $requirements['install_profile'] = [
         'title' => t('Installation profile'),
         'value' => t('%profile_name (%profile-%version)', [
@@ -62,9 +62,9 @@ function system_requirements($phase) {
 
     // Warn if any experimental modules are installed.
     $experimental_modules = [];
-    $enabled_modules = \Drupal::moduleHandler()->getModuleList();
+    $enabled_modules = Drupal::moduleHandler()->getModuleList();
     foreach ($enabled_modules as $module => $data) {
-      $info = \Drupal::service('extension.list.module')->getExtensionInfo($module);
+      $info = Drupal::service('extension.list.module')->getExtensionInfo($module);
       if (isset($info['package']) && $info['package'] === 'Core (Experimental)') {
         $experimental_modules[$module] = $info['name'];
       }
@@ -78,7 +78,7 @@ function system_requirements($phase) {
     }
     // Warn if any experimental themes are installed.
     $experimental_themes = [];
-    $installed_themes = \Drupal::service('theme_handler')->listInfo();
+    $installed_themes = Drupal::service('theme_handler')->listInfo();
     foreach ($installed_themes as $theme => $data) {
       if (isset($data->info['experimental']) && $data->info['experimental']) {
         $experimental_themes[$theme] = $data->info['name'];
@@ -94,7 +94,7 @@ function system_requirements($phase) {
   }
 
   // Web server information.
-  $request_object = \Drupal::request();
+  $request_object = Drupal::request();
   $software = $request_object->server->get('SERVER_SOFTWARE');
   $requirements['webserver'] = [
     'title' => t('Web server'),
@@ -202,19 +202,19 @@ function system_requirements($phase) {
   }
 
   // Check if the PHP version is below what Drupal supports.
-  if (version_compare($phpversion, DRUPAL_MINIMUM_SUPPORTED_PHP) < 0) {
-    $requirements['php']['description'] = t('Your PHP installation is too old. Drupal requires at least PHP %version. It is recommended to upgrade to PHP version %recommended or higher for the best ongoing support. See <a href="http://php.net/supported-versions.php">PHP\'s version support documentation</a> and the <a href=":php_requirements">Drupal 8 PHP requirements handbook page</a> for more information.',
+  if (version_compare($phpversion, Drupal::MINIMUM_SUPPORTED_PHP) < 0) {
+    $requirements['php']['description'] = t('Your PHP installation is too old. Drupal requires at least PHP %version. It is recommended to upgrade to PHP version %recommended or higher for the best ongoing support. See <a href="http://php.net/supported-versions.php">PHP\'s version support documentation</a> and the <a href=":php_requirements">Environment requirements of Drupal 9</a> page for more information.',
       [
-        '%version' => DRUPAL_MINIMUM_SUPPORTED_PHP,
-        '%recommended' => DRUPAL_RECOMMENDED_PHP,
-        ':php_requirements' => 'https://www.drupal.org/docs/8/system-requirements/php',
+        '%version' => Drupal::MINIMUM_SUPPORTED_PHP,
+        '%recommended' => Drupal::RECOMMENDED_PHP,
+        ':php_requirements' => 'https://www.drupal.org/docs/9/how-drupal-9-is-made-and-what-is-included/environment-requirements-of-drupal-9#s-php-version-requirement',
       ]
     );
     $requirements['php']['severity'] = REQUIREMENT_ERROR;
 
     // If the PHP version is also below the absolute minimum allowed, it's not
     // safe to continue with the requirements check.
-    if (version_compare($phpversion, DRUPAL_MINIMUM_PHP) < 0) {
+    if (version_compare($phpversion, Drupal::MINIMUM_PHP) < 0) {
       return $requirements;
     }
     // Otherwise downgrade the error to a warning during updates. Even if there
@@ -235,8 +235,8 @@ function system_requirements($phase) {
   // For PHP versions that are still supported but no longer recommended,
   // inform users of what's recommended, allowing them to take action before it
   // becomes urgent.
-  elseif ($phase === 'runtime' && version_compare($phpversion, DRUPAL_RECOMMENDED_PHP) < 0) {
-    $requirements['php']['description'] = t('It is recommended to upgrade to PHP version %recommended or higher for the best ongoing support.  See <a href="http://php.net/supported-versions.php">PHP\'s version support documentation</a> and the <a href=":php_requirements">Drupal 8 PHP requirements handbook page</a> for more information.', ['%recommended' => DRUPAL_RECOMMENDED_PHP, ':php_requirements' => 'https://www.drupal.org/docs/8/system-requirements/php']);
+  elseif ($phase === 'runtime' && version_compare($phpversion, Drupal::RECOMMENDED_PHP) < 0) {
+    $requirements['php']['description'] = t('It is recommended to upgrade to PHP version %recommended or higher for the best ongoing support.  See <a href="http://php.net/supported-versions.php">PHP\'s version support documentation</a> and the <a href=":php_requirements">Drupal 8 PHP requirements handbook page</a> for more information.', ['%recommended' => Drupal::RECOMMENDED_PHP, ':php_requirements' => 'https://www.drupal.org/docs/8/system-requirements/php']);
     $requirements['php']['severity'] = REQUIREMENT_INFO;
   }
 
@@ -269,7 +269,7 @@ function system_requirements($phase) {
 
   if (!empty($missing_extensions)) {
     $description = t('Drupal requires you to enable the PHP extensions in the following list (see the <a href=":system_requirements">system requirements page</a> for more information):', [
-      ':system_requirements' => 'https://www.drupal.org/requirements',
+      ':system_requirements' => 'https://www.drupal.org/docs/system-requirements',
     ]);
 
     // We use twig inline_template to avoid twig's autoescape.
@@ -316,7 +316,7 @@ function system_requirements($phase) {
       $apcu_actual_size = format_size($memory_info['seg_size']);
       $apcu_recommended_size = '32 MB';
       $requirements['php_apcu']['value'] = t('Enabled (@size)', ['@size' => $apcu_actual_size]);
-      if (Bytes::toInt($apcu_actual_size) < Bytes::toInt($apcu_recommended_size)) {
+      if (Bytes::toNumber($apcu_actual_size) < Bytes::toNumber($apcu_recommended_size)) {
         $requirements['php_apcu']['severity'] = REQUIREMENT_WARNING;
         $requirements['php_apcu']['description'] = t('Depending on your configuration, Drupal can run with a @apcu_size APCu limit. However, a @apcu_default_size APCu limit (the default) or above is recommended, especially if your site uses additional custom or contributed modules.', [
           '@apcu_size' => $apcu_actual_size,
@@ -356,11 +356,11 @@ function system_requirements($phase) {
     try {
       $bytes = random_bytes(10);
       if (strlen($bytes) != 10) {
-        throw new \Exception("Tried to generate 10 random bytes, generated '" . strlen($bytes) . "'");
+        throw new Exception("Tried to generate 10 random bytes, generated '" . strlen($bytes) . "'");
       }
       $requirements['php_random_bytes']['value'] = t('Successful');
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       // If /dev/urandom is not available on a UNIX-like system, check whether
       // open_basedir restrictions are the cause.
       $open_basedir_blocks_urandom = FALSE;
@@ -396,7 +396,7 @@ function system_requirements($phase) {
     $database_ok = extension_loaded('pdo');
     if (!$database_ok) {
       $pdo_message = t('Your web server does not appear to support PDO (PHP Data Objects). Ask your hosting provider if they support the native PDO extension. See the <a href=":link">system requirements</a> page for more information.', [
-        ':link' => 'https://www.drupal.org/requirements/pdo',
+        ':link' => 'https://www.drupal.org/docs/system-requirements/php-requirements#database',
       ]);
     }
     else {
@@ -405,7 +405,7 @@ function system_requirements($phase) {
       if (empty($drivers)) {
         $database_ok = FALSE;
         $pdo_message = t('Your web server does not appear to support any common PDO database extensions. Check with your hosting provider to see if they support PDO (PHP Data Objects) and offer any databases that <a href=":drupal-databases">Drupal supports</a>.', [
-          ':drupal-databases' => 'https://www.drupal.org/requirements/database',
+          ':drupal-databases' => 'https://www.drupal.org/docs/system-requirements/database-server-requirements',
         ]);
       }
       // Make sure the native PDO extension is available, not the older PEAR
@@ -413,7 +413,7 @@ function system_requirements($phase) {
       if (!defined('PDO::ATTR_DEFAULT_FETCH_MODE')) {
         $database_ok = FALSE;
         $pdo_message = t('Your web server seems to have the wrong version of PDO installed. Drupal requires the PDO extension from PHP core. This system has the older PECL version. See the <a href=":link">system requirements</a> page for more information.', [
-          ':link' => 'https://www.drupal.org/requirements/pdo#pecl',
+          ':link' => 'https://www.drupal.org/docs/system-requirements/php-requirements#database',
         ]);
       }
     }
@@ -463,16 +463,16 @@ function system_requirements($phase) {
     'value' => $memory_limit == -1 ? t('-1 (Unlimited)') : $memory_limit,
   ];
 
-  if (!Environment::checkMemoryLimit(DRUPAL_MINIMUM_PHP_MEMORY_LIMIT, $memory_limit)) {
+  if (!Environment::checkMemoryLimit(Drupal::MINIMUM_PHP_MEMORY_LIMIT, $memory_limit)) {
     $description = [];
     if ($phase == 'install') {
-      $description['phase'] = t('Consider increasing your PHP memory limit to %memory_minimum_limit to help prevent errors in the installation process.', ['%memory_minimum_limit' => DRUPAL_MINIMUM_PHP_MEMORY_LIMIT]);
+      $description['phase'] = t('Consider increasing your PHP memory limit to %memory_minimum_limit to help prevent errors in the installation process.', ['%memory_minimum_limit' => Drupal::MINIMUM_PHP_MEMORY_LIMIT]);
     }
     elseif ($phase == 'update') {
-      $description['phase'] = t('Consider increasing your PHP memory limit to %memory_minimum_limit to help prevent errors in the update process.', ['%memory_minimum_limit' => DRUPAL_MINIMUM_PHP_MEMORY_LIMIT]);
+      $description['phase'] = t('Consider increasing your PHP memory limit to %memory_minimum_limit to help prevent errors in the update process.', ['%memory_minimum_limit' => Drupal::MINIMUM_PHP_MEMORY_LIMIT]);
     }
     elseif ($phase == 'runtime') {
-      $description['phase'] = t('Depending on your configuration, Drupal can run with a %memory_limit PHP memory limit. However, a %memory_minimum_limit PHP memory limit or above is recommended, especially if your site uses additional custom or contributed modules.', ['%memory_limit' => $memory_limit, '%memory_minimum_limit' => DRUPAL_MINIMUM_PHP_MEMORY_LIMIT]);
+      $description['phase'] = t('Depending on your configuration, Drupal can run with a %memory_limit PHP memory limit. However, a %memory_minimum_limit PHP memory limit or above is recommended, especially if your site uses additional custom or contributed modules.', ['%memory_limit' => $memory_limit, '%memory_minimum_limit' => Drupal::MINIMUM_PHP_MEMORY_LIMIT]);
     }
 
     if (!empty($description['phase'])) {
@@ -505,8 +505,8 @@ function system_requirements($phase) {
     $conf_errors = [];
     // Find the site path. Kernel service is not always available at this point,
     // but is preferred, when available.
-    if (\Drupal::hasService('kernel')) {
-      $site_path = \Drupal::getContainer()->getParameter('site.path');
+    if (Drupal::hasService('kernel')) {
+      $site_path = Drupal::getContainer()->getParameter('site.path');
     }
     else {
       $site_path = DrupalKernel::findSitePath(Request::createFromGlobals());
@@ -570,7 +570,7 @@ function system_requirements($phase) {
     // Try to write the .htaccess files first, to prevent false alarms in case
     // (for example) the /tmp directory was wiped.
     /** @var \Drupal\Core\File\HtaccessWriterInterface $htaccessWriter */
-    $htaccessWriter = \Drupal::service("file.htaccess_writer");
+    $htaccessWriter = Drupal::service("file.htaccess_writer");
     $htaccessWriter->ensure();
     foreach ($htaccessWriter->defaultProtectedDirs() as $protected_dir) {
       $htaccess_file = $protected_dir->getPath() . '/.htaccess';
@@ -590,16 +590,16 @@ function system_requirements($phase) {
 
   // Report cron status.
   if ($phase == 'runtime') {
-    $cron_config = \Drupal::config('system.cron');
+    $cron_config = Drupal::config('system.cron');
     // Cron warning threshold defaults to two days.
     $threshold_warning = $cron_config->get('threshold.requirements_warning');
     // Cron error threshold defaults to two weeks.
     $threshold_error = $cron_config->get('threshold.requirements_error');
 
     // Determine when cron last ran.
-    $cron_last = \Drupal::state()->get('system.cron_last');
+    $cron_last = Drupal::state()->get('system.cron_last');
     if (!is_numeric($cron_last)) {
-      $cron_last = \Drupal::state()->get('install_time', 0);
+      $cron_last = Drupal::state()->get('install_time', 0);
     }
 
     // Determine severity based on time since cron last ran.
@@ -612,7 +612,7 @@ function system_requirements($phase) {
     }
 
     // Set summary and description based on values determined above.
-    $summary = t('Last run @time ago', ['@time' => \Drupal::service('date.formatter')->formatTimeDiffSince($cron_last)]);
+    $summary = t('Last run @time ago', ['@time' => Drupal::service('date.formatter')->formatTimeDiffSince($cron_last)]);
 
     $requirements['cron'] = [
       'title' => t('Cron maintenance tasks'),
@@ -649,13 +649,12 @@ function system_requirements($phase) {
     ];
   }
   if ($phase != 'install') {
-    $filesystem_config = \Drupal::config('system.file');
     $directories = [
       PublicStream::basePath(),
       // By default no private files directory is configured. For private files
       // to be secure the admin needs to provide a path outside the webroot.
       PrivateStream::basePath(),
-      \Drupal::service('file_system')->getTempDirectory(),
+      Drupal::service('file_system')->getTempDirectory(),
     ];
   }
 
@@ -693,7 +692,7 @@ function system_requirements($phase) {
   if (!empty($config_sync_directory)) {
     // If we're installing Drupal try and create the config sync directory.
     if (!is_dir($config_sync_directory) && $phase == 'install') {
-      \Drupal::service('file_system')->prepareDirectory($config_sync_directory, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
+      Drupal::service('file_system')->prepareDirectory($config_sync_directory, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
     }
     if (!is_dir($config_sync_directory)) {
       if ($phase == 'install') {
@@ -729,7 +728,7 @@ function system_requirements($phase) {
       continue;
     }
     if ($phase == 'install') {
-      \Drupal::service('file_system')->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
+      Drupal::service('file_system')->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
     }
     $is_writable = is_writable($directory);
     $is_directory = is_dir($directory);
@@ -768,7 +767,7 @@ function system_requirements($phase) {
     else {
       // This function can be called before the config_cache table has been
       // created.
-      if ($phase == 'install' || \Drupal::config('system.file')->get('default_scheme') == 'public') {
+      if ($phase == 'install' || Drupal::config('system.file')->get('default_scheme') == 'public') {
         $requirements['file system']['value'] = t('Writable (<em>public</em> download method)');
       }
       else {
@@ -786,7 +785,7 @@ function system_requirements($phase) {
 
     // Check installed modules.
     $has_pending_updates = FALSE;
-    foreach (\Drupal::moduleHandler()->getModuleList() as $module => $filename) {
+    foreach (Drupal::moduleHandler()->getModuleList() as $module => $filename) {
       $updates = drupal_get_schema_versions($module);
       if ($updates !== FALSE) {
         $default = drupal_get_installed_schema_version($module);
@@ -798,7 +797,7 @@ function system_requirements($phase) {
     }
     if (!$has_pending_updates) {
       /** @var \Drupal\Core\Update\UpdateRegistry $post_update_registry */
-      $post_update_registry = \Drupal::service('update.post_update_registry');
+      $post_update_registry = Drupal::service('update.post_update_registry');
       $missing_post_update_functions = $post_update_registry->getPendingUpdateFunctions();
       if (!empty($missing_post_update_functions)) {
         $has_pending_updates = TRUE;
@@ -816,10 +815,10 @@ function system_requirements($phase) {
       'value' => t('Up to date'),
     ];
     // Verify that no entity updates are pending.
-    if ($change_list = \Drupal::entityDefinitionUpdateManager()->getChangeSummary()) {
+    if ($change_list = Drupal::entityDefinitionUpdateManager()->getChangeSummary()) {
       $build = [];
       foreach ($change_list as $entity_type_id => $changes) {
-        $entity_type = \Drupal::entityTypeManager()->getDefinition($entity_type_id);
+        $entity_type = Drupal::entityTypeManager()->getDefinition($entity_type_id);
         $build[] = [
           '#theme' => 'item_list',
           '#title' => $entity_type->getLabel(),
@@ -827,7 +826,7 @@ function system_requirements($phase) {
         ];
       }
 
-      $entity_update_issues = \Drupal::service('renderer')->renderPlain($build);
+      $entity_update_issues = Drupal::service('renderer')->renderPlain($build);
       $requirements['entity_update']['severity'] = REQUIREMENT_ERROR;
       $requirements['entity_update']['value'] = t('Mismatched entity and/or field definitions');
       $requirements['entity_update']['description'] = t('The following changes were detected in the entity type and field definitions. @updates', ['@updates' => $entity_update_issues]);
@@ -882,9 +881,9 @@ function system_requirements($phase) {
         'severity' => REQUIREMENT_ERROR,
       ];
     };
-    $profile = \Drupal::installProfile();
-    $files = \Drupal::service('extension.list.module')->getList();
-    $files += \Drupal::service('extension.list.theme')->getList();
+    $profile = Drupal::installProfile();
+    $files = Drupal::service('extension.list.module')->getList();
+    $files += Drupal::service('extension.list.theme')->getList();
     $core_incompatible_extensions = [];
     $php_incompatible_extensions = [];
     foreach ($files as $extension_name => $file) {
@@ -921,7 +920,7 @@ function system_requirements($phase) {
         // Check for an incompatible version.
         $required_file = $files[$required_module];
         $required_name = $required_file->info['name'];
-        $version = str_replace(\Drupal::CORE_COMPATIBILITY . '-', '', $required_file->info['version']);
+        $version = str_replace(Drupal::CORE_COMPATIBILITY . '-', '', $required_file->info['version']);
         if (!$requirement->isCompatible($version)) {
           $requirements["$extension_name-$required_module"] = [
             'title' => t('Unresolved dependency'),
@@ -940,7 +939,7 @@ function system_requirements($phase) {
           count($core_incompatible_extensions['module']),
         'The following module is installed, but it is incompatible with Drupal @version:',
         'The following modules are installed, but they are incompatible with Drupal @version:',
-        ['@version' => \Drupal::VERSION]
+        ['@version' => Drupal::VERSION]
         ),
         new PluralTranslatableMarkup(
           count($core_incompatible_extensions['module']),
@@ -956,7 +955,7 @@ function system_requirements($phase) {
           count($core_incompatible_extensions['theme']),
           'The following theme is installed, but it is incompatible with Drupal @version:',
           'The following themes are installed, but they are incompatible with Drupal @version:',
-          ['@version' => \Drupal::VERSION]
+          ['@version' => Drupal::VERSION]
         ),
         new PluralTranslatableMarkup(
           count($core_incompatible_extensions['theme']),
@@ -999,9 +998,9 @@ function system_requirements($phase) {
     }
 
     // Look for invalid modules.
-    $extension_config = \Drupal::configFactory()->get('core.extension');
+    $extension_config = Drupal::configFactory()->get('core.extension');
     /** @var \Drupal\Core\Extension\ExtensionList $extension_list */
-    $extension_list = \Drupal::service('extension.list.module');
+    $extension_list = Drupal::service('extension.list.module');
     $is_missing_extension = function ($extension_name) use (&$extension_list) {
       return !$extension_list->exists($extension_name);
     };
@@ -1025,7 +1024,7 @@ function system_requirements($phase) {
     }
 
     // Look for invalid themes.
-    $extension_list = \Drupal::service('extension.list.theme');
+    $extension_list = Drupal::service('extension.list.theme');
     $invalid_themes = array_filter(array_keys($extension_config->get('theme')), $is_missing_extension);
     if (!empty($invalid_themes)) {
       $requirements['invalid_theme'] = $create_extension_incompatibility_list(
@@ -1075,19 +1074,11 @@ function system_requirements($phase) {
     case 'mbstring.encoding_translation':
       $requirements['unicode']['description'] = t('Multibyte string input conversion in PHP is active and must be disabled. Check the php.ini <em>mbstring.encoding_translation</em> setting. Please refer to the <a href="http://php.net/mbstring">PHP mbstring documentation</a> for more information.');
       break;
-
-    case 'mbstring.http_input':
-      $requirements['unicode']['description'] = t('Multibyte string input conversion in PHP is active and must be disabled. Check the php.ini <em>mbstring.http_input</em> setting. Please refer to the <a href="http://php.net/mbstring">PHP mbstring documentation</a> for more information.');
-      break;
-
-    case 'mbstring.http_output':
-      $requirements['unicode']['description'] = t('Multibyte string output conversion in PHP is active and must be disabled. Check the php.ini <em>mbstring.http_output</em> setting. Please refer to the <a href="http://php.net/mbstring">PHP mbstring documentation</a> for more information.');
-      break;
   }
 
   if ($phase == 'runtime') {
     // Check for update status module.
-    if (!\Drupal::moduleHandler()->moduleExists('update')) {
+    if (!Drupal::moduleHandler()->moduleExists('update')) {
       $requirements['update status'] = [
         'value' => t('Not enabled'),
         'severity' => REQUIREMENT_WARNING,
@@ -1156,7 +1147,7 @@ function system_requirements($phase) {
   // Warning for httpoxy on IIS with affected PHP versions
   // @see https://www.drupal.org/node/2783079
   if (strpos($software, 'Microsoft-IIS') !== FALSE && version_compare(PHP_VERSION, '7.0.9', '<')) {
-    $dom = new \DOMDocument('1.0', 'UTF-8');
+    $dom = new DOMDocument('1.0', 'UTF-8');
     $webconfig = file_get_contents('web.config');
     // If you are here the web.config file must - of course - be well formed.
     // But the PHP DOM component will throw warnings on some XML compliant
@@ -1238,14 +1229,14 @@ function system_requirements($phase) {
   // Ensure that no module has a current schema version that is lower than the
   // one that was last removed.
   if ($phase == 'update') {
-    $module_handler = \Drupal::moduleHandler();
+    $module_handler = Drupal::moduleHandler();
     $module_list = [];
     foreach ($module_handler->getImplementations('update_last_removed') as $module) {
       $last_removed = $module_handler->invoke($module, 'update_last_removed');
       if ($last_removed && $last_removed > drupal_get_installed_schema_version($module)) {
 
         /** @var \Drupal\Core\Extension\Extension $module_info */
-        $module_info = \Drupal::service('extension.list.module')->get($module);
+        $module_info = Drupal::service('extension.list.module')->get($module);
         $module_list[$module] = [
           'name' => $module_info->info['name'],
           'last_removed' => $last_removed,
@@ -1286,10 +1277,10 @@ function system_requirements($phase) {
     // Also check post-updates. Only do this if we're not already showing an
     // error for hook_update_N().
     if (empty($module_list)) {
-      $existing_updates = \Drupal::service('keyvalue')->get('post_update')->get('existing_updates', []);
-      $post_update_registry = \Drupal::service('update.post_update_registry');
-      $modules = \Drupal::moduleHandler()->getModuleList();
-      $module_extension_list = \Drupal::service('extension.list.module');
+      $existing_updates = Drupal::service('keyvalue')->get('post_update')->get('existing_updates', []);
+      $post_update_registry = Drupal::service('update.post_update_registry');
+      $modules = Drupal::moduleHandler()->getModuleList();
+      $module_extension_list = Drupal::service('extension.list.module');
       foreach ($modules as $module => $extension) {
         $module_info = $module_extension_list->get($module);
         $removed_post_updates = $post_update_registry->getRemovedPostUpdates($module);
@@ -1323,11 +1314,11 @@ function system_requirements($phase) {
 function system_install() {
   // Populate the cron key state variable.
   $cron_key = Crypt::randomBytesBase64(55);
-  \Drupal::state()->set('system.cron_key', $cron_key);
+  Drupal::state()->set('system.cron_key', $cron_key);
 
   // Populate the site UUID and default name (if not set).
-  $site = \Drupal::configFactory()->getEditable('system.site');
-  $site->set('uuid', \Drupal::service('uuid')->generate());
+  $site = Drupal::configFactory()->getEditable('system.site');
+  $site->set('uuid', Drupal::service('uuid')->generate());
   if (!$site->get('name')) {
     $site->set('name', 'Drupal');
   }
@@ -1338,71 +1329,6 @@ function system_install() {
  * Implements hook_schema().
  */
 function system_schema() {
-  $schema['key_value'] = [
-    'description' => 'Generic key-value storage table. See the state system for an example.',
-    'fields' => [
-      'collection' => [
-        'description' => 'A named collection of key and value pairs.',
-        'type' => 'varchar_ascii',
-        'length' => 128,
-        'not null' => TRUE,
-        'default' => '',
-      ],
-      'name' => [
-        'description' => 'The key of the key-value pair. As KEY is a SQL reserved keyword, name was chosen instead.',
-        'type' => 'varchar_ascii',
-        'length' => 128,
-        'not null' => TRUE,
-        'default' => '',
-      ],
-      'value' => [
-        'description' => 'The value.',
-        'type' => 'blob',
-        'not null' => TRUE,
-        'size' => 'big',
-      ],
-    ],
-    'primary key' => ['collection', 'name'],
-  ];
-
-  $schema['key_value_expire'] = [
-    'description' => 'Generic key/value storage table with an expiration.',
-    'fields' => [
-      'collection' => [
-        'description' => 'A named collection of key and value pairs.',
-        'type' => 'varchar_ascii',
-        'length' => 128,
-        'not null' => TRUE,
-        'default' => '',
-      ],
-      'name' => [
-        // KEY is an SQL reserved word, so use 'name' as the key's field name.
-        'description' => 'The key of the key/value pair.',
-        'type' => 'varchar_ascii',
-        'length' => 128,
-        'not null' => TRUE,
-        'default' => '',
-      ],
-      'value' => [
-        'description' => 'The value of the key/value pair.',
-        'type' => 'blob',
-        'not null' => TRUE,
-        'size' => 'big',
-      ],
-      'expire' => [
-        'description' => 'The time since Unix epoch in seconds when this item expires. Defaults to the maximum possible time.',
-        'type' => 'int',
-        'not null' => TRUE,
-        'default' => 2147483647,
-      ],
-    ],
-    'primary key' => ['collection', 'name'],
-    'indexes' => [
-      'all' => ['name', 'collection', 'expire'],
-      'expire' => ['expire'],
-    ],
-  ];
-
   $schema['sequences'] = [
     'description' => 'Stores IDs.',
     'fields' => [
@@ -1480,9 +1406,9 @@ function system_update_last_removed() {
  * Update the stored schema data for entity identifier fields.
  */
 function system_update_8901() {
-  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
-  $entity_type_manager = \Drupal::entityTypeManager();
-  $installed_storage_schema = \Drupal::keyValue('entity.storage_schema.sql');
+  $definition_update_manager = Drupal::entityDefinitionUpdateManager();
+  $entity_type_manager = Drupal::entityTypeManager();
+  $installed_storage_schema = Drupal::keyValue('entity.storage_schema.sql');
 
   foreach ($definition_update_manager->getEntityTypes() as $entity_type_id => $entity_type) {
     // Ensure that we are dealing with a non-deleted entity type that uses the
@@ -1514,7 +1440,7 @@ function system_update_8901() {
       // the identifier schema - ::processIdentifierSchema(). This is needed
       // because some storage schemas might not use serial identifiers.
       // @see \Drupal\user\UserStorageSchema::processIdentifierSchema()
-      $ref_get_storage_schema = new \ReflectionMethod($storage, 'getStorageSchema');
+      $ref_get_storage_schema = new ReflectionMethod($storage, 'getStorageSchema');
       $ref_get_storage_schema->setAccessible(TRUE);
       $storage_schema = $ref_get_storage_schema->invoke($storage);
 
@@ -1522,7 +1448,7 @@ function system_update_8901() {
         $field_schema_data = $installed_storage_schema->get($entity_type_id . '.field_schema_data.' . $field_storage_definition->getName(), []);
         $table = $key === 'id' ? $entity_type->getBaseTable() : $entity_type->getRevisionTable();
 
-        $ref_process_identifier_schema = new \ReflectionMethod($storage_schema, 'processIdentifierSchema');
+        $ref_process_identifier_schema = new ReflectionMethod($storage_schema, 'processIdentifierSchema');
         $ref_process_identifier_schema->setAccessible(TRUE);
         $ref_process_identifier_schema->invokeArgs($storage_schema, [&$field_schema_data[$table], $field_name]);
 

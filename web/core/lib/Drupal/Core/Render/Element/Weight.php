@@ -2,6 +2,7 @@
 
 namespace Drupal\Core\Render\Element;
 
+use Drupal;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
@@ -32,7 +33,7 @@ class Weight extends FormElement {
    * {@inheritdoc}
    */
   public function getInfo() {
-    $class = get_class($this);
+    $class = static::class;
     return [
       '#input' => TRUE,
       '#delta' => 10,
@@ -50,8 +51,8 @@ class Weight extends FormElement {
   public static function processWeight(&$element, FormStateInterface $form_state, &$complete_form) {
     // If the number of options is small enough, use a select field. Otherwise,
     // use a number field.
-    $type = $element['#delta'] <= \Drupal::config('system.site')->get('weight_select_max') ? 'select' : 'number';
-    $element = array_merge($element, \Drupal::service('element_info')->getInfo($type));
+    $type = $element['#delta'] <= Drupal::config('system.site')->get('weight_select_max') ? 'select' : 'number';
+    $element = array_merge($element, Drupal::service('element_info')->getInfo($type));
     $element['#is_weight'] = TRUE;
 
     if ($type === 'select') {

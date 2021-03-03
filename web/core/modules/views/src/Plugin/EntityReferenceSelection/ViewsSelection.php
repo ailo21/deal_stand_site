@@ -2,6 +2,7 @@
 
 namespace Drupal\views\Plugin\EntityReferenceSelection;
 
+use Drupal;
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Entity\EntityReferenceSelection\SelectionPluginBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -134,7 +135,7 @@ class ViewsSelection extends SelectionPluginBase implements ContainerFactoryPlug
 
     $options = [];
     foreach ($displays as $data) {
-      list($view_id, $display_id) = $data;
+      [$view_id, $display_id] = $data;
       $view = $view_storage->load($view_id);
       if (in_array($view->get('base_table'), [$entity_type->getBaseTable(), $entity_type->getDataTable()])) {
         $display = $view->get('display');
@@ -146,7 +147,7 @@ class ViewsSelection extends SelectionPluginBase implements ContainerFactoryPlug
     // into 'view_name' and 'view_display' in the final submitted values, so
     // we massage the data at validate time on the wrapping element (not
     // ideal).
-    $form['view']['#element_validate'] = [[get_called_class(), 'settingsFormValidate']];
+    $form['view']['#element_validate'] = [[static::class, 'settingsFormValidate']];
 
     if ($options) {
       $default = !empty($view_settings['view_name']) ? $view_settings['view_name'] . ':' . $view_settings['display_name'] : NULL;
@@ -208,7 +209,7 @@ class ViewsSelection extends SelectionPluginBase implements ContainerFactoryPlug
     // Check that the view is valid and the display still exists.
     $this->view = Views::getView($view_name);
     if (!$this->view || !$this->view->access($display_name)) {
-      \Drupal::messenger()->addWarning($this->t('The reference view %view_name cannot be found.', ['%view_name' => $view_name]));
+      Drupal::messenger()->addWarning($this->t('The reference view %view_name cannot be found.', ['%view_name' => $view_name]));
       return FALSE;
     }
     $this->view->setDisplay($display_name);
@@ -318,7 +319,7 @@ class ViewsSelection extends SelectionPluginBase implements ContainerFactoryPlug
   public static function settingsFormValidate($element, FormStateInterface $form_state, $form) {
     // Split view name and display name from the 'view_and_display' value.
     if (!empty($element['view_and_display']['#value'])) {
-      list($view, $display) = explode(':', $element['view_and_display']['#value']);
+      [$view, $display] = explode(':', $element['view_and_display']['#value']);
     }
     else {
       $form_state->setError($element, t('The views entity selection mode requires a view.'));

@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\workspaces\Functional\EntityResource;
 
+use DateTime;
+use DateTimeZone;
 use Drupal\Tests\rest\Functional\EntityResource\EntityResourceTestBase;
 use Drupal\user\Entity\User;
 use Drupal\workspaces\Entity\Workspace;
@@ -99,14 +101,14 @@ abstract class WorkspaceResourceTestBase extends EntityResourceTestBase {
     return [
       'created' => [
         [
-          'value' => (new \DateTime())->setTimestamp((int) $this->entity->getCreatedTime())->setTimezone(new \DateTimeZone('UTC'))->format(\DateTime::RFC3339),
-          'format' => \DateTime::RFC3339,
+          'value' => (new DateTime())->setTimestamp((int) $this->entity->getCreatedTime())->setTimezone(new DateTimeZone('UTC'))->format(DateTime::RFC3339),
+          'format' => DateTime::RFC3339,
         ],
       ],
       'changed' => [
         [
-          'value' => (new \DateTime())->setTimestamp($this->entity->getChangedTime())->setTimezone(new \DateTimeZone('UTC'))->format(\DateTime::RFC3339),
-          'format' => \DateTime::RFC3339,
+          'value' => (new DateTime())->setTimestamp($this->entity->getChangedTime())->setTimezone(new DateTimeZone('UTC'))->format(DateTime::RFC3339),
+          'format' => DateTime::RFC3339,
         ],
       ],
       'id' => [
@@ -162,16 +164,6 @@ abstract class WorkspaceResourceTestBase extends EntityResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getSecondNormalizedPostEntity() {
-    $normalized_post_entity = $this->getNormalizedPostEntity();
-    $normalized_post_entity['id'][0]['value'] = static::$secondCreatedEntityId;
-
-    return $normalized_post_entity;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   protected function getNormalizedPatchEntity() {
     return [
       'label' => [
@@ -191,7 +183,7 @@ abstract class WorkspaceResourceTestBase extends EntityResourceTestBase {
         return "The 'view any workspace' permission is required.";
 
       case 'POST':
-        return "The 'create workspace' permission is required.";
+        return "The following permissions are required: 'administer workspaces' OR 'create workspace'.";
 
       case 'PATCH':
         return "The 'edit any workspace' permission is required.";

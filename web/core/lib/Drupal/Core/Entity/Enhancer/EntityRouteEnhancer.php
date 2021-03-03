@@ -3,8 +3,9 @@
 namespace Drupal\Core\Entity\Enhancer;
 
 use Drupal\Core\Routing\EnhancerInterface;
+use RuntimeException;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Cmf\Component\Routing\RouteObjectInterface;
+use Drupal\Core\Routing\RouteObjectInterface;
 use Symfony\Component\Routing\Route;
 
 /**
@@ -105,7 +106,7 @@ class EntityRouteEnhancer implements EnhancerInterface {
     $defaults['_controller'] = '\Drupal\Core\Entity\Controller\EntityViewController::view';
     if (strpos($defaults['_entity_view'], '.') !== FALSE) {
       // The _entity_view entry is of the form entity_type.view_mode.
-      list($entity_type, $view_mode) = explode('.', $defaults['_entity_view']);
+      [$entity_type, $view_mode] = explode('.', $defaults['_entity_view']);
       $defaults['view_mode'] = $view_mode;
     }
     else {
@@ -139,11 +140,11 @@ class EntityRouteEnhancer implements EnhancerInterface {
           }
         }
         else {
-          throw new \RuntimeException(sprintf('Failed to find entity of type %s in route named %s', $entity_type, $defaults[RouteObjectInterface::ROUTE_NAME]));
+          throw new RuntimeException(sprintf('Failed to find entity of type %s in route named %s', $entity_type, $defaults[RouteObjectInterface::ROUTE_NAME]));
         }
       }
       else {
-        throw new \RuntimeException(sprintf('Failed to find entity of type %s in route named %s', $entity_type, $defaults[RouteObjectInterface::ROUTE_NAME]));
+        throw new RuntimeException(sprintf('Failed to find entity of type %s in route named %s', $entity_type, $defaults[RouteObjectInterface::ROUTE_NAME]));
       }
     }
     unset($defaults['_entity_view']);

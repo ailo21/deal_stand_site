@@ -2,6 +2,9 @@
 
 namespace Drupal\Core\TypedData;
 
+use ArrayAccess;
+use Countable;
+
 /**
  * Interface for a list of typed data.
  *
@@ -15,7 +18,7 @@ namespace Drupal\Core\TypedData;
  *
  * @ingroup typed_data
  */
-interface ListInterface extends TraversableTypedDataInterface, \ArrayAccess, \Countable {
+interface ListInterface extends TraversableTypedDataInterface, ArrayAccess, Countable {
 
   /**
    * Gets the data definition.
@@ -83,8 +86,8 @@ interface ListInterface extends TraversableTypedDataInterface, \ArrayAccess, \Co
   /**
    * Returns the first item in this list.
    *
-   * @return \Drupal\Core\TypedData\TypedDataInterface
-   *   The first item in this list.
+   * @return \Drupal\Core\TypedData\TypedDataInterface|null
+   *   The first item in this list, or NULL if there are no items.
    *
    * @throws \Drupal\Core\TypedData\Exception\MissingDataException
    *   If the complex data structure is unset and no item can be created.

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\field\Kernel;
 
+use Drupal;
 use Drupal\Core\Entity\EntityStorageException;
 use Drupal\Core\Field\FieldException;
 use Drupal\entity_test\Entity\EntityTest;
@@ -76,7 +77,7 @@ class FieldCrudTest extends FieldKernelTestBase {
     // the loaded ConfigEntity, to be sure we check that the defaults are
     // applied on write.
     $config = $this->config('field.field.' . $field->id())->get();
-    $field_type_manager = \Drupal::service('plugin.manager.field.field_type');
+    $field_type_manager = Drupal::service('plugin.manager.field.field_type');
 
     $this->assertTrue($config['settings']['config_data_from_field_setting']);
     $this->assertTrue(!isset($config['settings']['field_setting_from_config_data']));
@@ -87,9 +88,9 @@ class FieldCrudTest extends FieldKernelTestBase {
     unset($config['settings']['config_data_from_field_setting']);
 
     // Check that default values are set.
-    $this->assertEqual($config['required'], FALSE, 'Required defaults to false.');
-    $this->assertIdentical($config['label'], $this->fieldDefinition['field_name'], 'Label defaults to field name.');
-    $this->assertIdentical($config['description'], '', 'Description defaults to empty string.');
+    $this->assertFalse($config['required'], 'Required defaults to false.');
+    $this->assertSame($config['label'], $this->fieldDefinition['field_name'], 'Label defaults to field name.');
+    $this->assertSame('', $config['description'], 'Description defaults to empty string.');
 
     // Check that default settings are set.
     $this->assertEqual($config['settings'], $field_type_manager->getDefaultFieldSettings($this->fieldStorageDefinition['type']), 'Default field settings have been written.');
@@ -134,11 +135,11 @@ class FieldCrudTest extends FieldKernelTestBase {
     // a Range constraint are added dynamically to limit the field to values
     // between 0 and 32.
     // @see field_test_entity_bundle_field_info_alter()
-    \Drupal::state()->set('field_test_constraint', $field_name);
+    Drupal::state()->set('field_test_constraint', $field_name);
 
     // Clear the field definitions cache so the new constraints added by
     // field_test_entity_bundle_field_info_alter() are taken into consideration.
-    \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
+    Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
 
     // Test the newly added property constraints in the same request as when the
     // caches were cleared. This will test the field definitions that are stored
@@ -151,7 +152,7 @@ class FieldCrudTest extends FieldKernelTestBase {
     // \Drupal\Core\Entity\EntityFieldManager::getFieldDefinitions(), we need to
     // simulate a new request by removing the 'entity_field.manager' service,
     // thus forcing it to be re-initialized without static caches.
-    \Drupal::getContainer()->set('entity_field.manager', NULL);
+    Drupal::getContainer()->set('entity_field.manager', NULL);
 
     // This will test the field definitions that are stored in the persistent
     // cache by \Drupal\Core\Entity\EntityFieldManager::getFieldDefinitions().
@@ -199,7 +200,7 @@ class FieldCrudTest extends FieldKernelTestBase {
    */
   public function testCreateFieldCustomStorage() {
     $field_name = mb_strtolower($this->randomMachineName());
-    \Drupal::state()->set('field_test_custom_storage', $field_name);
+    Drupal::state()->set('field_test_custom_storage', $field_name);
 
     $field_storage = FieldStorageConfig::create([
       'field_name' => $field_name,
@@ -216,15 +217,15 @@ class FieldCrudTest extends FieldKernelTestBase {
     ]);
     $field->save();
 
-    \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
+    Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
 
     // Check that no table has been created for the field.
-    $this->assertFalse(\Drupal::database()->schema()->tableExists('entity_test__' . $field_storage->getName()));
+    $this->assertFalse(Drupal::database()->schema()->tableExists('entity_test__' . $field_storage->getName()));
 
     // Save an entity with a value in the custom storage field and verify no
     // data is retrieved on load.
     $entity = EntityTest::create(['name' => $this->randomString(), $field_name => 'Test value']);
-    $this->assertIdentical('Test value', $entity->{$field_name}->value, 'The test value is set on the field.');
+    $this->assertSame('Test value', $entity->{$field_name}->value, 'The test value is set on the field.');
 
     $entity->save();
     $entity = EntityTest::load($entity->id());
@@ -283,13 +284,13 @@ class FieldCrudTest extends FieldKernelTestBase {
     FieldConfig::create($another_field_definition)->save();
 
     // Test that the first field is not deleted, and then delete it.
-    $field = current(\Drupal::entityTypeManager()->getStorage('field_config')->loadByProperties(['entity_type' => 'entity_test', 'field_name' => $this->fieldDefinition['field_name'], 'bundle' => $this->fieldDefinition['bundle'], 'include_deleted' => TRUE]));
-    $this->assertTrue(!empty($field) && empty($field->deleted), 'A new field is not marked for deletion.');
+    $field = current(Drupal::entityTypeManager()->getStorage('field_config')->loadByProperties(['entity_type' => 'entity_test', 'field_name' => $this->fieldDefinition['field_name'], 'bundle' => $this->fieldDefinition['bundle'], 'include_deleted' => TRUE]));
+    $this->assertFalse($field->isDeleted());
     $field->delete();
 
     // Make sure the field was deleted without being marked for purging as there
     // was no data.
-    $fields = \Drupal::entityTypeManager()->getStorage('field_config')->loadByProperties(['entity_type' => 'entity_test', 'field_name' => $this->fieldDefinition['field_name'], 'bundle' => $this->fieldDefinition['bundle'], 'include_deleted' => TRUE]);
+    $fields = Drupal::entityTypeManager()->getStorage('field_config')->loadByProperties(['entity_type' => 'entity_test', 'field_name' => $this->fieldDefinition['field_name'], 'bundle' => $this->fieldDefinition['bundle'], 'include_deleted' => TRUE]);
     $this->assertCount(0, $fields, 'A deleted field is marked for deletion.');
 
     // Try to load the field normally and make sure it does not show up.
@@ -298,7 +299,7 @@ class FieldCrudTest extends FieldKernelTestBase {
 
     // Make sure the other field is not deleted.
     $another_field = FieldConfig::load('entity_test.' . $another_field_definition['bundle'] . '.' . $another_field_definition['field_name']);
-    $this->assertTrue(!empty($another_field) && !$another_field->isDeleted(), 'A non-deleted field is not marked for deletion.');
+    $this->assertFalse($another_field->isDeleted());
   }
 
   /**

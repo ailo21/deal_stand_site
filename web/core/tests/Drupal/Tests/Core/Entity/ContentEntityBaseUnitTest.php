@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\Core\Entity;
 
+use Drupal;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\ContentEntityBase;
@@ -12,9 +13,11 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\TypedData\TypedDataManagerInterface;
-use Drupal\Tests\Traits\ExpectDeprecationTrait;
 use Drupal\Tests\UnitTestCase;
 use Drupal\Core\Language\Language;
+use LogicException;
+use ReflectionProperty;
+use stdClass;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /**
@@ -23,8 +26,6 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
  * @group Access
  */
 class ContentEntityBaseUnitTest extends UnitTestCase {
-
-  use ExpectDeprecationTrait;
 
   /**
    * The bundle of the entity under test.
@@ -199,7 +200,7 @@ class ContentEntityBaseUnitTest extends UnitTestCase {
     $container->set('typed_data_manager', $this->typedDataManager);
     $container->set('language_manager', $this->languageManager);
     $container->set('plugin.manager.field.field_type', $this->fieldTypePluginManager);
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
 
     $this->fieldDefinitions = [
       'id' => BaseFieldDefinition::create('integer'),
@@ -347,7 +348,7 @@ class ContentEntityBaseUnitTest extends UnitTestCase {
   public function testPreSaveRevision() {
     // This method is internal, so check for errors on calling it only.
     $storage = $this->createMock('\Drupal\Core\Entity\EntityStorageInterface');
-    $record = new \stdClass();
+    $record = new stdClass();
     // Our mocked entity->preSaveRevision() returns NULL, so assert that.
     $this->assertNull($this->entity->preSaveRevision($storage, $record));
   }
@@ -431,7 +432,7 @@ class ContentEntityBaseUnitTest extends UnitTestCase {
     // that trying to save a non-validated entity when validation is required
     // results in an exception.
     $this->assertTrue($this->entity->isValidationRequired());
-    $this->expectException(\LogicException::class);
+    $this->expectException(LogicException::class);
     $this->expectExceptionMessage('Entity validation was skipped.');
     $this->entity->save();
   }
@@ -521,12 +522,12 @@ class ContentEntityBaseUnitTest extends UnitTestCase {
     }
 
     // Poke in activeLangcode.
-    $ref_langcode = new \ReflectionProperty($mock_base, 'activeLangcode');
+    $ref_langcode = new ReflectionProperty($mock_base, 'activeLangcode');
     $ref_langcode->setAccessible(TRUE);
     $ref_langcode->setValue($mock_base, $active_langcode);
 
     // Poke in fields.
-    $ref_fields = new \ReflectionProperty($mock_base, 'fields');
+    $ref_fields = new ReflectionProperty($mock_base, 'fields');
     $ref_fields->setAccessible(TRUE);
     $ref_fields->setValue($mock_base, $fields);
 
@@ -601,7 +602,7 @@ class ContentEntityBaseUnitTest extends UnitTestCase {
       ->willReturnArgument(0);
 
     // Exercise getFields().
-    $this->assertArrayEquals(
+    $this->assertEquals(
       $expected,
       $mock_base->getFields($include_computed)
     );

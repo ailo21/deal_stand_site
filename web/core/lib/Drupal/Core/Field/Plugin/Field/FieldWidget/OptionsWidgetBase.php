@@ -2,6 +2,7 @@
 
 namespace Drupal\Core\Field\Plugin\Field\FieldWidget;
 
+use Drupal;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldFilteredMarkup;
@@ -50,7 +51,7 @@ abstract class OptionsWidgetBase extends WidgetBase {
     $this->has_value = isset($items[0]->{$this->column});
 
     // Add our custom validator.
-    $element['#element_validate'][] = [get_class($this), 'validateElement'];
+    $element['#element_validate'][] = [static::class, 'validateElement'];
     $element['#key_column'] = $this->column;
 
     // The rest of the $element is built by child method implementations.
@@ -113,14 +114,14 @@ abstract class OptionsWidgetBase extends WidgetBase {
       $options = $this->fieldDefinition
         ->getFieldStorageDefinition()
         ->getOptionsProvider($this->column, $entity)
-        ->getSettableOptions(\Drupal::currentUser());
+        ->getSettableOptions(Drupal::currentUser());
 
       // Add an empty option if the widget needs one.
       if ($empty_label = $this->getEmptyLabel()) {
         $options = ['_none' => $empty_label] + $options;
       }
 
-      $module_handler = \Drupal::moduleHandler();
+      $module_handler = Drupal::moduleHandler();
       $context = [
         'fieldDefinition' => $this->fieldDefinition,
         'entity' => $entity,

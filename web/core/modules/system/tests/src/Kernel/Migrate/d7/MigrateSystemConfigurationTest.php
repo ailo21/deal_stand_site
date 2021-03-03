@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\system\Kernel\Migrate\d7;
 
+use Drupal;
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
 
 /**
@@ -128,6 +129,18 @@ class MigrateSystemConfigurationTest extends MigrateDrupal7TestBase {
   protected function setUp(): void {
     parent::setUp();
 
+    // The system_maintenance migration gets both the Drupal 6 and Drupal 7
+    // site maintenance message. Add a row with the Drupal 6 version of the
+    // maintenance message to confirm that the Drupal 7 variable is selected in
+    // the migration.
+    // See https://www.drupal.org/project/drupal/issues/3096676
+    $this->sourceDatabase->insert('variable')
+      ->fields([
+        'name' => 'site_offline_message',
+        'value' => 's:16:"Drupal 6 message";',
+      ])
+      ->execute();
+
     $migrations = [
       'd7_system_authorize',
       'd7_system_cron',
@@ -151,10 +164,10 @@ class MigrateSystemConfigurationTest extends MigrateDrupal7TestBase {
   public function testConfigurationMigration() {
     foreach ($this->expectedConfig as $config_id => $values) {
       if ($config_id == 'system.mail') {
-        $actual = \Drupal::config($config_id)->getRawData();
+        $actual = Drupal::config($config_id)->getRawData();
       }
       else {
-        $actual = \Drupal::config($config_id)->get();
+        $actual = Drupal::config($config_id)->get();
       }
       unset($actual['_core']);
       $this->assertSame($actual, $values, $config_id . ' matches expected values.');

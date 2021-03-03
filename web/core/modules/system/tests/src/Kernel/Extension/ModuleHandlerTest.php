@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\system\Kernel\Extension;
 
+use Drupal;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Extension\MissingDependencyException;
 use Drupal\Core\Extension\ModuleUninstallValidatorException;
@@ -89,7 +90,7 @@ class ModuleHandlerTest extends KernelTestBase {
     // Create a missing fake dependency.
     // Color will depend on Config, which depends on a non-existing module Foo.
     // Nothing should be installed.
-    \Drupal::state()->set('module_test.dependency', 'missing dependency');
+    Drupal::state()->set('module_test.dependency', 'missing dependency');
 
     try {
       $result = $this->moduleInstaller()->install(['color']);
@@ -103,20 +104,21 @@ class ModuleHandlerTest extends KernelTestBase {
 
     // Fix the missing dependency.
     // Color module depends on Config. Config depends on Help module.
-    \Drupal::state()->set('module_test.dependency', 'dependency');
+    Drupal::state()->set('module_test.dependency', 'dependency');
 
     $result = $this->moduleInstaller()->install(['color']);
     $this->assertTrue($result, 'ModuleInstaller::install() returns the correct value.');
 
     // Verify that the fake dependency chain was installed.
-    $this->assertTrue($this->moduleHandler()->moduleExists('config') && $this->moduleHandler()->moduleExists('help'), 'Dependency chain was installed.');
+    $this->assertTrue($this->moduleHandler()->moduleExists('config'));
+    $this->assertTrue($this->moduleHandler()->moduleExists('help'));
 
     // Verify that the original module was installed.
     $this->assertTrue($this->moduleHandler()->moduleExists('color'), 'Module installation with dependencies succeeded.');
 
     // Verify that the modules were enabled in the correct order.
-    $module_order = \Drupal::state()->get('module_test.install_order') ?: [];
-    $this->assertEqual($module_order, ['help', 'config', 'color']);
+    $module_order = Drupal::state()->get('module_test.install_order', []);
+    $this->assertEqual(['help', 'config', 'color'], $module_order);
 
     // Uninstall all three modules explicitly, but in the incorrect order,
     // and make sure that ModuleInstaller::uninstall() uninstalled them in the
@@ -125,29 +127,30 @@ class ModuleHandlerTest extends KernelTestBase {
     $this->assertTrue($result, 'ModuleInstaller::uninstall() returned TRUE.');
 
     foreach (['color', 'config', 'help'] as $module) {
-      $this->assertEqual(drupal_get_installed_schema_version($module), SCHEMA_UNINSTALLED, "$module module was uninstalled.");
+      $this->assertEqual(SCHEMA_UNINSTALLED, drupal_get_installed_schema_version($module), "{$module} module was uninstalled.");
     }
-    $uninstalled_modules = \Drupal::state()->get('module_test.uninstall_order') ?: [];
-    $this->assertEqual($uninstalled_modules, ['color', 'config', 'help'], 'Modules were uninstalled in the correct order.');
+    $uninstalled_modules = Drupal::state()->get('module_test.uninstall_order', []);
+    $this->assertEqual(['color', 'config', 'help'], $uninstalled_modules, 'Modules were uninstalled in the correct order.');
 
     // Enable Color module again, which should enable both the Config module and
     // Help module. But, this time do it with Config module declaring a
     // dependency on a specific version of Help module in its info file. Make
     // sure that Drupal\Core\Extension\ModuleInstaller::install() still works.
-    \Drupal::state()->set('module_test.dependency', 'version dependency');
+    Drupal::state()->set('module_test.dependency', 'version dependency');
 
     $result = $this->moduleInstaller()->install(['color']);
     $this->assertTrue($result, 'ModuleInstaller::install() returns the correct value.');
 
     // Verify that the fake dependency chain was installed.
-    $this->assertTrue($this->moduleHandler()->moduleExists('config') && $this->moduleHandler()->moduleExists('help'), 'Dependency chain was installed.');
+    $this->assertTrue($this->moduleHandler()->moduleExists('config'));
+    $this->assertTrue($this->moduleHandler()->moduleExists('help'));
 
     // Verify that the original module was installed.
     $this->assertTrue($this->moduleHandler()->moduleExists('color'), 'Module installation with version dependencies succeeded.');
 
     // Finally, verify that the modules were enabled in the correct order.
-    $enable_order = \Drupal::state()->get('module_test.install_order') ?: [];
-    $this->assertIdentical($enable_order, ['help', 'config', 'color']);
+    $enable_order = Drupal::state()->get('module_test.install_order', []);
+    $this->assertSame(['help', 'config', 'color'], $enable_order);
   }
 
   /**
@@ -166,7 +169,7 @@ class ModuleHandlerTest extends KernelTestBase {
     drupal_get_filename('profile', $profile, 'core/profiles/' . $profile . '/' . $profile . '.info.yml');
     $this->enableModules(['module_test', $profile]);
 
-    $data = \Drupal::service('extension.list.module')->reset()->getList();
+    $data = Drupal::service('extension.list.module')->reset()->getList();
     $this->assertArrayHasKey($dependency, $data[$profile]->requires);
     $this->assertArrayNotHasKey($non_dependency, $data[$profile]->requires);
 
@@ -180,7 +183,7 @@ class ModuleHandlerTest extends KernelTestBase {
     $this->assertEquals(drupal_get_installed_schema_version($non_dependency), SCHEMA_UNINSTALLED, "$non_dependency module was uninstalled.");
 
     // Verify that the installation profile itself was not uninstalled.
-    $uninstalled_modules = \Drupal::state()->get('module_test.uninstall_order') ?: [];
+    $uninstalled_modules = Drupal::state()->get('module_test.uninstall_order', []);
     $this->assertContains($non_dependency, $uninstalled_modules, "$non_dependency module is in the list of uninstalled modules.");
     $this->assertNotContains($profile, $uninstalled_modules, 'The installation profile is not in the list of uninstalled modules.');
 
@@ -191,7 +194,7 @@ class ModuleHandlerTest extends KernelTestBase {
   }
 
   /**
-   * Tests that a profile can supply only real dependencies
+   * Tests that a profile can supply only real dependencies.
    */
   public function testProfileAllDependencies() {
     $profile = 'testing_install_profile_all_dependencies';
@@ -206,7 +209,7 @@ class ModuleHandlerTest extends KernelTestBase {
     drupal_get_filename('profile', $profile, 'core/profiles/' . $profile . '/' . $profile . '.info.yml');
     $this->enableModules(['module_test', $profile]);
 
-    $data = \Drupal::service('extension.list.module')->reset()->getList();
+    $data = Drupal::service('extension.list.module')->reset()->getList();
     foreach ($dependencies as $dependency) {
       $this->assertArrayHasKey($dependency, $data[$profile]->requires);
     }
@@ -231,7 +234,7 @@ class ModuleHandlerTest extends KernelTestBase {
     $this->assertTrue($this->moduleHandler()->moduleExists('module_test'), 'Test module is enabled.');
 
     $this->installSchema('user', 'users_data');
-    $entity_types = \Drupal::entityTypeManager()->getDefinitions();
+    $entity_types = Drupal::entityTypeManager()->getDefinitions();
     foreach ($entity_types as $entity_type) {
       if ('entity_test' == $entity_type->getProvider()) {
         $this->installEntitySchema($entity_type->id());
@@ -241,7 +244,7 @@ class ModuleHandlerTest extends KernelTestBase {
     // Create a fake dependency.
     // entity_test will depend on help. This way help can not be uninstalled
     // when there is test content preventing entity_test from being uninstalled.
-    \Drupal::state()->set('module_test.dependency', 'dependency');
+    Drupal::state()->set('module_test.dependency', 'dependency');
 
     // Create an entity so that the modules can not be disabled.
     $entity = EntityTest::create(['name' => $this->randomString()]);
@@ -272,7 +275,7 @@ class ModuleHandlerTest extends KernelTestBase {
 
     $result = $this->moduleInstaller()->uninstall(['help']);
     $this->assertTrue($result, 'ModuleInstaller::uninstall() returns TRUE.');
-    $this->assertEqual(drupal_get_installed_schema_version('entity_test'), SCHEMA_UNINSTALLED, "entity_test module was uninstalled.");
+    $this->assertEqual(SCHEMA_UNINSTALLED, drupal_get_installed_schema_version('entity_test'), "entity_test module was uninstalled.");
   }
 
   /**
@@ -296,14 +299,14 @@ class ModuleHandlerTest extends KernelTestBase {
   public function testModuleStreamWrappers() {
     // file_test.module provides (among others) a 'dummy' stream wrapper.
     // Verify that it is not registered yet to prevent false positives.
-    $stream_wrappers = \Drupal::service('stream_wrapper_manager')->getWrappers();
+    $stream_wrappers = Drupal::service('stream_wrapper_manager')->getWrappers();
     $this->assertFalse(isset($stream_wrappers['dummy']));
     $this->moduleInstaller()->install(['file_test']);
     // Verify that the stream wrapper is available even without calling
     // \Drupal::service('stream_wrapper_manager')->getWrappers() again.
     // If the stream wrapper is not available file_exists() will raise a notice.
     file_exists('dummy://');
-    $stream_wrappers = \Drupal::service('stream_wrapper_manager')->getWrappers();
+    $stream_wrappers = Drupal::service('stream_wrapper_manager')->getWrappers();
     $this->assertTrue(isset($stream_wrappers['dummy']));
   }
 
@@ -312,7 +315,7 @@ class ModuleHandlerTest extends KernelTestBase {
    */
   public function testThemeMetaData() {
     // Generate the list of available themes.
-    $themes = \Drupal::service('theme_handler')->rebuildThemeData();
+    $themes = Drupal::service('theme_handler')->rebuildThemeData();
     // Check that the mtime field exists for the bartik theme.
     $this->assertTrue(!empty($themes['bartik']->info['mtime']), 'The bartik.info.yml file modification time field is present.');
     // Use 0 if mtime isn't present, to avoid an array index notice.

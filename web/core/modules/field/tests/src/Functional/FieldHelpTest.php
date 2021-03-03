@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\field\Functional;
 
+use Drupal;
 use Drupal\Tests\BrowserTestBase;
 
 /**
@@ -52,14 +53,16 @@ class FieldHelpTest extends BrowserTestBase {
     $this->drupalGet('admin/help/field');
 
     // Enable the Options, Email and Field API Test modules.
-    \Drupal::service('module_installer')->install(['options', 'field_test']);
+    Drupal::service('module_installer')->install(['options', 'field_test']);
     $this->resetAll();
-    \Drupal::service('plugin.manager.field.widget')->clearCachedDefinitions();
-    \Drupal::service('plugin.manager.field.field_type')->clearCachedDefinitions();
+    Drupal::service('plugin.manager.field.widget')->clearCachedDefinitions();
+    Drupal::service('plugin.manager.field.field_type')->clearCachedDefinitions();
 
     $this->drupalGet('admin/help/field');
     $this->assertSession()->linkExists('Options', 0, 'Options module is listed on the Field help page.');
-    $this->assertText('Field API Test', 'Modules with field types that do not implement hook_help are listed.');
+    // Verify that modules with field types that do not implement hook_help are
+    // listed.
+    $this->assertText('Field API Test');
     $this->assertSession()->linkNotExists('Field API Test', 'Modules with field types that do not implement hook_help are not linked.');
     $this->assertSession()->linkNotExists('Link', 'Modules that have not been installed, are not listed.');
   }

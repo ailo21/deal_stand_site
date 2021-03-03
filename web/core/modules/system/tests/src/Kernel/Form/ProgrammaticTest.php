@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\system\Kernel\Form;
 
+use Drupal;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Form\FormState;
 use Drupal\KernelTests\KernelTestBase;
@@ -69,7 +70,7 @@ class ProgrammaticTest extends KernelTestBase {
   protected function doSubmitForm($values, $valid_input) {
     // Programmatically submit the given values.
     $form_state = (new FormState())->setValues($values);
-    \Drupal::formBuilder()->submitForm('\Drupal\form_test\Form\FormTestProgrammaticForm', $form_state);
+    Drupal::formBuilder()->submitForm('\Drupal\form_test\Form\FormTestProgrammaticForm', $form_state);
 
     // Check that the form returns an error when expected, and vice versa.
     $errors = $form_state->getErrors();
@@ -85,7 +86,7 @@ class ProgrammaticTest extends KernelTestBase {
       // Fetching the values that were set in the submission handler.
       $stored_values = $form_state->get('programmatic_form_submit');
       foreach ($values as $key => $value) {
-        $this->assertEqual($stored_values[$key], $value, new FormattableMarkup('Submission handler correctly executed: %stored_key is %stored_value', ['%stored_key' => $key, '%stored_value' => print_r($value, TRUE)]));
+        $this->assertEqual($value, $stored_values[$key], new FormattableMarkup('Submission handler correctly executed: %stored_key is %stored_value', ['%stored_key' => $key, '%stored_value' => print_r($value, TRUE)]));
       }
     }
   }
@@ -102,18 +103,18 @@ class ProgrammaticTest extends KernelTestBase {
     // Programmatically submit the form with a value for the restricted field.
     // Since programmed_bypass_access_check is set to TRUE by default, the
     // field is accessible and can be set.
-    \Drupal::formBuilder()->submitForm('\Drupal\form_test\Form\FormTestProgrammaticForm', $form_state);
+    Drupal::formBuilder()->submitForm('\Drupal\form_test\Form\FormTestProgrammaticForm', $form_state);
     $values = $form_state->get('programmatic_form_submit');
-    $this->assertEqual($values['field_restricted'], 'dummy value', 'The value for the restricted field is stored correctly.');
+    $this->assertEqual('dummy value', $values['field_restricted'], 'The value for the restricted field is stored correctly.');
 
     // Programmatically submit the form with a value for the restricted field
     // with programmed_bypass_access_check set to FALSE. Since access
     // restrictions apply, the restricted field is inaccessible, and the value
     // should not be stored.
     $form_state->setProgrammedBypassAccessCheck(FALSE);
-    \Drupal::formBuilder()->submitForm('\Drupal\form_test\Form\FormTestProgrammaticForm', $form_state);
+    Drupal::formBuilder()->submitForm('\Drupal\form_test\Form\FormTestProgrammaticForm', $form_state);
     $values = $form_state->get('programmatic_form_submit');
-    $this->assertNotEqual($values['field_restricted'], 'dummy value', 'The value for the restricted field is not stored.');
+    $this->assertNotSame('dummy value', $values['field_restricted'], 'The value for the restricted field is not stored.');
 
   }
 

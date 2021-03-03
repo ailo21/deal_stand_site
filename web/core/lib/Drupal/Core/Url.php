@@ -2,6 +2,7 @@
 
 namespace Drupal\Core;
 
+use Drupal;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
@@ -10,8 +11,10 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Routing\UrlGeneratorInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Utility\UnroutedUrlAssemblerInterface;
-use Symfony\Cmf\Component\Routing\RouteObjectInterface;
+use Drupal\Core\Routing\RouteObjectInterface;
+use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Request;
+use UnexpectedValueException;
 
 /**
  * Defines an object that holds information about a URL.
@@ -42,7 +45,7 @@ class Url implements TrustedCallbackInterface {
   protected $urlAssembler;
 
   /**
-   * The access manager
+   * The access manager.
    *
    * @var \Drupal\Core\Access\AccessManagerInterface
    */
@@ -164,7 +167,7 @@ class Url implements TrustedCallbackInterface {
       return new static($route_match->getRouteName(), $route_match->getRawParameters()->all());
     }
     else {
-      throw new \InvalidArgumentException('Route required');
+      throw new InvalidArgumentException('Route required');
     }
   }
 
@@ -210,7 +213,7 @@ class Url implements TrustedCallbackInterface {
     // because these are URI reserved characters that a scheme name may not
     // start with.
     if ((strpos($user_input, '/') !== 0) && (strpos($user_input, '#') !== 0) && (strpos($user_input, '?') !== 0)) {
-      throw new \InvalidArgumentException("The user-entered string '$user_input' must begin with a '/', '?', or '#'.");
+      throw new InvalidArgumentException("The user-entered string '$user_input' must begin with a '/', '?', or '#'.");
     }
 
     // fromUri() requires an absolute URI, so prepend the appropriate scheme
@@ -280,14 +283,14 @@ class Url implements TrustedCallbackInterface {
     }
     $uri_parts = parse_url($uri);
     if ($uri_parts === FALSE) {
-      throw new \InvalidArgumentException("The URI '$uri' is malformed.");
+      throw new InvalidArgumentException("The URI '$uri' is malformed.");
     }
     // We support protocol-relative URLs.
     if (strpos($uri, '//') === 0) {
       $uri_parts['scheme'] = '';
     }
     elseif (empty($uri_parts['scheme'])) {
-      throw new \InvalidArgumentException("The URI '$uri' is invalid. You must use a valid URI scheme.");
+      throw new InvalidArgumentException("The URI '$uri' is invalid. You must use a valid URI scheme.");
     }
     $uri_parts += ['path' => ''];
     // Discard empty fragment in $options for consistency with parse_url().
@@ -334,7 +337,7 @@ class Url implements TrustedCallbackInterface {
    * Create a new Url object for entity URIs.
    *
    * @param array $uri_parts
-   *   Parts from an URI of the form entity:{entity_type}/{entity_id} as from
+   *   Parts from a URI of the form entity:{entity_type}/{entity_id} as from
    *   parse_url().
    * @param array $options
    *   An array of options, see \Drupal\Core\Url::fromUri() for details.
@@ -348,9 +351,9 @@ class Url implements TrustedCallbackInterface {
    *   Thrown if the entity URI is invalid.
    */
   protected static function fromEntityUri(array $uri_parts, array $options, $uri) {
-    list($entity_type_id, $entity_id) = explode('/', $uri_parts['path'], 2);
+    [$entity_type_id, $entity_id] = explode('/', $uri_parts['path'], 2);
     if ($uri_parts['scheme'] != 'entity' || $entity_id === '') {
-      throw new \InvalidArgumentException("The entity URI '$uri' is invalid. You must specify the entity id in the URL. e.g., entity:node/1 for loading the canonical path to node entity with id 1.");
+      throw new InvalidArgumentException("The entity URI '$uri' is invalid. You must specify the entity id in the URL. e.g., entity:node/1 for loading the canonical path to node entity with id 1.");
     }
 
     return new static("entity.$entity_type_id.canonical", [$entity_type_id => $entity_id], $options);
@@ -387,12 +390,12 @@ class Url implements TrustedCallbackInterface {
    * - 'internal:/some-path' (path component is '/some-path') to 'some-path'
    *
    * @param array $uri_parts
-   *   Parts from an URI of the form internal:{path} as from parse_url().
+   *   Parts from a URI of the form internal:{path} as from parse_url().
    * @param array $options
    *   An array of options, see \Drupal\Core\Url::fromUri() for details.
    *
    * @return static
-   *   A new Url object for a 'internal:' URI.
+   *   A new Url object for an 'internal:' URI.
    *
    * @throws \InvalidArgumentException
    *   Thrown when the URI's path component doesn't have a leading slash.
@@ -410,17 +413,17 @@ class Url implements TrustedCallbackInterface {
     }
     else {
       if ($uri_parts['path'][0] !== '/') {
-        throw new \InvalidArgumentException("The internal path component '{$uri_parts['path']}' is invalid. Its path component must have a leading slash, e.g. internal:/foo.");
+        throw new InvalidArgumentException("The internal path component '{$uri_parts['path']}' is invalid. Its path component must have a leading slash, e.g. internal:/foo.");
       }
       // Remove the leading slash.
       $uri_parts['path'] = substr($uri_parts['path'], 1);
 
       if (UrlHelper::isExternal($uri_parts['path'])) {
-        throw new \InvalidArgumentException("The internal path component '{$uri_parts['path']}' is external. You are not allowed to specify an external URL together with internal:/.");
+        throw new InvalidArgumentException("The internal path component '{$uri_parts['path']}' is external. You are not allowed to specify an external URL together with internal:/.");
       }
     }
 
-    $url = \Drupal::pathValidator()
+    $url = Drupal::pathValidator()
       ->getUrlIfValidWithoutAccessCheck($uri_parts['path']) ?: static::fromUri('base:' . $uri_parts['path'], $options);
     // Allow specifying additional options.
     $url->setOptions($options + $url->getOptions());
@@ -432,7 +435,7 @@ class Url implements TrustedCallbackInterface {
    * Creates a new Url object for 'route:' URIs.
    *
    * @param array $uri_parts
-   *   Parts from an URI of the form route:{route_name};{route_parameters} as
+   *   Parts from a URI of the form route:{route_name};{route_parameters} as
    *   from parse_url(), where the path is the route name optionally followed by
    *   a ";" followed by route parameters in key=value format with & separators.
    * @param array $options
@@ -450,7 +453,7 @@ class Url implements TrustedCallbackInterface {
     $route_parts = explode(';', $uri_parts['path'], 2);
     $route_name = $route_parts[0];
     if ($route_name === '') {
-      throw new \InvalidArgumentException("The route URI '$uri' is invalid. You must have a route name in the URI. e.g., route:system.admin");
+      throw new InvalidArgumentException("The route URI '$uri' is invalid. You must have a route name in the URI. e.g., route:system.admin");
     }
     $route_parameters = [];
     if (!empty($route_parts[1])) {
@@ -485,7 +488,7 @@ class Url implements TrustedCallbackInterface {
   public static function createFromRequest(Request $request) {
     // We use the router without access checks because URL objects might be
     // created and stored for different users.
-    $result = \Drupal::service('router.no_access_checks')->matchRequest($request);
+    $result = Drupal::service('router.no_access_checks')->matchRequest($request);
     $route_name = $result[RouteObjectInterface::ROUTE_NAME];
     $route_parameters = $result['_raw_variables']->all();
     return new static($route_name, $route_parameters);
@@ -511,7 +514,7 @@ class Url implements TrustedCallbackInterface {
    * Generates a URI string that represents the data in the Url object.
    *
    * The URI will typically have the scheme of route: even if the object was
-   * constructed using an entity: or internal: scheme. A internal: URI that
+   * constructed using an entity: or internal: scheme. An internal: URI that
    * does not match a Drupal route with be returned here with the base: scheme,
    * and external URLs will be returned in their original form.
    *
@@ -561,7 +564,7 @@ class Url implements TrustedCallbackInterface {
    */
   public function getRouteName() {
     if ($this->unrouted) {
-      throw new \UnexpectedValueException('External URLs do not have an internal route name.');
+      throw new UnexpectedValueException('External URLs do not have an internal route name.');
     }
 
     return $this->routeName;
@@ -577,7 +580,7 @@ class Url implements TrustedCallbackInterface {
    */
   public function getRouteParameters() {
     if ($this->unrouted) {
-      throw new \UnexpectedValueException('External URLs do not have internal route parameters.');
+      throw new UnexpectedValueException('External URLs do not have internal route parameters.');
     }
 
     return $this->routeParameters;
@@ -596,7 +599,7 @@ class Url implements TrustedCallbackInterface {
    */
   public function setRouteParameters($parameters) {
     if ($this->unrouted) {
-      throw new \UnexpectedValueException('External URLs do not have route parameters.');
+      throw new UnexpectedValueException('External URLs do not have route parameters.');
     }
     $this->routeParameters = $parameters;
     return $this;
@@ -617,7 +620,7 @@ class Url implements TrustedCallbackInterface {
    */
   public function setRouteParameter($key, $value) {
     if ($this->unrouted) {
-      throw new \UnexpectedValueException('External URLs do not have route parameters.');
+      throw new UnexpectedValueException('External URLs do not have route parameters.');
     }
     $this->routeParameters[$key] = $value;
     return $this;
@@ -714,7 +717,7 @@ class Url implements TrustedCallbackInterface {
    */
   public function getUri() {
     if (!$this->unrouted) {
-      throw new \UnexpectedValueException('This URL has a Drupal route, so the canonical form is not a URI.');
+      throw new UnexpectedValueException('This URL has a Drupal route, so the canonical form is not a URI.');
     }
 
     return $this->uri;
@@ -792,7 +795,7 @@ class Url implements TrustedCallbackInterface {
    */
   public function getInternalPath() {
     if ($this->unrouted) {
-      throw new \UnexpectedValueException('Unrouted URIs do not have internal representations.');
+      throw new UnexpectedValueException('Unrouted URIs do not have internal representations.');
     }
 
     if (!isset($this->internalPath)) {
@@ -838,7 +841,7 @@ class Url implements TrustedCallbackInterface {
    */
   protected function accessManager() {
     if (!isset($this->accessManager)) {
-      $this->accessManager = \Drupal::service('access_manager');
+      $this->accessManager = Drupal::service('access_manager');
     }
     return $this->accessManager;
   }
@@ -851,7 +854,7 @@ class Url implements TrustedCallbackInterface {
    */
   protected function urlGenerator() {
     if (!$this->urlGenerator) {
-      $this->urlGenerator = \Drupal::urlGenerator();
+      $this->urlGenerator = Drupal::urlGenerator();
     }
     return $this->urlGenerator;
   }
@@ -864,7 +867,7 @@ class Url implements TrustedCallbackInterface {
    */
   protected function unroutedUrlAssembler() {
     if (!$this->urlAssembler) {
-      $this->urlAssembler = \Drupal::service('unrouted_url_assembler');
+      $this->urlAssembler = Drupal::service('unrouted_url_assembler');
     }
     return $this->urlAssembler;
   }

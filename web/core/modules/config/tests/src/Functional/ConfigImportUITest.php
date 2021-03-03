@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\config\Functional;
 
+use Drupal;
 use Drupal\Component\Utility\Html;
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Config\InstallStorage;
 use Drupal\Tests\BrowserTestBase;
 
@@ -58,7 +58,7 @@ class ConfigImportUITest extends BrowserTestBase {
 
     $this->drupalGet('admin/config/development/configuration');
     $this->assertText('There are no configuration changes to import.');
-    $this->assertNoFieldById('edit-submit', t('Import all'));
+    $this->assertSession()->buttonNotExists('Import all');
 
     // Create updated configuration object.
     $new_site_name = 'Config import test ' . $this->randomString();
@@ -68,7 +68,7 @@ class ConfigImportUITest extends BrowserTestBase {
     // Create new config entity.
     $original_dynamic_data = [
       'uuid' => '30df59bd-7b03-4cf7-bb35-d42fc49f0651',
-      'langcode' => \Drupal::languageManager()->getDefaultLanguage()->getId(),
+      'langcode' => Drupal::languageManager()->getDefaultLanguage()->getId(),
       'status' => TRUE,
       'dependencies' => [],
       'id' => 'new',
@@ -113,11 +113,11 @@ class ConfigImportUITest extends BrowserTestBase {
     // handled correctly. Options depends on Text so Text should be installed
     // first. Since they were enabled during the test setup the core.extension
     // file in sync will already contain them.
-    \Drupal::service('module_installer')->uninstall(['text', 'options']);
+    Drupal::service('module_installer')->uninstall(['text', 'options']);
 
     // Set the state system to record installations and uninstallations.
-    \Drupal::state()->set('ConfigImportUITest.core.extension.modules_installed', []);
-    \Drupal::state()->set('ConfigImportUITest.core.extension.modules_uninstalled', []);
+    Drupal::state()->set('ConfigImportUITest.core.extension.modules_installed', []);
+    Drupal::state()->set('ConfigImportUITest.core.extension.modules_uninstalled', []);
 
     // Verify that both appear as ready to import.
     $this->drupalGet('admin/config/development/configuration');
@@ -126,44 +126,44 @@ class ConfigImportUITest extends BrowserTestBase {
     $this->assertRaw('<td>core.extension');
     $this->assertRaw('<td>system.theme');
     $this->assertRaw('<td>automated_cron.settings');
-    $this->assertFieldById('edit-submit', t('Import all'));
+    $this->assertSession()->buttonExists('Import all');
 
     // Import and verify that both do not appear anymore.
-    $this->drupalPostForm(NULL, [], t('Import all'));
+    $this->submitForm([], 'Import all');
     $this->assertNoRaw('<td>' . $name);
     $this->assertNoRaw('<td>' . $dynamic_name);
     $this->assertNoRaw('<td>core.extension');
     $this->assertNoRaw('<td>system.theme');
     $this->assertNoRaw('<td>automated_cron.settings');
 
-    $this->assertNoFieldById('edit-submit', t('Import all'));
+    $this->assertSession()->buttonNotExists('Import all');
 
     // Verify that there are no further changes to import.
-    $this->assertText(t('There are no configuration changes to import.'));
+    $this->assertText('There are no configuration changes to import.');
 
     $this->rebuildContainer();
     // Verify site name has changed.
-    $this->assertIdentical($new_site_name, $this->config('system.site')->get('name'));
+    $this->assertSame($new_site_name, $this->config('system.site')->get('name'));
 
     // Verify that new config entity exists.
-    $this->assertIdentical($original_dynamic_data, $this->config($dynamic_name)->get());
+    $this->assertSame($original_dynamic_data, $this->config($dynamic_name)->get());
 
     // Verify the cache got cleared.
     $this->assertTrue(isset($GLOBALS['hook_cache_flush']));
 
     $this->rebuildContainer();
-    $this->assertTrue(\Drupal::moduleHandler()->moduleExists('ban'), 'Ban module installed during import.');
-    $this->assertTrue(\Drupal::database()->schema()->tableExists('ban_ip'), 'The database table ban_ip exists.');
-    $this->assertTrue(\Drupal::moduleHandler()->moduleExists('automated_cron'), 'Automated Cron module installed during import.');
-    $this->assertTrue(\Drupal::moduleHandler()->moduleExists('options'), 'Options module installed during import.');
-    $this->assertTrue(\Drupal::moduleHandler()->moduleExists('text'), 'Text module installed during import.');
-    $this->assertTrue(\Drupal::service('theme_handler')->themeExists('bartik'), 'Bartik theme installed during import.');
+    $this->assertTrue(Drupal::moduleHandler()->moduleExists('ban'), 'Ban module installed during import.');
+    $this->assertTrue(Drupal::database()->schema()->tableExists('ban_ip'), 'The database table ban_ip exists.');
+    $this->assertTrue(Drupal::moduleHandler()->moduleExists('automated_cron'), 'Automated Cron module installed during import.');
+    $this->assertTrue(Drupal::moduleHandler()->moduleExists('options'), 'Options module installed during import.');
+    $this->assertTrue(Drupal::moduleHandler()->moduleExists('text'), 'Text module installed during import.');
+    $this->assertTrue(Drupal::service('theme_handler')->themeExists('bartik'), 'Bartik theme installed during import.');
 
     // Ensure installations and uninstallation occur as expected.
-    $installed = \Drupal::state()->get('ConfigImportUITest.core.extension.modules_installed', []);
-    $uninstalled = \Drupal::state()->get('ConfigImportUITest.core.extension.modules_uninstalled', []);
+    $installed = Drupal::state()->get('ConfigImportUITest.core.extension.modules_installed', []);
+    $uninstalled = Drupal::state()->get('ConfigImportUITest.core.extension.modules_uninstalled', []);
     $expected = ['automated_cron', 'ban', 'text', 'options'];
-    $this->assertIdentical($expected, $installed, 'Automated Cron, Ban, Text and Options modules installed in the correct order.');
+    $this->assertSame($expected, $installed, 'Automated Cron, Ban, Text and Options modules installed in the correct order.');
     $this->assertTrue(empty($uninstalled), 'No modules uninstalled during import');
 
     // Verify that the automated_cron configuration object was only written
@@ -171,8 +171,8 @@ class ConfigImportUITest extends BrowserTestBase {
     // configuration. This verifies that the module's default configuration is
     // used during configuration import and, additionally, that after installing
     // a module, that configuration is not synced twice.
-    $interval_values = \Drupal::state()->get('ConfigImportUITest.automated_cron.settings.interval', []);
-    $this->assertIdentical($interval_values, [10000]);
+    $interval_values = Drupal::state()->get('ConfigImportUITest.automated_cron.settings.interval', []);
+    $this->assertSame([10000], $interval_values);
 
     $core_extension = $this->config('core.extension')->get();
     unset($core_extension['module']['automated_cron']);
@@ -190,8 +190,8 @@ class ConfigImportUITest extends BrowserTestBase {
     $sync->write('system.theme', $system_theme);
 
     // Set the state system to record installations and uninstallations.
-    \Drupal::state()->set('ConfigImportUITest.core.extension.modules_installed', []);
-    \Drupal::state()->set('ConfigImportUITest.core.extension.modules_uninstalled', []);
+    Drupal::state()->set('ConfigImportUITest.core.extension.modules_installed', []);
+    Drupal::state()->set('ConfigImportUITest.core.extension.modules_uninstalled', []);
 
     // Verify that both appear as ready to import.
     $this->drupalGet('admin/config/development/configuration');
@@ -200,32 +200,32 @@ class ConfigImportUITest extends BrowserTestBase {
     $this->assertRaw('<td>automated_cron.settings');
 
     // Import and verify that both do not appear anymore.
-    $this->drupalPostForm(NULL, [], t('Import all'));
+    $this->submitForm([], 'Import all');
     $this->assertNoRaw('<td>core.extension');
     $this->assertNoRaw('<td>system.theme');
     $this->assertNoRaw('<td>automated_cron.settings');
 
     $this->rebuildContainer();
-    $this->assertFalse(\Drupal::moduleHandler()->moduleExists('ban'), 'Ban module uninstalled during import.');
-    $this->assertFalse(\Drupal::database()->schema()->tableExists('ban_ip'), 'The database table ban_ip does not exist.');
-    $this->assertFalse(\Drupal::moduleHandler()->moduleExists('automated_cron'), 'Automated cron module uninstalled during import.');
-    $this->assertFalse(\Drupal::moduleHandler()->moduleExists('options'), 'Options module uninstalled during import.');
-    $this->assertFalse(\Drupal::moduleHandler()->moduleExists('text'), 'Text module uninstalled during import.');
+    $this->assertFalse(Drupal::moduleHandler()->moduleExists('ban'), 'Ban module uninstalled during import.');
+    $this->assertFalse(Drupal::database()->schema()->tableExists('ban_ip'), 'The database table ban_ip does not exist.');
+    $this->assertFalse(Drupal::moduleHandler()->moduleExists('automated_cron'), 'Automated cron module uninstalled during import.');
+    $this->assertFalse(Drupal::moduleHandler()->moduleExists('options'), 'Options module uninstalled during import.');
+    $this->assertFalse(Drupal::moduleHandler()->moduleExists('text'), 'Text module uninstalled during import.');
 
     // Ensure installations and uninstallation occur as expected.
-    $installed = \Drupal::state()->get('ConfigImportUITest.core.extension.modules_installed', []);
-    $uninstalled = \Drupal::state()->get('ConfigImportUITest.core.extension.modules_uninstalled', []);
+    $installed = Drupal::state()->get('ConfigImportUITest.core.extension.modules_installed', []);
+    $uninstalled = Drupal::state()->get('ConfigImportUITest.core.extension.modules_uninstalled', []);
     $expected = ['options', 'text', 'ban', 'automated_cron'];
-    $this->assertIdentical($expected, $uninstalled, 'Options, Text, Ban and Automated Cron modules uninstalled in the correct order.');
+    $this->assertSame($expected, $uninstalled, 'Options, Text, Ban and Automated Cron modules uninstalled in the correct order.');
     $this->assertTrue(empty($installed), 'No modules installed during import');
 
-    $theme_info = \Drupal::service('theme_handler')->listInfo();
+    $theme_info = Drupal::service('theme_handler')->listInfo();
     $this->assertFalse(isset($theme_info['bartik']), 'Bartik theme uninstalled during import.');
 
     // Verify that the automated_cron.settings configuration object was only
     // deleted once during the import process.
-    $delete_called = \Drupal::state()->get('ConfigImportUITest.automated_cron.settings.delete', 0);
-    $this->assertIdentical($delete_called, 1, "The automated_cron.settings configuration was deleted once during configuration import.");
+    $delete_called = Drupal::state()->get('ConfigImportUITest.automated_cron.settings.delete', 0);
+    $this->assertSame(1, $delete_called, "The automated_cron.settings configuration was deleted once during configuration import.");
   }
 
   /**
@@ -238,38 +238,38 @@ class ConfigImportUITest extends BrowserTestBase {
 
     // Verify that there are configuration differences to import.
     $this->drupalGet('admin/config/development/configuration');
-    $this->assertNoText(t('There are no configuration changes to import.'));
+    $this->assertNoText('There are no configuration changes to import.');
 
     // Acquire a fake-lock on the import mechanism.
     $config_importer = $this->configImporter();
     $this->container->get('lock.persistent')->acquire($config_importer::LOCK_NAME);
 
     // Attempt to import configuration and verify that an error message appears.
-    $this->drupalPostForm(NULL, [], t('Import all'));
-    $this->assertText(t('Another request may be synchronizing configuration already.'));
+    $this->submitForm([], 'Import all');
+    $this->assertText('Another request may be synchronizing configuration already.');
 
     // Release the lock, just to keep testing sane.
     $this->container->get('lock.persistent')->release($config_importer::LOCK_NAME);
 
     // Verify site name has not changed.
-    $this->assertNotEqual($new_site_name, $this->config('system.site')->get('name'));
+    $this->assertNotEquals($this->config('system.site')->get('name'), $new_site_name);
   }
 
   /**
    * Tests verification of site UUID before importing configuration.
    */
   public function testImportSiteUuidValidation() {
-    $sync = \Drupal::service('config.storage.sync');
+    $sync = Drupal::service('config.storage.sync');
     // Create updated configuration object.
     $config_data = $this->config('system.site')->get();
     // Generate a new site UUID.
-    $config_data['uuid'] = \Drupal::service('uuid')->generate();
+    $config_data['uuid'] = Drupal::service('uuid')->generate();
     $sync->write('system.site', $config_data);
 
     // Verify that there are configuration differences to import.
     $this->drupalGet('admin/config/development/configuration');
-    $this->assertText(t('The staged configuration cannot be imported, because it originates from a different site than this site. You can only synchronize configuration between cloned instances of this site.'));
-    $this->assertNoFieldById('edit-submit', t('Import all'));
+    $this->assertText('The staged configuration cannot be imported, because it originates from a different site than this site. You can only synchronize configuration between cloned instances of this site.');
+    $this->assertSession()->buttonNotExists('Import all');
   }
 
   /**
@@ -301,9 +301,10 @@ class ConfigImportUITest extends BrowserTestBase {
     // Load the diff UI and verify that the diff reflects the change.
     $this->drupalGet('admin/config/development/configuration/sync/diff/' . $config_name);
     $this->assertNoRaw('&amp;nbsp;');
-    $this->assertTitle("View changes of $config_name | Drupal");
+    $this->assertSession()->titleEquals("View changes of $config_name | Drupal");
 
-    // The following assertions do not use $this::assertEscaped() because
+    // The following assertions do not use
+    // $this->assertSession()->assertEscaped() because
     // \Drupal\Component\Diff\DiffFormatter adds markup that signifies what has
     // changed.
 
@@ -355,14 +356,14 @@ class ConfigImportUITest extends BrowserTestBase {
     // Set state value so that
     // \Drupal\config_import_test\EventSubscriber::onConfigImportValidate() logs
     // validation errors.
-    \Drupal::state()->set('config_import_test.config_import_validate_fail', TRUE);
+    Drupal::state()->set('config_import_test.config_import_validate_fail', TRUE);
     // Ensure there is something to import.
     $new_site_name = 'Config import test ' . $this->randomString();
     $this->prepareSiteNameUpdate($new_site_name);
 
     $this->drupalGet('admin/config/development/configuration');
-    $this->assertNoText(t('There are no configuration changes to import.'));
-    $this->drupalPostForm(NULL, [], t('Import all'));
+    $this->assertNoText('There are no configuration changes to import.');
+    $this->submitForm([], 'Import all');
 
     // Verify that the validation messages appear.
     $this->assertText('The configuration cannot be imported because it failed validation for the following reasons:');
@@ -370,7 +371,7 @@ class ConfigImportUITest extends BrowserTestBase {
     $this->assertText('Config import validate error 2.');
 
     // Verify site name has not changed.
-    $this->assertNotEqual($new_site_name, $this->config('system.site')->get('name'));
+    $this->assertNotEquals($this->config('system.site')->get('name'), $new_site_name);
   }
 
   public function testConfigUninstallConfigException() {
@@ -384,7 +385,7 @@ class ConfigImportUITest extends BrowserTestBase {
     $this->assertText('core.extension');
 
     // Import and verify that both do not appear anymore.
-    $this->drupalPostForm(NULL, [], t('Import all'));
+    $this->submitForm([], 'Import all');
     $this->assertText('Can not uninstall the Configuration module as part of a configuration synchronization through the user interface.');
   }
 
@@ -438,14 +439,14 @@ class ConfigImportUITest extends BrowserTestBase {
     $sync->write($name_secondary, $values_secondary);
     // Verify that there are configuration differences to import.
     $this->drupalGet('admin/config/development/configuration');
-    $this->assertNoText(t('There are no configuration changes to import.'));
+    $this->assertNoText('There are no configuration changes to import.');
 
     // Attempt to import configuration and verify that an error message appears.
-    $this->drupalPostForm(NULL, [], t('Import all'));
-    $this->assertText(new FormattableMarkup('Deleted and replaced configuration entity "@name"', ['@name' => $name_secondary]));
-    $this->assertText(t('The configuration was imported with errors.'));
-    $this->assertNoText(t('The configuration was imported successfully.'));
-    $this->assertText(t('There are no configuration changes to import.'));
+    $this->submitForm([], 'Import all');
+    $this->assertText('Deleted and replaced configuration entity "' . $name_secondary . '"');
+    $this->assertText('The configuration was imported with errors.');
+    $this->assertNoText('The configuration was imported successfully.');
+    $this->assertText('There are no configuration changes to import.');
   }
 
   /**
@@ -454,7 +455,7 @@ class ConfigImportUITest extends BrowserTestBase {
    * @see \Drupal\Core\Entity\Event\BundleConfigImportValidate
    */
   public function testEntityBundleDelete() {
-    \Drupal::service('module_installer')->install(['node']);
+    Drupal::service('module_installer')->install(['node']);
     $this->copyConfig($this->container->get('config.storage'), $this->container->get('config.storage.sync'));
 
     $node_type = $this->drupalCreateContentType();
@@ -462,34 +463,34 @@ class ConfigImportUITest extends BrowserTestBase {
     $this->drupalGet('admin/config/development/configuration');
     // The node type, body field and entity displays will be scheduled for
     // removal.
-    $this->assertText(new FormattableMarkup('node.type.@type', ['@type' => $node_type->id()]));
-    $this->assertText(new FormattableMarkup('field.field.node.@type.body', ['@type' => $node_type->id()]));
-    $this->assertText(new FormattableMarkup('core.entity_view_display.node.@type.teaser', ['@type' => $node_type->id()]));
-    $this->assertText(new FormattableMarkup('core.entity_view_display.node.@type.default', ['@type' => $node_type->id()]));
-    $this->assertText(new FormattableMarkup('core.entity_form_display.node.@type.default', ['@type' => $node_type->id()]));
+    $this->assertText('node.type.' . $node_type->id());
+    $this->assertText('field.field.node.' . $node_type->id() . '.body');
+    $this->assertText('core.entity_view_display.node.' . $node_type->id() . '.teaser');
+    $this->assertText('core.entity_view_display.node.' . $node_type->id() . '.default');
+    $this->assertText('core.entity_form_display.node.' . $node_type->id() . '.default');
 
     // Attempt to import configuration and verify that an error message appears
     // and the node type, body field and entity displays are still scheduled for
     // removal.
-    $this->drupalPostForm(NULL, [], t('Import all'));
+    $this->submitForm([], 'Import all');
     $validation_message = t('Entities exist of type %entity_type and %bundle_label %bundle. These entities need to be deleted before importing.', ['%entity_type' => $node->getEntityType()->getLabel(), '%bundle_label' => $node->getEntityType()->getBundleLabel(), '%bundle' => $node_type->label()]);
     $this->assertRaw($validation_message);
-    $this->assertText(new FormattableMarkup('node.type.@type', ['@type' => $node_type->id()]));
-    $this->assertText(new FormattableMarkup('field.field.node.@type.body', ['@type' => $node_type->id()]));
-    $this->assertText(new FormattableMarkup('core.entity_view_display.node.@type.teaser', ['@type' => $node_type->id()]));
-    $this->assertText(new FormattableMarkup('core.entity_view_display.node.@type.default', ['@type' => $node_type->id()]));
-    $this->assertText(new FormattableMarkup('core.entity_form_display.node.@type.default', ['@type' => $node_type->id()]));
+    $this->assertText('node.type.' . $node_type->id());
+    $this->assertText('field.field.node.' . $node_type->id() . '.body');
+    $this->assertText('core.entity_view_display.node.' . $node_type->id() . '.teaser');
+    $this->assertText('core.entity_view_display.node.' . $node_type->id() . '.default');
+    $this->assertText('core.entity_form_display.node.' . $node_type->id() . '.default');
 
     // Delete the node and try to import again.
     $node->delete();
-    $this->drupalPostForm(NULL, [], t('Import all'));
+    $this->submitForm([], 'Import all');
     $this->assertNoRaw($validation_message);
-    $this->assertText(t('There are no configuration changes to import.'));
-    $this->assertNoText(new FormattableMarkup('node.type.@type', ['@type' => $node_type->id()]));
-    $this->assertNoText(new FormattableMarkup('field.field.node.@type.body', ['@type' => $node_type->id()]));
-    $this->assertNoText(new FormattableMarkup('core.entity_view_display.node.@type.teaser', ['@type' => $node_type->id()]));
-    $this->assertNoText(new FormattableMarkup('core.entity_view_display.node.@type.default', ['@type' => $node_type->id()]));
-    $this->assertNoText(new FormattableMarkup('core.entity_form_display.node.@type.default', ['@type' => $node_type->id()]));
+    $this->assertText('There are no configuration changes to import.');
+    $this->assertNoText('node.type.' . $node_type->id());
+    $this->assertNoText('field.field.node.' . $node_type->id() . '.body');
+    $this->assertNoText('core.entity_view_display.node.' . $node_type->id() . '.teaser');
+    $this->assertNoText('core.entity_view_display.node.' . $node_type->id() . '.default');
+    $this->assertNoText('core.entity_form_display.node.' . $node_type->id() . '.default');
   }
 
   /**
@@ -498,8 +499,8 @@ class ConfigImportUITest extends BrowserTestBase {
    * @see \Drupal\Core\EventSubscriber\ConfigImportSubscriber
    */
   public function testExtensionValidation() {
-    \Drupal::service('module_installer')->install(['node']);
-    \Drupal::service('theme_installer')->install(['test_subtheme']);
+    Drupal::service('module_installer')->install(['node']);
+    Drupal::service('theme_installer')->install(['test_subtheme']);
     $this->rebuildContainer();
 
     $sync = $this->container->get('config.storage.sync');
@@ -511,7 +512,7 @@ class ConfigImportUITest extends BrowserTestBase {
     $this->assertTrue(isset($module_data['node']->requires['text']), 'The Node module depends on the Text module.');
     // Bartik depends on Stable.
     unset($core['theme']['test_basetheme']);
-    $theme_data = \Drupal::service('theme_handler')->rebuildThemeData();
+    $theme_data = Drupal::service('theme_handler')->rebuildThemeData();
     $this->assertTrue(isset($theme_data['test_subtheme']->requires['test_basetheme']), 'The Test Subtheme theme depends on the Test Basetheme theme.');
     // This module does not exist.
     $core['module']['does_not_exist'] = 0;
@@ -519,7 +520,7 @@ class ConfigImportUITest extends BrowserTestBase {
     $core['theme']['does_not_exist'] = 0;
     $sync->write('core.extension', $core);
 
-    $this->drupalPostForm('admin/config/development/configuration', [], t('Import all'));
+    $this->drupalPostForm('admin/config/development/configuration', [], 'Import all');
     $this->assertText('The configuration cannot be imported because it failed validation for the following reasons:');
     $this->assertText('Unable to uninstall the Text module since the Node module is installed.');
     $this->assertText('Unable to uninstall the Theme test base theme theme since the Theme test subtheme theme is installed.');
@@ -533,8 +534,8 @@ class ConfigImportUITest extends BrowserTestBase {
   public function testBatchErrors() {
     $new_site_name = 'Config import test ' . $this->randomString();
     $this->prepareSiteNameUpdate($new_site_name);
-    \Drupal::state()->set('config_import_steps_alter.error', TRUE);
-    $this->drupalPostForm('admin/config/development/configuration', [], t('Import all'));
+    Drupal::state()->set('config_import_steps_alter.error', TRUE);
+    $this->drupalPostForm('admin/config/development/configuration', [], 'Import all');
     $this->assertSession()->responseContains('_config_import_test_config_import_steps_alter batch error');
     $this->assertSession()->responseContains('_config_import_test_config_import_steps_alter ConfigImporter error');
     $this->assertSession()->responseContains('The configuration was imported with errors.');

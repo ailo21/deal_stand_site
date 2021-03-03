@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\workspaces\Functional;
 
+use Drupal;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\workspaces\Entity\Workspace;
@@ -62,7 +63,7 @@ class PathWorkspacesTest extends BrowserTestBase {
       'settings[node][article][settings][language][language_alterable]' => 1,
     ];
     $this->drupalPostForm('admin/config/regional/content-language', $edit, 'Save configuration');
-    \Drupal::entityTypeManager()->clearCachedDefinitions();
+    Drupal::entityTypeManager()->clearCachedDefinitions();
 
     $this->setupWorkspaceSwitcherBlock();
   }
@@ -92,18 +93,18 @@ class PathWorkspacesTest extends BrowserTestBase {
 
     // Check that the 'preload-paths' cache includes the active workspace ID in
     // the cache key.
-    $this->assertNotEmpty(\Drupal::cache('data')->get('preload-paths:stage:/node/1'));
-    $this->assertFalse(\Drupal::cache('data')->get('preload-paths:/node/1'));
+    $this->assertNotEmpty(Drupal::cache('data')->get('preload-paths:stage:/node/1'));
+    $this->assertFalse(Drupal::cache('data')->get('preload-paths:/node/1'));
 
     // Check that the alias can not be accessed in Live.
     $this->switchToLive();
     $this->assertNotAccessiblePaths([$path]);
-    $this->assertFalse(\Drupal::cache('data')->get('preload-paths:/node/1'));
+    $this->assertFalse(Drupal::cache('data')->get('preload-paths:/node/1'));
 
     // Publish the workspace and check that the alias can be accessed in Live.
     $stage->publish();
     $this->assertAccessiblePaths([$path]);
-    $this->assertNotEmpty(\Drupal::cache('data')->get('preload-paths:/node/1'));
+    $this->assertNotEmpty(Drupal::cache('data')->get('preload-paths:/node/1'));
   }
 
   /**
@@ -131,21 +132,21 @@ class PathWorkspacesTest extends BrowserTestBase {
 
     // Check that the 'preload-paths' cache includes the active workspace ID in
     // the cache key.
-    $this->assertNotEmpty(\Drupal::cache('data')->get('preload-paths:stage:/node/1'));
-    $this->assertFalse(\Drupal::cache('data')->get('preload-paths:/node/1'));
+    $this->assertNotEmpty(Drupal::cache('data')->get('preload-paths:stage:/node/1'));
+    $this->assertFalse(Drupal::cache('data')->get('preload-paths:/node/1'));
 
     // Check that the alias can not be accessed in Live, by logging out without
     // an explicit switch.
     $this->drupalLogout();
     $this->assertNotAccessiblePaths([$path]);
-    $this->assertFalse(\Drupal::cache('data')->get('preload-paths:/node/1'));
+    $this->assertFalse(Drupal::cache('data')->get('preload-paths:/node/1'));
 
     // Publish the workspace and check that the alias can be accessed in Live.
     $this->drupalLogin($this->rootUser);
     $stage->publish();
     $this->drupalLogout();
     $this->assertAccessiblePaths([$path]);
-    $this->assertNotEmpty(\Drupal::cache('data')->get('preload-paths:/node/1'));
+    $this->assertNotEmpty(Drupal::cache('data')->get('preload-paths:/node/1'));
   }
 
   /**
@@ -171,7 +172,7 @@ class PathWorkspacesTest extends BrowserTestBase {
       'status[value]' => TRUE,
       'path[0][alias]' => '/' . $this->randomMachineName(),
     ];
-    $this->drupalPostForm(NULL, $edit_translation, 'Save (this translation)');
+    $this->submitForm($edit_translation, 'Save (this translation)');
     // Confirm that the alias works.
     $this->drupalGet('ro' . $edit_translation['path[0][alias]']);
     $this->assertSession()->pageTextContains($edit_translation['body[0][value]']);
@@ -213,7 +214,7 @@ class PathWorkspacesTest extends BrowserTestBase {
     $edit_new_translation_draft = [
       'body[0][value]' => $this->randomMachineName(),
     ];
-    $this->drupalPostForm('ro/node/' . $default_node->id() . '/edit', $edit_new_translation_draft, t('Save (this translation)'));
+    $this->drupalPostForm('ro/node/' . $default_node->id() . '/edit', $edit_new_translation_draft, 'Save (this translation)');
     // Confirm that the new draft revision was created.
     $this->assertSession()->pageTextContains($edit_new_translation_draft['body[0][value]']);
 

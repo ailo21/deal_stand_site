@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\Composer\Plugin\Scaffold;
 
+use RuntimeException;
 use Symfony\Component\Process\Process;
 
 /**
@@ -23,11 +24,11 @@ trait ExecTrait {
    *   Standard output from the command
    */
   protected function mustExec($cmd, $cwd, array $env = []) {
-    $process = new Process($cmd, $cwd, $env + ['PATH' => getenv('PATH'), 'HOME' => getenv('HOME')]);
+    $process = Process::fromShellCommandline($cmd, $cwd, $env + ['PATH' => getenv('PATH'), 'HOME' => getenv('HOME')]);
     $process->setTimeout(300)->setIdleTimeout(300)->run();
     $exitCode = $process->getExitCode();
     if (0 != $exitCode) {
-      throw new \RuntimeException("Exit code: {$exitCode}\n\n" . $process->getErrorOutput() . "\n\n" . $process->getOutput());
+      throw new RuntimeException("Exit code: {$exitCode}\n\n" . $process->getErrorOutput() . "\n\n" . $process->getOutput());
     }
     return $process->getOutput();
   }

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\taxonomy\Kernel\Migrate\d7;
 
+use Drupal;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
 use Drupal\taxonomy\TermInterface;
@@ -126,7 +127,7 @@ class MigrateTaxonomyTermTest extends MigrateDrupal7TestBase {
 
     // Reset the forums tree data so this new term is included in the tree.
     unset($this->treeData['forums']);
-    $this->assertEntity(25, 'en', 'Forum Container', 'forums', '', '', 0, [], NULL, NULL, 1);
+    $this->assertEntity(26, 'en', 'Forum Container', 'forums', '', '', 0, [], NULL, NULL, 1);
 
     // Test taxonomy term language translations.
     $this->assertEntity(19, 'en', 'Jupiter Station', 'vocablocalized', 'Holographic research.', 'filtered_html', 0, [], NULL, NULL, 1);
@@ -139,6 +140,7 @@ class MigrateTaxonomyTermTest extends MigrateDrupal7TestBase {
     // Localized.
     $this->assertEntity(19, 'en', 'Jupiter Station', 'vocablocalized', 'Holographic research.', 'filtered_html', '0', []);
     $this->assertEntity(20, 'en', 'DS9', 'vocablocalized', 'Terok Nor', 'filtered_html', '0', []);
+    $this->assertEntity(25, 'en', 'Emissary', 'vocablocalized2', 'Pilot episode', 'filtered_html', '0', []);
 
     /** @var \Drupal\taxonomy\TermInterface $entity */
     $entity = Term::load(20);
@@ -165,7 +167,7 @@ class MigrateTaxonomyTermTest extends MigrateDrupal7TestBase {
    *   List of parent term IDs.
    */
   protected function getParentIDs($tid) {
-    return array_keys(\Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadParents($tid));
+    return array_keys(Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadParents($tid));
   }
 
   /**
@@ -180,7 +182,7 @@ class MigrateTaxonomyTermTest extends MigrateDrupal7TestBase {
    */
   protected function assertHierarchy($vid, $tid, array $parent_ids) {
     if (!isset($this->treeData[$vid])) {
-      $tree = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadTree($vid);
+      $tree = Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadTree($vid);
       $this->treeData[$vid] = [];
       foreach ($tree as $item) {
         $this->treeData[$vid][$item->tid] = $item;

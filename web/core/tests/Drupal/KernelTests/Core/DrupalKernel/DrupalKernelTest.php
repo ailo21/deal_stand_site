@@ -6,8 +6,10 @@ use Composer\Autoload\ClassLoader;
 use Drupal\Core\DrupalKernel;
 use Drupal\Core\DrupalKernelInterface;
 use Drupal\KernelTests\KernelTestBase;
+use LogicException;
 use org\bovigo\vfs\vfsStream;
 use Prophecy\Argument;
+use ReflectionClass;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -75,7 +77,7 @@ class DrupalKernelTest extends KernelTestBase {
     // class.
     $kernel = $this->getTestKernel($request);
     $container = $kernel->getContainer();
-    $refClass = new \ReflectionClass($container);
+    $refClass = new ReflectionClass($container);
     $is_compiled_container = !$refClass->isSubclassOf('Symfony\Component\DependencyInjection\ContainerBuilder');
     $this->assertTrue($is_compiled_container);
     // Verify that the list of modules is the same for the initial and the
@@ -87,7 +89,7 @@ class DrupalKernelTest extends KernelTestBase {
     $container = $this->getTestKernel($request, NULL)
       ->getContainer();
 
-    $refClass = new \ReflectionClass($container);
+    $refClass = new ReflectionClass($container);
     $is_compiled_container = !$refClass->isSubclassOf('Symfony\Component\DependencyInjection\ContainerBuilder');
     $this->assertTrue($is_compiled_container);
 
@@ -98,7 +100,7 @@ class DrupalKernelTest extends KernelTestBase {
 
     // Test that our synthetic services are there.
     $class_loader = $container->get('class_loader');
-    $refClass = new \ReflectionClass($class_loader);
+    $refClass = new ReflectionClass($class_loader);
     $this->assertTrue($refClass->hasMethod('loadClass'), 'Container has a class loader');
 
     // We make this assertion here purely to show that the new container below
@@ -117,7 +119,7 @@ class DrupalKernelTest extends KernelTestBase {
     $kernel = $this->getTestKernel($request, $modules_enabled);
     $container = $kernel->getContainer();
 
-    $refClass = new \ReflectionClass($container);
+    $refClass = new ReflectionClass($container);
     $is_container_builder = $refClass->isSubclassOf('Symfony\Component\DependencyInjection\ContainerBuilder');
     $this->assertFalse($is_container_builder, 'Container is not a builder');
 
@@ -126,16 +128,12 @@ class DrupalKernelTest extends KernelTestBase {
 
     // Test that our synthetic services are there.
     $class_loader = $container->get('class_loader');
-    $refClass = new \ReflectionClass($class_loader);
+    $refClass = new ReflectionClass($class_loader);
     $this->assertTrue($refClass->hasMethod('loadClass'), 'Container has a class loader');
 
     // Check that the location of the new module is registered.
     $modules = $container->getParameter('container.modules');
-    $this->assertEqual($modules['service_provider_test'], [
-      'type' => 'module',
-      'pathname' => drupal_get_filename('module', 'service_provider_test'),
-      'filename' => NULL,
-    ]);
+    $this->assertEqual(['type' => 'module', 'pathname' => drupal_get_filename('module', 'service_provider_test'), 'filename' => NULL], $modules['service_provider_test']);
 
     // Check that the container itself is not among the persist IDs because it
     // does not make sense to persist the container itself.
@@ -181,7 +179,7 @@ class DrupalKernelTest extends KernelTestBase {
     try {
       $kernel->setSitePath('/dev/null');
     }
-    catch (\LogicException $e) {
+    catch (LogicException $e) {
       $pass = TRUE;
     }
     $this->assertTrue($pass, 'Throws LogicException if DrupalKernel::setSitePath() is called after boot');
@@ -193,7 +191,7 @@ class DrupalKernelTest extends KernelTestBase {
   }
 
   /**
-   * Data provider for self::testClassLoaderAutoDetect
+   * Data provider for self::testClassLoaderAutoDetect.
    * @return array
    */
   public function providerClassLoaderAutoDetect() {

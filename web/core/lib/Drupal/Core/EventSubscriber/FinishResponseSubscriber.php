@@ -2,6 +2,7 @@
 
 namespace Drupal\Core\EventSubscriber;
 
+use DateTime;
 use Drupal\Component\Datetime\DateTimePlus;
 use Drupal\Core\Cache\CacheableResponseInterface;
 use Drupal\Core\Cache\Context\CacheContextsManager;
@@ -156,6 +157,14 @@ class FinishResponseSubscriber implements EventSubscriberInterface {
       $response_cacheability = $response->getCacheableMetadata();
       $response->headers->set('X-Drupal-Cache-Tags', implode(' ', $response_cacheability->getCacheTags()));
       $response->headers->set('X-Drupal-Cache-Contexts', implode(' ', $this->cacheContextsManager->optimizeTokens($response_cacheability->getCacheContexts())));
+      $max_age_message = $response_cacheability->getCacheMaxAge();
+      if ($max_age_message === 0) {
+        $max_age_message = '0 (Uncacheable)';
+      }
+      elseif ($max_age_message === -1) {
+        $max_age_message = '-1 (Permanent)';
+      }
+      $response->headers->set('X-Drupal-Cache-Max-Age', $max_age_message);
     }
 
     $is_cacheable = ($this->requestPolicy->check($request) === RequestPolicyInterface::ALLOW) && ($this->responsePolicy->check($response, $request) !== ResponsePolicyInterface::DENY);
@@ -249,7 +258,7 @@ class FinishResponseSubscriber implements EventSubscriberInterface {
     // Last-Modified and an ETag header on the response.
     if (!$response->headers->has('Last-Modified')) {
       $timestamp = REQUEST_TIME;
-      $response->setLastModified(new \DateTime(gmdate(DateTimePlus::RFC7231, REQUEST_TIME)));
+      $response->setLastModified(new DateTime(gmdate(DateTimePlus::RFC7231, REQUEST_TIME)));
     }
     else {
       $timestamp = $response->getLastModified()->getTimestamp();
@@ -288,7 +297,7 @@ class FinishResponseSubscriber implements EventSubscriberInterface {
    *   A response object.
    */
   protected function setExpiresNoCache(Response $response) {
-    $response->setExpires(\DateTime::createFromFormat('j-M-Y H:i:s T', '19-Nov-1978 05:00:00 UTC'));
+    $response->setExpires(DateTime::createFromFormat('j-M-Y H:i:s T', '19-Nov-1978 05:00:00 UTC'));
   }
 
   /**

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\user\Traits;
 
+use Drupal;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Database\DatabaseExceptionWrapper;
 use Drupal\Core\Database\SchemaObjectExistsException;
@@ -11,6 +12,7 @@ use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
 use Drupal\user\RoleInterface;
+use LogicException;
 
 /**
  * Provides methods to create additional test users and switch the currently
@@ -54,7 +56,7 @@ trait UserCreationTrait {
     // In many cases the anonymous user account is fine for testing purposes,
     // however, if we need to create a user with a non-empty ID, we need also
     // the "sequences" table.
-    if (!\Drupal::moduleHandler()->moduleExists('system')) {
+    if (!Drupal::moduleHandler()->moduleExists('system')) {
       $values['uid'] = 0;
     }
     if ($this instanceof KernelTestBase && (!isset($values['uid']) || $values['uid'])) {
@@ -69,7 +71,7 @@ trait UserCreationTrait {
     // creating and assigning a new role to the user. This is not possible with
     // the anonymous user account.
     if (($admin || $permissions) && isset($values['uid']) && is_numeric($values['uid']) && $values['uid'] == 0) {
-      throw new \LogicException('The anonymous user account cannot have additional roles.');
+      throw new LogicException('The anonymous user account cannot have additional roles.');
     }
 
     $original_permissions = $permissions;
@@ -133,7 +135,7 @@ trait UserCreationTrait {
    *   The user account object.
    */
   protected function setCurrentUser(AccountInterface $account) {
-    \Drupal::currentUser()->setAccount($account);
+    Drupal::currentUser()->setAccount($account);
   }
 
   /**
@@ -177,7 +179,7 @@ trait UserCreationTrait {
     }
     $edit += [
       'mail' => $edit['name'] . '@example.com',
-      'pass' => user_password(),
+      'pass' => Drupal::service('password_generator')->generate(),
       'status' => 1,
     ];
     if ($rid) {
@@ -272,10 +274,7 @@ trait UserCreationTrait {
     }
     $result = $role->save();
 
-    $this->assertIdentical($result, SAVED_NEW, new FormattableMarkup('Created role ID @rid with name @name.', [
-      '@name' => var_export($role->label(), TRUE),
-      '@rid' => var_export($role->id(), TRUE),
-    ]), 'Role');
+    $this->assertSame(SAVED_NEW, $result, new FormattableMarkup('Created role ID @rid with name @name.', ['@name' => var_export($role->label(), TRUE), '@rid' => var_export($role->id(), TRUE)]), 'Role');
 
     if ($result === SAVED_NEW) {
       // Grant the specified permissions to the role, if any.
@@ -302,7 +301,7 @@ trait UserCreationTrait {
    *   TRUE if the permissions are valid, FALSE otherwise.
    */
   protected function checkPermissions(array $permissions) {
-    $available = array_keys(\Drupal::service('user.permissions')->getPermissions());
+    $available = array_keys(Drupal::service('user.permissions')->getPermissions());
     $valid = TRUE;
     foreach ($permissions as $permission) {
       if (!in_array($permission, $available)) {

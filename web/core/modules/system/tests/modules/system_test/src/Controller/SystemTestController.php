@@ -2,6 +2,7 @@
 
 namespace Drupal\system_test\Controller;
 
+use Drupal;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Cache\CacheableResponse;
 use Drupal\Core\Controller\ControllerBase;
@@ -220,7 +221,7 @@ class SystemTestController extends ControllerBase implements TrustedCallbackInte
   }
 
   /**
-   * Set cache tag on on the returned render array.
+   * Set cache tag on the returned render array.
    */
   public function system_test_cache_tags_page() {
     $build['main'] = [
@@ -376,7 +377,7 @@ class SystemTestController extends ControllerBase implements TrustedCallbackInte
    */
   public function getCurrentDate() {
     // Uses specific time to test that the right timezone is used.
-    $response = new Response(\Drupal::service('date.formatter')->format(1452702549));
+    $response = new Response(Drupal::service('date.formatter')->format(1452702549));
     return $response;
   }
 
@@ -410,7 +411,7 @@ class SystemTestController extends ControllerBase implements TrustedCallbackInte
    * Use a plain Symfony response object to output the current install_profile.
    */
   public function getInstallProfile() {
-    $install_profile = \Drupal::installProfile() ?: 'NONE';
+    $install_profile = Drupal::installProfile() ?: 'NONE';
     return new Response('install_profile: ' . $install_profile);
   }
 

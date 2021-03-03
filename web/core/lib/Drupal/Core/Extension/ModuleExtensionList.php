@@ -2,6 +2,7 @@
 
 namespace Drupal\Core\Extension;
 
+use Drupal;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\State\StateInterface;
@@ -28,7 +29,7 @@ class ModuleExtensionList extends ExtensionList {
     'description' => '',
     'package' => 'Other',
     'version' => NULL,
-    'php' => DRUPAL_MINIMUM_PHP,
+    'php' => Drupal::MINIMUM_PHP,
   ];
 
   /**

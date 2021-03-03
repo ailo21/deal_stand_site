@@ -2,6 +2,7 @@
 
 namespace Drupal\language\Element;
 
+use Drupal;
 use Drupal\Core\Url;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
@@ -18,7 +19,7 @@ class LanguageConfiguration extends FormElement {
    * {@inheritdoc}
    */
   public function getInfo() {
-    $class = get_class($this);
+    $class = static::class;
     return [
       '#input' => TRUE,
       '#tree' => TRUE,
@@ -110,7 +111,7 @@ class LanguageConfiguration extends FormElement {
    * @return \Drupal\Core\Language\LanguageManagerInterface
    */
   protected static function languageManager() {
-    return \Drupal::languageManager();
+    return Drupal::languageManager();
   }
 
 }

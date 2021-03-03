@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\locale\Functional;
 
+use Drupal;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\RequirementsPageTrait;
@@ -45,7 +46,7 @@ class LocaleTranslatedSchemaDefinitionTest extends BrowserTestBase {
    */
   public function testTranslatedSchemaDefinition() {
     /** @var \Drupal\locale\StringDatabaseStorage $stringStorage */
-    $stringStorage = \Drupal::service('locale.storage');
+    $stringStorage = Drupal::service('locale.storage');
 
     $source = $stringStorage->createString([
       'source' => 'Revision ID',
@@ -58,10 +59,10 @@ class LocaleTranslatedSchemaDefinitionTest extends BrowserTestBase {
     ])->save();
 
     // Ensure that the field is translated when access through the API.
-    $this->assertEqual('Translated Revision ID', \Drupal::service('entity_field.manager')->getBaseFieldDefinitions('node')['vid']->getLabel());
+    $this->assertEqual('Translated Revision ID', Drupal::service('entity_field.manager')->getBaseFieldDefinitions('node')['vid']->getLabel());
 
     // Assert there are no updates.
-    $this->assertFalse(\Drupal::service('entity.definition_update_manager')->needsUpdates());
+    $this->assertFalse(Drupal::service('entity.definition_update_manager')->needsUpdates());
   }
 
   /**
@@ -75,7 +76,7 @@ class LocaleTranslatedSchemaDefinitionTest extends BrowserTestBase {
     $this->drupalGet($update_url, ['external' => TRUE]);
 
     /** @var \Drupal\locale\StringDatabaseStorage $stringStorage */
-    $stringStorage = \Drupal::service('locale.storage');
+    $stringStorage = Drupal::service('locale.storage');
     $sources = $stringStorage->getStrings();
 
     // Translate all source strings found.
@@ -93,8 +94,8 @@ class LocaleTranslatedSchemaDefinitionTest extends BrowserTestBase {
     $this->drupalGet($update_url . '/selection', ['external' => TRUE]);
     $this->updateRequirementsProblem();
     $this->drupalGet($update_url . '/selection', ['external' => TRUE]);
-    $this->assertRaw('messages--status', 'No pending updates.');
-    $this->assertNoLinkByHref('fr/update.php/run', 'No link to run updates.');
+    $this->assertRaw('messages--status');
+    $this->assertSession()->linkByHrefNotExists('fr/update.php/run', 'No link to run updates.');
   }
 
 }

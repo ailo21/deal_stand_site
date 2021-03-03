@@ -2,6 +2,7 @@
 
 namespace Drupal\views\Plugin\views\exposed_form;
 
+use Drupal;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableDependencyInterface;
 use Drupal\Core\Form\FormState;
@@ -131,7 +132,7 @@ abstract class ExposedFormPluginBase extends PluginBase implements CacheableDepe
       $form_state->set('ajax', TRUE);
     }
 
-    $form = \Drupal::formBuilder()->buildForm('\Drupal\views\Form\ViewsExposedForm', $form_state);
+    $form = Drupal::formBuilder()->buildForm('\Drupal\views\Form\ViewsExposedForm', $form_state);
     $errors = $form_state->getErrors();
 
     // If the exposed form had errors, do not build the view.
@@ -322,7 +323,7 @@ abstract class ExposedFormPluginBase extends PluginBase implements CacheableDepe
     }
 
     // Set the form to allow redirect.
-    if (empty($this->view->live_preview) && !\Drupal::request()->isXmlHttpRequest()) {
+    if (empty($this->view->live_preview) && !Drupal::request()->isXmlHttpRequest()) {
       $form_state->disableRedirect(FALSE);
     }
     else {
@@ -347,7 +348,7 @@ abstract class ExposedFormPluginBase extends PluginBase implements CacheableDepe
   public function getCacheContexts() {
     $contexts = [];
     if ($this->options['expose_sort_order']) {
-      // The sort order query arg is just important in case there is a exposed
+      // The sort order query arg is just important in case there is an exposed
       // sort order.
       $has_exposed_sort_handler = FALSE;
       /** @var \Drupal\views\Plugin\views\sort\SortPluginBase $sort_handler */

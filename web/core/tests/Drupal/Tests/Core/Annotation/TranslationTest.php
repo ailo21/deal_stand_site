@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\Core\Annotation;
 
+use Drupal;
 use Drupal\Core\Annotation\Translation;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Tests\UnitTestCase;
@@ -34,12 +35,7 @@ class TranslationTest extends UnitTestCase {
   public function testGet(array $values, $expected) {
     $container = new ContainerBuilder();
     $container->set('string_translation', $this->translationManager);
-    \Drupal::setContainer($container);
-
-    $arguments = isset($values['arguments']) ? $values['arguments'] : [];
-    $options = isset($values['context']) ? [
-      'context' => $values['context'],
-    ] : [];
+    Drupal::setContainer($container);
 
     $annotation = new Translation($values);
 

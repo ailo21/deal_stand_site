@@ -29,7 +29,7 @@ function drupal_get_schema_versions($module) {
   $updates = &drupal_static(__FUNCTION__, NULL);
   if (!isset($updates[$module])) {
     $updates = [];
-    foreach (\Drupal::moduleHandler()->getModuleList() as $loaded_module => $filename) {
+    foreach (Drupal::moduleHandler()->getModuleList() as $loaded_module => $filename) {
       $updates[$loaded_module] = [];
     }
 
@@ -46,7 +46,7 @@ function drupal_get_schema_versions($module) {
       // If this function is a module update function, add it to the list of
       // module updates.
       if (preg_match($regexp, $function, $matches)) {
-        $updates[$matches['module']][] = $matches['version'];
+        $updates[$matches['module']][] = (int) $matches['version'];
       }
     }
     // Ensure that updates are applied in numerical order.
@@ -80,7 +80,7 @@ function drupal_get_installed_schema_version($module, $reset = FALSE, $array = F
   }
 
   if (!$versions) {
-    if (!$versions = \Drupal::keyValue('system.schema')->getAll()) {
+    if (!$versions = Drupal::keyValue('system.schema')->getAll()) {
       $versions = [];
     }
   }
@@ -102,7 +102,7 @@ function drupal_get_installed_schema_version($module, $reset = FALSE, $array = F
  *   The new schema version.
  */
 function drupal_set_installed_schema_version($module, $version) {
-  \Drupal::keyValue('system.schema')->set($module, $version);
+  Drupal::keyValue('system.schema')->set($module, $version);
   // Reset the static cache of module schema versions.
   drupal_get_installed_schema_version(NULL, TRUE);
 }
@@ -118,7 +118,7 @@ function drupal_install_schema($module) {
   _drupal_schema_initialize($schema, $module, FALSE);
 
   foreach ($schema as $name => $table) {
-    \Drupal::database()->schema()->createTable($name, $table);
+    Drupal::database()->schema()->createTable($name, $table);
   }
 }
 
@@ -131,7 +131,7 @@ function drupal_install_schema($module) {
 function drupal_uninstall_schema($module) {
   $tables = drupal_get_module_schema($module);
   _drupal_schema_initialize($tables, $module, FALSE);
-  $schema = \Drupal::database()->schema();
+  $schema = Drupal::database()->schema();
   foreach ($tables as $table) {
     if ($schema->tableExists($table['name'])) {
       $schema->dropTable($table['name']);
@@ -155,7 +155,7 @@ function drupal_uninstall_schema($module) {
 function drupal_get_module_schema($module, $table = NULL) {
   // Load the .install file to get hook_schema.
   module_load_install($module);
-  $schema = \Drupal::moduleHandler()->invoke($module, 'schema');
+  $schema = Drupal::moduleHandler()->invoke($module, 'schema');
 
   if (isset($table)) {
     if (isset($schema[$table])) {

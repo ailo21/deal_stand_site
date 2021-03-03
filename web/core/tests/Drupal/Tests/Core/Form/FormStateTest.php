@@ -12,6 +12,7 @@ use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\Tests\UnitTestCase;
+use LogicException;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
@@ -120,7 +121,7 @@ class FormStateTest extends UnitTestCase {
     return [
       // Only validate the 'options' element.
       [[['options']], ['options' => '']],
-      // Do not limit an validation, and, ensuring the first error is returned
+      // Do not limit a validation, ensure the first error is returned
       // for the 'test' element.
       [NULL, ['test' => 'Fail 1', 'options' => '']],
       // Limit all validation.
@@ -136,7 +137,7 @@ class FormStateTest extends UnitTestCase {
   public function testFormErrorsDuringSubmission() {
     $form_state = new FormState();
     $form_state->setValidationComplete();
-    $this->expectException(\LogicException::class);
+    $this->expectException(LogicException::class);
     $this->expectExceptionMessage('Form errors cannot be set after form validation has finished.');
     $form_state->setErrorByName('test', 'message');
   }
@@ -318,7 +319,7 @@ class FormStateTest extends UnitTestCase {
   public function testSetCachedGet() {
     $form_state = new FormState();
     $form_state->setRequestMethod('GET');
-    $this->expectException(\LogicException::class);
+    $this->expectException(LogicException::class);
     $this->expectExceptionMessage('Form state caching on GET requests is not allowed.');
     $form_state->setCached();
   }

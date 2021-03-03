@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\system\Kernel;
 
+use Drupal;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Cache\Context\CacheContextsManager;
 use Drupal\Core\Datetime\Entity\DateFormat;
@@ -53,7 +54,7 @@ class DateFormatAccessControlHandlerTest extends KernelTestBase {
    * @dataProvider testAccessProvider
    */
   public function testAccess($which_user, $which_entity, $view_label_access_result, $view_access_result, $update_access_result, $delete_access_result, $create_access_result) {
-    // We must always create user 1, so that a "normal" user has a ID >1.
+    // We must always create user 1, so that a "normal" user has an ID >1.
     $root_user = $this->drupalCreateUser();
 
     if ($which_user === 'user1') {
@@ -86,7 +87,7 @@ class DateFormatAccessControlHandlerTest extends KernelTestBase {
     $cache_contexts_manager->assertValidTokens()->willReturn(TRUE);
     $cache_contexts_manager->reveal();
     $c->set('cache_contexts_manager', $cache_contexts_manager);
-    \Drupal::setContainer($c);
+    Drupal::setContainer($c);
 
     return [
       'permissionless + unlocked' => [

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\help_topics\Functional;
 
+use Drupal;
 use Drupal\Tests\Traits\Core\CronRunTrait;
 use Drupal\help_topics\Plugin\Search\HelpSearch;
 
@@ -82,7 +83,7 @@ class HelpTopicSearchTest extends HelpTopicTranslatedTestBase {
    * Tests help topic search.
    */
   public function testHelpSearch() {
-    $german = \Drupal::languageManager()->getLanguage('de');
+    $german = Drupal::languageManager()->getLanguage('de');
     $session = $this->assertSession();
 
     // Verify that when we search in English for a word that is only in
@@ -148,7 +149,7 @@ class HelpTopicSearchTest extends HelpTopicTranslatedTestBase {
     // Verify that we can search from the admin/help page.
     $this->drupalGet('admin/help');
     $session->pageTextContains('Search help');
-    $this->drupalPostForm(NULL, ['keys' => 'nonworditem'], 'Search');
+    $this->submitForm(['keys' => 'nonworditem'], 'Search');
     $this->assertSearchResultsCount(1);
     $session->linkExists('ABC Help Test module');
 
@@ -174,7 +175,7 @@ class HelpTopicSearchTest extends HelpTopicTranslatedTestBase {
     // Just changing the title and running cron is not enough to reindex so
     // 'sdeeeee' still hits a match. The content is updated because the help
     // topic is rendered each time.
-    \Drupal::state()->set('help_topics_test:translated_title', 'Updated translated title');
+    Drupal::state()->set('help_topics_test:translated_title', 'Updated translated title');
     $this->cronRun();
     $this->drupalPostForm('admin/help', ['keys' => 'sdeeeee'], 'Search', [
       'language' => $german,
@@ -232,7 +233,7 @@ class HelpTopicSearchTest extends HelpTopicTranslatedTestBase {
 
     // Uninstall the test module and verify its topics are immediately not
     // searchable.
-    \Drupal::service('module_installer')->uninstall(['help_topics_test']);
+    Drupal::service('module_installer')->uninstall(['help_topics_test']);
     $this->drupalPostForm('search/help', ['keys' => 'nonworditem'], 'Search');
     $this->assertSearchResultsCount(0);
   }
@@ -241,15 +242,15 @@ class HelpTopicSearchTest extends HelpTopicTranslatedTestBase {
    * Tests uninstalling the help_topics module.
    */
   public function testUninstall() {
-    \Drupal::service('module_installer')->uninstall(['help_topics_test']);
+    Drupal::service('module_installer')->uninstall(['help_topics_test']);
     // Ensure we can uninstall help_topics and use the help system without
     // breaking.
     $this->drupalLogin($this->rootUser);
     $edit = [];
     $edit['uninstall[help_topics]'] = TRUE;
-    $this->drupalPostForm('admin/modules/uninstall', $edit, t('Uninstall'));
-    $this->drupalPostForm(NULL, NULL, t('Uninstall'));
-    $this->assertText(t('The selected modules have been uninstalled.'), 'Modules status has been updated.');
+    $this->drupalPostForm('admin/modules/uninstall', $edit, 'Uninstall');
+    $this->submitForm([], 'Uninstall');
+    $this->assertText('The selected modules have been uninstalled.');
     $this->drupalGet('admin/help');
     $this->assertSession()->statusCodeEquals(200);
   }

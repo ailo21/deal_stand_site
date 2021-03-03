@@ -42,8 +42,8 @@ function system_removed_post_updates() {
  * Update all entity form displays that contain extra fields.
  */
 function system_post_update_extra_fields_form_display(&$sandbox = NULL) {
-  $config_entity_updater = \Drupal::classResolver(ConfigEntityUpdater::class);
-  $entity_field_manager = \Drupal::service('entity_field.manager');
+  $config_entity_updater = Drupal::classResolver(ConfigEntityUpdater::class);
+  $entity_field_manager = Drupal::service('entity_field.manager');
 
   $callback = function (EntityDisplayInterface $display) use ($entity_field_manager) {
     $display_context = $display instanceof EntityViewDisplayInterface ? 'display' : 'form';
@@ -72,7 +72,7 @@ function system_post_update_extra_fields_form_display(&$sandbox = NULL) {
  * @see https://www.drupal.org/project/drupal/issues/3110862
  */
 function system_post_update_uninstall_simpletest() {
-  \Drupal::service('module_installer')->uninstall(['simpletest']);
+  Drupal::service('module_installer')->uninstall(['simpletest']);
 }
 
 /**
@@ -81,7 +81,7 @@ function system_post_update_uninstall_simpletest() {
  * @see https://www.drupal.org/project/drupal/issues/3111645
  */
 function system_post_update_uninstall_entity_reference_module() {
-  \Drupal::service('module_installer')->uninstall(['entity_reference']);
+  Drupal::service('module_installer')->uninstall(['entity_reference']);
 }
 
 /**
@@ -89,7 +89,7 @@ function system_post_update_uninstall_entity_reference_module() {
  */
 function system_post_update_entity_revision_metadata_bc_cleanup() {
   /** @var \Drupal\Core\Entity\EntityLastInstalledSchemaRepositoryInterface $last_installed_schema_repository */
-  $last_installed_schema_repository = \Drupal::service('entity.last_installed_schema.repository');
+  $last_installed_schema_repository = Drupal::service('entity.last_installed_schema.repository');
 
   // Get a list of content entity types.
   /** @var \Drupal\Core\Entity\EntityTypeInterface[] $last_installed_definitions */
@@ -102,7 +102,7 @@ function system_post_update_entity_revision_metadata_bc_cleanup() {
     $closure = function (ContentEntityTypeInterface $entity_type) {
       return get_object_vars($entity_type);
     };
-    $closure = \Closure::bind($closure, NULL, $entity_type);
+    $closure = Closure::bind($closure, NULL, $entity_type);
 
     $entity_type_definition = $closure($entity_type);
     unset($entity_type_definition["\x00*\x00requiredRevisionMetadataKeys"]);
@@ -117,11 +117,11 @@ function system_post_update_entity_revision_metadata_bc_cleanup() {
  */
 function system_post_update_uninstall_classy() {
   /** @var \Drupal\Core\Extension\ThemeInstallerInterface $theme_installer */
-  $theme_installer = \Drupal::getContainer()->get('theme_installer');
+  $theme_installer = Drupal::getContainer()->get('theme_installer');
   try {
     $theme_installer->uninstall(['classy']);
   }
-  catch (\InvalidArgumentException | UnknownExtensionException $exception) {
+  catch (InvalidArgumentException | UnknownExtensionException $exception) {
     // Exception is thrown if Classy wasn't installed or if there are themes
     // depending on it.
   }
@@ -138,12 +138,33 @@ function system_post_update_uninstall_classy() {
  */
 function system_post_update_uninstall_stable() {
   /** @var \Drupal\Core\Extension\ThemeInstallerInterface $theme_installer */
-  $theme_installer = \Drupal::getContainer()->get('theme_installer');
+  $theme_installer = Drupal::getContainer()->get('theme_installer');
   try {
     $theme_installer->uninstall(['stable']);
   }
-  catch (\InvalidArgumentException | UnknownExtensionException $exception) {
+  catch (InvalidArgumentException | UnknownExtensionException $exception) {
     // Exception is thrown if Stable wasn't installed or if there are themes
     // depending on it.
+  }
+}
+
+/**
+ * Clear caches due to trustedCallbacks changing in ClaroPreRender.
+ */
+function system_post_update_claro_dropbutton_variants() {
+  // Empty post-update hook.
+}
+
+/**
+ * Update schema version to integers.
+ *
+ * @see https://www.drupal.org/project/drupal/issues/3143713
+ */
+function system_post_update_schema_version_int() {
+  $registry = Drupal::keyValue('system.schema');
+  foreach ($registry->getAll() as $name => $schema) {
+    if (is_string($schema)) {
+      $registry->set($name, (int) $schema);
+    }
   }
 }

@@ -12,6 +12,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\field\FieldStorageConfigInterface;
 use Drupal\field_ui\FieldUI;
+use Exception;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -187,9 +188,7 @@ class FieldStorageAddForm extends FormBase {
     $field_prefix = $this->config('field_ui.settings')->get('field_prefix');
     $form['new_storage_wrapper']['field_name'] = [
       '#type' => 'machine_name',
-      // This field should stay LTR even for RTL languages.
-      '#field_prefix' => '<span dir="ltr">' . $field_prefix,
-      '#field_suffix' => '</span>&lrm;',
+      '#field_prefix' => $field_prefix,
       '#size' => 15,
       '#description' => $this->t('A unique machine-readable name containing letters, numbers, and underscores.'),
       // Calculate characters depending on the length of the field prefix
@@ -340,7 +339,7 @@ class FieldStorageAddForm extends FormBase {
 
       // Check if we're dealing with a preconfigured field.
       if (strpos($field_storage_values['type'], 'field_ui:') !== FALSE) {
-        list(, $field_type, $option_key) = explode(':', $field_storage_values['type'], 3);
+        [, $field_type, $option_key] = explode(':', $field_storage_values['type'], 3);
         $field_storage_values['type'] = $field_type;
 
         $field_definition = $this->fieldTypePluginManager->getDefinition($field_type);
@@ -392,7 +391,7 @@ class FieldStorageAddForm extends FormBase {
         // Store new field information for any additional submit handlers.
         $form_state->set(['fields_added', '_add_new_field'], $values['field_name']);
       }
-      catch (\Exception $e) {
+      catch (Exception $e) {
         $error = TRUE;
         $this->messenger()->addError($this->t('There was a problem creating field %label: @message', ['%label' => $values['label'], '@message' => $e->getMessage()]));
       }
@@ -423,7 +422,7 @@ class FieldStorageAddForm extends FormBase {
         // Store new field information for any additional submit handlers.
         $form_state->set(['fields_added', '_add_existing_field'], $field_name);
       }
-      catch (\Exception $e) {
+      catch (Exception $e) {
         $error = TRUE;
         $this->messenger()->addError($this->t('There was a problem creating field %label: @message', ['%label' => $values['label'], '@message' => $e->getMessage()]));
       }

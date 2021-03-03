@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\system\Functional\Form;
 
+use Drupal;
 use Drupal\Core\Serialization\Yaml;
 use Drupal\Tests\BrowserTestBase;
 
@@ -27,7 +28,7 @@ class ModulesListFormWebTest extends BrowserTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
-    \Drupal::state()->set('system_test.module_hidden', FALSE);
+    Drupal::state()->set('system_test.module_hidden', FALSE);
     $this->drupalLogin($this->drupalCreateUser([
       'administer modules',
       'administer permissions',
@@ -41,13 +42,13 @@ class ModulesListFormWebTest extends BrowserTestBase {
     $this->drupalGet('admin/modules');
 
     // Check that system_test's configure link was rendered correctly.
-    $this->assertFieldByXPath("//a[contains(@href, '/system-test/configure/bar') and text()='Configure ']/span[contains(@class, 'visually-hidden') and text()='the System test module']");
+    $this->assertSession()->elementExists('xpath', "//a[contains(@href, '/system-test/configure/bar') and text()='Configure ']/span[contains(@class, 'visually-hidden') and text()='the System test module']");
 
     // Check that system_test's permissions link was rendered correctly.
-    $this->assertFieldByXPath("//a[contains(@href, '/admin/people/permissions#module-system_test') and @title='Configure permissions']");
+    $this->assertSession()->elementExists('xpath', "//a[contains(@href, '/admin/people/permissions#module-system_test') and @title='Configure permissions']");
 
     // Check that system_test's help link was rendered correctly.
-    $this->assertFieldByXPath("//a[contains(@href, '/admin/help/system_test') and @title='Help']");
+    $this->assertSession()->elementExists('xpath', "//a[contains(@href, '/admin/help/system_test') and @title='Help']");
 
     // Ensure that the Database Logging module's machine name is printed. This
     // module is used because its machine name is different than its human
@@ -59,7 +60,7 @@ class ModulesListFormWebTest extends BrowserTestBase {
    * Tests the module form with modules with invalid info.yml files.
    */
   public function testModulesListFormWithInvalidInfoFile() {
-    $path = \Drupal::getContainer()->getParameter('site.path') . "/modules/broken";
+    $path = Drupal::getContainer()->getParameter('site.path') . "/modules/broken";
     mkdir($path, 0777, TRUE);
     $file_path = "$path/broken.info.yml";
 
@@ -130,7 +131,7 @@ BROKEN,
    */
   public function testInstalledIncompatibleModule() {
     $incompatible_modules_message = 'There are errors with some installed modules. Visit the status report page for more information.';
-    $path = \Drupal::getContainer()->getParameter('site.path') . "/modules/changing_module";
+    $path = Drupal::getContainer()->getParameter('site.path') . "/modules/changing_module";
     mkdir($path, 0777, TRUE);
     $file_path = "$path/changing_module.info.yml";
     $info = [
@@ -142,7 +143,7 @@ BROKEN,
     file_put_contents($file_path, Yaml::encode($compatible_info));
     $edit = ['modules[changing_module][enable]' => 'changing_module'];
     $this->drupalGet('admin/modules');
-    $this->drupalPostForm('admin/modules', $edit, t('Install'));
+    $this->drupalPostForm('admin/modules', $edit, 'Install');
     $this->assertText('Module Module that changes has been enabled.');
 
     $incompatible_updates = [
@@ -166,8 +167,8 @@ BROKEN,
     // Uninstall the module and ensure that incompatible modules message is not
     // displayed for modules that are not installed.
     $edit = ['uninstall[changing_module]' => 'changing_module'];
-    $this->drupalPostForm('admin/modules/uninstall', $edit, t('Uninstall'));
-    $this->drupalPostForm(NULL, NULL, t('Uninstall'));
+    $this->drupalPostForm('admin/modules/uninstall', $edit, 'Uninstall');
+    $this->submitForm([], 'Uninstall');
     $this->assertText('The selected modules have been uninstalled.');
     foreach ($incompatible_updates as $incompatible_update) {
       $incompatible_info = $info + $incompatible_update;

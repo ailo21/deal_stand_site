@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\views\Kernel\Handler;
 
+use Drupal;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormState;
@@ -73,7 +74,7 @@ class AreaEntityTest extends ViewsKernelTestBase {
     foreach (array_keys($expected_entities) as $entity) {
       $this->assertTrue(!empty($data['entity_' . $entity]), new FormattableMarkup('Views entity area data found for @entity', ['@entity' => $entity]));
       // Test that entity_type is set correctly in the area data.
-      $this->assertEqual($entity, $data['entity_' . $entity]['area']['entity_type'], new FormattableMarkup('Correct entity_type set for @entity', ['@entity' => $entity]));
+      $this->assertEqual($data['entity_' . $entity]['area']['entity_type'], $entity, new FormattableMarkup('Correct entity_type set for @entity', ['@entity' => $entity]));
     }
 
     $expected_entities = array_filter($entity_types, function (EntityTypeInterface $type) {
@@ -106,7 +107,7 @@ class AreaEntityTest extends ViewsKernelTestBase {
 
       $entity_test->save();
       $entities[] = $entity_test;
-      \Drupal::state()
+      Drupal::state()
         ->set('entity_test_entity_access.view.' . $entity_test->id(), $i != 2);
     }
 
@@ -125,7 +126,7 @@ class AreaEntityTest extends ViewsKernelTestBase {
     $renderer = $this->container->get('renderer');
     $view = Views::getView('test_entity_area');
     $preview = $view->preview('default', [$entities[1]->id()]);
-    $this->setRawContent(\Drupal::service('renderer')->renderRoot($preview));
+    $this->setRawContent(Drupal::service('renderer')->renderRoot($preview));
     $view_class = 'js-view-dom-id-' . $view->dom_id;
     $header_xpath = '//div[@class = "' . $view_class . '"]/header[1]';
     $footer_xpath = '//div[@class = "' . $view_class . '"]/footer[1]';
@@ -150,7 +151,7 @@ class AreaEntityTest extends ViewsKernelTestBase {
     $this->assertStringContainsString('full', (string) $result[0], 'The rendered entity appeared in the right view mode.');
 
     // Mark entity_test test view_mode as customizable.
-    $entity_view_mode = \Drupal::entityTypeManager()->getStorage('entity_view_mode')->load('entity_test.test');
+    $entity_view_mode = Drupal::entityTypeManager()->getStorage('entity_view_mode')->load('entity_test.test');
     $entity_view_mode->enable();
     $entity_view_mode->save();
 

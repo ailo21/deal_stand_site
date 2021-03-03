@@ -2,9 +2,11 @@
 
 namespace Drupal\KernelTests\Core\Render\Element;
 
+use Drupal;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Url;
 use Drupal\KernelTests\KernelTestBase;
+use SimpleXMLElement;
 
 /**
  * Tests the markup of core render element types passed to drupal_render().
@@ -23,7 +25,6 @@ class RenderElementTypesTest extends KernelTestBase {
   protected function setUp(): void {
     parent::setUp();
     $this->installConfig(['system']);
-    \Drupal::service('router.builder')->rebuild();
   }
 
   /**
@@ -37,7 +38,7 @@ class RenderElementTypesTest extends KernelTestBase {
    *   Assertion message.
    */
   protected function assertElements(array $elements, $expected_html, $message) {
-    $actual_html = (string) \Drupal::service('renderer')->renderRoot($elements);
+    $actual_html = (string) Drupal::service('renderer')->renderRoot($elements);
 
     $out = '<table><tr>';
     $out .= '<td valign="top"><pre>' . Html::escape($expected_html) . '</pre></td>';
@@ -45,7 +46,7 @@ class RenderElementTypesTest extends KernelTestBase {
     $out .= '</tr></table>';
     $this->verbose($out);
 
-    $this->assertIdentical($actual_html, $expected_html, Html::escape($message));
+    $this->assertSame($expected_html, $actual_html, Html::escape($message));
   }
 
   /**
@@ -166,7 +167,7 @@ class RenderElementTypesTest extends KernelTestBase {
           '#type' => 'more_link',
           '#url' => Url::fromRoute('router_test.1'),
         ],
-        'expected' => '//div[@class="more-link"]/a[@href="' . \Drupal::urlGenerator()->generate('router_test.1') . '" and text()="More"]',
+        'expected' => '//div[@class="more-link"]/a[@href="' . Drupal::urlGenerator()->generate('router_test.1') . '" and text()="More"]',
       ],
       [
         'name' => "#type 'more_link' anchor tag with an absolute path",
@@ -188,7 +189,7 @@ class RenderElementTypesTest extends KernelTestBase {
     ];
 
     foreach ($elements as $element) {
-      $xml = new \SimpleXMLElement(\Drupal::service('renderer')->renderRoot($element['value']));
+      $xml = new SimpleXMLElement(Drupal::service('renderer')->renderRoot($element['value']));
       $result = $xml->xpath($element['expected']);
       $this->assertNotEmpty($result, '"' . $element['name'] . '" input rendered correctly by drupal_render().');
     }
@@ -219,13 +220,13 @@ class RenderElementTypesTest extends KernelTestBase {
     ];
 
     foreach ($elements as $element) {
-      $xml = new \SimpleXMLElement(\Drupal::service('renderer')->renderRoot($element['value']));
+      $xml = new SimpleXMLElement(Drupal::service('renderer')->renderRoot($element['value']));
       $result = $xml->xpath($element['expected']);
       $this->assertNotEmpty($result, '"' . $element['name'] . '" is rendered correctly by drupal_render().');
     }
 
     // Set admin compact mode on for additional tests.
-    \Drupal::request()->cookies->set('Drupal_visitor_admin_compact_mode', TRUE);
+    Drupal::request()->cookies->set('Drupal_visitor_admin_compact_mode', TRUE);
 
     $element = [
       'name' => "#type 'system_compact_link' when admin compact mode is on",
@@ -235,7 +236,7 @@ class RenderElementTypesTest extends KernelTestBase {
       'expected' => '//div[@class="compact-link"]/a[contains(@href, "admin/compact?") and text()="Show descriptions"]',
     ];
 
-    $xml = new \SimpleXMLElement(\Drupal::service('renderer')->renderRoot($element['value']));
+    $xml = new SimpleXMLElement(Drupal::service('renderer')->renderRoot($element['value']));
     $result = $xml->xpath($element['expected']);
     $this->assertNotEmpty($result, '"' . $element['name'] . '" is rendered correctly by drupal_render().');
   }

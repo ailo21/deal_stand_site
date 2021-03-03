@@ -2,6 +2,7 @@
 
 namespace Drupal\file;
 
+use Drupal;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityAccessControlHandler;
 use Drupal\Core\Entity\EntityInterface;
@@ -21,7 +22,7 @@ class FileAccessControlHandler extends EntityAccessControlHandler {
   protected function checkAccess(EntityInterface $entity, $operation, AccountInterface $account) {
     /** @var \Drupal\file\FileInterface $entity */
     if ($operation == 'download' || $operation == 'view') {
-      if (\Drupal::service('stream_wrapper_manager')->getScheme($entity->getFileUri()) === 'public') {
+      if (Drupal::service('stream_wrapper_manager')->getScheme($entity->getFileUri()) === 'public') {
         if ($operation === 'download') {
           return AccessResult::allowed();
         }
@@ -50,7 +51,7 @@ class FileAccessControlHandler extends EntityAccessControlHandler {
           // file is positively allowed access to it. See file_save_upload().
           // @todo Implement \Drupal\Core\Entity\EntityHandlerInterface so that
           //   services can be more properly injected.
-          $allowed_fids = \Drupal::service('session')->get('anonymous_allowed_file_ids', []);
+          $allowed_fids = Drupal::service('session')->get('anonymous_allowed_file_ids', []);
           if (!empty($allowed_fids[$entity->id()])) {
             return AccessResult::allowed()->addCacheContexts(['session', 'user']);
           }
@@ -125,7 +126,7 @@ class FileAccessControlHandler extends EntityAccessControlHandler {
     // The file entity has no "create" permission because by default Drupal core
     // does not allow creating file entities independently. It allows you to
     // create file entities that are referenced from another entity
-    // (e.g. an image for a article). A contributed module is free to alter
+    // (e.g. an image for an article). A contributed module is free to alter
     // this to allow file entities to be created directly.
     return AccessResult::neutral();
   }

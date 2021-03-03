@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\node\Kernel\Migrate\d7;
 
+use Drupal;
 use Drupal\comment\Plugin\Field\FieldType\CommentItemInterface;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\Tests\file\Kernel\Migrate\d7\FileMigrationSetupTrait;
@@ -135,7 +136,7 @@ class MigrateNodeTest extends MigrateDrupal7TestBase {
    *   The revision's time stamp.
    */
   protected function assertRevision($id, $title, $uid, $log, $timestamp) {
-    $revision = \Drupal::entityTypeManager()->getStorage('node')->loadRevision($id);
+    $revision = Drupal::entityTypeManager()->getStorage('node')->loadRevision($id);
     $this->assertInstanceOf(NodeInterface::class, $revision);
     $this->assertEquals($title, $revision->getTitle());
     $this->assertEquals($uid, $revision->getRevisionUser()->id());
@@ -150,7 +151,7 @@ class MigrateNodeTest extends MigrateDrupal7TestBase {
     // Confirm there are only classic node migration map tables. This shows
     // that only the classic migration ran.
     $results = $this->nodeMigrateMapTableCount('7');
-    $this->assertSame(8, $results['node']);
+    $this->assertSame(9, $results['node']);
     $this->assertSame(0, $results['node_complete']);
 
     $this->assertEntity(1, 'test_content_type', 'en', 'An English Node', '2', TRUE, '1421727515', '1441032132', TRUE, FALSE);

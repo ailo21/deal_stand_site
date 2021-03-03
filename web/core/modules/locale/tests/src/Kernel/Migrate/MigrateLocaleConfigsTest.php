@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\locale\Kernel\Migrate;
 
+use Drupal;
 use Drupal\Tests\SchemaCheckTestTrait;
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
 
@@ -33,8 +34,8 @@ class MigrateLocaleConfigsTest extends MigrateDrupal6TestBase {
   public function testLocaleSettings() {
     $config = $this->config('locale.settings');
     $this->assertTrue($config->get('cache_strings'));
-    $this->assertIdentical('languages', $config->get('javascript.directory'));
-    $this->assertConfigSchema(\Drupal::service('config.typed'), 'locale.settings', $config->get());
+    $this->assertSame('languages', $config->get('javascript.directory'));
+    $this->assertConfigSchema(Drupal::service('config.typed'), 'locale.settings', $config->get());
   }
 
 }

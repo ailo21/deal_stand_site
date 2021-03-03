@@ -2,6 +2,7 @@
 
 namespace Drupal\KernelTests\Core\Image;
 
+use Drupal;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Image\ImageInterface;
 use Drupal\Component\Render\FormattableMarkup;
@@ -106,7 +107,7 @@ class ToolkitGdTest extends KernelTestBase {
   public function testManipulations() {
 
     // Test that the image factory is set to use the GD toolkit.
-    $this->assertEqual($this->imageFactory->getToolkitId(), 'gd', 'The image factory is set to use the \'gd\' image toolkit.');
+    $this->assertEqual('gd', $this->imageFactory->getToolkitId(), 'The image factory is set to use the \'gd\' image toolkit.');
 
     // Test the list of supported extensions.
     $expected_extensions = ['png', 'gif', 'jpeg', 'jpg', 'jpe'];
@@ -275,7 +276,7 @@ class ToolkitGdTest extends KernelTestBase {
 
     // Prepare a directory for test file results.
     $directory = Settings::get('file_public_path') . '/imagetest';
-    \Drupal::service('file_system')->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY);
+    Drupal::service('file_system')->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY);
 
     foreach ($files as $file) {
       foreach ($operations as $op => $values) {
@@ -410,7 +411,7 @@ class ToolkitGdTest extends KernelTestBase {
         $this->assertEqual('#ffff00', $image_reloaded->getToolkit()->getTransparentColor(), new FormattableMarkup('Image file %file has the correct transparent color channel set.', ['%file' => $file]));
       }
       else {
-        $this->assertEqual(NULL, $image_reloaded->getToolkit()->getTransparentColor(), new FormattableMarkup('Image file %file has no color channel set.', ['%file' => $file]));
+        $this->assertNull($image_reloaded->getToolkit()->getTransparentColor(), new FormattableMarkup('Image file %file has no color channel set.', ['%file' => $file]));
       }
     }
 
@@ -428,8 +429,13 @@ class ToolkitGdTest extends KernelTestBase {
 
   /**
    * Tests that GD resources are freed from memory.
+   *
+   * @todo Remove the method for PHP 8.0+ https://www.drupal.org/node/3179058
    */
   public function testResourceDestruction() {
+    if (PHP_VERSION_ID >= 80000) {
+      $this->markTestSkipped('In PHP8 resources are no longer used. \GdImage objects are used instead. These will be garbage collected like the regular objects they are.');
+    }
     // Test that an Image object going out of scope releases its GD resource.
     $image = $this->imageFactory->get('core/tests/fixtures/files/image-test.png');
     $res = $image->getToolkit()->getResource();
@@ -460,7 +466,7 @@ class ToolkitGdTest extends KernelTestBase {
   public function testGifTransparentImages() {
     // Prepare a directory for test file results.
     $directory = Settings::get('file_public_path') . '/imagetest';
-    \Drupal::service('file_system')->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY);
+    Drupal::service('file_system')->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY);
 
     // Test loading an indexed GIF image with transparent color set.
     // Color at top-right pixel should be fully transparent.
@@ -525,7 +531,7 @@ class ToolkitGdTest extends KernelTestBase {
   public function testMissingOperation() {
 
     // Test that the image factory is set to use the GD toolkit.
-    $this->assertEqual($this->imageFactory->getToolkitId(), 'gd', 'The image factory is set to use the \'gd\' image toolkit.');
+    $this->assertEqual('gd', $this->imageFactory->getToolkitId(), 'The image factory is set to use the \'gd\' image toolkit.');
 
     // An image file that will be tested.
     $file = 'image-test.png';

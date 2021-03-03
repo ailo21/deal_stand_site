@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\Core\ParamConverter;
 
+use Drupal;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\ContentEntityStorageInterface;
@@ -145,7 +146,7 @@ class EntityConverterTest extends UnitTestCase {
       ->method('get')
       ->willReturnMap($return_map);
 
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
   }
 
   /**
@@ -199,7 +200,7 @@ class EntityConverterTest extends UnitTestCase {
   }
 
   /**
-   * Provides test data for testConvert
+   * Provides test data for testConvert.
    */
   public function providerTestConvert() {
     $data = [];

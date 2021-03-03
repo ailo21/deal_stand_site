@@ -2,6 +2,7 @@
 
 namespace Drupal\FunctionalJavascriptTests\Core\Installer\Form;
 
+use Drupal;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Language\Language;
 use Drupal\Core\Session\UserSession;
@@ -88,7 +89,7 @@ class SelectProfileFormTest extends WebDriverTestBase {
 
     $this->container
       ->setParameter('app.root', DRUPAL_ROOT);
-    \Drupal::setContainer($this->container);
+    Drupal::setContainer($this->container);
 
     // Setup Mink.
     $this->initMink();
@@ -126,7 +127,7 @@ class SelectProfileFormTest extends WebDriverTestBase {
     $edit = [
       'langcode' => 'en',
     ];
-    $this->drupalPostForm(NULL, $edit, 'Save and continue');
+    $this->submitForm($edit, 'Save and continue');
     $page = $this->getSession()->getPage();
     $warning_message = $page->find('css', '.description .messages--warning');
     $this->assertFalse($warning_message->isVisible());

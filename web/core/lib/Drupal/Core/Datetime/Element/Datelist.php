@@ -2,10 +2,12 @@
 
 namespace Drupal\Core\Datetime\Element;
 
+use DateTimeZone;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Datetime\DateHelper;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Form\FormStateInterface;
+use Exception;
 
 /**
  * Provides a datelist element.
@@ -18,7 +20,7 @@ class Datelist extends DateElementBase {
    * {@inheritdoc}
    */
   public function getInfo() {
-    $class = get_class($this);
+    $class = static::class;
     return [
       '#input' => TRUE,
       '#element_validate' => [
@@ -63,7 +65,7 @@ class Datelist extends DateElementBase {
         try {
           $date = DrupalDateTime::createFromArray($input, $element['#date_timezone']);
         }
-        catch (\Exception $e) {
+        catch (Exception $e) {
           $form_state->setError($element, t('Selected combination of day and month is not valid.'));
         }
         if ($date instanceof DrupalDateTime && !$date->hasErrors()) {
@@ -76,7 +78,7 @@ class Datelist extends DateElementBase {
       if (!empty($element['#default_value'])) {
         $date = $element['#default_value'];
         if ($date instanceof DrupalDateTime && !$date->hasErrors()) {
-          $date->setTimezone(new \DateTimeZone($element['#date_timezone']));
+          $date->setTimezone(new DateTimeZone($element['#date_timezone']));
           static::incrementRound($date, $increment);
           foreach ($parts as $part) {
             switch ($part) {

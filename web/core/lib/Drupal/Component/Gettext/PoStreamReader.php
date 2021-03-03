@@ -3,6 +3,7 @@
 namespace Drupal\Component\Gettext;
 
 use Drupal\Component\Render\FormattableMarkup;
+use Exception;
 
 /**
  * Implements Gettext PO stream reader.
@@ -155,7 +156,7 @@ class PoStreamReader implements PoStreamInterface, PoReaderInterface {
       $this->readHeader();
     }
     else {
-      throw new \Exception('Cannot open stream without URI set.');
+      throw new Exception('Cannot open stream without URI set.');
     }
   }
 
@@ -170,7 +171,7 @@ class PoStreamReader implements PoStreamInterface, PoReaderInterface {
       fclose($this->fd);
     }
     else {
-      throw new \Exception('Cannot close stream that is not open.');
+      throw new Exception('Cannot close stream that is not open.');
     }
   }
 
@@ -506,8 +507,6 @@ class PoStreamReader implements PoStreamInterface, PoReaderInterface {
       $this->errors[] = new FormattableMarkup('The translation stream %uri ended unexpectedly at line %line.', $log_vars);
       return FALSE;
     }
-
-    return;
   }
 
   /**

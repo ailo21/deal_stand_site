@@ -186,7 +186,7 @@
  *   @code
  *   function THEME_page_attachments_alter(array &$page) {
  *     if ($some_condition) {
- *       $page['#attached']['library'][] = 'mytheme/something';
+ *       $page['#attached']['library'][] = 'my_theme/something';
  *     }
  *   }
  *   @endcode
@@ -199,6 +199,15 @@
  *     $variables['#attached']['library'][] = 'core/modernizr';
  *   }
  *   @endcode
+ *
+ * @section front_matter Front Matter
+ * Twig has been extended in Drupal to provide an easy way to parse front
+ * matter from template files. See \Drupal\Component\FrontMatter\FrontMatter
+ * for more information:
+ * @code
+ * $metadata = \Drupal::service('twig')->getTemplateMetadata('/path/to/template.html.twig');
+ * @endcode
+ * Note: all front matter is stripped from templates prior to rendering.
  *
  * @see hooks
  * @see callbacks
@@ -508,6 +517,9 @@
  * @{
  */
 
+use Drupal\Core\Asset\AttachedAssetsInterface;
+use Drupal\Core\Form\FormStateInterface;
+
 /**
  * Allow themes to alter the theme-specific settings form.
  *
@@ -524,7 +536,7 @@
  * @param $form_state
  *   The current state of the form.
  */
-function hook_form_system_theme_settings_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state) {
+function hook_form_system_theme_settings_alter(&$form, FormStateInterface $form_state) {
   // Add a checkbox to toggle the breadcrumb trail.
   $form['toggle_breadcrumb'] = [
     '#type' => 'checkbox',
@@ -556,7 +568,7 @@ function hook_preprocess(&$variables, $hook) {
 
   // Add contextual links to the variables, if the user has permission.
 
-  if (!\Drupal::currentUser()->hasPermission('access contextual links')) {
+  if (!Drupal::currentUser()->hasPermission('access contextual links')) {
     return;
   }
 
@@ -685,7 +697,7 @@ function hook_theme_suggestions_HOOK(array $variables) {
  */
 function hook_theme_suggestions_alter(array &$suggestions, array $variables, $hook) {
   // Add an interface-language specific suggestion to all theme hooks.
-  $suggestions[] = $hook . '__' . \Drupal::languageManager()->getCurrentLanguage()->getId();
+  $suggestions[] = $hook . '__' . Drupal::languageManager()->getCurrentLanguage()->getId();
 }
 
 /**
@@ -747,7 +759,7 @@ function hook_themes_installed($theme_list) {
 function hook_themes_uninstalled(array $themes) {
   // Remove some state entries depending on the theme.
   foreach ($themes as $theme) {
-    \Drupal::state()->delete('example.' . $theme);
+    Drupal::state()->delete('example.' . $theme);
   }
 }
 
@@ -788,7 +800,7 @@ function hook_extension() {
  *   containing HTML markup.
  */
 function hook_render_template($template_file, $variables) {
-  $twig_service = \Drupal::service('twig');
+  $twig_service = Drupal::service('twig');
 
   return $twig_service->loadTemplate($template_file)->render($variables);
 }
@@ -843,7 +855,7 @@ function hook_element_plugin_alter(array &$definitions) {
  * @see drupal_js_defaults()
  * @see \Drupal\Core\Asset\AssetResolver
  */
-function hook_js_alter(&$javascript, \Drupal\Core\Asset\AttachedAssetsInterface $assets) {
+function hook_js_alter(&$javascript, AttachedAssetsInterface $assets) {
   // Swap out jQuery to use an updated version of the library.
   $javascript['core/assets/vendor/jquery/jquery.min.js']['data'] = drupal_get_path('module', 'jquery_update') . '/jquery.js';
 }
@@ -932,7 +944,7 @@ function hook_library_info_build() {
  * The results of this hook are cached, however modules may use
  * hook_js_settings_alter() to dynamically alter settings.
  */
-function hook_js_settings_build(array &$settings, \Drupal\Core\Asset\AttachedAssetsInterface $assets) {
+function hook_js_settings_build(array &$settings, AttachedAssetsInterface $assets) {
   // Manipulate settings.
   if (isset($settings['dialog'])) {
     $settings['dialog']['autoResize'] = FALSE;
@@ -950,9 +962,9 @@ function hook_js_settings_build(array &$settings, \Drupal\Core\Asset\AttachedAss
  *
  * @see \Drupal\Core\Asset\AssetResolver
  */
-function hook_js_settings_alter(array &$settings, \Drupal\Core\Asset\AttachedAssetsInterface $assets) {
+function hook_js_settings_alter(array &$settings, AttachedAssetsInterface $assets) {
   // Add settings.
-  $settings['user']['uid'] = \Drupal::currentUser();
+  $settings['user']['uid'] = Drupal::currentUser();
 
   // Manipulate settings.
   if (isset($settings['dialog'])) {
@@ -1019,7 +1031,7 @@ function hook_library_info_alter(&$libraries, $extension) {
  *
  * @see Drupal\Core\Asset\LibraryResolverInterface::getCssAssets()
  */
-function hook_css_alter(&$css, \Drupal\Core\Asset\AttachedAssetsInterface $assets) {
+function hook_css_alter(&$css, AttachedAssetsInterface $assets) {
   // Remove defaults.css file.
   unset($css[drupal_get_path('module', 'system') . '/defaults.css']);
 }
@@ -1046,7 +1058,7 @@ function hook_page_attachments(array &$attachments) {
   $attachments['#attached']['library'][] = 'core/drupalSettings';
 
   // Conditionally attach an asset to the page.
-  if (!\Drupal::currentUser()->hasPermission('may pet kittens')) {
+  if (!Drupal::currentUser()->hasPermission('may pet kittens')) {
     $attachments['#attached']['library'][] = 'core/jquery';
   }
 }
@@ -1302,7 +1314,7 @@ function hook_theme_registry_alter(&$theme_registry) {
  * @see _template_preprocess_default_variables()
  */
 function hook_template_preprocess_default_variables_alter(&$variables) {
-  $variables['is_admin'] = \Drupal::currentUser()->hasPermission('access administration pages');
+  $variables['is_admin'] = Drupal::currentUser()->hasPermission('access administration pages');
 }
 
 /**

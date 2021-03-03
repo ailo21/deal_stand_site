@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\node\Kernel;
 
+use Drupal;
 use Drupal\user\UserInterface;
 use Drupal\Core\Field\Entity\BaseFieldOverride;
 use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
@@ -36,7 +37,7 @@ class NodeFieldOverridesTest extends EntityKernelTestBase {
     parent::setUp();
     $this->installConfig(['user']);
     $this->user = $this->createUser();
-    \Drupal::service('current_user')->setAccount($this->user);
+    Drupal::service('current_user')->setAccount($this->user);
   }
 
   /**
@@ -50,7 +51,7 @@ class NodeFieldOverridesTest extends EntityKernelTestBase {
     if ($override) {
       $override->delete();
     }
-    $uid_field = \Drupal::service('entity_field.manager')->getBaseFieldDefinitions('node')['uid'];
+    $uid_field = Drupal::service('entity_field.manager')->getBaseFieldDefinitions('node')['uid'];
     $config = $uid_field->getConfig('ponies');
     $config->save();
     $this->assertEquals($config->get('default_value_callback'), 'Drupal\node\Entity\Node::getDefaultEntityOwner');
@@ -58,7 +59,7 @@ class NodeFieldOverridesTest extends EntityKernelTestBase {
     $node = Node::create(['type' => 'ponies']);
     $owner = $node->getOwner();
     $this->assertInstanceOf(UserInterface::class, $owner);
-    $this->assertEqual($owner->id(), $this->user->id());
+    $this->assertEqual($this->user->id(), $owner->id());
   }
 
 }

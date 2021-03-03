@@ -2,13 +2,15 @@
 
 namespace Drupal\Core\File\MimeType;
 
+use Drupal;
 use Drupal\Core\Extension\ModuleHandlerInterface;
-use Symfony\Component\HttpFoundation\File\MimeType\MimeTypeGuesserInterface;
+use Symfony\Component\HttpFoundation\File\MimeType\MimeTypeGuesserInterface as LegacyMimeTypeGuesserInterface;
+use Symfony\Component\Mime\MimeTypeGuesserInterface;
 
 /**
  * Makes possible to guess the MIME type of a file using its extension.
  */
-class ExtensionMimeTypeGuesser implements MimeTypeGuesserInterface {
+class ExtensionMimeTypeGuesser implements MimeTypeGuesserInterface, LegacyMimeTypeGuesserInterface {
 
   /**
    * Default MIME extension mapping.
@@ -889,6 +891,14 @@ class ExtensionMimeTypeGuesser implements MimeTypeGuesserInterface {
    * {@inheritdoc}
    */
   public function guess($path) {
+    @trigger_error(__METHOD__ . '() is deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Use ::guessMimeType() instead. See https://www.drupal.org/node/3133341', E_USER_DEPRECATED);
+    return $this->guessMimeType($path);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function guessMimeType($path): ?string {
     if ($this->mapping === NULL) {
       $mapping = $this->defaultMapping;
       // Allow modules to alter the default mapping.
@@ -897,7 +907,7 @@ class ExtensionMimeTypeGuesser implements MimeTypeGuesserInterface {
     }
 
     $extension = '';
-    $file_parts = explode('.', \Drupal::service('file_system')->basename($path));
+    $file_parts = explode('.', Drupal::service('file_system')->basename($path));
 
     // Remove the first part: a full filename should not match an extension.
     array_shift($file_parts);
@@ -925,6 +935,13 @@ class ExtensionMimeTypeGuesser implements MimeTypeGuesserInterface {
    */
   public function setMapping(array $mapping = NULL) {
     $this->mapping = $mapping;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isGuesserSupported(): bool {
+    return TRUE;
   }
 
 }

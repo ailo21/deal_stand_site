@@ -2,6 +2,7 @@
 
 namespace Drupal\Core\Entity\Entity;
 
+use Drupal;
 use Drupal\Core\Entity\EntityConstraintViolationListInterface;
 use Drupal\Core\Entity\EntityDisplayPluginCollection;
 use Drupal\Core\Entity\FieldableEntityInterface;
@@ -13,7 +14,7 @@ use Symfony\Component\Validator\ConstraintViolationList;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 
 /**
- * Configuration entity that contains widget options for all components of a
+ * Configuration entity that contains widget options for all components of an
  * entity form in a given form mode.
  *
  * @ConfigEntityType(
@@ -90,13 +91,13 @@ class EntityFormDisplay extends EntityDisplayBase implements EntityFormDisplayIn
     if ($default_fallback) {
       $candidate_ids[] = $entity_type . '.' . $bundle . '.default';
     }
-    $results = \Drupal::entityQuery('entity_form_display')
+    $results = Drupal::entityQuery('entity_form_display')
       ->condition('id', $candidate_ids)
       ->condition('status', TRUE)
       ->execute();
 
     // Load the first valid candidate display, if any.
-    $storage = \Drupal::entityTypeManager()->getStorage('entity_form_display');
+    $storage = Drupal::entityTypeManager()->getStorage('entity_form_display');
     foreach ($candidate_ids as $candidate_id) {
       if (isset($results[$candidate_id])) {
         $display = $storage->load($candidate_id);
@@ -122,7 +123,7 @@ class EntityFormDisplay extends EntityDisplayBase implements EntityFormDisplayIn
       'bundle' => $bundle,
       'form_mode' => $form_mode,
     ];
-    \Drupal::moduleHandler()->alter('entity_form_display', $display, $display_context);
+    Drupal::moduleHandler()->alter('entity_form_display', $display, $display_context);
 
     return $display;
   }
@@ -131,7 +132,7 @@ class EntityFormDisplay extends EntityDisplayBase implements EntityFormDisplayIn
    * {@inheritdoc}
    */
   public function __construct(array $values, $entity_type) {
-    $this->pluginManager = \Drupal::service('plugin.manager.field.widget');
+    $this->pluginManager = Drupal::service('plugin.manager.field.widget');
 
     parent::__construct($values, $entity_type);
   }
@@ -212,7 +213,7 @@ class EntityFormDisplay extends EntityDisplayBase implements EntityFormDisplayIn
     }
 
     // Hide extra fields.
-    $extra_fields = \Drupal::service('entity_field.manager')->getExtraFields($this->targetEntityType, $this->bundle);
+    $extra_fields = Drupal::service('entity_field.manager')->getExtraFields($this->targetEntityType, $this->bundle);
     $extra_fields = isset($extra_fields['form']) ? $extra_fields['form'] : [];
     foreach ($extra_fields as $extra_field => $info) {
       if (!$this->getComponent($extra_field)) {

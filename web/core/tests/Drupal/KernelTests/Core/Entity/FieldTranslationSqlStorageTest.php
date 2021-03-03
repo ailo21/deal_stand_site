@@ -2,6 +2,7 @@
 
 namespace Drupal\KernelTests\Core\Entity;
 
+use Drupal;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\field\Entity\FieldStorageConfig;
@@ -46,7 +47,7 @@ class FieldTranslationSqlStorageTest extends EntityLanguageTestBase {
     $this->toggleFieldTranslatability($entity_type, $entity_type);
     $entity = $this->reloadEntity($entity);
     foreach ([$this->fieldName, $this->untranslatableFieldName] as $field_name) {
-      $this->assertEqual($entity->get($field_name)->value, $values[$field_name], 'Field language works as expected after switching translatability.');
+      $this->assertEqual($values[$field_name], $entity->get($field_name)->value, 'Field language works as expected after switching translatability.');
     }
 
     // Test that after disabling field translatability translated values are not
@@ -60,7 +61,7 @@ class FieldTranslationSqlStorageTest extends EntityLanguageTestBase {
     $translation->save();
     $this->toggleFieldTranslatability($entity_type, $entity_type);
     $entity = $this->reloadEntity($entity);
-    $this->assertEqual($entity->getTranslation($this->langcodes[1])->get($this->fieldName)->value, $values[$this->fieldName], 'Existing field translations are not loaded for untranslatable fields.');
+    $this->assertEqual($values[$this->fieldName], $entity->getTranslation($this->langcodes[1])->get($this->fieldName)->value, 'Existing field translations are not loaded for untranslatable fields.');
   }
 
   /**
@@ -78,13 +79,13 @@ class FieldTranslationSqlStorageTest extends EntityLanguageTestBase {
     $langcode = $entity->getUntranslated()->language()->getId();
     $fields = [$this->fieldName, $this->untranslatableFieldName];
     /** @var \Drupal\Core\Entity\Sql\DefaultTableMapping $table_mapping */
-    $table_mapping = \Drupal::entityTypeManager()->getStorage($entity_type)->getTableMapping();
+    $table_mapping = Drupal::entityTypeManager()->getStorage($entity_type)->getTableMapping();
 
     foreach ($fields as $field_name) {
       $field_storage = FieldStorageConfig::loadByName($entity_type, $field_name);
       $table = $table_mapping->getDedicatedDataTableName($field_storage);
 
-      $record = \Drupal::database()
+      $record = Drupal::database()
         ->select($table, 'f')
         ->fields('f')
         ->condition('f.entity_id', $id)

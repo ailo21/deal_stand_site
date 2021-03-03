@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\migrate\Kernel;
 
+use Drupal;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\KernelTests\KernelTestBase;
@@ -10,6 +11,7 @@ use Drupal\migrate\MigrateMessageInterface;
 use Drupal\migrate\Plugin\MigrateIdMapInterface;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\Row;
+use RuntimeException;
 
 /**
  * Creates abstract base class for migration tests.
@@ -80,7 +82,7 @@ abstract class MigrateTestBase extends KernelTestBase implements MigrateMessageI
     // global state construct on the Database class, which at least persists
     // for all test methods executed in one PHP process.
     if (Database::getConnectionInfo('simpletest_original_migrate')) {
-      throw new \RuntimeException("Bad Database connection state: 'simpletest_original_migrate' connection key already exists. Broken test?");
+      throw new RuntimeException("Bad Database connection state: 'simpletest_original_migrate' connection key already exists. Broken test?");
     }
 
     // Clone the current connection and replace the current prefix.
@@ -205,7 +207,7 @@ abstract class MigrateTestBase extends KernelTestBase implements MigrateMessageI
       $this->migrateMessages[$type][] = $message;
     }
     else {
-      $this->assert($type == 'status', $message, 'migrate');
+      $this->assertEquals('status', $type, $message);
     }
   }
 
@@ -269,7 +271,7 @@ abstract class MigrateTestBase extends KernelTestBase implements MigrateMessageI
   protected function setTestLogger() {
     $this->logger = $this->prophesize(LoggerChannelInterface::class);
     $this->container->set('logger.channel.migrate', $this->logger->reveal());
-    \Drupal::setContainer($this->container);
+    Drupal::setContainer($this->container);
   }
 
 }

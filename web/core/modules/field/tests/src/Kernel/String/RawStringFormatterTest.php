@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\field\Kernel\String;
 
+use Drupal;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
@@ -11,7 +12,7 @@ use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\KernelTests\KernelTestBase;
 
 /**
- * Tests the raw string formatter
+ * Tests the raw string formatter.
  *
  * @group field
  */
@@ -58,7 +59,6 @@ class RawStringFormatterTest extends KernelTestBase {
 
     // Configure the theme system.
     $this->installConfig(['system', 'field']);
-    \Drupal::service('router.builder')->rebuild();
     $this->installEntitySchema('entity_test');
 
     $this->entityType = 'entity_test';
@@ -79,7 +79,7 @@ class RawStringFormatterTest extends KernelTestBase {
     ]);
     $instance->save();
 
-    $this->display = \Drupal::service('entity_display.repository')
+    $this->display = Drupal::service('entity_display.repository')
       ->getViewDisplay($this->entityType, $this->bundle)
       ->setComponent($this->fieldName, [
         'type' => 'string',

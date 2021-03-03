@@ -9,6 +9,7 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
 use Drupal\Core\Render\Element\FormElementInterface;
 use Drupal\Core\Theme\ThemeManagerInterface;
+use Traversable;
 
 /**
  * Provides a plugin manager for element plugins.
@@ -45,7 +46,7 @@ class ElementInfoManager extends DefaultPluginManager implements ElementInfoMana
   protected $cacheTagInvalidator;
 
   /**
-   * Constructs a ElementInfoManager object.
+   * Constructs an ElementInfoManager object.
    *
    * @param \Traversable $namespaces
    *   An object that implements \Traversable which contains the root paths
@@ -59,7 +60,7 @@ class ElementInfoManager extends DefaultPluginManager implements ElementInfoMana
    * @param \Drupal\Core\Theme\ThemeManagerInterface $theme_manager
    *   The theme manager.
    */
-  public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, CacheTagsInvalidatorInterface $cache_tag_invalidator, ModuleHandlerInterface $module_handler, ThemeManagerInterface $theme_manager) {
+  public function __construct(Traversable $namespaces, CacheBackendInterface $cache_backend, CacheTagsInvalidatorInterface $cache_tag_invalidator, ModuleHandlerInterface $module_handler, ThemeManagerInterface $theme_manager) {
     $this->setCacheBackend($cache_backend, 'element_info');
     $this->themeManager = $theme_manager;
     $this->cacheTagInvalidator = $cache_tag_invalidator;

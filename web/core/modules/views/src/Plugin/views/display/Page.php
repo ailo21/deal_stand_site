@@ -2,6 +2,8 @@
 
 namespace Drupal\views\Plugin\views\display;
 
+use BadFunctionCallException;
+use Drupal;
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -167,7 +169,7 @@ class Page extends PathPluginBase {
       $build['#view_display_show_admin_links'] = $route->getOption('_view_display_show_admin_links');
     }
     else {
-      throw new \BadFunctionCallException('Missing route parameters.');
+      throw new BadFunctionCallException('Missing route parameters.');
     }
 
     return $build;
@@ -229,7 +231,7 @@ class Page extends PathPluginBase {
     // This adds a 'Settings' link to the style_options setting if the style
     // has options.
     if ($menu['type'] == 'default tab') {
-      $options['menu']['setting'] = $this->t('Parent menu item');
+      $options['menu']['setting'] = $this->t('Parent menu link');
       $options['menu']['links']['tab_options'] = $this->t('Change settings for the parent menu');
     }
   }
@@ -242,7 +244,7 @@ class Page extends PathPluginBase {
 
     switch ($form_state->get('section')) {
       case 'menu':
-        $form['#title'] .= $this->t('Menu item entry');
+        $form['#title'] .= $this->t('Menu link entry');
         $form['menu'] = [
           '#prefix' => '<div class="clearfix">',
           '#suffix' => '</div>',
@@ -313,9 +315,9 @@ class Page extends PathPluginBase {
 
         // Only display the parent selector if Menu UI module is enabled.
         $menu_parent = $menu['menu_name'] . ':' . $menu['parent'];
-        if (\Drupal::moduleHandler()->moduleExists('menu_ui')) {
+        if (Drupal::moduleHandler()->moduleExists('menu_ui')) {
           $menu_link = 'views_view:views.' . $form_state->get('view')->id() . '.' . $form_state->get('display_id');
-          $form['menu']['parent'] = \Drupal::service('menu.parent_form_selector')->parentSelectElement($menu_parent, $menu_link);
+          $form['menu']['parent'] = Drupal::service('menu.parent_form_selector')->parentSelectElement($menu_parent, $menu_link);
           $form['menu']['parent'] += [
             '#title' => $this->t('Parent'),
             '#description' => $this->t('The maximum depth for a link and all its children is fixed. Some menu links may not be available as parents if selecting them would exceed this limit.'),
@@ -382,7 +384,7 @@ class Page extends PathPluginBase {
         }
 
         $form['tab_markup'] = [
-          '#markup' => '<div class="js-form-item form-item description">' . $this->t('When providing a menu item as a tab, Drupal needs to know what the parent menu item of that tab will be. Sometimes the parent will already exist, but other times you will need to have one created. The path of a parent item will always be the same path with the last part left off. i.e, if the path to this view is <em>foo/bar/baz</em>, the parent path would be <em>foo/bar</em>.') . '</div>',
+          '#markup' => '<div class="js-form-item form-item description">' . $this->t('When providing a menu link as a tab, Drupal needs to know what the parent menu link of that tab will be. Sometimes the parent will already exist, but other times you will need to have one created. The path of a parent link will always be the same path with the last part left off. i.e, if the path to this view is <em>foo/bar/baz</em>, the parent path would be <em>foo/bar</em>.') . '</div>',
         ];
 
         $form['tab_options'] = [
@@ -393,9 +395,9 @@ class Page extends PathPluginBase {
         $form['tab_options']['type'] = [
           '#prefix' => '<div class="views-left-25">',
           '#suffix' => '</div>',
-          '#title' => $this->t('Parent menu item'),
+          '#title' => $this->t('Parent menu link'),
           '#type' => 'radios',
-          '#options' => ['none' => $this->t('Already exists'), 'normal' => $this->t('Normal menu item'), 'tab' => $this->t('Menu tab')],
+          '#options' => ['none' => $this->t('Already exists'), 'normal' => $this->t('Normal menu link'), 'tab' => $this->t('Menu tab')],
           '#default_value' => $tab_options['type'],
         ];
         $form['tab_options']['title'] = [
@@ -403,7 +405,7 @@ class Page extends PathPluginBase {
           '#title' => $this->t('Title'),
           '#type' => 'textfield',
           '#default_value' => $tab_options['title'],
-          '#description' => $this->t('If creating a parent menu item, enter the title of the item.'),
+          '#description' => $this->t('If creating a parent menu link, enter the title of the link.'),
           '#states' => [
             'visible' => [
               [
@@ -419,7 +421,7 @@ class Page extends PathPluginBase {
           '#title' => $this->t('Description'),
           '#type' => 'textfield',
           '#default_value' => $tab_options['description'],
-          '#description' => $this->t('If creating a parent menu item, enter the description of the item.'),
+          '#description' => $this->t('If creating a parent menu link, enter the description of the link.'),
           '#states' => [
             'visible' => [
               [
@@ -437,7 +439,7 @@ class Page extends PathPluginBase {
           '#type' => 'textfield',
           '#default_value' => $tab_options['weight'],
           '#size' => 5,
-          '#description' => $this->t('If the parent menu item is a tab, enter the weight of the tab. Heavier tabs will sink and the lighter tabs will be positioned nearer to the first menu item.'),
+          '#description' => $this->t('If the parent menu link is a tab, enter the weight of the tab. Heavier tabs will sink and the lighter tabs will be positioned nearer to the first menu link.'),
           '#states' => [
             'visible' => [
               ':input[name="tab_options[type]"]' => ['value' => 'tab'],
@@ -458,7 +460,7 @@ class Page extends PathPluginBase {
       $path = $this->getOption('path');
       $menu_type = $form_state->getValue(['menu', 'type']);
       if ($menu_type == 'normal' && strpos($path, '%') !== FALSE) {
-        $form_state->setError($form['menu']['type'], $this->t('Views cannot create normal menu items for paths with a % in them.'));
+        $form_state->setError($form['menu']['type'], $this->t('Views cannot create normal menu links for paths with a % in them.'));
       }
 
       if ($menu_type == 'default tab' || $menu_type == 'tab') {
@@ -484,7 +486,7 @@ class Page extends PathPluginBase {
     switch ($form_state->get('section')) {
       case 'menu':
         $menu = $form_state->getValue('menu');
-        list($menu['menu_name'], $menu['parent']) = explode(':', $menu['parent'], 2);
+        [$menu['menu_name'], $menu['parent']] = explode(':', $menu['parent'], 2);
         $this->setOption('menu', $menu);
         // send ajax form to options page if we use it.
         if ($form_state->getValue(['menu', 'type']) == 'default tab') {

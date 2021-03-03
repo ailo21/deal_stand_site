@@ -2,6 +2,7 @@
 
 namespace Drupal\layout_builder\Entity;
 
+use Drupal;
 use Drupal\Component\Plugin\ConfigurableInterface;
 use Drupal\Component\Plugin\DerivativeInspectionInterface;
 use Drupal\Component\Plugin\PluginBase;
@@ -45,7 +46,7 @@ class LayoutBuilderEntityViewDisplay extends BaseEntityViewDisplay implements La
     // Set $entityFieldManager before calling the parent constructor because the
     // constructor will call init() which then calls setComponent() which needs
     // $entityFieldManager.
-    $this->entityFieldManager = \Drupal::service('entity_field.manager');
+    $this->entityFieldManager = Drupal::service('entity_field.manager');
     parent::__construct($values, $entity_type);
   }
 
@@ -247,7 +248,7 @@ class LayoutBuilderEntityViewDisplay extends BaseEntityViewDisplay implements La
    *   The context repository service.
    */
   protected function contextRepository() {
-    return \Drupal::service('context.repository');
+    return Drupal::service('context.repository');
   }
 
   /**
@@ -347,7 +348,7 @@ class LayoutBuilderEntityViewDisplay extends BaseEntityViewDisplay implements La
    * @todo Move this upstream in https://www.drupal.org/node/2939931.
    */
   public function label() {
-    $bundle_info = \Drupal::service('entity_type.bundle.info')->getBundleInfo($this->getTargetEntityTypeId());
+    $bundle_info = Drupal::service('entity_type.bundle.info')->getBundleInfo($this->getTargetEntityTypeId());
     $bundle_label = $bundle_info[$this->getTargetBundle()]['label'];
     $target_entity_type = $this->entityTypeManager()->getDefinition($this->getTargetEntityTypeId());
     return new TranslatableMarkup('@bundle @label', ['@bundle' => $bundle_label, '@label' => $target_entity_type->getPluralLabel()]);
@@ -436,7 +437,7 @@ class LayoutBuilderEntityViewDisplay extends BaseEntityViewDisplay implements La
 
       $section = $this->getDefaultSection();
       $region = isset($options['region']) ? $options['region'] : $section->getDefaultRegion();
-      $new_component = (new SectionComponent(\Drupal::service('uuid')->generate(), $region, $configuration));
+      $new_component = (new SectionComponent(Drupal::service('uuid')->generate(), $region, $configuration));
       $section->appendComponent($new_component);
     }
     return $this;
@@ -465,7 +466,7 @@ class LayoutBuilderEntityViewDisplay extends BaseEntityViewDisplay implements La
    *   The section storage manager.
    */
   private function sectionStorageManager() {
-    return \Drupal::service('plugin.manager.layout_builder.section_storage');
+    return Drupal::service('plugin.manager.layout_builder.section_storage');
   }
 
   /**
@@ -503,7 +504,7 @@ class LayoutBuilderEntityViewDisplay extends BaseEntityViewDisplay implements La
       // Builder component. It follows the structure prescribed by the
       // documentation of hook_quickedit_render_field().
       if (count($parts) === 6 && $parts[0] === 'layout_builder') {
-        list(, $delta, $component_uuid, $entity_id) = QuickEditIntegration::deconstructViewModeId($original_mode);
+        [, $delta, $component_uuid, $entity_id] = QuickEditIntegration::deconstructViewModeId($original_mode);
         $entity = $this->entityTypeManager()->getStorage($this->getTargetEntityTypeId())->load($entity_id);
         $sections = $this->getEntitySections($entity);
         if (isset($sections[$delta])) {
@@ -535,10 +536,10 @@ class LayoutBuilderEntityViewDisplay extends BaseEntityViewDisplay implements La
     foreach ($this->getSections() as $section) {
       foreach ($section->getComponents() as $component) {
         $plugin = $component->getPlugin();
-        if ($plugin instanceof DerivativeInspectionInterface && $plugin->getBaseId() === 'field_block') {
+        if ($plugin instanceof DerivativeInspectionInterface && in_array($plugin->getBaseId(), ['field_block', 'extra_field_block'], TRUE)) {
           // FieldBlock derivative IDs are in the format
           // [entity_type]:[bundle]:[field].
-          list(, , $field_block_field_name) = explode(PluginBase::DERIVATIVE_SEPARATOR, $plugin->getDerivativeId());
+          [, , $field_block_field_name] = explode(PluginBase::DERIVATIVE_SEPARATOR, $plugin->getDerivativeId());
           if ($field_block_field_name === $field_name) {
             return $component;
           }

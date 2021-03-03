@@ -8,7 +8,9 @@
 namespace Drupal\Tests\Component\DependencyInjection\Dumper {
 
   use Drupal\Component\Utility\Crypt;
+  use Drupal\Tests\PhpUnitCompatibilityTrait;
   use PHPUnit\Framework\TestCase;
+  use stdClass;
   use Symfony\Component\DependencyInjection\Definition;
   use Symfony\Component\DependencyInjection\Reference;
   use Symfony\Component\DependencyInjection\Parameter;
@@ -23,6 +25,8 @@ namespace Drupal\Tests\Component\DependencyInjection\Dumper {
    * @group DependencyInjection
    */
   class OptimizedPhpArrayDumperTest extends TestCase {
+
+    use PhpUnitCompatibilityTrait;
 
     /**
      * The container builder instance.
@@ -342,7 +346,7 @@ namespace Drupal\Tests\Component\DependencyInjection\Dumper {
       ] + $base_service_definition;
 
       // Test objects that have _serviceId property.
-      $drupal_service = new \stdClass();
+      $drupal_service = new stdClass();
       $drupal_service->_serviceId = 'bar';
 
       $service_definitions[] = [
@@ -566,7 +570,7 @@ namespace Drupal\Tests\Component\DependencyInjection\Dumper {
      * @covers ::dumpValue
      */
     public function testGetServiceDefinitionForObject() {
-      $service = new \stdClass();
+      $service = new stdClass();
 
       $bar_definition = new Definition('\stdClass');
       $bar_definition->addArgument($service);

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\syslog\Kernel\Migrate\d6;
 
+use Drupal;
 use Drupal\Tests\SchemaCheckTestTrait;
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
 
@@ -32,9 +33,9 @@ class MigrateSyslogConfigsTest extends MigrateDrupal6TestBase {
    */
   public function testSyslogSettings() {
     $config = $this->config('syslog.settings');
-    $this->assertIdentical('drupal', $config->get('identity'));
-    $this->assertIdentical(128, $config->get('facility'));
-    $this->assertConfigSchema(\Drupal::service('config.typed'), 'syslog.settings', $config->get());
+    $this->assertSame('drupal', $config->get('identity'));
+    $this->assertSame(128, $config->get('facility'));
+    $this->assertConfigSchema(Drupal::service('config.typed'), 'syslog.settings', $config->get());
   }
 
 }

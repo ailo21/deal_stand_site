@@ -10,6 +10,7 @@ use Drupal\Core\Entity\RevisionableInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\workspaces\Plugin\Validation\Constraint\EntityWorkspaceConflictConstraint;
+use RuntimeException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -121,7 +122,7 @@ class EntityOperations implements ContainerInjectionInterface {
     // Disallow any change to an unsupported entity when we are not in the
     // default workspace.
     if (!$this->workspaceManager->isEntityTypeSupported($entity_type)) {
-      throw new \RuntimeException('This entity can only be saved in the default workspace.');
+      throw new RuntimeException('This entity can only be saved in the default workspace.');
     }
 
     /** @var \Drupal\Core\Entity\ContentEntityInterface|\Drupal\Core\Entity\EntityPublishedInterface $entity */
@@ -234,7 +235,7 @@ class EntityOperations implements ContainerInjectionInterface {
     // Disallow any change to an unsupported entity when we are not in the
     // default workspace.
     if (!$this->workspaceManager->isEntityTypeSupported($entity_type)) {
-      throw new \RuntimeException('This entity can only be deleted in the default workspace.');
+      throw new RuntimeException('This entity can only be deleted in the default workspace.');
     }
   }
 
@@ -268,7 +269,7 @@ class EntityOperations implements ContainerInjectionInterface {
     // know in advance (before hook_entity_presave()) that the new revision will
     // be a pending one.
     if ($this->workspaceManager->hasActiveWorkspace()) {
-      $form['#entity_builders'][] = [get_called_class(), 'entityFormEntityBuild'];
+      $form['#entity_builders'][] = [static::class, 'entityFormEntityBuild'];
     }
 
     // Run the workspace conflict validation constraint when the entity form is

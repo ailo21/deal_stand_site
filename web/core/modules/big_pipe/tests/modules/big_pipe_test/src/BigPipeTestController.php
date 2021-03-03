@@ -2,30 +2,32 @@
 
 namespace Drupal\big_pipe_test;
 
+use Drupal;
 use Drupal\big_pipe\Render\BigPipeMarkup;
 use Drupal\big_pipe_test\EventSubscriber\BigPipeTestSubscriber;
 use Drupal\Core\Security\TrustedCallbackInterface;
+use Exception;
 
 class BigPipeTestController implements TrustedCallbackInterface {
 
   /**
-   * Returns a all BigPipe placeholder test case render arrays.
+   * Returns all BigPipe placeholder test case render arrays.
    *
    * @return array
    */
   public function test() {
-    $has_session = \Drupal::service('session_configuration')->hasSession(\Drupal::requestStack()->getMasterRequest());
+    $has_session = Drupal::service('session_configuration')->hasSession(Drupal::requestStack()->getMasterRequest());
 
     $build = [];
 
-    $cases = BigPipePlaceholderTestCases::cases(\Drupal::getContainer());
+    $cases = BigPipePlaceholderTestCases::cases(Drupal::getContainer());
 
     // 1. HTML placeholder: status messages. Drupal renders those automatically,
     // so all that we need to do in this controller is set a message.
     if ($has_session) {
       // Only set a message if a session already exists, otherwise we always
       // trigger a session, which means we can't test no-session requests.
-      \Drupal::messenger()->addStatus('Hello from BigPipe!');
+      Drupal::messenger()->addStatus('Hello from BigPipe!');
     }
     $build['html'] = $cases['html']->renderArray;
 
@@ -117,7 +119,7 @@ class BigPipeTestController implements TrustedCallbackInterface {
    * @throws \Exception
    */
   public static function exception() {
-    throw new \Exception('You are not allowed to say llamas are not cool!');
+    throw new Exception('You are not allowed to say llamas are not cool!');
   }
 
   /**

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\node\Functional;
 
+use Drupal;
 use Drupal\comment\CommentInterface;
 use Drupal\comment\Tests\CommentTestTrait;
 use Drupal\comment\Entity\Comment;
@@ -69,7 +70,7 @@ class NodeAccessPagerTest extends BrowserTestBase {
     // be two pages (0, 1) but no third (2) page.
     $this->drupalGet('node/' . $node->id());
     $this->assertText($node->label());
-    $this->assertText(t('Comments'));
+    $this->assertText('Comments');
     $this->assertRaw('page=1');
     $this->assertNoRaw('page=2');
   }
@@ -83,7 +84,7 @@ class NodeAccessPagerTest extends BrowserTestBase {
     $this->assertNotEmpty($vid, 'Forum navigation vocabulary ID is set.');
 
     // Look up the general discussion term.
-    $tree = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadTree($vid, 0, 1);
+    $tree = Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadTree($vid, 0, 1);
     $tid = reset($tree)->tid;
     $this->assertNotEmpty($tid, 'General discussion term is found in the forum vocabulary.');
 

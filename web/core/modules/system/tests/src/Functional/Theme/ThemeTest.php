@@ -2,9 +2,10 @@
 
 namespace Drupal\Tests\system\Functional\Theme;
 
+use Drupal;
 use Drupal\Component\Serialization\Json;
 use Drupal\Tests\BrowserTestBase;
-use Symfony\Cmf\Component\Routing\RouteObjectInterface;
+use Drupal\Core\Routing\RouteObjectInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Route;
 
@@ -30,7 +31,7 @@ class ThemeTest extends BrowserTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
-    \Drupal::service('theme_installer')->install(['test_theme']);
+    Drupal::service('theme_installer')->install(['test_theme']);
   }
 
   /**
@@ -45,7 +46,7 @@ class ThemeTest extends BrowserTestBase {
     drupal_theme_rebuild();
     for ($i = 0; $i < 2; $i++) {
       $this->drupalGet('theme-test/suggestion');
-      $this->assertText('Theme hook implementor=theme-test--suggestion.html.twig. Foo=template_preprocess_theme_test', 'Theme hook suggestion ran with data available from a preprocess function for the base hook.');
+      $this->assertText('Theme hook implementor=theme-test--suggestion.html.twig. Foo=template_preprocess_theme_test');
     }
   }
 
@@ -56,7 +57,7 @@ class ThemeTest extends BrowserTestBase {
     $this->drupalGet('theme-test/priority');
 
     // Ensure that the custom theme negotiator was not able to set the theme.
-    $this->assertNoText('Theme hook implementor=theme-test--suggestion.html.twig. Foo=template_preprocess_theme_test', 'Theme hook suggestion ran with data available from a preprocess function for the base hook.');
+    $this->assertNoText('Theme hook implementor=theme-test--suggestion.html.twig. Foo=template_preprocess_theme_test');
   }
 
   /**
@@ -77,11 +78,11 @@ class ThemeTest extends BrowserTestBase {
     $request = Request::create('/user/login');
     $request->attributes->set(RouteObjectInterface::ROUTE_NAME, 'user.login');
     $request->attributes->set(RouteObjectInterface::ROUTE_OBJECT, new Route('/user/login'));
-    \Drupal::requestStack()->push($request);
+    Drupal::requestStack()->push($request);
     $this->config('system.site')->set('page.front', '/user/login')->save();
     $suggestions = theme_get_suggestions(['user', 'login'], 'page');
     // Set it back to not annoy the batch runner.
-    \Drupal::requestStack()->pop();
+    Drupal::requestStack()->pop();
     $this->assertContains('page__front', $suggestions, 'Front page template was suggested.');
   }
 
@@ -138,7 +139,7 @@ class ThemeTest extends BrowserTestBase {
       ->set('default', 'test_theme')
       ->save();
     $this->drupalGet('theme-test/template-test');
-    $this->assertText('Success: Template overridden.', 'Template overridden by defined \'template\' filename.');
+    $this->assertText('Success: Template overridden.');
   }
 
   /**
@@ -151,14 +152,14 @@ class ThemeTest extends BrowserTestBase {
     $this->drupalGet('');
     $attributes = $this->xpath('/body[@theme_test_page_variable="Page variable is an array."]');
     $this->assertCount(1, $attributes, 'In template_preprocess_html(), the page variable is still an array (not rendered yet).');
-    $this->assertText('theme test page bottom markup', 'Modules are able to set the page bottom region.');
+    $this->assertText('theme test page bottom markup');
   }
 
   /**
    * Tests that region attributes can be manipulated via preprocess functions.
    */
   public function testRegionClass() {
-    \Drupal::service('module_installer')->install(['block', 'theme_region_test']);
+    Drupal::service('module_installer')->install(['block', 'theme_region_test']);
 
     // Place a block.
     $this->drupalPlaceBlock('system_main_block');

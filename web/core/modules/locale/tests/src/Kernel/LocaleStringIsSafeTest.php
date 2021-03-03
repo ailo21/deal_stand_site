@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\locale\Kernel;
 
+use Drupal;
 use Drupal\KernelTests\KernelTestBase;
 
 /**
@@ -64,37 +65,29 @@ class LocaleStringIsSafeTest extends KernelTestBase {
 
     foreach ($tests_to_do as $i => $test) {
       $original_string = $test['original'];
-      $rendered_original_string = \Drupal::theme()->render('locale_test_tokenized', ['content' => $original_string]);
+      $rendered_original_string = Drupal::theme()->render('locale_test_tokenized', ['content' => $original_string]);
       // Twig assumes that strings are unsafe so it escapes them, and so the
       // original and the rendered version should be different.
-      $this->assertNotEqual(
-        $rendered_original_string,
+      $this->assertNotEquals(
         $original_string . "\n",
+        $rendered_original_string,
         'Security test ' . $i . ' before translation'
       );
 
       // Pass the original string to the t() function to get it marked as safe.
       $safe_string = t($original_string);
-      $rendered_safe_string = \Drupal::theme()->render('locale_test_tokenized', ['content' => $safe_string]);
+      $rendered_safe_string = Drupal::theme()->render('locale_test_tokenized', ['content' => $safe_string]);
       // t() function always marks the string as safe so it won't be escaped,
       // and should be the same as the original.
-      $this->assertEqual(
-        $rendered_safe_string,
-        $original_string . "\n",
-        'Security test ' . $i . ' after translation before token replacement'
-      );
+      $this->assertEqual($original_string . "\n", $rendered_safe_string, 'Security test ' . $i . ' after translation before token replacement');
 
       // Replace tokens in the safe string to inject it with dangerous content.
       // @see locale_test_tokens().
-      $unsafe_string = \Drupal::token()->replace($safe_string);
-      $rendered_unsafe_string = \Drupal::theme()->render('locale_test_tokenized', ['content' => $unsafe_string]);
+      $unsafe_string = Drupal::token()->replace($safe_string);
+      $rendered_unsafe_string = Drupal::theme()->render('locale_test_tokenized', ['content' => $unsafe_string]);
       // Token replacement changes the string so it is not marked as safe
       // anymore. Check it is escaped the way we expect.
-      $this->assertEqual(
-        $rendered_unsafe_string,
-        $test['replaced'] . "\n",
-        'Security test ' . $i . ' after translation  after token replacement'
-      );
+      $this->assertEqual($test['replaced'] . "\n", $rendered_unsafe_string, 'Security test ' . $i . ' after translation  after token replacement');
     }
   }
 

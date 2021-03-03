@@ -2,6 +2,8 @@
 
 namespace Drupal\KernelTests\Core\Database;
 
+use PDO;
+
 /**
  * Tests the Select query builder.
  *
@@ -23,11 +25,12 @@ class SelectOrderedTest extends DatabaseTestBase {
     $last_age = 0;
     foreach ($result as $record) {
       $num_records++;
-      $this->assertTrue($record->age >= $last_age, 'Results returned in correct order.');
+      // Verify that the results are returned in the correct order.
+      $this->assertGreaterThanOrEqual($last_age, $record->age);
       $last_age = $record->age;
     }
 
-    $this->assertEqual($num_records, 4, 'Returned the correct number of rows.');
+    $this->assertEqual(4, $num_records, 'Returned the correct number of rows.');
   }
 
   /**
@@ -49,7 +52,7 @@ class SelectOrderedTest extends DatabaseTestBase {
       ['George', 27, 'Singer'],
       ['Paul', 26, 'Songwriter'],
     ];
-    $results = $result->fetchAll(\PDO::FETCH_NUM);
+    $results = $result->fetchAll(PDO::FETCH_NUM);
     foreach ($expected as $k => $record) {
       $num_records++;
       foreach ($record as $kk => $col) {
@@ -58,7 +61,7 @@ class SelectOrderedTest extends DatabaseTestBase {
         }
       }
     }
-    $this->assertEqual($num_records, 4, 'Returned the correct number of rows.');
+    $this->assertEqual(4, $num_records, 'Returned the correct number of rows.');
   }
 
   /**
@@ -75,11 +78,12 @@ class SelectOrderedTest extends DatabaseTestBase {
     $last_age = 100000000;
     foreach ($result as $record) {
       $num_records++;
-      $this->assertTrue($record->age <= $last_age, 'Results returned in correct order.');
+      // Verify that the results are returned in the correct order.
+      $this->assertLessThanOrEqual($last_age, $record->age);
       $last_age = $record->age;
     }
 
-    $this->assertEqual($num_records, 4, 'Returned the correct number of rows.');
+    $this->assertEqual(4, $num_records, 'Returned the correct number of rows.');
   }
 
 }

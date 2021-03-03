@@ -6,6 +6,7 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Routing\Access\AccessInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
+use Exception;
 
 /**
  * Provides an access check for state and transition operations.
@@ -53,7 +54,7 @@ class WorkflowStateTransitionOperationsAccessCheck implements AccessInterface {
   public function access(RouteMatchInterface $route_match, AccountInterface $account) {
     $workflow_operation = $this->getOperation($route_match);
     if (!preg_match('/^(?<operation>add|update|delete)-(?<type>state|transition)$/', $workflow_operation, $matches)) {
-      throw new \Exception("Invalid _workflow_access operation '$workflow_operation' specified for route '{$route_match->getRouteName()}'.");
+      throw new Exception("Invalid _workflow_access operation '$workflow_operation' specified for route '{$route_match->getRouteName()}'.");
     }
 
     $parameters = $route_match->getParameters();
@@ -69,7 +70,7 @@ class WorkflowStateTransitionOperationsAccessCheck implements AccessInterface {
   }
 
   /**
-   * Get the operation that will be used for the access check
+   * Get the operation that will be used for the access check.
    *
    * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
    *   The parametrized route

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\Core\Field;
 
+use Drupal;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemInterface;
@@ -28,7 +29,7 @@ class FieldItemListTest extends UnitTestCase {
     $field_type_manager = $this->createMock('Drupal\Core\Field\FieldTypePluginManagerInterface');
     $container = new ContainerBuilder();
     $container->set('plugin.manager.field.field_type', $field_type_manager);
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
 
     // Set up three properties, one of them being computed.
     $property_definitions['0'] = $this->createMock('Drupal\Core\TypedData\DataDefinitionInterface');
@@ -169,7 +170,7 @@ class FieldItemListTest extends UnitTestCase {
     $field_type_manager = $this->createMock(FieldTypePluginManagerInterface::class);
     $container = new ContainerBuilder();
     $container->set('plugin.manager.field.field_type', $field_type_manager);
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
 
     $field_storage_definition = $this->createMock(FieldStorageDefinitionInterface::class);
     $field_storage_definition->expects($this->any())
@@ -236,7 +237,7 @@ class FieldItemListTest extends UnitTestCase {
     $field_type_manager = $this->createMock('Drupal\Core\Field\FieldTypePluginManagerInterface');
     $container = new ContainerBuilder();
     $container->set('plugin.manager.field.field_type', $field_type_manager);
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
 
     // Set up the properties of the field item.
     $property_definitions['0'] = $this->createMock('Drupal\Core\TypedData\DataDefinitionInterface');
@@ -349,7 +350,7 @@ class FieldItemListTest extends UnitTestCase {
     $field_list->expects($this->never())
       ->method('getValue');
 
-    $this->assertArrayEquals([], $field_list->defaultValuesFormSubmit([], $form, $form_state));
+    $this->assertSame([], $field_list->defaultValuesFormSubmit([], $form, $form_state));
   }
 
 }

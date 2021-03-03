@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\config\Functional;
 
+use Drupal;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Tests\BrowserTestBase;
@@ -55,8 +56,8 @@ class ConfigLanguageOverrideWebTest extends BrowserTestBase {
       'label' => $name,
       'direction' => LanguageInterface::DIRECTION_LTR,
     ];
-    $this->drupalPostForm('admin/config/regional/language/add', $edit, t('Add custom language'));
-    \Drupal::languageManager()
+    $this->drupalPostForm('admin/config/regional/language/add', $edit, 'Add custom language');
+    Drupal::languageManager()
       ->getLanguageConfigOverride($langcode, 'system.site')
       ->set('name', 'XX site name')
       ->save();
@@ -83,7 +84,7 @@ class ConfigLanguageOverrideWebTest extends BrowserTestBase {
     // Set the xx language to be the default language and delete the English
     // language so the site is no longer multilingual and confirm configuration
     // overrides still work.
-    $language_manager = \Drupal::languageManager()->reset();
+    $language_manager = Drupal::languageManager()->reset();
     $this->assertTrue($language_manager->isMultilingual(), 'The test site is multilingual.');
     $this->config('system.site')->set('default_langcode', 'xx')->save();
 

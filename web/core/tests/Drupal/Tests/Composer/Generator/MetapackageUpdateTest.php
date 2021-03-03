@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\Composer\Generator;
 
+use Drupal;
 use Drupal\Composer\Generator\Builder\DrupalCoreRecommendedBuilder;
 use Drupal\Composer\Generator\Builder\DrupalDevDependenciesBuilder;
 use Drupal\Composer\Generator\Builder\DrupalPinnedDevDependenciesBuilder;
@@ -18,7 +19,7 @@ use PHPUnit\Framework\TestCase;
 class MetapackageUpdateTest extends TestCase {
 
   /**
-   * Test data for testUpdated
+   * Test data for testUpdated.
    */
   public function updatedTestData() {
     return [
@@ -70,7 +71,7 @@ class MetapackageUpdateTest extends TestCase {
     // The generated json is the "expected", what we think the loaded
     // json would contain, if the current patch is generated correctly
     // (metapackages updated when composer.lock is updated).
-    $version = str_replace('.0-dev', '.x-dev', \Drupal::VERSION);
+    $version = str_replace('.0-dev', '.x-dev', Drupal::VERSION);
     $message = <<< __EOT__
 The rebuilt version of $path does not match what is in the source tree.
 

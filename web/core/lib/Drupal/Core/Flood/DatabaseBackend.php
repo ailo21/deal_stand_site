@@ -3,6 +3,7 @@
 namespace Drupal\Core\Flood;
 
 use Drupal\Core\Database\DatabaseException;
+use Exception;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Drupal\Core\Database\Connection;
 
@@ -55,7 +56,7 @@ class DatabaseBackend implements FloodInterface {
     try {
       $this->doInsert($name, $window, $identifier);
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       $try_again = $this->ensureTableExists();
       if (!$try_again) {
         throw $e;
@@ -67,7 +68,7 @@ class DatabaseBackend implements FloodInterface {
   }
 
   /**
-   * Inserts an event into the flood table
+   * Inserts an event into the flood table.
    *
    * @param string $name
    *   The name of an event.
@@ -102,7 +103,7 @@ class DatabaseBackend implements FloodInterface {
         ->condition('identifier', $identifier)
         ->execute();
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       $this->catchException($e);
     }
   }
@@ -124,7 +125,7 @@ class DatabaseBackend implements FloodInterface {
         ->fetchField();
       return ($number < $threshold);
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       $this->catchException($e);
       return TRUE;
     }
@@ -139,7 +140,7 @@ class DatabaseBackend implements FloodInterface {
         ->condition('expiration', REQUEST_TIME, '<')
         ->execute();
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       $this->catchException($e);
     }
   }
@@ -177,7 +178,7 @@ class DatabaseBackend implements FloodInterface {
    *
    * @throws \Exception
    */
-  protected function catchException(\Exception $e) {
+  protected function catchException(Exception $e) {
     if ($this->connection->schema()->tableExists(static::TABLE_NAME)) {
       throw $e;
     }

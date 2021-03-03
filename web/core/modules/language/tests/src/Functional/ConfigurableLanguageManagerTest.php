@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\language\Functional;
 
+use Drupal;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\field\Entity\FieldConfig;
@@ -71,7 +72,7 @@ class ConfigurableLanguageManagerTest extends BrowserTestBase {
     $node->save();
 
     // Enable both language_interface and language_content language negotiation.
-    \Drupal::getContainer()->get('language_negotiator')->updateConfiguration([
+    Drupal::getContainer()->get('language_negotiator')->updateConfiguration([
       'language_interface',
       'language_content',
     ]);
@@ -91,7 +92,7 @@ class ConfigurableLanguageManagerTest extends BrowserTestBase {
 
     // Translate the Powered by string.
     /** @var \Drupal\locale\StringStorageInterface $string_storage */
-    $string_storage = \Drupal::getContainer()->get('locale.storage');
+    $string_storage = Drupal::getContainer()->get('locale.storage');
     $source = $string_storage->findString(['source' => 'Powered by <a href=":poweredby">Drupal</a>']);
     $string_storage->createTranslation([
       'lid' => $source->lid,
@@ -113,7 +114,7 @@ class ConfigurableLanguageManagerTest extends BrowserTestBase {
     // Set the interface language to use the preferred administration language
     // and then the URL.
     /** @var \Drupal\language\LanguageNegotiatorInterface $language_negotiator */
-    $language_negotiator = \Drupal::getContainer()->get('language_negotiator');
+    $language_negotiator = Drupal::getContainer()->get('language_negotiator');
     $language_negotiator->saveConfiguration('language_interface', [
       'language-user-admin' => 1,
       'language-url' => 2,
@@ -152,7 +153,7 @@ class ConfigurableLanguageManagerTest extends BrowserTestBase {
   public function testUrlContentTranslationWithSessionLanguage() {
     $assert_session = $this->assertSession();
     /** @var \Drupal\language\LanguageNegotiatorInterface $language_negotiator */
-    $language_negotiator = \Drupal::getContainer()->get('language_negotiator');
+    $language_negotiator = Drupal::getContainer()->get('language_negotiator');
     // Set Interface Language Negotiator to Session.
     $language_negotiator->saveConfiguration('language_interface', [
       'language-session' => 1,
@@ -205,7 +206,7 @@ class ConfigurableLanguageManagerTest extends BrowserTestBase {
     $assert_session = $this->assertSession();
     // Set the interface language to use the preferred administration language.
     /** @var \Drupal\language\LanguageNegotiatorInterface $language_negotiator */
-    $language_negotiator = \Drupal::getContainer()->get('language_negotiator');
+    $language_negotiator = Drupal::getContainer()->get('language_negotiator');
     $language_negotiator->saveConfiguration('language_interface', [
       'language-user-admin' => 1,
       'language-selected' => 2,
@@ -232,7 +233,7 @@ class ConfigurableLanguageManagerTest extends BrowserTestBase {
     $instance->save();
 
     // Add a Spanish translation.
-    \Drupal::languageManager()
+    Drupal::languageManager()
       ->getLanguageConfigOverride('es', "field.field.user.user.$field_name")
       ->set('label', $field_label_es)
       ->save();
@@ -249,19 +250,19 @@ class ConfigurableLanguageManagerTest extends BrowserTestBase {
       ])
       ->save();
 
-    $user_id = \Drupal::currentUser()->id();
+    $user_id = Drupal::currentUser()->id();
     $this->drupalGet("/user/$user_id/edit");
     // Admin language choice is "No preference" so we should get the default.
     $assert_session->pageTextContains($field_label_en);
     $assert_session->pageTextNotContains($field_label_es);
 
     // Set admin language to Spanish.
-    $this->drupalPostForm(NULL, ['edit-preferred-admin-langcode' => 'es'], 'edit-submit');
+    $this->submitForm(['edit-preferred-admin-langcode' => 'es'], 'edit-submit');
     $assert_session->pageTextContains($field_label_es);
     $assert_session->pageTextNotContains($field_label_en);
 
     // Set admin language to English.
-    $this->drupalPostForm(NULL, ['edit-preferred-admin-langcode' => 'en'], 'edit-submit');
+    $this->submitForm(['edit-preferred-admin-langcode' => 'en'], 'edit-submit');
     $assert_session->pageTextContains($field_label_en);
     $assert_session->pageTextNotContains($field_label_es);
   }

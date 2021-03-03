@@ -2,6 +2,8 @@
 
 namespace Drupal\Component\Plugin\Exception;
 
+use Exception;
+
 /**
  * Defines a class for invalid plugin definition exceptions.
  */
@@ -15,7 +17,7 @@ class InvalidPluginDefinitionException extends PluginException {
   protected $pluginId;
 
   /**
-   * Constructs a InvalidPluginDefinitionException.
+   * Constructs an InvalidPluginDefinitionException.
    *
    * For the remaining parameters see \Exception.
    *
@@ -24,7 +26,7 @@ class InvalidPluginDefinitionException extends PluginException {
    *
    * @see \Exception
    */
-  public function __construct($plugin_id, $message = '', $code = 0, \Exception $previous = NULL) {
+  public function __construct($plugin_id, $message = '', $code = 0, Exception $previous = NULL) {
     $this->pluginId = $plugin_id;
     parent::__construct($message, $code, $previous);
   }

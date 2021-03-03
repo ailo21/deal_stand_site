@@ -2,6 +2,7 @@
 
 namespace Drupal\Core\Render\Element;
 
+use Drupal;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
@@ -75,7 +76,7 @@ class MachineName extends Textfield {
    * {@inheritdoc}
    */
   public function getInfo() {
-    $class = get_class($this);
+    $class = static::class;
     return [
       '#input' => TRUE,
       '#default_value' => NULL,
@@ -126,7 +127,7 @@ class MachineName extends Textfield {
    */
   public static function processMachineName(&$element, FormStateInterface $form_state, &$complete_form) {
     // We need to pass the langcode to the client.
-    $language = \Drupal::languageManager()->getCurrentLanguage();
+    $language = Drupal::languageManager()->getCurrentLanguage();
 
     // Apply default form element properties.
     $element += [
@@ -213,7 +214,7 @@ class MachineName extends Textfield {
     ];
 
     /** @var \Drupal\Core\Access\CsrfTokenGenerator $token_generator */
-    $token_generator = \Drupal::service('csrf_token');
+    $token_generator = Drupal::service('csrf_token');
     $element['#machine_name']['replace_token'] = $token_generator->get($element['#machine_name']['replace_pattern']);
 
     $element['#attached']['drupalSettings']['machineName']['#' . $source['#id']] = array_intersect_key($element['#machine_name'], array_flip($options));

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests;
 
+use Drupal;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Render\Element;
 
@@ -28,19 +29,17 @@ trait EntityViewTrait {
    * @param null $langcode
    *   (optional) For which language the entity should be prepared, defaults to
    *   the current content language.
-   * @param bool $reset
-   *   (optional) Whether to clear the cache for this entity.
    *
    * @return array
    *
    * @see \Drupal\Core\Render\RendererInterface::render()
    */
-  protected function buildEntityView(EntityInterface $entity, $view_mode = 'full', $langcode = NULL, $reset = FALSE) {
+  protected function buildEntityView(EntityInterface $entity, $view_mode = 'full', $langcode = NULL) {
     $ensure_fully_built = function (&$elements) use (&$ensure_fully_built) {
       // If the default values for this element have not been loaded yet, populate
       // them.
       if (isset($elements['#type']) && empty($elements['#defaults_loaded'])) {
-        $elements += \Drupal::service('element_info')->getInfo($elements['#type']);
+        $elements += Drupal::service('element_info')->getInfo($elements['#type']);
       }
 
       // Make any final changes to the element before it is rendered. This means
@@ -60,9 +59,6 @@ trait EntityViewTrait {
     };
 
     $render_controller = $this->container->get('entity_type.manager')->getViewBuilder($entity->getEntityTypeId());
-    if ($reset) {
-      $render_controller->resetCache([$entity->id()]);
-    }
     $build = $render_controller->view($entity, $view_mode, $langcode);
     $ensure_fully_built($build);
 

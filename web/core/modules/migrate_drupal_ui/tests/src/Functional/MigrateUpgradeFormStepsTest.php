@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\migrate_drupal_ui\Functional;
 
+use Drupal;
 use Drupal\migrate_drupal\MigrationConfigurationTrait;
 use Drupal\Tests\migrate_drupal\Traits\CreateTestContentEntitiesTrait;
 use Drupal\Tests\BrowserTestBase;
@@ -54,8 +55,8 @@ class MigrateUpgradeFormStepsTest extends BrowserTestBase {
    */
   public function testMigrateUpgradeReviewPage() {
     /** @var \Drupal\Core\TempStore\PrivateTempStore  $store */
-    $store = \Drupal::service('tempstore.private')->get('migrate_drupal_ui');
-    $state = \Drupal::service('state');
+    $store = Drupal::service('tempstore.private')->get('migrate_drupal_ui');
+    $state = Drupal::service('state');
 
     // Test that when data required by a form is missing that the correct first
     // form is displayed. The first form for an initial migration is the
@@ -63,7 +64,7 @@ class MigrateUpgradeFormStepsTest extends BrowserTestBase {
     // form.
     $session = $this->assertSession();
     // Get the current major version.
-    list($destination_site_version) = explode('.', \Drupal::VERSION, 2);
+    [$destination_site_version] = explode('.', Drupal::VERSION, 2);
     $expected['initial'] = "Upgrade a site by importing its files and the data from its database into a clean and empty new install of Drupal $destination_site_version.";
     $expected['incremental'] = "An upgrade has already been performed on this site.";
 
@@ -116,7 +117,7 @@ class MigrateUpgradeFormStepsTest extends BrowserTestBase {
     $store->set('step', 'overview');
     $this->drupalGet('/upgrade');
     $session->pageTextContains("An upgrade has already been performed on this site. To perform a new migration, create a clean and empty new install of Drupal $destination_site_version. Rollbacks are not yet supported through the user interface.");
-    $this->drupalPostForm(NULL, [], t('Import new configuration and content from old site'));
+    $this->submitForm([], 'Import new configuration and content from old site');
     $session->pageTextContains('Provide credentials for the database of the Drupal site you want to upgrade.');
   }
 
