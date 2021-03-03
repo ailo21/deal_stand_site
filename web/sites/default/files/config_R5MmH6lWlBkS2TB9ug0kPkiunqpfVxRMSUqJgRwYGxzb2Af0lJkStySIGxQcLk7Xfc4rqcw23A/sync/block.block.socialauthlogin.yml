@@ -1,0 +1,20 @@
+uuid: e6562cf5-1d62-432d-a67e-594787349493
+langcode: ru
+status: true
+dependencies:
+  module:
+    - social_auth
+  theme:
+    - bartik
+id: socialauthlogin
+theme: bartik
+region: secondary_menu
+weight: 0
+provider: null
+plugin: social_auth_login
+settings:
+  id: social_auth_login
+  label: 'Social Auth Login'
+  provider: social_auth
+  label_display: '0'
+visibility: {  }

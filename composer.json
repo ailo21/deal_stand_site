@@ -23,6 +23,8 @@
         "drupal/core-recommended": "^9",
         "drupal/devel": "^4.0",
         "drupal/restui": "^1.18",
+        "drupal/social_auth_google": "^2.1",
+        "drupal/social_auth_vk": "3.x",
         "drupal/taxonomy_manager": "^2.0",
         "drush/drush": "^10.3"
     },
