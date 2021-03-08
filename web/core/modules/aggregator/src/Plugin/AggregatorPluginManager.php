@@ -5,6 +5,7 @@ namespace Drupal\aggregator\Plugin;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
+use Traversable;
 
 /**
  * Manages aggregator plugins.
@@ -21,7 +22,7 @@ use Drupal\Core\Plugin\DefaultPluginManager;
 class AggregatorPluginManager extends DefaultPluginManager {
 
   /**
-   * Constructs a AggregatorPluginManager object.
+   * Constructs an AggregatorPluginManager object.
    *
    * @param string $type
    *   The plugin type, for example fetcher.
@@ -33,7 +34,7 @@ class AggregatorPluginManager extends DefaultPluginManager {
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
    */
-  public function __construct($type, \Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
+  public function __construct($type, Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
     $type_annotations = [
       'fetcher' => 'Drupal\aggregator\Annotation\AggregatorFetcher',
       'parser' => 'Drupal\aggregator\Annotation\AggregatorParser',

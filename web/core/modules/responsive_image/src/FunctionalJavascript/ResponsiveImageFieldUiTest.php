@@ -2,11 +2,12 @@
 
 namespace Drupal\responsive_image\Tests;
 
+use Drupal;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\responsive_image\Entity\ResponsiveImageStyle;
 
 /**
- * Class ResponsiveImageFieldUiTest.
+ * Tests the responsive image field UI.
  *
  * @group responsive_image
  */
@@ -117,7 +118,7 @@ class ResponsiveImageFieldUiTest extends WebDriverTestBase {
         'image_mapping' => 'large',
       ])
       ->save();
-    \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
+    Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
     // Refresh the page.
     $this->drupalGet($manage_display);
     $assert_session->responseContains("Select a responsive image style.");

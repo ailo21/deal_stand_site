@@ -2,6 +2,7 @@
 
 namespace Drupal\KernelTests;
 
+use Drupal;
 use Drupal\Component\FileCache\FileCacheFactory;
 use Drupal\Core\Database\Database;
 use org\bovigo\vfs\vfsStream;
@@ -66,7 +67,7 @@ class KernelTestBaseTest extends KernelTestBase {
     $this->assertNotEmpty($request);
     $this->assertEquals('/', $request->getPathInfo());
 
-    $this->assertSame($request, \Drupal::request());
+    $this->assertSame($request, Drupal::request());
 
     $this->assertEquals($this, $GLOBALS['conf']['container_service_providers']['test']);
 
@@ -113,7 +114,7 @@ class KernelTestBaseTest extends KernelTestBase {
   public function testRegister() {
     // Verify that this container is identical to the actual container.
     $this->assertInstanceOf('Symfony\Component\DependencyInjection\ContainerInterface', $this->container);
-    $this->assertSame($this->container, \Drupal::getContainer());
+    $this->assertSame($this->container, Drupal::getContainer());
 
     // The request service should never exist.
     $this->assertFalse($this->container->has('request'));
@@ -121,14 +122,14 @@ class KernelTestBaseTest extends KernelTestBase {
     // Verify that there is a request stack.
     $request = $this->container->get('request_stack')->getCurrentRequest();
     $this->assertInstanceOf('Symfony\Component\HttpFoundation\Request', $request);
-    $this->assertSame($request, \Drupal::request());
+    $this->assertSame($request, Drupal::request());
 
     // Trigger a container rebuild.
     $this->enableModules(['system']);
 
     // Verify that this container is identical to the actual container.
     $this->assertInstanceOf('Symfony\Component\DependencyInjection\ContainerInterface', $this->container);
-    $this->assertSame($this->container, \Drupal::getContainer());
+    $this->assertSame($this->container, Drupal::getContainer());
 
     // The request service should never exist.
     $this->assertFalse($this->container->has('request'));
@@ -136,7 +137,7 @@ class KernelTestBaseTest extends KernelTestBase {
     // Verify that there is a request stack (and that it persisted).
     $new_request = $this->container->get('request_stack')->getCurrentRequest();
     $this->assertInstanceOf('Symfony\Component\HttpFoundation\Request', $new_request);
-    $this->assertSame($new_request, \Drupal::request());
+    $this->assertSame($new_request, Drupal::request());
     $this->assertSame($request, $new_request);
 
     // Ensure getting the router.route_provider does not trigger a deprecation
@@ -184,9 +185,9 @@ class KernelTestBaseTest extends KernelTestBase {
     ];
     $expected = "<h3>Inner</h3>\n";
 
-    $this->assertEquals('core', \Drupal::theme()->getActiveTheme()->getName());
-    $output = \Drupal::service('renderer')->renderRoot($build);
-    $this->assertEquals('core', \Drupal::theme()->getActiveTheme()->getName());
+    $this->assertEquals('core', Drupal::theme()->getActiveTheme()->getName());
+    $output = Drupal::service('renderer')->renderRoot($build);
+    $this->assertEquals('core', Drupal::theme()->getActiveTheme()->getName());
 
     $this->assertEquals($expected, $build['#markup']);
     $this->assertEquals($expected, $output);
@@ -205,8 +206,8 @@ class KernelTestBaseTest extends KernelTestBase {
     $expected = '/' . preg_quote('<input type="text" name="test"', '/') . '/';
 
     $this->assertArrayNotHasKey('theme', $GLOBALS);
-    $output = \Drupal::service('renderer')->renderRoot($build);
-    $this->assertEquals('core', \Drupal::theme()->getActiveTheme()->getName());
+    $output = Drupal::service('renderer')->renderRoot($build);
+    $this->assertEquals('core', Drupal::theme()->getActiveTheme()->getName());
 
     $this->assertRegExp($expected, (string) $build['#children']);
     $this->assertRegExp($expected, (string) $output);
@@ -217,7 +218,7 @@ class KernelTestBaseTest extends KernelTestBase {
    */
   public function testBootKernel() {
     $this->assertNull($this->container->get('request_stack')->getParentRequest(), 'There should only be one request on the stack');
-    $this->assertEquals('public', \Drupal::config('system.file')->get('default_scheme'));
+    $this->assertEquals('public', Drupal::config('system.file')->get('default_scheme'));
   }
 
   /**
@@ -292,18 +293,18 @@ class KernelTestBaseTest extends KernelTestBase {
     // point the original database connection is restored so we need to prefix
     // the tables.
     $connection = Database::getConnection();
-    if ($connection->databaseType() != 'sqlite') {
-      $tables = $connection->schema()->findTables($this->databasePrefix . '%');
-      $this->assertTrue(empty($tables), 'All test tables have been removed.');
-    }
-    else {
-      $result = $connection->query("SELECT name FROM " . $this->databasePrefix . ".sqlite_master WHERE type = :type AND name LIKE :table_name AND name NOT LIKE :pattern", [
+    if ($connection->databaseType() === 'sqlite') {
+      $result = $connection->query("SELECT name FROM " . $this->databasePrefix .
+        ".sqlite_master WHERE type = :type AND name LIKE :table_name AND name NOT LIKE :pattern", [
         ':type' => 'table',
         ':table_name' => '%',
         ':pattern' => 'sqlite_%',
       ])->fetchAllKeyed(0, 0);
-
       $this->assertTrue(empty($result), 'All test tables have been removed.');
+    }
+    else {
+      $tables = $connection->schema()->findTables($this->databasePrefix . '%');
+      $this->assertTrue(empty($tables), 'All test tables have been removed.');
     }
   }
 
@@ -314,8 +315,40 @@ class KernelTestBaseTest extends KernelTestBase {
     $this->assertFileExists('core/profiles/demo_umami/modules/demo_umami_content/demo_umami_content.info.yml');
     $this->assertSame(
       'core/profiles/demo_umami/modules/demo_umami_content/demo_umami_content.info.yml',
-      \Drupal::service('extension.list.module')->getPathname('demo_umami_content')
+      Drupal::service('extension.list.module')->getPathname('demo_umami_content')
     );
+  }
+
+  /**
+   * Tests the deprecation of AssertLegacyTrait::assert.
+   *
+   * @group legacy
+   */
+  public function testAssert() {
+    $this->expectDeprecation('AssertLegacyTrait::assert() is deprecated in drupal:8.0.0 and is removed from drupal:10.0.0. Use $this->assertTrue() instead. See https://www.drupal.org/node/3129738');
+    $this->assert(TRUE);
+  }
+
+  /**
+   * Tests the deprecation of AssertLegacyTrait::assertIdenticalObject.
+   *
+   * @group legacy
+    */
+  public function testAssertIdenticalObject() {
+    $this->expectDeprecation('AssertLegacyTrait::assertIdenticalObject() is deprecated in drupal:8.0.0 and is removed from drupal:10.0.0. Use $this->assertEquals() instead. See https://www.drupal.org/node/3129738');
+    $this->assertIdenticalObject((object) ['foo' => 'bar'], (object) ['foo' => 'bar']);
+  }
+
+  /**
+   * Tests the deprecation of ::installSchema with the tables key_value(_expire).
+   *
+   * @group legacy
+    */
+  public function testKernelTestBaseInstallSchema() {
+    $this->expectDeprecation('Installing the tables key_value and key_value_expire with the method KernelTestBase::installSchema() is deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. The tables are now lazy loaded and therefore will be installed automatically when used. See https://www.drupal.org/node/3143286');
+    $this->enableModules(['system']);
+    $this->installSchema('system', ['key_value', 'key_value_expire']);
+    $this->assertFalse(Database::getConnection()->schema()->tableExists('key_value'));
   }
 
 }

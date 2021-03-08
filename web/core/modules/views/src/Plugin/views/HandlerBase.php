@@ -2,6 +2,7 @@
 
 namespace Drupal\views\Plugin\views;
 
+use Drupal;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Component\Utility\UrlHelper;
@@ -15,6 +16,7 @@ use Drupal\views\Render\ViewsRenderPipelineMarkup;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Views;
 use Drupal\views\ViewsData;
+use Exception;
 
 /**
  * Base class for Views handler plugins.
@@ -254,7 +256,7 @@ abstract class HandlerBase extends PluginBase implements ViewsHandlerInterface {
     // be moved into one because of the $form_state->getValues() hierarchy. Those
     // elements can add a #fieldset => 'fieldset_name' property, and they'll
     // be moved to their fieldset during pre_render.
-    $form['#pre_render'][] = [get_class($this), 'preRenderAddFieldsetMarkup'];
+    $form['#pre_render'][] = [static::class, 'preRenderAddFieldsetMarkup'];
 
     parent::buildOptionsForm($form, $form_state);
 
@@ -297,7 +299,7 @@ abstract class HandlerBase extends PluginBase implements ViewsHandlerInterface {
    */
   protected function getModuleHandler() {
     if (!$this->moduleHandler) {
-      $this->moduleHandler = \Drupal::moduleHandler();
+      $this->moduleHandler = Drupal::moduleHandler();
     }
 
     return $this->moduleHandler;
@@ -401,17 +403,17 @@ abstract class HandlerBase extends PluginBase implements ViewsHandlerInterface {
   public function exposedInfo() {}
 
   /**
-   * Render our chunk of the exposed handler form when selecting
+   * Render our chunk of the exposed handler form when selecting.
    */
   public function buildExposedForm(&$form, FormStateInterface $form_state) {}
 
   /**
-   * Validate the exposed handler form
+   * Validate the exposed handler form.
    */
   public function validateExposed(&$form, FormStateInterface $form_state) {}
 
   /**
-   * Submit the exposed handler form
+   * Submit the exposed handler form.
    */
   public function submitExposed(&$form, FormStateInterface $form_state) {}
 
@@ -715,7 +717,7 @@ abstract class HandlerBase extends PluginBase implements ViewsHandlerInterface {
       return $views_data['table']['entity type'];
     }
     else {
-      throw new \Exception("No entity type for field {$this->options['id']} on view {$this->view->storage->id()}");
+      throw new Exception("No entity type for field {$this->options['id']} on view {$this->view->storage->id()}");
     }
   }
 
@@ -838,7 +840,7 @@ abstract class HandlerBase extends PluginBase implements ViewsHandlerInterface {
   }
 
   /**
-   * Calculates options stored on the handler
+   * Calculates options stored on the handler.
    *
    * @param array $options
    *   The options stored in the handler

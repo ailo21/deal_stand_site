@@ -12,6 +12,7 @@ use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\comment\CommentManagerInterface;
 use Drupal\node\NodeInterface;
+use stdClass;
 
 /**
  * Provides forum manager service.
@@ -65,7 +66,7 @@ class ForumManager implements ForumManagerInterface {
   protected $entityTypeManager;
 
   /**
-   * Database connection
+   * Database connection.
    *
    * @var \Drupal\Core\Database\Connection
    */
@@ -260,7 +261,7 @@ class ForumManager implements ForumManagerInterface {
       }
 
       if ($topic->comment_count > 0) {
-        $last_reply = new \stdClass();
+        $last_reply = new stdClass();
         $last_reply->created = $topic->last_comment_timestamp;
         $last_reply->name = $topic->last_comment_name;
         $last_reply->uid = $topic->last_comment_uid;
@@ -360,7 +361,7 @@ class ForumManager implements ForumManagerInterface {
       ->fetchObject();
 
     // Build the last post information.
-    $last_post = new \stdClass();
+    $last_post = new stdClass();
     if (!empty($topic->last_comment_timestamp)) {
       $last_post->created = $topic->last_comment_timestamp;
       $last_post->name = $topic->last_comment_name;

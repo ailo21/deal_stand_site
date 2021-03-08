@@ -4,6 +4,7 @@ namespace Drupal\Core\Batch;
 
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\DatabaseException;
+use Exception;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Drupal\Core\Access\CsrfTokenGenerator;
 
@@ -58,12 +59,12 @@ class BatchStorage implements BatchStorageInterface {
     // Ensure that a session is started before using the CSRF token generator.
     $this->session->start();
     try {
-      $batch = $this->connection->query("SELECT batch FROM {batch} WHERE bid = :bid AND token = :token", [
+      $batch = $this->connection->query("SELECT [batch] FROM {batch} WHERE [bid] = :bid AND [token] = :token", [
         ':bid' => $id,
         ':token' => $this->csrfToken->get($id),
       ])->fetchField();
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       $this->catchException($e);
       $batch = FALSE;
     }
@@ -82,7 +83,7 @@ class BatchStorage implements BatchStorageInterface {
         ->condition('bid', $id)
         ->execute();
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       $this->catchException($e);
     }
   }
@@ -97,7 +98,7 @@ class BatchStorage implements BatchStorageInterface {
         ->condition('bid', $batch['id'])
         ->execute();
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       $this->catchException($e);
     }
   }
@@ -112,7 +113,7 @@ class BatchStorage implements BatchStorageInterface {
         ->condition('timestamp', REQUEST_TIME - 864000, '<')
         ->execute();
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       $this->catchException($e);
     }
   }
@@ -128,7 +129,7 @@ class BatchStorage implements BatchStorageInterface {
       // The batch table might not yet exist.
       $this->doCreate($batch);
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       // If there was an exception, try to create the table.
       if (!$try_again = $this->ensureTableExists()) {
         // If the exception happened for other reason than the missing table,
@@ -192,7 +193,7 @@ class BatchStorage implements BatchStorageInterface {
    *
    * @throws \Exception
    */
-  protected function catchException(\Exception $e) {
+  protected function catchException(Exception $e) {
     if ($this->connection->schema()->tableExists(static::TABLE_NAME)) {
       throw $e;
     }

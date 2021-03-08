@@ -2,6 +2,7 @@
 
 namespace Drupal\KernelTests\Core\Config;
 
+use Drupal;
 use Drupal\Core\Config\Schema\SchemaCheckTrait;
 use Drupal\KernelTests\KernelTestBase;
 
@@ -34,7 +35,7 @@ class SchemaCheckTraitTest extends KernelTestBase {
   protected function setUp(): void {
     parent::setUp();
     $this->installConfig(['config_test', 'config_schema_test']);
-    $this->typedConfig = \Drupal::service('config.typed');
+    $this->typedConfig = Drupal::service('config.typed');
   }
 
   /**
@@ -60,7 +61,7 @@ class SchemaCheckTraitTest extends KernelTestBase {
       'config_test.types:new_array' => 'missing schema',
       'config_test.types:boolean' => 'non-scalar value but not defined as an array (such as mapping or sequence)',
     ];
-    $this->assertEqual($ret, $expected);
+    $this->assertEqual($expected, $ret);
   }
 
 }

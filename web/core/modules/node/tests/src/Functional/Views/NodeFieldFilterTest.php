@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\node\Functional\Views;
 
+use Drupal;
 use Drupal\language\Entity\ConfigurableLanguage;
 
 /**
@@ -100,7 +101,7 @@ class NodeFieldFilterTest extends NodeTestBase {
    */
   protected function assertPageCounts($path, $counts, $message) {
     // Disable read more links.
-    \Drupal::service('entity_display.repository')
+    Drupal::service('entity_display.repository')
       ->getViewDisplay('node', 'page', 'teaser')
       ->removeComponent('links')
       ->save();
@@ -113,7 +114,7 @@ class NodeFieldFilterTest extends NodeTestBase {
     // page, and they are the same. So the title/body string should appear on
     // the page twice as many times as the input count.
     foreach ($counts as $langcode => $count) {
-      $this->assertEqual(substr_count($text, $this->nodeTitles[$langcode]), 2 * $count, 'Translation ' . $langcode . ' has count ' . $count . ' with ' . $message);
+      $this->assertEqual(2 * $count, substr_count($text, $this->nodeTitles[$langcode]), 'Translation ' . $langcode . ' has count ' . $count . ' with ' . $message);
     }
   }
 

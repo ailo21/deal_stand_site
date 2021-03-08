@@ -2,13 +2,13 @@
 
 namespace Drupal\link\Plugin\Field\FieldFormatter;
 
+use Drupal;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Path\PathValidatorInterface;
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Url;
 use Drupal\link\LinkItemInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -24,7 +24,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   }
  * )
  */
-class LinkFormatter extends FormatterBase implements ContainerFactoryPluginInterface {
+class LinkFormatter extends FormatterBase {
 
   /**
    * The path validator service.
@@ -184,7 +184,7 @@ class LinkFormatter extends FormatterBase implements ContainerFactoryPluginInter
         // Unsanitized token replacement here because the entire link title
         // gets auto-escaped during link generation in
         // \Drupal\Core\Utility\LinkGenerator::generate().
-        $link_title = \Drupal::token()->replace($item->title, [$entity->getEntityTypeId() => $entity], ['clear' => TRUE]);
+        $link_title = Drupal::token()->replace($item->title, [$entity->getEntityTypeId() => $entity], ['clear' => TRUE]);
       }
 
       // Trim the link text to the desired length.

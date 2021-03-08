@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\Core\Extension;
 
+use Drupal;
 use Drupal\Core\Extension\InfoParser;
 use Drupal\Core\Extension\InfoParserException;
 use Drupal\Tests\UnitTestCase;
@@ -161,7 +162,7 @@ MISSING_CORE_AND_CORE_VERSION_REQUIREMENT;
       ],
     ]);
     $info_values = $this->infoParser->parse(vfsStream::url('modules/fixtures/missing_core_and_core_version_requirement.info.txt'));
-    $this->assertSame($info_values['core_version_requirement'], \Drupal::VERSION);
+    $this->assertSame($info_values['core_version_requirement'], Drupal::VERSION);
   }
 
   /**
@@ -334,7 +335,7 @@ CORE_8X;
   }
 
   /**
-   * Dataprovider for testCore8x().
+   * Data provider for testCore8x().
    */
   public function providerCore8x() {
     return [
@@ -444,7 +445,7 @@ INVALID_CORE_VERSION_REQUIREMENT;
   }
 
   /**
-   * Dataprovider for testCoreVersionRequirementInvalid().
+   * Data provider for testCoreVersionRequirementInvalid().
    */
   public function providerCoreVersionRequirementInvalid() {
     return [
@@ -520,7 +521,7 @@ COMMONTEST;
       ]);
       $info_values = $this->infoParser->parse(vfsStream::url("modules/fixtures/$filename"));
       $this->assertEquals($info_values['simple_string'], 'A simple string', 'Simple string value was parsed correctly.');
-      $this->assertEquals($info_values['version'], \Drupal::VERSION, 'Constant value was parsed correctly.');
+      $this->assertEquals($info_values['version'], Drupal::VERSION, 'Constant value was parsed correctly.');
       $this->assertEquals($info_values['double_colon'], 'dummyClassName::method', 'Value containing double-colon was parsed correctly.');
       $this->assertFalse($info_values['core_incompatible']);
     }
@@ -548,9 +549,9 @@ CORETEST;
       ],
     ]);
     $info_values = $this->infoParser->parse(vfsStream::url("core/fixtures/$filename"));
-    $this->assertEquals($info_values['version'], \Drupal::VERSION, 'Constant value was parsed correctly.');
+    $this->assertEquals($info_values['version'], Drupal::VERSION, 'Constant value was parsed correctly.');
     $this->assertFalse($info_values['core_incompatible']);
-    $this->assertEquals(\Drupal::VERSION, $info_values['core_version_requirement']);
+    $this->assertEquals(Drupal::VERSION, $info_values['core_version_requirement']);
   }
 
   /**
@@ -583,10 +584,10 @@ CORE_INCOMPATIBILITY;
   }
 
   /**
-   * Dataprovider for testCoreIncompatibility().
+   * Data provider for testCoreIncompatibility().
    */
   public function providerCoreIncompatibility() {
-    list($major, $minor) = explode('.', \Drupal::VERSION);
+    [$major, $minor] = explode('.', Drupal::VERSION);
 
     $next_minor = $minor + 1;
     $next_major = $major + 1;

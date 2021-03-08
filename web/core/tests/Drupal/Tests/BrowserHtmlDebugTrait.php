@@ -6,6 +6,7 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Utility\Error;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use RuntimeException;
 
 /**
  * Provides the debug functions for browser tests.
@@ -141,7 +142,7 @@ trait BrowserHtmlDebugTrait {
     $this->htmlOutputBaseUrl = getenv('BROWSERTEST_OUTPUT_BASE_URL') ?: $GLOBALS['base_url'];
     if ($this->htmlOutputEnabled) {
       $this->htmlOutputFile = $browser_output_file;
-      $this->htmlOutputClassName = str_replace("\\", "_", get_called_class());
+      $this->htmlOutputClassName = str_replace("\\", "_", static::class);
       $this->htmlOutputDirectory = DRUPAL_ROOT . '/sites/simpletest/browser_output';
       // Do not use the file_system service so this method can be called before
       // it is available. Checks !is_dir() twice around mkdir() because a
@@ -149,7 +150,7 @@ trait BrowserHtmlDebugTrait {
       // fail. In this case we can still use the directory even though we failed
       // to make it.
       if (!is_dir($this->htmlOutputDirectory) && !@mkdir($this->htmlOutputDirectory, 0775, TRUE) && !is_dir($this->htmlOutputDirectory)) {
-        throw new \RuntimeException(sprintf('Unable to create directory: %s', $this->htmlOutputDirectory));
+        throw new RuntimeException(sprintf('Unable to create directory: %s', $this->htmlOutputDirectory));
       }
       if (!file_exists($this->htmlOutputDirectory . '/.htaccess')) {
         file_put_contents($this->htmlOutputDirectory . '/.htaccess', "<IfModule mod_expires.c>\nExpiresActive Off\n</IfModule>\n");
@@ -209,7 +210,7 @@ trait BrowserHtmlDebugTrait {
     $backtrace = debug_backtrace();
     // Find the test class that has the test method.
     while ($caller = Error::getLastCaller($backtrace)) {
-      if (isset($caller['class']) && $caller['class'] === get_class($this)) {
+      if (isset($caller['class']) && $caller['class'] === static::class) {
         break;
       }
       // If the test method is implemented by a test class's parent then the

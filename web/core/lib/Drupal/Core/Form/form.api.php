@@ -10,6 +10,9 @@
  * @{
  */
 
+use Drupal\Core\Ajax\PrependCommand;
+use Drupal\Core\Form\FormStateInterface;
+
 /**
  * Perform a single batch operation.
  *
@@ -55,13 +58,13 @@
  *   object implement \ArrayAccess to be passed.
  */
 function callback_batch_operation($multiple_params, &$context) {
-  $node_storage = \Drupal::entityTypeManager()->getStorage('node');
-  $database = \Drupal::database();
+  $node_storage = Drupal::entityTypeManager()->getStorage('node');
+  $database = Drupal::database();
 
   if (!isset($context['sandbox']['progress'])) {
     $context['sandbox']['progress'] = 0;
     $context['sandbox']['current_node'] = 0;
-    $context['sandbox']['max'] = $database->query('SELECT COUNT(DISTINCT nid) FROM {node}')->fetchField();
+    $context['sandbox']['max'] = $database->query('SELECT COUNT(DISTINCT [nid]) FROM {node}')->fetchField();
   }
 
   // For this example, we decide that we can safely process
@@ -69,7 +72,7 @@ function callback_batch_operation($multiple_params, &$context) {
   $limit = 5;
 
   // With each pass through the callback, retrieve the next group of nids.
-  $result = $database->queryRange("SELECT nid FROM {node} WHERE nid > :nid ORDER BY nid ASC", 0, $limit, [':nid' => $context['sandbox']['current_node']]);
+  $result = $database->queryRange("SELECT [nid] FROM {node} WHERE [nid] > :nid ORDER BY [nid] ASC", 0, $limit, [':nid' => $context['sandbox']['current_node']]);
   foreach ($result as $row) {
 
     // Here we actually perform our processing on the current node.
@@ -124,8 +127,8 @@ function callback_batch_finished($success, $results, $operations, $elapsed) {
       '#theme' => 'item_list',
       '#items' => $results,
     ];
-    $message .= \Drupal::service('renderer')->render($list);
-    \Drupal::messenger()->addStatus($message);
+    $message .= Drupal::service('renderer')->render($list);
+    Drupal::messenger()->addStatus($message);
   }
   else {
     // An error occurred.
@@ -135,7 +138,7 @@ function callback_batch_finished($success, $results, $operations, $elapsed) {
       '%error_operation' => $error_operation[0],
       '@arguments' => print_r($error_operation[1], TRUE),
     ]);
-    \Drupal::messenger()->addError($message);
+    Drupal::messenger()->addError($message);
   }
 }
 
@@ -157,7 +160,7 @@ function callback_batch_finished($success, $results, $operations, $elapsed) {
 function hook_ajax_render_alter(array &$data) {
   // Inject any new status messages into the content area.
   $status_messages = ['#type' => 'status_messages'];
-  $command = new \Drupal\Core\Ajax\PrependCommand('#block-system-main .content', \Drupal::service('renderer')->renderRoot($status_messages));
+  $command = new PrependCommand('#block-system-main .content', Drupal::service('renderer')->renderRoot($status_messages));
   $data[] = $command->render();
 }
 
@@ -169,7 +172,7 @@ function hook_ajax_render_alter(array &$data) {
  * $form_state->getFormObject()->getEntity().
  *
  * Implementations are responsible for adding cache contexts/tags/max-age as
- * needed. See https://www.drupal.org/developing/api/8/cache.
+ * needed. See https://www.drupal.org/docs/8/api/cache-api/cache-api.
  *
  * In addition to hook_form_alter(), which is called for all forms, there are
  * two more specific form hooks available. The first,
@@ -202,9 +205,9 @@ function hook_ajax_render_alter(array &$data) {
  *
  * @ingroup form_api
  */
-function hook_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+function hook_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   if (isset($form['type']) && $form['type']['#value'] . '_node_settings' == $form_id) {
-    $upload_enabled_types = \Drupal::config('mymodule.settings')->get('upload_enabled_types');
+    $upload_enabled_types = Drupal::config('mymodule.settings')->get('upload_enabled_types');
     $form['workflow']['upload_' . $form['type']['#value']] = [
       '#type' => 'radios',
       '#title' => t('Attachments'),
@@ -220,7 +223,7 @@ function hook_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_stat
  * Provide a form-specific alteration instead of the global hook_form_alter().
  *
  * Implementations are responsible for adding cache contexts/tags/max-age as
- * needed. See https://www.drupal.org/developing/api/8/cache.
+ * needed. See https://www.drupal.org/docs/8/api/cache-api/cache-api.
  *
  * Modules can implement hook_form_FORM_ID_alter() to modify a specific form,
  * rather than implementing hook_form_alter() and checking the form ID, or
@@ -246,7 +249,7 @@ function hook_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_stat
  *
  * @ingroup form_api
  */
-function hook_form_FORM_ID_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+function hook_form_FORM_ID_alter(&$form, FormStateInterface $form_state, $form_id) {
   // Modification for the form with the given form ID goes here. For example, if
   // FORM_ID is "user_register_form" this code would run only on the user
   // registration form.
@@ -263,7 +266,7 @@ function hook_form_FORM_ID_alter(&$form, \Drupal\Core\Form\FormStateInterface $f
  * Provide a form-specific alteration for shared ('base') forms.
  *
  * Implementations are responsible for adding cache contexts/tags/max-age as
- * needed. See https://www.drupal.org/developing/api/8/cache.
+ * needed. See https://www.drupal.org/docs/8/api/cache-api/cache-api.
  *
  * By default, when \Drupal::formBuilder()->getForm() is called, Drupal looks
  * for a function with the same name as the form ID, and uses that function to
@@ -296,7 +299,7 @@ function hook_form_FORM_ID_alter(&$form, \Drupal\Core\Form\FormStateInterface $f
  *
  * @ingroup form_api
  */
-function hook_form_BASE_FORM_ID_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+function hook_form_BASE_FORM_ID_alter(&$form, FormStateInterface $form_state, $form_id) {
   // Modification for the form with the given BASE_FORM_ID goes here. For
   // example, if BASE_FORM_ID is "node_form", this code would run on every
   // node form, regardless of node type.

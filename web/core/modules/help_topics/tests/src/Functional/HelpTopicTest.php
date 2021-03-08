@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\help_topics\Functional;
 
+use Drupal;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\system\Functional\Menu\AssertBreadcrumbTrait;
 
@@ -52,8 +53,8 @@ class HelpTopicTest extends BrowserTestBase {
 
     // These tests rely on some markup from the 'Seven' theme and we test theme
     // provided help topics.
-    \Drupal::service('theme_installer')->install(['seven', 'help_topics_test_theme']);
-    \Drupal::service('config.factory')->getEditable('system.theme')->set('admin', 'seven')->save();
+    Drupal::service('theme_installer')->install(['seven', 'help_topics_test_theme']);
+    Drupal::service('config.factory')->getEditable('system.theme')->set('admin', 'seven')->save();
 
     // Place various blocks.
     $settings = [
@@ -98,7 +99,7 @@ class HelpTopicTest extends BrowserTestBase {
     $session->pageTextContains('Topics can be provided by modules or themes');
     $session->responseHeaderContains('X-Drupal-Cache-Tags', 'core.extension');
 
-    // Verify links for for help topics and order.
+    // Verify links for help topics and order.
     $page_text = $this->getTextContent();
     $start = strpos($page_text, 'Topics can be provided');
     $pos = $start;
@@ -106,18 +107,18 @@ class HelpTopicTest extends BrowserTestBase {
       $name = $info['name'];
       $session->linkExists($name);
       $new_pos = strpos($page_text, $name, $start);
-      $this->assertTrue($new_pos > $pos, 'Order of ' . $name . ' is correct on page');
+      $this->assertGreaterThan($pos, $new_pos, "Order of $name is not correct on page");
       $pos = $new_pos;
     }
 
     // Ensure the plugin manager alter hook works as expected.
     $session->linkExists('ABC Help Test module');
-    \Drupal::state()->set('help_topics_test.test:top_level', FALSE);
-    \Drupal::service('plugin.manager.help_topic')->clearCachedDefinitions();
+    Drupal::state()->set('help_topics_test.test:top_level', FALSE);
+    Drupal::service('plugin.manager.help_topic')->clearCachedDefinitions();
     $this->drupalGet('admin/help');
     $session->linkNotExists('ABC Help Test module');
-    \Drupal::state()->set('help_topics_test.test:top_level', TRUE);
-    \Drupal::service('plugin.manager.help_topic')->clearCachedDefinitions();
+    Drupal::state()->set('help_topics_test.test:top_level', TRUE);
+    Drupal::service('plugin.manager.help_topic')->clearCachedDefinitions();
     $this->drupalGet('admin/help');
 
     // Ensure all the expected links are present before uninstalling.

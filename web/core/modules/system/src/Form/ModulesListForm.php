@@ -2,6 +2,7 @@
 
 namespace Drupal\system\Form;
 
+use Drupal;
 use Drupal\Core\Config\PreExistingConfigException;
 use Drupal\Core\Config\UnmetDependenciesException;
 use Drupal\Core\Access\AccessManagerInterface;
@@ -75,6 +76,13 @@ class ModulesListForm extends FormBase {
    * @var \Drupal\Core\Extension\ModuleExtensionList
    */
   protected $moduleExtensionList;
+
+  /**
+   * The access manager.
+   *
+   * @var \Drupal\Core\Access\AccessManagerInterface
+   */
+  protected $accessManager;
 
   /**
    * {@inheritdoc}
@@ -308,11 +316,11 @@ class ModulesListForm extends FormBase {
     if ($module->info['core_incompatible']) {
       $compatible = FALSE;
       $reasons[] = $this->t('This version is not compatible with Drupal @core_version and should be replaced.', [
-        '@core_version' => \Drupal::VERSION,
+        '@core_version' => Drupal::VERSION,
       ]);
       $row['#requires']['core'] = $this->t('Drupal Core (@core_requirement) (<span class="admin-missing">incompatible with</span> version @core_version)', [
         '@core_requirement' => isset($module->info['core_version_requirement']) ? $module->info['core_version_requirement'] : $module->info['core'],
-        '@core_version' => \Drupal::VERSION,
+        '@core_version' => Drupal::VERSION,
       ]);
     }
 

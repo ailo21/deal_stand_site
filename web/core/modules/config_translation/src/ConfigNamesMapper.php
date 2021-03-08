@@ -2,6 +2,7 @@
 
 namespace Drupal\config_translation;
 
+use Drupal;
 use Drupal\config_translation\Event\ConfigMapperPopulateEvent;
 use Drupal\config_translation\Event\ConfigTranslationEvents;
 use Drupal\config_translation\Exception\ConfigMapperLanguageException;
@@ -144,7 +145,7 @@ class ConfigNamesMapper extends PluginBase implements ConfigMapperInterface, Con
 
     $this->stringTranslation = $string_translation;
     $this->languageManager = $language_manager;
-    $this->eventDispatcher = $event_dispatcher ?: \Drupal::service('event_dispatcher');
+    $this->eventDispatcher = $event_dispatcher ?: Drupal::service('event_dispatcher');
   }
 
   /**
@@ -384,7 +385,7 @@ class ConfigNamesMapper extends PluginBase implements ConfigMapperInterface, Con
     $this->langcode = $route_match->getParameter('langcode');
 
     $event = new ConfigMapperPopulateEvent($this, $route_match);
-    $this->eventDispatcher->dispatch(ConfigTranslationEvents::POPULATE_MAPPER, $event);
+    $this->eventDispatcher->dispatch($event, ConfigTranslationEvents::POPULATE_MAPPER);
   }
 
   /**

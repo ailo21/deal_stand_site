@@ -2,6 +2,7 @@
 
 namespace Drupal\Core\Entity\Element;
 
+use Drupal;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Component\Utility\Tags;
 use Drupal\Core\Entity\EntityInterface;
@@ -10,6 +11,7 @@ use Drupal\Core\Entity\EntityReferenceSelection\SelectionWithAutocreateInterface
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element\Textfield;
 use Drupal\Core\Site\Settings;
+use InvalidArgumentException;
 
 /**
  * Provides an entity autocomplete form element.
@@ -72,7 +74,7 @@ class EntityAutocomplete extends Textfield {
    */
   public function getInfo() {
     $info = parent::getInfo();
-    $class = get_class($this);
+    $class = static::class;
 
     // Apply default form element properties.
     $info['#target_type'] = NULL;
@@ -101,7 +103,7 @@ class EntityAutocomplete extends Textfield {
     // Process the #default_value property.
     if ($input === FALSE && isset($element['#default_value']) && $element['#process_default_value']) {
       if (is_array($element['#default_value']) && $element['#tags'] !== TRUE) {
-        throw new \InvalidArgumentException('The #default_value property is an array but the form element does not allow multiple values.');
+        throw new InvalidArgumentException('The #default_value property is an array but the form element does not allow multiple values.');
       }
       elseif (!empty($element['#default_value']) && !is_array($element['#default_value'])) {
         // Convert the default value into an array for easier processing in
@@ -111,7 +113,7 @@ class EntityAutocomplete extends Textfield {
 
       if ($element['#default_value']) {
         if (!(reset($element['#default_value']) instanceof EntityInterface)) {
-          throw new \InvalidArgumentException('The #default_value property has to be an entity object or an array of entity objects.');
+          throw new InvalidArgumentException('The #default_value property has to be an entity object or an array of entity objects.');
         }
 
         // Extract the labels from the passed-in entity objects, taking access
@@ -127,7 +129,7 @@ class EntityAutocomplete extends Textfield {
         return $item['target_id'];
       }, $input);
 
-      $entities = \Drupal::entityTypeManager()->getStorage($element['#target_type'])->loadMultiple($entity_ids);
+      $entities = Drupal::entityTypeManager()->getStorage($element['#target_type'])->loadMultiple($entity_ids);
 
       return static::getEntityLabels($entities);
     }
@@ -158,16 +160,16 @@ class EntityAutocomplete extends Textfield {
   public static function processEntityAutocomplete(array &$element, FormStateInterface $form_state, array &$complete_form) {
     // Nothing to do if there is no target entity type.
     if (empty($element['#target_type'])) {
-      throw new \InvalidArgumentException('Missing required #target_type parameter.');
+      throw new InvalidArgumentException('Missing required #target_type parameter.');
     }
 
     // Provide default values and sanity checks for the #autocreate parameter.
     if ($element['#autocreate']) {
       if (!isset($element['#autocreate']['bundle'])) {
-        throw new \InvalidArgumentException("Missing required #autocreate['bundle'] parameter.");
+        throw new InvalidArgumentException("Missing required #autocreate['bundle'] parameter.");
       }
       // Default the autocreate user ID to the current user.
-      $element['#autocreate']['uid'] = isset($element['#autocreate']['uid']) ? $element['#autocreate']['uid'] : \Drupal::currentUser()->id();
+      $element['#autocreate']['uid'] = isset($element['#autocreate']['uid']) ? $element['#autocreate']['uid'] : Drupal::currentUser()->id();
     }
 
     // Store the selection settings in the key/value store and pass a hashed key
@@ -176,7 +178,7 @@ class EntityAutocomplete extends Textfield {
     $data = serialize($selection_settings) . $element['#target_type'] . $element['#selection_handler'];
     $selection_settings_key = Crypt::hmacBase64($data, Settings::getHashSalt());
 
-    $key_value_storage = \Drupal::keyValue('entity_autocomplete');
+    $key_value_storage = Drupal::keyValue('entity_autocomplete');
     if (!$key_value_storage->has($selection_settings_key)) {
       $key_value_storage->set($selection_settings_key, $selection_settings);
     }
@@ -203,7 +205,7 @@ class EntityAutocomplete extends Textfield {
         'handler' => $element['#selection_handler'],
       ];
       /** @var /Drupal\Core\Entity\EntityReferenceSelection\SelectionInterface $handler */
-      $handler = \Drupal::service('plugin.manager.entity_reference_selection')->getInstance($options);
+      $handler = Drupal::service('plugin.manager.entity_reference_selection')->getInstance($options);
       $autocreate = (bool) $element['#autocreate'] && $handler instanceof SelectionWithAutocreateInterface;
 
       // GET forms might pass the validated data around on the next request, in
@@ -364,7 +366,7 @@ class EntityAutocomplete extends Textfield {
    */
   public static function getEntityLabels(array $entities) {
     /** @var \Drupal\Core\Entity\EntityRepositoryInterface $entity_repository */
-    $entity_repository = \Drupal::service('entity.repository');
+    $entity_repository = Drupal::service('entity.repository');
 
     $entity_labels = [];
     foreach ($entities as $entity) {

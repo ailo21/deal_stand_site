@@ -2,6 +2,7 @@
 
 namespace Drupal\views\Tests;
 
+use Drupal;
 use Drupal\Core\Cache\Cache;
 use Drupal\Tests\system\Functional\Cache\AssertPageCacheContextsAndTagsTrait;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
@@ -33,9 +34,9 @@ trait AssertViewsCacheTagsTrait {
    */
   protected function assertViewsCacheTags(ViewExecutable $view, $expected_results_cache, $views_caching_is_enabled, array $expected_render_array_cache_tags) {
     /** @var \Drupal\Core\Render\RendererInterface $renderer */
-    $renderer = \Drupal::service('renderer');
+    $renderer = Drupal::service('renderer');
     /** @var \Drupal\Core\Render\RenderCacheInterface $render_cache */
-    $render_cache = \Drupal::service('render_cache');
+    $render_cache = Drupal::service('render_cache');
 
     $build = $view->buildRenderable();
     $original = $build;
@@ -43,7 +44,7 @@ trait AssertViewsCacheTagsTrait {
     // Ensure the current request is a GET request so that render caching is
     // active for direct rendering of views, just like for actual requests.
     /** @var \Symfony\Component\HttpFoundation\RequestStack $request_stack */
-    $request_stack = \Drupal::service('request_stack');
+    $request_stack = Drupal::service('request_stack');
     $request = new Request();
     $request->server->set('REQUEST_TIME', REQUEST_TIME);
     $view->setRequest($request);
@@ -52,7 +53,7 @@ trait AssertViewsCacheTagsTrait {
 
     // Check render array cache tags.
     sort($expected_render_array_cache_tags);
-    $this->assertEqual($build['#cache']['tags'], $expected_render_array_cache_tags);
+    $this->assertEqual($expected_render_array_cache_tags, $build['#cache']['tags']);
 
     if ($views_caching_is_enabled) {
       // Check Views render cache item cache tags.
@@ -63,12 +64,12 @@ trait AssertViewsCacheTagsTrait {
 
       // Ensure that the views query is built.
       $view->build();
-      $results_cache_item = \Drupal::cache('data')->get($cache_plugin->generateResultsKey());
+      $results_cache_item = Drupal::cache('data')->get($cache_plugin->generateResultsKey());
       if (is_array($expected_results_cache)) {
         $this->assertNotEmpty($results_cache_item, 'Results cache item found.');
         if ($results_cache_item) {
           sort($expected_results_cache);
-          $this->assertEqual($results_cache_item->tags, $expected_results_cache);
+          $this->assertEqual($expected_results_cache, $results_cache_item->tags);
         }
       }
       else {
@@ -83,7 +84,7 @@ trait AssertViewsCacheTagsTrait {
       if ($views_caching_is_enabled === TRUE) {
         $this->assertNotEmpty($render_cache_item, 'Render cache item found.');
         if ($render_cache_item) {
-          $this->assertEqual($render_cache_item['#cache']['tags'], $expected_render_array_cache_tags);
+          $this->assertEqual($expected_render_array_cache_tags, $render_cache_item['#cache']['tags']);
         }
       }
       else {
@@ -117,14 +118,14 @@ trait AssertViewsCacheTagsTrait {
     $original = $build = DisplayPluginBase::buildBasicRenderable($view->id(), $view->current_display ?: 'default', $view->args);
 
     /** @var \Drupal\Core\Render\RendererInterface $renderer */
-    $renderer = \Drupal::service('renderer');
+    $renderer = Drupal::service('renderer');
     /** @var \Drupal\Core\Render\RenderCacheInterface $render_cache */
-    $render_cache = \Drupal::service('render_cache');
+    $render_cache = Drupal::service('render_cache');
 
     // Ensure the current request is a GET request so that render caching is
     // active for direct rendering of views, just like for actual requests.
     /** @var \Symfony\Component\HttpFoundation\RequestStack $request_stack */
-    $request_stack = \Drupal::service('request_stack');
+    $request_stack = Drupal::service('request_stack');
     $request = new Request();
     $request->server->set('REQUEST_TIME', REQUEST_TIME);
     $request_stack->push($request);
@@ -132,7 +133,7 @@ trait AssertViewsCacheTagsTrait {
 
     // Check render array cache tags.
     sort($expected_render_array_cache_tags);
-    $this->assertEqual($build['#cache']['tags'], $expected_render_array_cache_tags);
+    $this->assertEqual($expected_render_array_cache_tags, $build['#cache']['tags']);
 
     // Check Views render cache item cache tags.
     $original['#cache'] += ['contexts' => []];
@@ -142,7 +143,7 @@ trait AssertViewsCacheTagsTrait {
     if ($views_caching_is_enabled) {
       $this->assertTrue(!empty($render_cache_item), 'Render cache item found.');
       if ($render_cache_item) {
-        $this->assertEqual($render_cache_item['#cache']['tags'], $expected_render_array_cache_tags);
+        $this->assertEqual($expected_render_array_cache_tags, $render_cache_item['#cache']['tags']);
       }
     }
     else {

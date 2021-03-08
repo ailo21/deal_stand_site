@@ -2,6 +2,7 @@
 
 namespace Drupal\field_ui\Element;
 
+use Drupal;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Element\Table;
@@ -85,7 +86,7 @@ class FieldUiTable extends Table {
               '#size' => $depth,
               '#suffix' => isset($row[$cell]['#prefix']) ? $row[$cell]['#prefix'] : '',
             ];
-            $row[$cell]['#prefix'] = \Drupal::service('renderer')->render($indentation);
+            $row[$cell]['#prefix'] = Drupal::service('renderer')->render($indentation);
           }
 
           // Add row id and associate JS settings.
@@ -110,7 +111,7 @@ class FieldUiTable extends Table {
 
     $elements['#attached']['drupalSettings']['fieldUIRowsData'] = $js_settings;
 
-    // If the custom #tabledrag is set and there is a HTML ID, add the table's
+    // If the custom #tabledrag is set and there is an HTML ID, add the table's
     // HTML ID to the options and attach the behavior.
     // @see \Drupal\Core\Render\Element\Table::preRenderTable()
     if (!empty($elements['#tabledrag']) && isset($elements['#attributes']['id'])) {

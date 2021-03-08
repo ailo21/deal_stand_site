@@ -6,6 +6,8 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
+    'Attribute' => $vendorDir . '/symfony/polyfill-php80/Resources/stubs/Attribute.php',
+    'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
     'Drupal' => $baseDir . '/web/core/lib/Drupal.php',
     'DrupalFinder\\DrupalFinder' => $vendorDir . '/webflo/drupal-finder/src/DrupalFinder.php',
     'Drupal\\Component\\DependencyInjection\\Container' => $baseDir . '/web/core/lib/Drupal/Component/DependencyInjection/Container.php',
@@ -33,8 +35,9 @@ return array(
     'Drupal\\Core\\Installer\\InstallerRedirectTrait' => $baseDir . '/web/core/lib/Drupal/Core/Installer/InstallerRedirectTrait.php',
     'Drupal\\Core\\Site\\Settings' => $baseDir . '/web/core/lib/Drupal/Core/Site/Settings.php',
     'JsonException' => $vendorDir . '/symfony/polyfill-php73/Resources/stubs/JsonException.php',
+    'Normalizer' => $vendorDir . '/symfony/polyfill-intl-normalizer/Resources/stubs/Normalizer.php',
     'PEAR_Exception' => $vendorDir . '/pear/pear_exception/PEAR/Exception.php',
-    'Spoons\\ScriptHandler' => $baseDir . '/web/modules/contrib/devel/.spoons/ScriptHandler.php',
     'Stringable' => $vendorDir . '/symfony/polyfill-php80/Resources/stubs/Stringable.php',
+    'UnhandledMatchError' => $vendorDir . '/symfony/polyfill-php80/Resources/stubs/UnhandledMatchError.php',
     'ValueError' => $vendorDir . '/symfony/polyfill-php80/Resources/stubs/ValueError.php',
 );

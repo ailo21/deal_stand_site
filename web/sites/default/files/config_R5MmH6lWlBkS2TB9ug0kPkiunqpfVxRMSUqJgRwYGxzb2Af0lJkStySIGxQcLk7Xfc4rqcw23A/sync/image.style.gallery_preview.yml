@@ -1,0 +1,15 @@
+uuid: 885c8b61-3e12-4de0-8df1-953e8ee55da0
+langcode: ru
+status: true
+dependencies: {  }
+name: gallery_preview
+label: 'Превью галлереи'
+effects:
+  2b89eba0-8e5e-42ea-b029-6bb342359502:
+    uuid: 2b89eba0-8e5e-42ea-b029-6bb342359502
+    id: image_scale_and_crop
+    weight: 1
+    data:
+      width: 75
+      height: 54
+      anchor: center-center

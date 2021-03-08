@@ -2,6 +2,7 @@
 
 namespace Drupal\KernelTests\Core\File;
 
+use Drupal;
 use Drupal\Component\Render\FormattableMarkup;
 
 /**
@@ -63,10 +64,10 @@ class NameMungingTest extends FileTestBase {
     // Disable insecure uploads.
     $this->config('system.file')->set('allow_insecure_uploads', 0)->save();
     $munged_name = file_munge_filename($this->name, '', TRUE);
-    $messages = \Drupal::messenger()->all();
-    \Drupal::messenger()->deleteAll();
-    $this->assertContains(strtr('For security reasons, your upload has been renamed to <em class="placeholder">%filename</em>.', ['%filename' => $munged_name]), $messages['status'], 'Alert properly set when a file is renamed.');
-    $this->assertNotEqual($munged_name, $this->name, new FormattableMarkup('The new filename (%munged) has been modified from the original (%original)', ['%munged' => $munged_name, '%original' => $this->name]));
+    $messages = Drupal::messenger()->all();
+    Drupal::messenger()->deleteAll();
+    $this->assertContainsEquals(strtr('For security reasons, your upload has been renamed to <em class="placeholder">%filename</em>.', ['%filename' => $munged_name]), $messages['status'], 'Alert properly set when a file is renamed.');
+    $this->assertNotEquals($this->name, $munged_name, new FormattableMarkup('The new filename (%munged) has been modified from the original (%original)', ['%munged' => $munged_name, '%original' => $this->name]));
   }
 
   /**
@@ -75,7 +76,7 @@ class NameMungingTest extends FileTestBase {
   public function testMungeNullByte() {
     $prefix = $this->randomMachineName();
     $filename = $prefix . '.' . $this->badExtension . "\0.txt";
-    $this->assertEqual(file_munge_filename($filename, ''), $prefix . '.' . $this->badExtension . '_.txt', 'A filename with a null byte is correctly munged to remove the null byte.');
+    $this->assertEqual($prefix . '.' . $this->badExtension . '_.txt', file_munge_filename($filename, ''), 'A filename with a null byte is correctly munged to remove the null byte.');
   }
 
   /**

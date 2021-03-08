@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\field\Functional\EntityReference;
 
+use Drupal;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
@@ -101,7 +102,7 @@ class EntityReferenceFileUploadTest extends BrowserTestBase {
     ])->save();
 
     /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $display_repository */
-    $display_repository = \Drupal::service('entity_display.repository');
+    $display_repository = Drupal::service('entity_display.repository');
 
     $display_repository->getViewDisplay('node', $referencing->id())
       ->setComponent('test_field')
@@ -128,14 +129,14 @@ class EntityReferenceFileUploadTest extends BrowserTestBase {
     $this->drupalLogin($user1);
 
     $test_file = current($this->getTestFiles('text'));
-    $edit['files[file_field_0]'] = \Drupal::service('file_system')->realpath($test_file->uri);
+    $edit['files[file_field_0]'] = Drupal::service('file_system')->realpath($test_file->uri);
     $this->drupalPostForm('node/add/' . $this->referencingType, $edit, 'Upload');
     $this->assertSession()->statusCodeEquals(200);
     $edit = [
       'title[0][value]' => $this->randomMachineName(),
       'test_field[0][target_id]' => $this->nodeId,
     ];
-    $this->drupalPostForm(NULL, $edit, 'Save');
+    $this->submitForm($edit, 'Save');
     $this->assertSession()->statusCodeEquals(200);
   }
 

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\comment\Functional;
 
+use Drupal;
 use Drupal\comment\Plugin\Field\FieldType\CommentItemInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\comment\CommentInterface;
@@ -48,7 +49,7 @@ class CommentLinksTest extends CommentTestBase {
    */
   public function testCommentLinks() {
     // Bartik theme alters comment links, so use a different theme.
-    \Drupal::service('theme_installer')->install(['stark']);
+    Drupal::service('theme_installer')->install(['stark']);
     $this->config('system.theme')
       ->set('default', 'stark')
       ->save();
@@ -56,7 +57,7 @@ class CommentLinksTest extends CommentTestBase {
     // Remove additional user permissions from $this->webUser added by setUp(),
     // since this test is limited to anonymous and authenticated roles only.
     $roles = $this->webUser->getRoles();
-    \Drupal::entityTypeManager()->getStorage('user_role')->load(reset($roles))->delete();
+    Drupal::entityTypeManager()->getStorage('user_role')->load(reset($roles))->delete();
 
     // Create a comment via CRUD API functionality, since
     // $this->postComment() relies on actual user permissions.
@@ -101,7 +102,7 @@ class CommentLinksTest extends CommentTestBase {
       // In teaser view, a link containing the comment count is always
       // expected.
       if ($path == 'node') {
-        $this->assertSession()->linkExists(t('1 comment'));
+        $this->assertSession()->linkExists('1 comment');
       }
       $this->assertSession()->linkExists('Add new comment');
     }
@@ -116,7 +117,7 @@ class CommentLinksTest extends CommentTestBase {
     $element = $this->cssSelect('article.js-comment > div');
     // Get last child element.
     $element = end($element);
-    $this->assertIdentical($element->getTagName(), 'div', 'Last element is comment body.');
+    $this->assertSame('div', $element->getTagName(), 'Last element is comment body.');
 
     // Change weight to make links go after comment body.
     $display_repository->getViewDisplay('comment', 'comment')

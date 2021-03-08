@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\system\Functional\Menu;
 
+use Drupal;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
@@ -58,7 +59,7 @@ class LocalTasksTest extends BrowserTestBase {
     ]);
     $this->assertGreaterThan(0, count($elements), 'Local tasks found.');
     foreach ($routes as $index => $route_info) {
-      list($route_name, $route_parameters) = $route_info;
+      [$route_name, $route_parameters] = $route_info;
       $expected = Url::fromRoute($route_name, $route_parameters)->toString();
       $this->assertEquals($expected, $elements[$index]->getAttribute('href'), "Task " . ($index + 1) . "number href " . $elements[$index]->getAttribute('href') . " equals $expected.");
     }
@@ -78,7 +79,7 @@ class LocalTasksTest extends BrowserTestBase {
     // so use a pattern instead to check the raw content.
     // This behavior is a bug in libxml, see
     // https://bugs.php.net/bug.php?id=49437.
-    return $this->assertPattern('@<a [^>]*>' . preg_quote($title, '@') . '</a>@');
+    return $this->assertSession()->responseMatches('@<a [^>]*>' . preg_quote($title, '@') . '</a>@');
   }
 
   /**
@@ -154,8 +155,8 @@ class LocalTasksTest extends BrowserTestBase {
     $this->assertEqual('Settings(active tab)', $result[0]->getText(), 'The settings tab is active.');
     $this->assertEqual('Dynamic title for TestTasksSettingsSub1(active tab)', $result[1]->getText(), 'The sub1 tab is active.');
 
-    $this->assertCacheTag('kittens:ragdoll');
-    $this->assertCacheTag('kittens:dwarf-cat');
+    $this->assertSession()->responseHeaderContains('X-Drupal-Cache-Tags', 'kittens:ragdoll');
+    $this->assertSession()->responseHeaderContains('X-Drupal-Cache-Tags', 'kittens:dwarf-cat');
 
     $this->drupalGet(Url::fromRoute('menu_test.local_task_test_tasks_settings_derived', ['placeholder' => 'derive1']));
     $this->assertLocalTasks($sub_tasks, 1);
@@ -167,16 +168,16 @@ class LocalTasksTest extends BrowserTestBase {
 
     // Ensures that the local tasks contains the proper 'provider key'
     $definitions = $this->container->get('plugin.manager.menu.local_task')->getDefinitions();
-    $this->assertEqual($definitions['menu_test.local_task_test_tasks_view']['provider'], 'menu_test');
-    $this->assertEqual($definitions['menu_test.local_task_test_tasks_edit']['provider'], 'menu_test');
-    $this->assertEqual($definitions['menu_test.local_task_test_tasks_settings']['provider'], 'menu_test');
-    $this->assertEqual($definitions['menu_test.local_task_test_tasks_settings_sub1']['provider'], 'menu_test');
-    $this->assertEqual($definitions['menu_test.local_task_test_tasks_settings_sub2']['provider'], 'menu_test');
-    $this->assertEqual($definitions['menu_test.local_task_test_tasks_settings_sub3']['provider'], 'menu_test');
+    $this->assertEqual('menu_test', $definitions['menu_test.local_task_test_tasks_view']['provider']);
+    $this->assertEqual('menu_test', $definitions['menu_test.local_task_test_tasks_edit']['provider']);
+    $this->assertEqual('menu_test', $definitions['menu_test.local_task_test_tasks_settings']['provider']);
+    $this->assertEqual('menu_test', $definitions['menu_test.local_task_test_tasks_settings_sub1']['provider']);
+    $this->assertEqual('menu_test', $definitions['menu_test.local_task_test_tasks_settings_sub2']['provider']);
+    $this->assertEqual('menu_test', $definitions['menu_test.local_task_test_tasks_settings_sub3']['provider']);
 
     // Test that we we correctly apply the active class to tabs where one of the
     // request attributes is upcast to an entity object.
-    $entity = \Drupal::entityTypeManager()->getStorage('entity_test')->create(['bundle' => 'test']);
+    $entity = Drupal::entityTypeManager()->getStorage('entity_test')->create(['bundle' => 'test']);
     $entity->save();
 
     $this->drupalGet(Url::fromRoute('menu_test.local_task_test_upcasting_sub1', ['entity_test' => '1']));
@@ -266,7 +267,7 @@ class LocalTasksTest extends BrowserTestBase {
     $this->assertNoLocalTasks();
 
     // Field UI adds the usual Manage fields etc tabs.
-    \Drupal::service('module_installer')->install(['field_ui']);
+    Drupal::service('module_installer')->install(['field_ui']);
 
     $this->drupalGet('/admin/structure/types/manage/page');
 

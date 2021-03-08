@@ -6,6 +6,7 @@ use Drupal\node\Entity\NodeType;
 use Drupal\Tests\contextual\FunctionalJavascript\ContextualLinkClickTrait;
 use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
 use Drupal\Tests\quickedit\FunctionalJavascript\QuickEditJavascriptTestBase;
+use Exception;
 
 /**
  * Tests that Layout Builder functions with Quick Edit.
@@ -102,11 +103,11 @@ class LayoutBuilderQuickEditTest extends QuickEditJavascriptTestBase {
     $this->drupalGet('admin/structure/types/manage/article/display/default/layout');
     $page->clickLink('Add block');
     $this->assertNotEmpty($assert_session->waitForElementVisible('css', '#drupal-off-canvas'));
-    $assert_session->assertWaitOnAjaxRequest();
+    $assert_session->waitForElementVisible('named', ['link', 'Body']);
     $page->clickLink('Body');
-    $assert_session->assertWaitOnAjaxRequest();
+    $assert_session->waitForElementVisible('named', ['button', 'Add block']);
     $page->pressButton('Add block');
-    $assert_session->assertWaitOnAjaxRequest();
+    $assert_session->waitForElementVisible('named', ['button', 'Save layout']);
     $page->pressButton('Save layout');
     $this->assertNotEmpty($assert_session->waitForElement('css', '.messages--status'));
     $assert_session->pageTextContains('The layout has been saved.');
@@ -202,8 +203,12 @@ class LayoutBuilderQuickEditTest extends QuickEditJavascriptTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function assertEntityInstanceFieldMarkup($entity_type_id, $entity_id, $entity_instance_id, array $expected_field_attributes) {
-    parent::assertEntityInstanceFieldMarkup($entity_type_id, $entity_id, $entity_instance_id, $this->replaceLayoutBuilderFieldIdKeys($expected_field_attributes));
+  protected function assertEntityInstanceFieldMarkup($expected_field_attributes) {
+    if (func_num_args() === 4) {
+      $expected_field_attributes = func_get_arg(3);
+      @trigger_error('Calling ' . __METHOD__ . '() with 4 arguments is deprecated in drupal:9.1.0 and will throw an error in drupal:10.0.0. See https://www.drupal.org/project/drupal/issues/3037436', E_USER_DEPRECATED);
+    }
+    parent::assertEntityInstanceFieldMarkup($this->replaceLayoutBuilderFieldIdKeys($expected_field_attributes));
   }
 
   /**
@@ -338,7 +343,7 @@ class LayoutBuilderQuickEditTest extends QuickEditJavascriptTestBase {
     try {
       $has_attribute = $element->hasAttribute('data-quickedit-field-id');
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       $has_attribute = FALSE;
     }
     $this->assertTrue($has_attribute, $field_key_without_view_mode);

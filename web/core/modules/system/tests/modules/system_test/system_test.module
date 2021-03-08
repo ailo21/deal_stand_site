@@ -25,9 +25,9 @@ function system_test_help($route_name, RouteMatchInterface $route_match) {
  * Implements hook_modules_installed().
  */
 function system_test_modules_installed($modules) {
-  if (\Drupal::state()->get('system_test.verbose_module_hooks')) {
+  if (Drupal::state()->get('system_test.verbose_module_hooks')) {
     foreach ($modules as $module) {
-      \Drupal::messenger()->addStatus(t('hook_modules_installed fired for @module', ['@module' => $module]));
+      Drupal::messenger()->addStatus(t('hook_modules_installed fired for @module', ['@module' => $module]));
     }
   }
 }
@@ -36,9 +36,9 @@ function system_test_modules_installed($modules) {
  * Implements hook_modules_uninstalled().
  */
 function system_test_modules_uninstalled($modules) {
-  if (\Drupal::state()->get('system_test.verbose_module_hooks')) {
+  if (Drupal::state()->get('system_test.verbose_module_hooks')) {
     foreach ($modules as $module) {
-      \Drupal::messenger()->addStatus(t('hook_modules_uninstalled fired for @module', ['@module' => $module]));
+      Drupal::messenger()->addStatus(t('hook_modules_uninstalled fired for @module', ['@module' => $module]));
     }
   }
 }
@@ -49,11 +49,11 @@ function system_test_modules_uninstalled($modules) {
 function system_test_system_info_alter(&$info, Extension $file, $type) {
   // We need a static otherwise the last test will fail to alter common_test.
   static $test;
-  if (($dependencies = \Drupal::state()->get('system_test.dependencies')) || $test) {
+  if (($dependencies = Drupal::state()->get('system_test.dependencies')) || $test) {
     if ($file->getName() == 'module_test') {
       $info['hidden'] = FALSE;
       $info['dependencies'][] = array_shift($dependencies);
-      \Drupal::state()->set('system_test.dependencies', $dependencies);
+      Drupal::state()->set('system_test.dependencies', $dependencies);
       $test = TRUE;
     }
     if ($file->getName() == 'common_test') {
@@ -77,7 +77,7 @@ function system_test_system_info_alter(&$info, Extension $file, $type) {
     $info['hidden'] = FALSE;
   }
   if ($file->getName() == 'system_test') {
-    $info['hidden'] = \Drupal::state()->get('system_test.module_hidden', TRUE);
+    $info['hidden'] = Drupal::state()->get('system_test.module_hidden', TRUE);
   }
 }
 
@@ -87,9 +87,9 @@ function system_test_system_info_alter(&$info, Extension $file, $type) {
 function system_test_page_attachments(array &$page) {
   // Used by FrontPageTestCase to get the results of
   // \Drupal::service('path.matcher')->isFrontPage().
-  $frontpage = \Drupal::state()->get('system_test.front_page_output') ?: 0;
-  if ($frontpage && \Drupal::service('path.matcher')->isFrontPage()) {
-    \Drupal::messenger()->addStatus(t('On front page.'));
+  $frontpage = Drupal::state()->get('system_test.front_page_output', 0);
+  if ($frontpage && Drupal::service('path.matcher')->isFrontPage()) {
+    Drupal::messenger()->addStatus(t('On front page.'));
   }
 }
 
@@ -98,7 +98,7 @@ function system_test_page_attachments(array &$page) {
  */
 function _system_test_first_shutdown_function($arg1, $arg2) {
   // Set something to ensure that this function got called.
-  \Drupal::state()->set('_system_test_first_shutdown_function', [$arg1, $arg2]);
+  Drupal::state()->set('_system_test_first_shutdown_function', [$arg1, $arg2]);
   drupal_register_shutdown_function('_system_test_second_shutdown_function', $arg1, $arg2);
 }
 
@@ -107,7 +107,7 @@ function _system_test_first_shutdown_function($arg1, $arg2) {
  */
 function _system_test_second_shutdown_function($arg1, $arg2) {
   // Set something to ensure that this function got called.
-  \Drupal::state()->set('_system_test_second_shutdown_function', [$arg1, $arg2]);
+  Drupal::state()->set('_system_test_second_shutdown_function', [$arg1, $arg2]);
 
   // Throw an exception with an HTML tag. Since this is called in a shutdown
   // function, it will not bubble up to the default exception handler but will
@@ -133,13 +133,13 @@ function system_test_filetransfer_info() {
  * Implements hook_module_preinstall().
  */
 function system_test_module_preinstall($module) {
-  \Drupal::messenger()->addStatus('system_test_preinstall_module called');
-  \Drupal::state()->set('system_test_preinstall_module', $module);
+  Drupal::messenger()->addStatus('system_test_preinstall_module called');
+  Drupal::state()->set('system_test_preinstall_module', $module);
 }
 
 /**
  * Implements hook_module_preuninstall().
  */
 function system_test_module_preuninstall($module) {
-  \Drupal::state()->set('system_test_preuninstall_module', $module);
+  Drupal::state()->set('system_test_preuninstall_module', $module);
 }

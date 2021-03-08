@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\shortcut\Functional;
 
+use Drupal;
 use Drupal\block_content\Entity\BlockContentType;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Url;
@@ -79,9 +80,9 @@ class ShortcutLinksTest extends ShortcutTestBase {
         'title[0][value]' => $title,
         'link[0][uri]' => $test_path,
       ];
-      $this->drupalPostForm('admin/config/user-interface/shortcut/manage/' . $set->id() . '/add-link', $form_data, t('Save'));
+      $this->drupalPostForm('admin/config/user-interface/shortcut/manage/' . $set->id() . '/add-link', $form_data, 'Save');
       $this->assertSession()->statusCodeEquals(200);
-      $this->assertText(t('Added a shortcut for @title.', ['@title' => $title]));
+      $this->assertText('Added a shortcut for ' . $title . '.');
       $saved_set = ShortcutSet::load($set->id());
       $paths = $this->getShortcutInformation($saved_set, 'link');
       $this->assertContains('internal:' . $test_path, $paths, 'Shortcut created: ' . $test_path);
@@ -112,7 +113,7 @@ class ShortcutLinksTest extends ShortcutTestBase {
       'title[0][value]' => $title,
       'link[0][uri]' => '/admin',
     ];
-    $this->drupalPostForm('admin/config/user-interface/shortcut/manage/' . $set->id() . '/add-link', $form_data, t('Save'));
+    $this->drupalPostForm('admin/config/user-interface/shortcut/manage/' . $set->id() . '/add-link', $form_data, 'Save');
     $this->assertSession()->statusCodeEquals(200);
     $this->assertRaw(t("The path '@link_path' is inaccessible.", ['@link_path' => '/admin']));
 
@@ -120,7 +121,7 @@ class ShortcutLinksTest extends ShortcutTestBase {
       'title[0][value]' => $title,
       'link[0][uri]' => '/node',
     ];
-    $this->drupalPostForm('admin/config/user-interface/shortcut/manage/' . $set->id() . '/add-link', $form_data, t('Save'));
+    $this->drupalPostForm('admin/config/user-interface/shortcut/manage/' . $set->id() . '/add-link', $form_data, 'Save');
     $this->assertSession()->linkExists($title, 0, 'Shortcut link found on the page.');
 
     // Create a new shortcut set and add a link to it.
@@ -129,13 +130,13 @@ class ShortcutLinksTest extends ShortcutTestBase {
       'label' => $this->randomMachineName(),
       'id' => strtolower($this->randomMachineName()),
     ];
-    $this->drupalPostForm('admin/config/user-interface/shortcut/add-set', $edit, t('Save'));
+    $this->drupalPostForm('admin/config/user-interface/shortcut/add-set', $edit, 'Save');
     $title = $this->randomMachineName();
     $form_data = [
       'title[0][value]' => $title,
       'link[0][uri]' => '/admin',
     ];
-    $this->drupalPostForm('admin/config/user-interface/shortcut/manage/' . $edit['id'] . '/add-link', $form_data, t('Save'));
+    $this->drupalPostForm('admin/config/user-interface/shortcut/manage/' . $edit['id'] . '/add-link', $form_data, 'Save');
     $this->assertSession()->statusCodeEquals(200);
   }
 
@@ -143,7 +144,7 @@ class ShortcutLinksTest extends ShortcutTestBase {
    * Tests that the "add to shortcut" and "remove from shortcut" links work.
    */
   public function testShortcutQuickLink() {
-    \Drupal::service('theme_installer')->install(['seven']);
+    Drupal::service('theme_installer')->install(['seven']);
     $this->config('system.theme')->set('admin', 'seven')->save();
     $this->config('node.settings')->set('use_admin_theme', '1')->save();
     $this->container->get('router.builder')->rebuild();
@@ -199,15 +200,15 @@ class ShortcutLinksTest extends ShortcutTestBase {
 
     // Test the "Add to shortcuts" link for node view route.
     $this->clickLink('Add to Default shortcuts');
-    $this->assertText(new FormattableMarkup('Added a shortcut for @title.', ['@title' => $title]));
+    $this->assertText("Added a shortcut for $title.");
     $this->assertShortcutQuickLink('Remove from Default shortcuts');
 
     // Test the "Remove from shortcuts" link for node view route.
     $this->clickLink('Remove from Default shortcuts');
-    $this->assertText(new FormattableMarkup('The shortcut @title has been deleted.', ['@title' => $title]));
+    $this->assertText("The shortcut $title has been deleted.");
     $this->assertShortcutQuickLink('Add to Default shortcuts');
 
-    \Drupal::service('module_installer')->install(['block_content']);
+    Drupal::service('module_installer')->install(['block_content']);
     BlockContentType::create([
       'id' => 'basic',
       'label' => 'Basic block',
@@ -236,12 +237,12 @@ class ShortcutLinksTest extends ShortcutTestBase {
 
     $shortcuts = $set->getShortcuts();
     $shortcut = reset($shortcuts);
-    $this->drupalPostForm('admin/config/user-interface/shortcut/link/' . $shortcut->id(), ['title[0][value]' => $new_link_name], t('Save'));
+    $this->drupalPostForm('admin/config/user-interface/shortcut/link/' . $shortcut->id(), ['title[0][value]' => $new_link_name], 'Save');
     $saved_set = ShortcutSet::load($set->id());
     $titles = $this->getShortcutInformation($saved_set, 'title');
     $this->assertContains($new_link_name, $titles, 'Shortcut renamed: ' . $new_link_name);
     $this->assertSession()->linkExists($new_link_name, 0, 'Renamed shortcut link appears on the page.');
-    $this->assertText(t('The shortcut @link has been updated.', ['@link' => $new_link_name]));
+    $this->assertText('The shortcut ' . $new_link_name . ' has been updated.');
   }
 
   /**
@@ -255,12 +256,12 @@ class ShortcutLinksTest extends ShortcutTestBase {
 
     $shortcuts = $set->getShortcuts();
     $shortcut = reset($shortcuts);
-    $this->drupalPostForm('admin/config/user-interface/shortcut/link/' . $shortcut->id(), ['title[0][value]' => $shortcut->getTitle(), 'link[0][uri]' => $new_link_path], t('Save'));
+    $this->drupalPostForm('admin/config/user-interface/shortcut/link/' . $shortcut->id(), ['title[0][value]' => $shortcut->getTitle(), 'link[0][uri]' => $new_link_path], 'Save');
     $saved_set = ShortcutSet::load($set->id());
     $paths = $this->getShortcutInformation($saved_set, 'link');
     $this->assertContains('internal:' . $new_link_path, $paths, 'Shortcut path changed: ' . $new_link_path);
-    $this->assertLinkByHref($new_link_path, 0, 'Shortcut with new path appears on the page.');
-    $this->assertText(t('The shortcut @link has been updated.', ['@link' => $shortcut->getTitle()]));
+    $this->assertSession()->linkByHrefExists($new_link_path, 0, 'Shortcut with new path appears on the page.');
+    $this->assertText('The shortcut ' . $shortcut->getTitle() . ' has been updated.');
   }
 
   /**
@@ -273,7 +274,7 @@ class ShortcutLinksTest extends ShortcutTestBase {
     // Disable the view.
     View::load('content')->disable()->save();
     /** @var \Drupal\Core\Routing\RouteBuilderInterface $router_builder */
-    $router_builder = \Drupal::service('router.builder');
+    $router_builder = Drupal::service('router.builder');
     $router_builder->rebuildIfNeeded();
     $this->drupalGet('admin/content');
     $this->assertSession()->statusCodeEquals(200);
@@ -293,7 +294,7 @@ class ShortcutLinksTest extends ShortcutTestBase {
     $this->assertNotContains($shortcut->id(), $ids, 'Successfully deleted a shortcut.');
 
     // Delete all the remaining shortcut links.
-    $storage = \Drupal::entityTypeManager()->getStorage('shortcut');
+    $storage = Drupal::entityTypeManager()->getStorage('shortcut');
     $storage->delete($storage->loadMultiple(array_filter($ids)));
 
     // Get the front page to check that no exceptions occur.
@@ -308,7 +309,7 @@ class ShortcutLinksTest extends ShortcutTestBase {
    */
   public function testNoShortcutLink() {
     // Change to a theme that displays shortcuts.
-    \Drupal::service('theme_installer')->install(['seven']);
+    Drupal::service('theme_installer')->install(['seven']);
     $this->config('system.theme')
       ->set('default', 'seven')
       ->save();
@@ -339,7 +340,7 @@ class ShortcutLinksTest extends ShortcutTestBase {
    */
   public function testAccessShortcutsPermission() {
     // Change to a theme that displays shortcuts.
-    \Drupal::service('theme_installer')->install(['seven']);
+    Drupal::service('theme_installer')->install(['seven']);
     $this->config('system.theme')
       ->set('default', 'seven')
       ->save();
@@ -387,15 +388,15 @@ class ShortcutLinksTest extends ShortcutTestBase {
     ]));
     $this->drupalGet(Url::fromRoute('<front>'));
     $shortcuts = $this->cssSelect('#toolbar-item-shortcuts-tray .toolbar-menu a');
-    $this->assertEqual($shortcuts[0]->getText(), 'Add content');
-    $this->assertEqual($shortcuts[1]->getText(), 'All content');
+    $this->assertEqual('Add content', $shortcuts[0]->getText());
+    $this->assertEqual('All content', $shortcuts[1]->getText());
     foreach ($this->set->getShortcuts() as $shortcut) {
       $shortcut->setWeight($shortcut->getWeight() * -1)->save();
     }
     $this->drupalGet(Url::fromRoute('<front>'));
     $shortcuts = $this->cssSelect('#toolbar-item-shortcuts-tray .toolbar-menu a');
-    $this->assertEqual($shortcuts[0]->getText(), 'All content');
-    $this->assertEqual($shortcuts[1]->getText(), 'Add content');
+    $this->assertEqual('All content', $shortcuts[0]->getText());
+    $this->assertEqual('Add content', $shortcuts[1]->getText());
   }
 
   /**
@@ -465,12 +466,13 @@ class ShortcutLinksTest extends ShortcutTestBase {
    *   this default.
    *
    * @return bool
-   *   TRUE if the assertion succeeded, FALSE otherwise.
+   *   TRUE if the assertion succeeded.
    */
   protected function assertShortcutQuickLink($label, $index = 0, $message = '', $group = 'Other') {
     $links = $this->xpath('//a[normalize-space()=:label]', [':label' => $label]);
     $message = ($message ? $message : new FormattableMarkup('Shortcut quick link with label %label found.', ['%label' => $label]));
-    return $this->assert(isset($links[$index]), $message, $group);
+    $this->assertArrayHasKey($index, $links, $message);
+    return TRUE;
   }
 
 }

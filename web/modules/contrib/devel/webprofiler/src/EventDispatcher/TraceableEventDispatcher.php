@@ -2,8 +2,10 @@
 
 namespace Drupal\webprofiler\EventDispatcher;
 
+use Closure;
 use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
 use Drupal\webprofiler\Stopwatch;
+use LogicException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\Event;
 use Symfony\Component\HttpKernel\KernelEvents;
@@ -48,9 +50,12 @@ class TraceableEventDispatcher extends ContainerAwareEventDispatcher implements 
   /**
    * {@inheritdoc}
    */
-  public function dispatch($event_name, Event $event = NULL) {
-    if ($event === NULL) {
-      $event = new Event();
+  public function dispatch($event, $event_name = NULL) {
+    // Temporary hack for 9.0 and 9.1 compat. See https://gitlab.com/drupalspoons/devel/-/issues/344.
+    if (is_string($event)) {
+      $event_obj = $event_name ?? new Event();
+      $event_name = $event;
+      $event = $event_obj;
     }
 
     $this->preDispatch($event_name, $event);
@@ -153,7 +158,7 @@ class TraceableEventDispatcher extends ContainerAwareEventDispatcher implements 
         try {
           $this->stopwatch->stopSection($token);
         }
-        catch (\LogicException $e) {
+        catch (LogicException $e) {
         }
         break;
 
@@ -165,7 +170,7 @@ class TraceableEventDispatcher extends ContainerAwareEventDispatcher implements 
         try {
           $this->stopwatch->stopSection($token);
         }
-        catch (\LogicException $e) {
+        catch (LogicException $e) {
         }
         break;
     }
@@ -218,7 +223,7 @@ class TraceableEventDispatcher extends ContainerAwareEventDispatcher implements 
    *
    */
   private function isClosure($t) {
-    return is_object($t) && ($t instanceof \Closure);
+    return is_object($t) && ($t instanceof Closure);
   }
 
 }

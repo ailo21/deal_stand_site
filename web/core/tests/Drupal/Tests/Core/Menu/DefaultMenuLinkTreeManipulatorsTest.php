@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\Core\Menu;
 
+use Drupal;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Cache\Context\CacheContextsManager;
 use Drupal\Core\DependencyInjection\Container;
@@ -57,7 +58,7 @@ class DefaultMenuLinkTreeManipulatorsTest extends UnitTestCase {
   protected $originalTree = [];
 
   /**
-   * Array of menu link instances
+   * Array of menu link instances.
    *
    * @var \Drupal\Core\Menu\MenuLinkInterface[]
    */
@@ -83,7 +84,7 @@ class DefaultMenuLinkTreeManipulatorsTest extends UnitTestCase {
 
     $container = new Container();
     $container->set('cache_contexts_manager', $cache_contexts_manager);
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
   }
 
   /**

@@ -54,7 +54,7 @@ class RelationshipUserFileDataTest extends ViewTestBase {
       'required' => 0,
     ])->save();
 
-    ViewTestData::createTestViews(get_class($this), ['file_test_views']);
+    ViewTestData::createTestViews(static::class, ['file_test_views']);
   }
 
   /**
@@ -87,7 +87,7 @@ class RelationshipUserFileDataTest extends ViewTestBase {
         'user',
       ],
     ];
-    $this->assertIdentical($expected, $view->getDependencies());
+    $this->assertSame($expected, $view->getDependencies());
     $this->executeView($view);
     $expected_result = [
       [

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\system\Functional\Theme;
 
+use Drupal;
 use Drupal\Tests\BrowserTestBase;
 
 /**
@@ -41,8 +42,8 @@ class ExperimentalThemeTest extends BrowserTestBase {
   public function testExperimentalConfirmForm() {
     // Only experimental themes should be marked as such with a parenthetical.
     $this->drupalGet('admin/appearance');
-    $this->assertText(sprintf('Experimental test %s                (experimental theme)', \Drupal::VERSION));
-    $this->assertText(sprintf('Experimental dependency test %s', \Drupal::VERSION));
+    $this->assertText(sprintf('Experimental test %s                (experimental theme)', Drupal::VERSION));
+    $this->assertText(sprintf('Experimental dependency test %s', Drupal::VERSION));
 
     // First, test installing a non-experimental theme with no dependencies.
     // There should be no confirmation form and no experimental theme warning.
@@ -67,20 +68,20 @@ class ExperimentalThemeTest extends BrowserTestBase {
     $this->assertNoText('You must enable');
 
     // Enable the theme and confirm that it worked.
-    $this->drupalPostForm(NULL, [], 'Continue');
+    $this->submitForm([], 'Continue');
     $this->assertText('The Experimental test theme has been installed.');
 
     // Setting it as the default should not ask for another confirmation.
     $this->cssSelect('a[title="Set Experimental test as default theme"]')[0]->click();
     $this->assertNoText('Experimental themes are provided for testing purposes only. Use at your own risk.');
     $this->assertText('Experimental test is now the default theme.');
-    $this->assertNoText(sprintf('Experimental test %s                (experimental theme)', \Drupal::VERSION));
-    $this->assertText(sprintf('Experimental test %s                (default theme, administration theme, experimental theme)', \Drupal::VERSION));
+    $this->assertNoText(sprintf('Experimental test %s                (experimental theme)', Drupal::VERSION));
+    $this->assertText(sprintf('Experimental test %s                (default theme, administration theme, experimental theme)', Drupal::VERSION));
 
     // Uninstall the theme.
     $this->config('system.theme')->set('default', 'test_theme')->save();
-    \Drupal::service('theme_handler')->refreshInfo();
-    \Drupal::service('theme_installer')->uninstall(['experimental_theme_test']);
+    Drupal::service('theme_handler')->refreshInfo();
+    Drupal::service('theme_installer')->uninstall(['experimental_theme_test']);
 
     // Reinstall the same experimental theme, but this time immediately set it
     // as the default. This should again trigger a confirmation form with an
@@ -108,22 +109,22 @@ class ExperimentalThemeTest extends BrowserTestBase {
     $this->assertText('You must enable the Experimental test theme to install Experimental dependency test');
 
     // Enable the theme and confirm that it worked.
-    $this->drupalPostForm(NULL, [], 'Continue');
+    $this->submitForm([], 'Continue');
     $this->assertText('The Experimental dependency test theme has been installed.');
-    $this->assertText(sprintf('Experimental test %s                (experimental theme)', \Drupal::VERSION));
-    $this->assertText(sprintf('Experimental dependency test %s', \Drupal::VERSION));
+    $this->assertText(sprintf('Experimental test %s                (experimental theme)', Drupal::VERSION));
+    $this->assertText(sprintf('Experimental dependency test %s', Drupal::VERSION));
 
     // Setting it as the default should not ask for another confirmation.
     $this->cssSelect('a[title="Set Experimental dependency test as default theme"]')[0]->click();
     $this->assertNoText('Experimental themes are provided for testing purposes only. Use at your own risk.');
     $this->assertText('Experimental dependency test is now the default theme.');
-    $this->assertText(sprintf('Experimental test %s                (experimental theme)', \Drupal::VERSION));
-    $this->assertText(sprintf('Experimental dependency test %s                (default theme, administration theme)', \Drupal::VERSION));
+    $this->assertText(sprintf('Experimental test %s                (experimental theme)', Drupal::VERSION));
+    $this->assertText(sprintf('Experimental dependency test %s                (default theme, administration theme)', Drupal::VERSION));
 
     // Uninstall the theme.
     $this->config('system.theme')->set('default', 'test_theme')->save();
-    \Drupal::service('theme_handler')->refreshInfo();
-    \Drupal::service('theme_installer')->uninstall(['experimental_theme_test', 'experimental_theme_dependency_test']);
+    Drupal::service('theme_handler')->refreshInfo();
+    Drupal::service('theme_installer')->uninstall(['experimental_theme_test', 'experimental_theme_dependency_test']);
 
     // Reinstall the same theme, but this time immediately set it as the
     // default. This should again trigger a confirmation form with an

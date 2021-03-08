@@ -1,0 +1,4 @@
+administer ds_user configuration:
+  title: 'Administer ds_user configuration'
+  description: 'Optional description.'
+  restrict access: true

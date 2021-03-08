@@ -3,9 +3,11 @@
 namespace Drupal\Tests\Core\Database;
 
 use Composer\Autoload\ClassLoader;
+use Drupal;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Site\Settings;
 use Drupal\Tests\UnitTestCase;
+use RuntimeException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -50,7 +52,7 @@ class DatabaseTest extends UnitTestCase {
       ->method('getParameter')
       ->with('site.path')
       ->willReturn('');
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
   }
 
   /**
@@ -82,12 +84,7 @@ class DatabaseTest extends UnitTestCase {
    */
   public function testFindDriverAutoloadDirectoryException($expected_message, $namespace, $include_tests) {
     new Settings(['extension_discovery_scan_tests' => $include_tests]);
-    if ($include_tests === FALSE) {
-      // \Drupal\Core\Extension\ExtensionDiscovery::scan() needs
-      // drupal_valid_test_ua().
-      include $this->root . '/core/includes/bootstrap.inc';
-    }
-    $this->expectException(\RuntimeException::class);
+    $this->expectException(RuntimeException::class);
     $this->expectExceptionMessage($expected_message);
     Database::findDriverAutoloadDirectory($namespace, $this->root);
   }

@@ -2,6 +2,7 @@
 
 namespace Drupal\Core\Field\Entity;
 
+use Drupal;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\FieldConfigBase;
@@ -64,7 +65,7 @@ class BaseFieldOverride extends FieldConfigBase {
     $values = $base_field_definition->toArray();
     $values['bundle'] = $bundle;
     $values['baseFieldDefinition'] = $base_field_definition;
-    return \Drupal::entityTypeManager()->getStorage('base_field_override')->create($values);
+    return Drupal::entityTypeManager()->getStorage('base_field_override')->create($values);
   }
 
   /**
@@ -161,7 +162,7 @@ class BaseFieldOverride extends FieldConfigBase {
    */
   protected function getBaseFieldDefinition() {
     if (!isset($this->baseFieldDefinition)) {
-      $fields = \Drupal::service('entity_field.manager')->getBaseFieldDefinitions($this->entity_type);
+      $fields = Drupal::service('entity_field.manager')->getBaseFieldDefinitions($this->entity_type);
       $this->baseFieldDefinition = $fields[$this->getName()];
     }
     return $this->baseFieldDefinition;
@@ -177,7 +178,7 @@ class BaseFieldOverride extends FieldConfigBase {
     // Filter out unknown settings and make sure all settings are present, so
     // that a complete field definition is passed to the various hooks and
     // written to config.
-    $field_type_manager = \Drupal::service('plugin.manager.field.field_type');
+    $field_type_manager = Drupal::service('plugin.manager.field.field_type');
     $default_settings = $field_type_manager->getDefaultFieldSettings($this->getType());
     $this->settings = array_intersect_key($this->settings, $default_settings) + $default_settings;
 
@@ -209,9 +210,9 @@ class BaseFieldOverride extends FieldConfigBase {
    * {@inheritdoc}
    */
   public static function postDelete(EntityStorageInterface $storage, array $field_overrides) {
-    $entity_type_manager = \Drupal::entityTypeManager();
+    $entity_type_manager = Drupal::entityTypeManager();
     // Clear the cache upfront, to refresh the results of getBundles().
-    \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
+    Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
     /** @var \Drupal\Core\Field\Entity\BaseFieldOverride $field_override */
     foreach ($field_overrides as $field_override) {
       // Inform the system that the field definition is being updated back to
@@ -233,12 +234,12 @@ class BaseFieldOverride extends FieldConfigBase {
    * @param string $field_name
    *   Name of the field.
    *
-   * @return static
+   * @return \Drupal\Core\Field\FieldConfigInterface|null
    *   The base field bundle override config entity if one exists for the
    *   provided field name, otherwise NULL.
    */
   public static function loadByName($entity_type_id, $bundle, $field_name) {
-    return \Drupal::entityTypeManager()->getStorage('base_field_override')->load($entity_type_id . '.' . $bundle . '.' . $field_name);
+    return Drupal::entityTypeManager()->getStorage('base_field_override')->load($entity_type_id . '.' . $bundle . '.' . $field_name);
   }
 
   /**

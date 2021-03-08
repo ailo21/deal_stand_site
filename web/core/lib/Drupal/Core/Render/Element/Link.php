@@ -2,6 +2,7 @@
 
 namespace Drupal\Core\Render\Element;
 
+use Drupal;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Component\Utility\Html as HtmlUtility;
 use Drupal\Core\Render\BubbleableMetadata;
@@ -13,7 +14,7 @@ use Drupal\Core\Url as CoreUrl;
  *
  * Properties:
  * - #title: The link text.
- * - #url: \Drupal\Core\Url object containing URL information pointing to a
+ * - #url: \Drupal\Core\Url object containing URL information pointing to an
  *   internal or external link. See \Drupal\Core\Utility\LinkGeneratorInterface.
  *
  * Usage example:
@@ -33,7 +34,7 @@ class Link extends RenderElement {
    * {@inheritdoc}
    */
   public function getInfo() {
-    $class = get_class($this);
+    $class = static::class;
     return [
       '#pre_render' => [
         [$class, 'preRenderLink'],
@@ -69,7 +70,7 @@ class Link extends RenderElement {
     }
 
     // This #pre_render callback can be invoked from inside or outside of a Form
-    // API context, and depending on that, a HTML ID may be already set in
+    // API context, and depending on that, an HTML ID may be already set in
     // different locations. #options should have precedence over Form API's #id.
     // #attributes have been taken over into #options above already.
     if (isset($element['#options']['attributes']['id'])) {
@@ -91,7 +92,7 @@ class Link extends RenderElement {
     if (!empty($element['#url']) && $element['#url'] instanceof CoreUrl) {
       $options = NestedArray::mergeDeep($element['#url']->getOptions(), $element['#options']);
       /** @var \Drupal\Core\Utility\LinkGenerator $link_generator */
-      $link_generator = \Drupal::service('link_generator');
+      $link_generator = Drupal::service('link_generator');
       $generated_link = $link_generator->generate($element['#title'], $element['#url']->setOptions($options));
       $element['#markup'] = $generated_link;
       $generated_link->merge(BubbleableMetadata::createFromRenderArray($element))

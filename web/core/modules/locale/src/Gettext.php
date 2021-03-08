@@ -3,6 +3,7 @@
 namespace Drupal\locale;
 
 use Drupal\Component\Gettext\PoStreamReader;
+use Exception;
 
 /**
  * Static class providing Drupal specific Gettext functionality.
@@ -18,7 +19,7 @@ class Gettext {
    * Reads the given PO files into the database.
    *
    * @param object $file
-   *   File object with an URI property pointing at the file's path.
+   *   File object with a URI property pointing at the file's path.
    *   - "langcode": The language the strings will be added to.
    *   - "uri": File URI.
    * @param array $options
@@ -55,13 +56,13 @@ class Gettext {
     try {
       $reader->open();
     }
-    catch (\Exception $exception) {
+    catch (Exception $exception) {
       throw $exception;
     }
 
     $header = $reader->getHeader();
     if (!$header) {
-      throw new \Exception('Missing or malformed header.');
+      throw new Exception('Missing or malformed header.');
     }
 
     // Initialize the database writer.
@@ -81,7 +82,7 @@ class Gettext {
       }
       $writer->writeItems($reader, $options['items']);
     }
-    catch (\Exception $exception) {
+    catch (Exception $exception) {
       throw $exception;
     }
 

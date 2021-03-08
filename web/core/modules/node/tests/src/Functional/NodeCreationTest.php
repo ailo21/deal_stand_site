@@ -2,9 +2,11 @@
 
 namespace Drupal\Tests\node\Functional;
 
+use Drupal;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\node\Entity\Node;
+use Exception;
 
 /**
  * Create a node and test saving it.
@@ -46,25 +48,24 @@ class NodeCreationTest extends NodeTestBase {
    * Creates a "Basic page" node and verifies its consistency in the database.
    */
   public function testNodeCreation() {
-    $node_type_storage = \Drupal::entityTypeManager()->getStorage('node_type');
+    $node_type_storage = Drupal::entityTypeManager()->getStorage('node_type');
 
     // Test /node/add page with only one content type.
     $node_type_storage->load('article')->delete();
     $this->drupalGet('node/add');
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertUrl('node/add/page');
+    $this->assertSession()->addressEquals('node/add/page');
     // Create a node.
     $edit = [];
     $edit['title[0][value]'] = $this->randomMachineName(8);
     $edit['body[0][value]'] = $this->randomMachineName(16);
-    $this->drupalPostForm('node/add/page', $edit, t('Save'));
+    $this->drupalPostForm('node/add/page', $edit, 'Save');
 
     // Check that the Basic page has been created.
-    $this->assertText(t('@post @title has been created.', ['@post' => 'Basic page', '@title' => $edit['title[0][value]']]), 'Basic page created.');
+    $this->assertText('Basic page ' . $edit['title[0][value]'] . ' has been created.');
 
     // Verify that the creation message contains a link to a node.
-    $view_link = $this->xpath('//div[@class="messages"]//a[contains(@href, :href)]', [':href' => 'node/']);
-    $this->assert(isset($view_link), 'The message area contains a link to a node');
+    $this->assertSession()->elementExists('xpath', '//div[@data-drupal-messages]//a[contains(@href, "node/")]');
 
     // Check that the node exists in the database.
     $node = $this->drupalGetNodeByTitle($edit['title[0][value]']);
@@ -92,7 +93,7 @@ class NodeCreationTest extends NodeTestBase {
     ]);
     $this->drupalLogin($admin_user);
     $this->drupalGet('node/add/page');
-    $this->assertNoFieldById('edit-revision', NULL, 'The revision checkbox is not present.');
+    $this->assertSession()->fieldNotExists('edit-revision', NULL);
   }
 
   /**
@@ -114,28 +115,18 @@ class NodeCreationTest extends NodeTestBase {
       Node::create($edit)->save();
       $this->fail('Expected exception has not been thrown.');
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       // Expected exception; just continue testing.
     }
 
-    if (Database::getConnection()->supportsTransactions()) {
-      // Check that the node does not exist in the database.
-      $node = $this->drupalGetNodeByTitle($edit['title']);
-      $this->assertFalse($node, 'Transactions supported, and node not found in database.');
-    }
-    else {
-      // Check that the node exists in the database.
-      $node = $this->drupalGetNodeByTitle($edit['title']);
-      $this->assertTrue($node, 'Transactions not supported, and node found in database.');
-
-      // Check that the failed rollback was logged.
-      $records = static::getWatchdogIdsForFailedExplicitRollback();
-      $this->assertTrue(count($records) > 0, 'Transactions not supported, and rollback error logged to watchdog.');
-    }
+    // Check that the node does not exist in the database.
+    $node = $this->drupalGetNodeByTitle($edit['title']);
+    $this->assertFalse($node);
 
     // Check that the rollback error was logged.
     $records = static::getWatchdogIdsForTestExceptionRollback();
-    $this->assertTrue(count($records) > 0, 'Rollback explanatory error logged to watchdog.');
+    // Verify that the rollback explanatory error was logged.
+    $this->assertNotEmpty($records);
   }
 
   /**
@@ -146,7 +137,7 @@ class NodeCreationTest extends NodeTestBase {
     $this->config('system.site')->set('page.front', '/test-page')->save();
 
     // Set "Basic page" content type to be unpublished by default.
-    $fields = \Drupal::service('entity_field.manager')->getFieldDefinitions('node', 'page');
+    $fields = Drupal::service('entity_field.manager')->getFieldDefinitions('node', 'page');
     $fields['status']->getConfig('page')
       ->setDefaultValue(FALSE)
       ->save();
@@ -155,25 +146,24 @@ class NodeCreationTest extends NodeTestBase {
     $edit = [];
     $edit['title[0][value]'] = $this->randomMachineName(8);
     $edit['body[0][value]'] = $this->randomMachineName(16);
-    $this->drupalPostForm('node/add/page', $edit, t('Save'));
+    $this->drupalPostForm('node/add/page', $edit, 'Save');
 
     // Check that the user was redirected to the home page.
-    $this->assertUrl('');
-    $this->assertText(t('Test page text'));
+    $this->assertSession()->addressEquals('');
+    $this->assertText('Test page text');
 
     // Confirm that the node was created.
-    $this->assertText(t('@post @title has been created.', ['@post' => 'Basic page', '@title' => $edit['title[0][value]']]));
+    $this->assertText('Basic page ' . $edit['title[0][value]'] . ' has been created.');
 
     // Verify that the creation message contains a link to a node.
-    $view_link = $this->xpath('//div[@class="messages"]//a[contains(@href, :href)]', [':href' => 'node/']);
-    $this->assert(isset($view_link), 'The message area contains a link to a node');
+    $this->assertSession()->elementExists('xpath', '//div[@data-drupal-messages]//a[contains(@href, "node/")]');
   }
 
   /**
    * Creates nodes with different authored dates.
    */
   public function testAuthoredDate() {
-    $now = \Drupal::time()->getRequestTime();
+    $now = Drupal::time()->getRequestTime();
     $admin = $this->drupalCreateUser([], NULL, TRUE);
     $this->drupalLogin($admin);
 
@@ -267,10 +257,10 @@ class NodeCreationTest extends NodeTestBase {
   public function testNodeAddWithoutContentTypes() {
     $this->drupalGet('node/add');
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertNoLinkByHref('/admin/structure/types/add');
+    $this->assertSession()->linkByHrefNotExists('/admin/structure/types/add');
 
     // Test /node/add page without content types.
-    foreach (\Drupal::entityTypeManager()->getStorage('node_type')->loadMultiple() as $entity) {
+    foreach (Drupal::entityTypeManager()->getStorage('node_type')->loadMultiple() as $entity) {
       $entity->delete();
     }
 
@@ -284,7 +274,7 @@ class NodeCreationTest extends NodeTestBase {
 
     $this->drupalGet('node/add');
 
-    $this->assertLinkByHref('/admin/structure/types/add');
+    $this->assertSession()->linkByHrefExists('/admin/structure/types/add');
   }
 
   /**
@@ -308,17 +298,6 @@ class NodeCreationTest extends NodeTestBase {
       }
     }
     return $matches;
-  }
-
-  /**
-   * Gets the log records with the explicit rollback failed exception message.
-   *
-   * @return \Drupal\Core\Database\StatementInterface
-   *   A prepared statement object (already executed), which contains the log
-   *   records with the explicit rollback failed exception message.
-   */
-  protected static function getWatchdogIdsForFailedExplicitRollback() {
-    return Database::getConnection()->query("SELECT wid FROM {watchdog} WHERE message LIKE 'Explicit rollback failed%'")->fetchAll();
   }
 
 }

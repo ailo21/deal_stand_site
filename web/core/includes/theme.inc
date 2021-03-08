@@ -8,6 +8,7 @@
  * customized by user themes.
  */
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Url;
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\Crypt;
@@ -88,7 +89,7 @@ const RESPONSIVE_PRIORITY_LOW = 'priority-low';
  *   Drupal\Core\Utility\ThemeRegistry class.
  */
 function theme_get_registry($complete = TRUE) {
-  $theme_registry = \Drupal::service('theme.registry');
+  $theme_registry = Drupal::service('theme.registry');
   if ($complete) {
     return $theme_registry->get();
   }
@@ -119,7 +120,7 @@ function _system_default_theme_features() {
  * a dynamic system needs to add more theme hooks.
  */
 function drupal_theme_rebuild() {
-  \Drupal::service('theme.registry')->reset();
+  Drupal::service('theme.registry')->reset();
 }
 
 /**
@@ -135,14 +136,14 @@ function drupal_theme_rebuild() {
  */
 function drupal_find_theme_functions($cache, $prefixes) {
   $implementations = [];
-  $grouped_functions = \Drupal::service('theme.registry')->getPrefixGroupedUserFunctions($prefixes);
+  $grouped_functions = Drupal::service('theme.registry')->getPrefixGroupedUserFunctions($prefixes);
 
   foreach ($cache as $hook => $info) {
     foreach ($prefixes as $prefix) {
       // Find theme functions that implement possible "suggestion" variants of
       // registered theme hooks and add those as new registered theme hooks.
       // The 'pattern' key defines a common prefix that all suggestions must
-      // start with. The default is the name of the hook followed by '__'. An
+      // start with. The default is the name of the hook followed by '__'. A
       // 'base hook' key is added to each entry made for a found suggestion,
       // so that common functionality can be implemented for all suggestions of
       // the same base hook. To keep things simple, deep hierarchy of
@@ -152,7 +153,7 @@ function drupal_find_theme_functions($cache, $prefixes) {
       // intermediary suggestion.
       $pattern = isset($info['pattern']) ? $info['pattern'] : ($hook . '__');
       // Grep only the functions which are within the prefix group.
-      list($first_prefix,) = explode('_', $prefix, 2);
+      [$first_prefix,] = explode('_', $prefix, 2);
       if (!isset($info['base hook']) && !empty($pattern) && isset($grouped_functions[$first_prefix])) {
         $matches = preg_grep('/^' . $prefix . '_' . $pattern . '/', $grouped_functions[$first_prefix]);
         if ($matches) {
@@ -198,7 +199,7 @@ function drupal_find_theme_templates($cache, $extension, $path) {
   // used for filtering. This allows base themes to have sub-themes in its
   // folder hierarchy without affecting the base themes template discovery.
   $theme_paths = [];
-  foreach (\Drupal::service('theme_handler')->listInfo() as $theme_info) {
+  foreach (Drupal::service('theme_handler')->listInfo() as $theme_info) {
     if (!empty($theme_info->base_theme)) {
       $theme_paths[$theme_info->base_theme][$theme_info->getName()] = $theme_info->getPath();
     }
@@ -210,7 +211,7 @@ function drupal_find_theme_templates($cache, $extension, $path) {
       }
     }
   }
-  $theme = \Drupal::theme()->getActiveTheme()->getName();
+  $theme = Drupal::theme()->getActiveTheme()->getName();
   $subtheme_paths = isset($theme_paths[$theme]) ? $theme_paths[$theme] : [];
 
   // Escape the periods in the extension.
@@ -218,7 +219,7 @@ function drupal_find_theme_templates($cache, $extension, $path) {
   // Get a listing of all template files in the path to search.
   $files = [];
   if (is_dir($path)) {
-    $files = \Drupal::service('file_system')->scanDirectory($path, $regex, ['key' => 'filename']);
+    $files = Drupal::service('file_system')->scanDirectory($path, $regex, ['key' => 'filename']);
   }
 
   // Find templates that implement registered theme hooks and include that in
@@ -312,24 +313,24 @@ function theme_get_setting($setting_name, $theme = NULL) {
 
   // If no key is given, use the current theme if we can determine it.
   if (!isset($theme)) {
-    $theme = \Drupal::theme()->getActiveTheme()->getName();
+    $theme = Drupal::theme()->getActiveTheme()->getName();
   }
 
   if (empty($cache[$theme])) {
     // Create a theme settings object.
     $cache[$theme] = new ThemeSettings($theme);
     // Get the global settings from configuration.
-    $cache[$theme]->setData(\Drupal::config('system.theme.global')->get());
+    $cache[$theme]->setData(Drupal::config('system.theme.global')->get());
 
     // Get the values for the theme-specific settings from the .info.yml files
     // of the theme and all its base themes.
-    $themes = \Drupal::service('theme_handler')->listInfo();
+    $themes = Drupal::service('theme_handler')->listInfo();
     if (isset($themes[$theme])) {
       $theme_object = $themes[$theme];
 
       // Retrieve configured theme-specific settings, if any.
       try {
-        if ($theme_settings = \Drupal::config($theme . '.settings')->get()) {
+        if ($theme_settings = Drupal::config($theme . '.settings')->get()) {
           $cache[$theme]->merge($theme_settings);
         }
       }
@@ -348,7 +349,7 @@ function theme_get_setting($setting_name, $theme = NULL) {
 
       // Generate the path to the logo image.
       if ($cache[$theme]->get('logo.use_default')) {
-        $logo = \Drupal::service('theme.initialization')->getActiveThemeByName($theme)->getLogo();
+        $logo = Drupal::service('theme.initialization')->getActiveThemeByName($theme)->getLogo();
         $cache[$theme]->set('logo.url', file_url_transform_relative(file_create_url($logo)));
       }
       elseif ($logo_path = $cache[$theme]->get('logo.path')) {
@@ -414,7 +415,7 @@ function theme_render_and_autoescape($arg) {
     $arg_bubbleable = [];
     BubbleableMetadata::createFromObject($arg)
       ->applyTo($arg_bubbleable);
-    \Drupal::service('renderer')->render($arg_bubbleable);
+    Drupal::service('renderer')->render($arg_bubbleable);
   }
 
   if ($arg instanceof MarkupInterface) {
@@ -439,7 +440,7 @@ function theme_render_and_autoescape($arg) {
       $return = $arg->toString();
     }
     else {
-      throw new \Exception('Object of type ' . get_class($arg) . ' cannot be printed.');
+      throw new Exception('Object of type ' . get_class($arg) . ' cannot be printed.');
     }
   }
 
@@ -456,7 +457,7 @@ function theme_render_and_autoescape($arg) {
     return (string) $arg['#markup'];
   }
   $arg['#printed'] = FALSE;
-  return (string) \Drupal::service('renderer')->render($arg);
+  return (string) Drupal::service('renderer')->render($arg);
 }
 
 /**
@@ -512,7 +513,7 @@ function theme_settings_convert_to_config(array $theme_settings, Config $config)
  */
 function template_preprocess_time(&$variables) {
   /** @var \Drupal\Core\Datetime\DateFormatterInterface $date_formatter */
-  $date_formatter = \Drupal::service('date.formatter');
+  $date_formatter = Drupal::service('date.formatter');
   // Format the 'datetime' attribute based on the timestamp.
   // @see http://www.w3.org/TR/html5-author/the-time-element.html#attr-time-datetime
   if (!isset($variables['attributes']['datetime']) && isset($variables['timestamp'])) {
@@ -850,6 +851,13 @@ function template_preprocess_image(&$variables) {
       $variables['attributes'][$key] = $variables[$key];
     }
   }
+
+  // Without dimensions specified, layout shifts can occur,
+  // which are more noticeable on pages that take some time to load.
+  // As a result, only mark images as lazy load that have dimensions.
+  if (isset($variables['width'], $variables['height']) && !isset($variables['attributes']['loading'])) {
+    $variables['attributes']['loading'] = 'lazy';
+  }
 }
 
 /**
@@ -978,7 +986,7 @@ function template_preprocess_table(&$variables) {
   $ts = [];
   $header_columns = 0;
   if (!empty($variables['header'])) {
-    $ts = TableSort::getContextFromRequest($variables['header'], \Drupal::request());
+    $ts = TableSort::getContextFromRequest($variables['header'], Drupal::request());
 
     // Use a separate index with responsive classes as headers
     // may be associative.
@@ -1288,10 +1296,10 @@ function _template_preprocess_default_variables() {
   ];
 
   // Give modules a chance to alter the default template variables.
-  \Drupal::moduleHandler()->alter('template_preprocess_default_variables', $variables);
+  Drupal::moduleHandler()->alter('template_preprocess_default_variables', $variables);
 
   // Tell all templates where they are located.
-  $variables['directory'] = \Drupal::theme()->getActiveTheme()->getPath();
+  $variables['directory'] = Drupal::theme()->getActiveTheme()->getPath();
 
   return $variables;
 }
@@ -1322,7 +1330,7 @@ function template_preprocess_html(&$variables) {
   $variables['html_attributes'] = new Attribute();
 
   // <html> element attributes.
-  $language_interface = \Drupal::languageManager()->getCurrentLanguage();
+  $language_interface = Drupal::languageManager()->getCurrentLanguage();
   $variables['html_attributes']['lang'] = $language_interface->getId();
   $variables['html_attributes']['dir'] = $language_interface->getDirection();
 
@@ -1333,21 +1341,21 @@ function template_preprocess_html(&$variables) {
   // Add a variable for the root path. This can be used to create a class and
   // theme the page depending on the current path (e.g. node, admin, user) as
   // well as more specific data like path-frontpage.
-  $is_front_page = \Drupal::service('path.matcher')->isFrontPage();
+  $is_front_page = Drupal::service('path.matcher')->isFrontPage();
 
   if ($is_front_page) {
     $variables['root_path'] = FALSE;
   }
   else {
-    $system_path = \Drupal::service('path.current')->getPath();
+    $system_path = Drupal::service('path.current')->getPath();
     $variables['root_path'] = explode('/', $system_path)[1];
   }
 
-  $site_config = \Drupal::config('system.site');
+  $site_config = Drupal::config('system.site');
   // Construct page title.
   if (isset($variables['page']['#title']) && is_array($variables['page']['#title'])) {
     // Do an early render if the title is a render array.
-    $variables['page']['#title'] = (string) \Drupal::service('renderer')->render($variables['page']['#title']);
+    $variables['page']['#title'] = (string) Drupal::service('renderer')->render($variables['page']['#title']);
   }
   if (!empty($variables['page']['#title'])) {
     $head_title = [
@@ -1396,9 +1404,9 @@ function template_preprocess_html(&$variables) {
  * See the page.html.twig template for the list of variables.
  */
 function template_preprocess_page(&$variables) {
-  $language_interface = \Drupal::languageManager()->getCurrentLanguage();
+  $language_interface = Drupal::languageManager()->getCurrentLanguage();
 
-  foreach (\Drupal::theme()->getActiveTheme()->getRegions() as $region) {
+  foreach (Drupal::theme()->getActiveTheme()->getRegions() as $region) {
     if (!isset($variables['page'][$region])) {
       $variables['page'][$region] = [];
     }
@@ -1410,7 +1418,7 @@ function template_preprocess_page(&$variables) {
 
   // An exception might be thrown.
   try {
-    $variables['is_front'] = \Drupal::service('path.matcher')->isFrontPage();
+    $variables['is_front'] = Drupal::service('path.matcher')->isFrontPage();
   }
   catch (Exception $e) {
     // If the database is not yet available, set default values for these
@@ -1419,7 +1427,7 @@ function template_preprocess_page(&$variables) {
     $variables['db_is_active'] = FALSE;
   }
 
-  if ($node = \Drupal::routeMatch()->getParameter('node')) {
+  if ($node = Drupal::routeMatch()->getParameter('node')) {
     $variables['node'] = $node;
   }
 }
@@ -1486,7 +1494,7 @@ function theme_get_suggestions($args, $base, $delimiter = '__') {
       $prefix .= $delimiter . $arg;
     }
   }
-  if (\Drupal::service('path.matcher')->isFrontPage()) {
+  if (Drupal::service('path.matcher')->isFrontPage()) {
     // Front templates should be based on root only, not prefixed arguments.
     $suggestions[] = $base . $delimiter . 'front';
   }
@@ -1514,7 +1522,7 @@ function template_preprocess_maintenance_page(&$variables) {
 
   // Maintenance page and install page need branding info in variables because
   // there is no blocks.
-  $site_config = \Drupal::config('system.site');
+  $site_config = Drupal::config('system.site');
   $variables['logo'] = theme_get_setting('logo.url');
   $variables['site_name'] = $site_config->get('name');
   $variables['site_slogan'] = $site_config->get('slogan');
@@ -1777,7 +1785,7 @@ function template_preprocess_pager(&$variables) {
   $route_parameters = isset($variables['pager']['#route_parameters']) ? $variables['pager']['#route_parameters'] : [];
 
   /* @var $pager_manager \Drupal\Core\Pager\PagerManagerInterface */
-  $pager_manager = \Drupal::service('pager.manager');
+  $pager_manager = Drupal::service('pager.manager');
 
   $pager = $pager_manager->getPager($element);
 
@@ -1896,6 +1904,71 @@ function template_preprocess_pager(&$variables) {
   // on the page, like exposed filters, so for the cacheability all query
   // parameters matter.
   $variables['#cache']['contexts'][] = 'url.query_args';
+}
+
+/**
+ * Prepares variables for single local task link templates.
+ *
+ * Default template: menu-local-task.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - element: A render element containing:
+ *     - #link: A menu link array with 'title', 'url', and (optionally)
+ *       'localized_options' keys.
+ *     - #active: A boolean indicating whether the local task is active.
+ */
+function template_preprocess_menu_local_task(&$variables) {
+  $link = $variables['element']['#link'];
+  $link += [
+    'localized_options' => [],
+  ];
+  $link_text = $link['title'];
+
+  if (!empty($variables['element']['#active'])) {
+    $variables['is_active'] = TRUE;
+
+    // Add text to indicate active tab for non-visual users.
+    $active = new FormattableMarkup('<span class="visually-hidden">@label</span>', ['@label' => t('(active tab)')]);
+    $link_text = t('@local-task-title@active', ['@local-task-title' => $link_text, '@active' => $active]);
+  }
+
+  $link['localized_options']['set_active_class'] = TRUE;
+
+  $variables['link'] = [
+    '#type' => 'link',
+    '#title' => $link_text,
+    '#url' => $link['url'],
+    '#options' => $link['localized_options'],
+  ];
+}
+
+/**
+ * Prepares variables for single local action link templates.
+ *
+ * Default template: menu-local-action.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - element: A render element containing:
+ *     - #link: A menu link array with 'title', 'url', and (optionally)
+ *       'localized_options' keys.
+ */
+function template_preprocess_menu_local_action(&$variables) {
+  $link = $variables['element']['#link'];
+  $link += [
+    'localized_options' => [],
+  ];
+  $link['localized_options']['attributes']['class'][] = 'button';
+  $link['localized_options']['attributes']['class'][] = 'button-action';
+  $link['localized_options']['set_active_class'] = TRUE;
+
+  $variables['link'] = [
+    '#type' => 'link',
+    '#title' => $link['title'],
+    '#options' => $link['localized_options'],
+    '#url' => $link['url'],
+  ];
 }
 
 /**

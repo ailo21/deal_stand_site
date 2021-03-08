@@ -2,6 +2,11 @@
 
 namespace Drupal\Core\Database;
 
+use PDO;
+use PDOStatement;
+
+@trigger_error('\Drupal\Core\Database\Statement is deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Database drivers should use or extend StatementWrapper instead, and encapsulate client-level statement objects. See https://www.drupal.org/node/3177488', E_USER_DEPRECATED);
+
 /**
  * Default implementation of StatementInterface.
  *
@@ -12,8 +17,14 @@ namespace Drupal\Core\Database;
  * constructor.
  *
  * @see http://php.net/pdostatement
+ *
+ * @deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Database
+ *   drivers should use or extend StatementWrapper instead, and encapsulate
+ *   client-level statement objects.
+ *
+ * @see https://www.drupal.org/node/3177488
  */
-class Statement extends \PDOStatement implements StatementInterface {
+class Statement extends PDOStatement implements StatementInterface {
 
   /**
    * Reference to the database connection object for this statement.
@@ -33,7 +44,7 @@ class Statement extends \PDOStatement implements StatementInterface {
 
   protected function __construct(Connection $dbh) {
     $this->dbh = $dbh;
-    $this->setFetchMode(\PDO::FETCH_OBJ);
+    $this->setFetchMode(PDO::FETCH_OBJ);
   }
 
   /**
@@ -44,7 +55,7 @@ class Statement extends \PDOStatement implements StatementInterface {
       if (is_string($options['fetch'])) {
         // \PDO::FETCH_PROPS_LATE tells __construct() to run before properties
         // are added to the object.
-        $this->setFetchMode(\PDO::FETCH_CLASS | \PDO::FETCH_PROPS_LATE, $options['fetch']);
+        $this->setFetchMode(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, $options['fetch']);
       }
       else {
         $this->setFetchMode($options['fetch']);
@@ -77,7 +88,7 @@ class Statement extends \PDOStatement implements StatementInterface {
    * {@inheritdoc}
    */
   public function fetchCol($index = 0) {
-    return $this->fetchAll(\PDO::FETCH_COLUMN, $index);
+    return $this->fetchAll(PDO::FETCH_COLUMN, $index);
   }
 
   /**
@@ -87,7 +98,7 @@ class Statement extends \PDOStatement implements StatementInterface {
     $return = [];
     if (isset($fetch)) {
       if (is_string($fetch)) {
-        $this->setFetchMode(\PDO::FETCH_CLASS, $fetch);
+        $this->setFetchMode(PDO::FETCH_CLASS, $fetch);
       }
       else {
         $this->setFetchMode($fetch);
@@ -107,7 +118,7 @@ class Statement extends \PDOStatement implements StatementInterface {
    */
   public function fetchAllKeyed($key_index = 0, $value_index = 1) {
     $return = [];
-    $this->setFetchMode(\PDO::FETCH_NUM);
+    $this->setFetchMode(PDO::FETCH_NUM);
     foreach ($this as $record) {
       $return[$record[$key_index]] = $record[$value_index];
     }
@@ -127,7 +138,7 @@ class Statement extends \PDOStatement implements StatementInterface {
    */
   public function fetchAssoc() {
     // Call \PDOStatement::fetch to fetch the row.
-    return $this->fetch(\PDO::FETCH_ASSOC);
+    return $this->fetch(PDO::FETCH_ASSOC);
   }
 
   /**

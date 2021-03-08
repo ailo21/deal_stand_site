@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\layout_builder\Unit;
 
+use Drupal;
 use Drupal\block_content\Access\RefinableDependentAccessInterface;
 use Drupal\Component\Plugin\Context\ContextInterface;
 use Drupal\Core\Access\AccessResult;
@@ -43,7 +44,7 @@ class BlockComponentRenderArrayTest extends UnitTestCase {
   protected $blockManager;
 
   /**
-   * Dataprovider for test functions that should test block types.
+   * Data provider for test functions that should test block types.
    */
   public function providerBlockTypes() {
     return [
@@ -64,7 +65,7 @@ class BlockComponentRenderArrayTest extends UnitTestCase {
     $container = new ContainerBuilder();
     $container->set('plugin.manager.block', $this->blockManager->reveal());
     $container->set('context.handler', $this->prophesize(ContextHandlerInterface::class));
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
   }
 
   /**

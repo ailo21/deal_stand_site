@@ -2,6 +2,7 @@
 
 namespace Drupal\user;
 
+use Drupal;
 use Drupal\views\EntityViewsData;
 
 /**
@@ -24,7 +25,7 @@ class UserViewsData extends EntityViewsData {
     $data['users_field_data']['uid']['argument'] += [
       'name table' => 'users_field_data',
       'name field' => 'name',
-      'empty field name' => \Drupal::config('user.settings')->get('anonymous'),
+      'empty field name' => Drupal::config('user.settings')->get('anonymous'),
     ];
     $data['users_field_data']['uid']['filter']['id'] = 'user_name';
     $data['users_field_data']['uid']['filter']['title'] = $this->t('Name (autocomplete)');
@@ -248,6 +249,10 @@ class UserViewsData extends EntityViewsData {
         'real field' => 'roles_target_id',
       ],
     ];
+
+    // Unset the "pass" field because the access control handler for the user
+    // entity type allows editing the password, but not viewing it.
+    unset($data['users_field_data']['pass']);
 
     return $data;
   }

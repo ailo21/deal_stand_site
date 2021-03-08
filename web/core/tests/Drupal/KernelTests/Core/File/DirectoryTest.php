@@ -2,6 +2,7 @@
 
 namespace Drupal\KernelTests\Core\File;
 
+use Drupal;
 use Drupal\Component\FileSecurity\FileSecurity;
 use Drupal\Component\FileSystem\FileSystem;
 use Drupal\Component\Render\FormattableMarkup;
@@ -14,20 +15,6 @@ use Drupal\Core\File\FileSystemInterface;
  * @group File
  */
 class DirectoryTest extends FileTestBase {
-
-  /**
-   * Modules to enable.
-   *
-   * @var array
-   */
-  protected static $modules = ['system'];
-
-  protected function setUp(): void {
-    parent::setUp();
-
-    // These additional tables are necessary due to the call to system_cron().
-    $this->installSchema('system', ['key_value_expire']);
-  }
 
   /**
    * Test local directory handling functions.
@@ -50,8 +37,8 @@ class DirectoryTest extends FileTestBase {
     $parent_path = $directory . DIRECTORY_SEPARATOR . $parent;
     $child_path = $parent_path . DIRECTORY_SEPARATOR . $child;
     /** @var \Drupal\Core\File\FileSystemInterface $file_system */
-    $file_system = \Drupal::service('file_system');
-    $this->assertTrue($file_system->mkdir($child_path, 0775, TRUE), t('No error reported when creating new local directories.'), 'File');
+    $file_system = Drupal::service('file_system');
+    $this->assertTrue($file_system->mkdir($child_path, 0775, TRUE), 'No error reported when creating new local directories.');
 
     // Ensure new directories also exist.
     $this->assertDirectoryExists($parent_path);
@@ -81,7 +68,7 @@ class DirectoryTest extends FileTestBase {
 
     // Non-existent directory.
     /** @var \Drupal\Core\File\FileSystemInterface $file_system */
-    $file_system = \Drupal::service('file_system');
+    $file_system = Drupal::service('file_system');
     $this->assertFalse($file_system->prepareDirectory($directory, 0), 'Error reported for non-existing directory.', 'File');
 
     // Make a directory.
@@ -89,7 +76,7 @@ class DirectoryTest extends FileTestBase {
 
     // Make sure directory actually exists.
     $this->assertDirectoryExists($directory);
-    $file_system = \Drupal::service('file_system');
+    $file_system = Drupal::service('file_system');
     if (substr(PHP_OS, 0, 3) != 'WIN') {
       // PHP on Windows doesn't support any kind of useful read-only mode for
       // directories. When executing a chmod() on a directory, PHP only sets the
@@ -122,7 +109,7 @@ class DirectoryTest extends FileTestBase {
 
     // Verify contents of .htaccess file.
     $file = file_get_contents($default_scheme . '://.htaccess');
-    $this->assertEqual($file, FileSecurity::htaccessLines(FALSE), 'The .htaccess file contains the proper content.', 'File');
+    $this->assertEqual(FileSecurity::htaccessLines(FALSE), $file, 'The .htaccess file contains the proper content.', 'File');
   }
 
   /**
@@ -136,16 +123,16 @@ class DirectoryTest extends FileTestBase {
     $directory = 'core/misc';
     $original = $directory . '/' . $basename;
     /** @var \Drupal\Core\File\FileSystemInterface $file_system */
-    $file_system = \Drupal::service('file_system');
+    $file_system = Drupal::service('file_system');
     $path = $file_system->createFilename($basename, $directory);
-    $this->assertEqual($path, $original, new FormattableMarkup('New filepath %new equals %original.', ['%new' => $path, '%original' => $original]), 'File');
+    $this->assertEqual($original, $path, new FormattableMarkup('New filepath %new equals %original.', ['%new' => $path, '%original' => $original]), 'File');
 
     // Then we test against a file that already exists within that directory.
     $basename = 'druplicon.png';
     $original = $directory . '/' . $basename;
     $expected = $directory . '/druplicon_0.png';
     $path = $file_system->createFilename($basename, $directory);
-    $this->assertEqual($path, $expected, new FormattableMarkup('Creating a new filepath from %original equals %new (expected %expected).', ['%new' => $path, '%original' => $original, '%expected' => $expected]), 'File');
+    $this->assertEqual($expected, $path, new FormattableMarkup('Creating a new filepath from %original equals %new (expected %expected).', ['%new' => $path, '%original' => $original, '%expected' => $expected]), 'File');
 
     // @TODO: Finally we copy a file into a directory several times, to ensure a properly iterating filename suffix.
   }
@@ -166,21 +153,21 @@ class DirectoryTest extends FileTestBase {
     // First test for non-existent file.
     $destination = 'core/misc/xyz.txt';
     /** @var \Drupal\Core\File\FileSystemInterface $file_system */
-    $file_system = \Drupal::service('file_system');
+    $file_system = Drupal::service('file_system');
     $path = $file_system->getDestinationFilename($destination, FileSystemInterface::EXISTS_REPLACE);
-    $this->assertEqual($path, $destination, 'Non-existing filepath destination is correct with FileSystemInterface::EXISTS_REPLACE.', 'File');
+    $this->assertEqual($destination, $path, 'Non-existing filepath destination is correct with FileSystemInterface::EXISTS_REPLACE.', 'File');
     $path = $file_system->getDestinationFilename($destination, FileSystemInterface::EXISTS_RENAME);
-    $this->assertEqual($path, $destination, 'Non-existing filepath destination is correct with FileSystemInterface::EXISTS_RENAME.', 'File');
+    $this->assertEqual($destination, $path, 'Non-existing filepath destination is correct with FileSystemInterface::EXISTS_RENAME.', 'File');
     $path = $file_system->getDestinationFilename($destination, FileSystemInterface::EXISTS_ERROR);
-    $this->assertEqual($path, $destination, 'Non-existing filepath destination is correct with FileSystemInterface::EXISTS_ERROR.', 'File');
+    $this->assertEqual($destination, $path, 'Non-existing filepath destination is correct with FileSystemInterface::EXISTS_ERROR.', 'File');
 
     $destination = 'core/misc/druplicon.png';
     $path = $file_system->getDestinationFilename($destination, FileSystemInterface::EXISTS_REPLACE);
-    $this->assertEqual($path, $destination, 'Existing filepath destination remains the same with FileSystemInterface::EXISTS_REPLACE.', 'File');
+    $this->assertEqual($destination, $path, 'Existing filepath destination remains the same with FileSystemInterface::EXISTS_REPLACE.', 'File');
     $path = $file_system->getDestinationFilename($destination, FileSystemInterface::EXISTS_RENAME);
-    $this->assertNotEqual($path, $destination, 'A new filepath destination is created when filepath destination already exists with FileSystemInterface::EXISTS_RENAME.', 'File');
+    $this->assertNotEquals($destination, $path, 'A new filepath destination is created when filepath destination already exists with FileSystemInterface::EXISTS_RENAME.');
     $path = $file_system->getDestinationFilename($destination, FileSystemInterface::EXISTS_ERROR);
-    $this->assertEqual($path, FALSE, 'An error is returned when filepath destination already exists with FileSystemInterface::EXISTS_ERROR.', 'File');
+    $this->assertFalse($path, 'An error is returned when filepath destination already exists with FileSystemInterface::EXISTS_ERROR.', 'File');
 
     // Invalid UTF-8 causes an exception.
     $this->expectException(FileException::class);
@@ -192,7 +179,7 @@ class DirectoryTest extends FileTestBase {
    * Ensure that the getTempDirectory() method always returns a value.
    */
   public function testFileDirectoryTemp() {
-    $tmp_directory = \Drupal::service('file_system')->getTempDirectory();
+    $tmp_directory = Drupal::service('file_system')->getTempDirectory();
     $this->assertNotEmpty($tmp_directory);
     $this->assertEquals($tmp_directory, FileSystem::getOsTemporaryDirectory());
   }

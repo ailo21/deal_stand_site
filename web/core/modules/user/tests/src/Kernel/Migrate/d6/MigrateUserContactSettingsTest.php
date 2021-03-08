@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\user\Kernel\Migrate\d6;
 
+use Drupal;
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
 
 /**
@@ -30,19 +31,19 @@ class MigrateUserContactSettingsTest extends MigrateDrupal6TestBase {
    * Tests the Drupal6 user contact settings migration.
    */
   public function testUserContactSettings() {
-    $user_data = \Drupal::service('user.data');
+    $user_data = Drupal::service('user.data');
     $module = $key = 'contact';
     $uid = 2;
     $setting = $user_data->get($module, $uid, $key);
-    $this->assertIdentical('1', $setting);
+    $this->assertSame('1', $setting);
 
     $uid = 8;
     $setting = $user_data->get($module, $uid, $key);
-    $this->assertIdentical('0', $setting);
+    $this->assertSame('0', $setting);
 
     $uid = 15;
     $setting = $user_data->get($module, $uid, $key);
-    $this->assertIdentical(NULL, $setting);
+    $this->assertNull($setting);
   }
 
 }

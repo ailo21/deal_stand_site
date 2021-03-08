@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\file\FunctionalJavascript;
 
+use Drupal;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\file\Entity\File;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
@@ -73,7 +74,7 @@ class FileFieldWidgetTest extends WebDriverTestBase {
     $assert_session = $this->assertSession();
 
     $test_file = current($this->getTestFiles('text'));
-    $test_file_path = \Drupal::service('file_system')
+    $test_file_path = Drupal::service('file_system')
       ->realpath($test_file->uri);
 
     $this->drupalGet("node/add/$type_name");
@@ -108,7 +109,7 @@ class FileFieldWidgetTest extends WebDriverTestBase {
             $check_field_name = $field_name;
           }
 
-          $this->assertIdentical($button->getAttribute('name'), $check_field_name . '_' . $key . '_remove_button');
+          $this->assertSame($check_field_name . '_' . $key . '_remove_button', $button->getAttribute('name'));
         }
 
         $button_name = $current_field_name . '_' . $delta . '_remove_button';
@@ -146,7 +147,7 @@ class FileFieldWidgetTest extends WebDriverTestBase {
     $assert_session = $this->assertSession();
 
     $test_file = current($this->getTestFiles('text'));
-    $test_file_path = \Drupal::service('file_system')
+    $test_file_path = Drupal::service('file_system')
       ->realpath($test_file->uri);
 
     $this->drupalGet("node/add/$type_name");
@@ -167,7 +168,7 @@ class FileFieldWidgetTest extends WebDriverTestBase {
 
     // Create a new node and try to upload a file with an invalid extension.
     $test_image = current($this->getTestFiles('image'));
-    $test_image_path = \Drupal::service('file_system')
+    $test_image_path = Drupal::service('file_system')
       ->realpath($test_image->uri);
 
     $this->drupalGet("node/add/$type_name");
@@ -193,7 +194,7 @@ class FileFieldWidgetTest extends WebDriverTestBase {
     $this->createFileField($field_name, 'node', $type_name, ['cardinality' => $cardinality]);
 
     $web_driver = $this->getSession()->getDriver();
-    $file_system = \Drupal::service('file_system');
+    $file_system = Drupal::service('file_system');
 
     $files = array_slice($this->getTestFiles('text'), 0, 3);
     $real_paths = [];

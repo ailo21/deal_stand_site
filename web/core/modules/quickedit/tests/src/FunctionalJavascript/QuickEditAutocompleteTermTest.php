@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\quickedit\FunctionalJavascript;
 
+use Drupal;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
@@ -72,7 +73,7 @@ class QuickEditAutocompleteTermTest extends WebDriverTestBase {
   protected $fieldName;
 
   /**
-   * An user with permissions to access in-place editor.
+   * A user with permissions to access in-place editor.
    *
    * @var \Drupal\user\UserInterface
    */
@@ -102,20 +103,20 @@ class QuickEditAutocompleteTermTest extends WebDriverTestBase {
     ];
     $this->createEntityReferenceField('node', 'article', $this->fieldName, 'Tags', 'taxonomy_term', 'default', $handler_settings, FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
 
-    \Drupal::service('entity_display.repository')->getFormDisplay('node', 'article')
+    Drupal::service('entity_display.repository')->getFormDisplay('node', 'article')
       ->setComponent($this->fieldName, [
         'type' => 'entity_reference_autocomplete_tags',
         'weight' => -4,
       ])
       ->save();
 
-    \Drupal::service('entity_display.repository')->getViewDisplay('node', 'article')
+    Drupal::service('entity_display.repository')->getViewDisplay('node', 'article')
       ->setComponent($this->fieldName, [
         'type' => 'entity_reference_label',
         'weight' => 10,
       ])
       ->save();
-    \Drupal::service('entity_display.repository')->getViewDisplay('node', 'article', 'teaser')
+    Drupal::service('entity_display.repository')->getViewDisplay('node', 'article', 'teaser')
       ->setComponent($this->fieldName, [
         'type' => 'entity_reference_label',
         'weight' => 10,

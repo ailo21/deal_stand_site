@@ -2,6 +2,8 @@
 
 namespace Drupal\Core\Security;
 
+use Closure;
+
 /**
  * Ensures that TrustedCallbackInterface can be enforced for callback methods.
  *
@@ -53,10 +55,10 @@ trait DoTrustedCallbackTrait {
     $safe_callback = FALSE;
 
     if (is_array($callback)) {
-      list($object_or_classname, $method_name) = $callback;
+      [$object_or_classname, $method_name] = $callback;
     }
     elseif (is_string($callback) && strpos($callback, '::') !== FALSE) {
-      list($object_or_classname, $method_name) = explode('::', $callback, 2);
+      [$object_or_classname, $method_name] = explode('::', $callback, 2);
     }
 
     if (isset($method_name)) {
@@ -73,7 +75,7 @@ trait DoTrustedCallbackTrait {
         $safe_callback = in_array($method_name, $methods, TRUE);
       }
     }
-    elseif ($callback instanceof \Closure) {
+    elseif ($callback instanceof Closure) {
       $safe_callback = TRUE;
     }
 
@@ -97,7 +99,8 @@ trait DoTrustedCallbackTrait {
       }
     }
 
-    return call_user_func_array($callback, $args);
+    // @TODO Allow named arguments in https://www.drupal.org/node/3174150
+    return call_user_func_array($callback, array_values($args));
   }
 
 }

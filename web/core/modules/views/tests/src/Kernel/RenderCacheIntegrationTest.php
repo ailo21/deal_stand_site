@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\views\Kernel;
 
+use Drupal;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Language\LanguageInterface;
@@ -113,7 +114,7 @@ class RenderCacheIntegrationTest extends ViewsKernelTestBase {
 
     // Test pager.
     // Page 1.
-    \Drupal::request()->query->set('page', 0);
+    Drupal::request()->query->set('page', 0);
     $tags_page_1 = Cache::mergeTags($base_tags, $entities[1]->getCacheTags());
     $tags_page_1 = Cache::mergeTags($tags_page_1, $entities[2]->getCacheTags());
     $tags_page_1 = Cache::mergeTags($tags_page_1, $entities[3]->getCacheTags());
@@ -124,7 +125,7 @@ class RenderCacheIntegrationTest extends ViewsKernelTestBase {
     $view->destroy();
     // Page 2.
     $view->setCurrentPage(1);
-    \Drupal::request()->query->set('page', 1);
+    Drupal::request()->query->set('page', 1);
     $tags_page_2 = Cache::mergeTags($base_tags, $entities[0]->getCacheTags());
     $this->assertViewsCacheTags($view, $tags_page_2, $do_assert_views_caches, $tags_page_2);
     $view->destroy();
@@ -132,7 +133,7 @@ class RenderCacheIntegrationTest extends ViewsKernelTestBase {
     // Ensure that invalidation works on both pages.
     // Page 2.
     $view->setCurrentPage(1);
-    \Drupal::request()->query->set('page', 1);
+    Drupal::request()->query->set('page', 1);
     $entities[0]->name->value = $random_name = $this->randomMachineName();
     $entities[0]->save();
     $build = $this->assertViewsCacheTags($view, $tags_page_2, $do_assert_views_caches, $tags_page_2);
@@ -144,7 +145,7 @@ class RenderCacheIntegrationTest extends ViewsKernelTestBase {
 
     // Page 1.
     $view->setCurrentPage(0);
-    \Drupal::request()->query->set('page', 0);
+    Drupal::request()->query->set('page', 0);
     $entities[1]->name->value = $random_name = $this->randomMachineName();
     $entities[1]->save();
     $build = $this->assertViewsCacheTags($view, $tags_page_1, $do_assert_views_caches, $tags_page_1);
@@ -159,9 +160,9 @@ class RenderCacheIntegrationTest extends ViewsKernelTestBase {
 
       $result = $this->cssSelect('div.views-row');
       $count = count($result);
-      $this->assertEqual($count, 1);
+      $this->assertEqual(1, $count);
 
-      $this->assertEqual((string) $result[0]->div->span, (string) $entity->id());
+      $this->assertEqual((string) $entity->id(), (string) $result[0]->div->span);
     };
 
     // Execute the view once with a static renderable and one with a full
@@ -185,7 +186,7 @@ class RenderCacheIntegrationTest extends ViewsKernelTestBase {
   }
 
   /**
-   * Tests a entity-based view's cache tags when using the "none" cache plugin.
+   * Tests an entity-based view's cache tags when using the "none" cache plugin.
    */
   public function testEntityBasedViewCacheTagsWithCachePluginNone() {
     $view = Views::getview('entity_test_row');
@@ -198,7 +199,7 @@ class RenderCacheIntegrationTest extends ViewsKernelTestBase {
   }
 
   /**
-   * Tests a entity-based view's cache tags when using the "tag" cache plugin.
+   * Tests an entity-based view's cache tags when using the "tag" cache plugin.
    */
   public function testEntityBasedViewCacheTagsWithCachePluginTag() {
     $view = Views::getview('entity_test_row');
@@ -211,7 +212,7 @@ class RenderCacheIntegrationTest extends ViewsKernelTestBase {
   }
 
   /**
-   * Tests a entity-based view's cache tags when using the "time" cache plugin.
+   * Tests an entity-based view's cache tags when using the "time" cache plugin.
    */
   public function testEntityBasedViewCacheTagsWithCachePluginTime() {
     $view = Views::getview('entity_test_row');

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\language\Functional;
 
+use Drupal;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Url;
@@ -100,7 +101,7 @@ class LanguageUILanguageNegotiationTest extends BrowserTestBase {
     $http_header_blah = ["Accept-Language" => "blah;q=1"];
 
     // Create a private file for testing accessible by the admin user.
-    \Drupal::service('file_system')->mkdir($this->privateFilesDirectory . '/test');
+    Drupal::service('file_system')->mkdir($this->privateFilesDirectory . '/test');
     $filepath = 'private://test/private-file-test.txt';
     $contents = "file_put_contents() doesn't seem to appreciate empty strings so let's put in some data.";
     file_put_contents($filepath, $contents);
@@ -115,7 +116,7 @@ class LanguageUILanguageNegotiationTest extends BrowserTestBase {
     // into database when seen by t(). Without doing this, our target string
     // is for some reason not found when doing translate search. This might
     // be some bug.
-    $default_language = \Drupal::languageManager()->getDefaultLanguage();
+    $default_language = Drupal::languageManager()->getDefaultLanguage();
     ConfigurableLanguage::createFromLangcode($langcode_browser_fallback)->save();
     $this->config('system.site')->set('default_langcode', $langcode_browser_fallback)->save();
     ConfigurableLanguage::createFromLangcode($langcode)->save();
@@ -142,29 +143,29 @@ class LanguageUILanguageNegotiationTest extends BrowserTestBase {
       'string' => $default_string,
       'langcode' => $langcode_browser_fallback,
     ];
-    $this->drupalPostForm('admin/config/regional/translate', $search, t('Filter'));
+    $this->drupalPostForm('admin/config/regional/translate', $search, 'Filter');
     $textarea = current($this->xpath('//textarea'));
     $lid = $textarea->getAttribute('name');
     $edit = [
       $lid => $language_browser_fallback_string,
     ];
-    $this->drupalPostForm('admin/config/regional/translate', $edit, t('Save translations'));
+    $this->drupalPostForm('admin/config/regional/translate', $edit, 'Save translations');
 
     $search = [
       'string' => $default_string,
       'langcode' => $langcode,
     ];
-    $this->drupalPostForm('admin/config/regional/translate', $search, t('Filter'));
+    $this->drupalPostForm('admin/config/regional/translate', $search, 'Filter');
     $textarea = current($this->xpath('//textarea'));
     $lid = $textarea->getAttribute('name');
     $edit = [
       $lid => $language_string,
     ];
-    $this->drupalPostForm('admin/config/regional/translate', $edit, t('Save translations'));
+    $this->drupalPostForm('admin/config/regional/translate', $edit, 'Save translations');
 
     // Configure selected language negotiation to use zh-hans.
     $edit = ['selected_langcode' => $langcode];
-    $this->drupalPostForm('admin/config/regional/language/detection/selected', $edit, t('Save configuration'));
+    $this->drupalPostForm('admin/config/regional/language/detection/selected', $edit, 'Save configuration');
     $test = [
       'language_negotiation' => [LanguageNegotiationSelected::METHOD_ID],
       'path' => 'admin/config',
@@ -252,7 +253,7 @@ class LanguageUILanguageNegotiationTest extends BrowserTestBase {
     }
 
     // Unknown language prefix should return 404.
-    $definitions = \Drupal::languageManager()->getNegotiator()->getNegotiationMethods();
+    $definitions = Drupal::languageManager()->getNegotiator()->getNegotiationMethods();
     // Enable only methods, which are either not limited to a specific language
     // type or are supporting the interface language type.
     $language_interface_method_definitions = array_filter($definitions, function ($method_definition) {
@@ -368,7 +369,7 @@ class LanguageUILanguageNegotiationTest extends BrowserTestBase {
     // Go by session preference.
     $language_negotiation_session_param = $this->randomMachineName();
     $edit = ['language_negotiation_session_param' => $language_negotiation_session_param];
-    $this->drupalPostForm('admin/config/regional/language/detection/session', $edit, t('Save configuration'));
+    $this->drupalPostForm('admin/config/regional/language/detection/session', $edit, 'Save configuration');
     $tests = [
       [
         'language_negotiation' => [LanguageNegotiationSession::METHOD_ID],
@@ -405,12 +406,12 @@ class LanguageUILanguageNegotiationTest extends BrowserTestBase {
         ->save();
     }
     if (!empty($test['language_test_domain'])) {
-      \Drupal::state()->set('language_test.domain', $test['language_test_domain']);
+      Drupal::state()->set('language_test.domain', $test['language_test_domain']);
     }
     $this->container->get('language_manager')->reset();
     $this->drupalGet($test['path'], $test['path_options'], $test['http_header']);
-    $this->assertText($test['expect'], $test['message']);
-    $this->assertText(t('Language negotiation method: @name', ['@name' => $test['expected_method_id']]));
+    $this->assertText($test['expect']);
+    $this->assertText('Language negotiation method: ' . $test['expected_method_id']);
 
     // Get the private file and ensure it is a 200. It is important to
     // invalidate the router cache to ensure the routing system runs a full
@@ -432,7 +433,7 @@ class LanguageUILanguageNegotiationTest extends BrowserTestBase {
     // Enable the path prefix for the default language: this way any unprefixed
     // URL must have a valid fallback value.
     $edit = ['prefix[en]' => 'en'];
-    $this->drupalPostForm('admin/config/regional/language/detection/url', $edit, t('Save configuration'));
+    $this->drupalPostForm('admin/config/regional/language/detection/url', $edit, 'Save configuration');
 
     // Enable browser and URL language detection.
     $edit = [
@@ -441,7 +442,7 @@ class LanguageUILanguageNegotiationTest extends BrowserTestBase {
       'language_interface[weight][language-browser]' => -8,
       'language_interface[weight][language-url]' => -10,
     ];
-    $this->drupalPostForm('admin/config/regional/language/detection', $edit, t('Save settings'));
+    $this->drupalPostForm('admin/config/regional/language/detection', $edit, 'Save settings');
     $this->drupalGet('admin/config/regional/language/detection');
 
     // Enable the language switcher block.
@@ -491,15 +492,15 @@ class LanguageUILanguageNegotiationTest extends BrowserTestBase {
       'language_interface[enabled][language-url]' => TRUE,
       'language_interface[weight][language-url]' => -10,
     ];
-    $this->drupalPostForm('admin/config/regional/language/detection', $edit, t('Save settings'));
+    $this->drupalPostForm('admin/config/regional/language/detection', $edit, 'Save settings');
 
     // Do not allow blank domain.
     $edit = [
       'language_negotiation_url_part' => LanguageNegotiationUrl::CONFIG_DOMAIN,
       'domain[en]' => '',
     ];
-    $this->drupalPostForm('admin/config/regional/language/detection/url', $edit, t('Save configuration'));
-    $this->assertText('The domain may not be left blank for English', 'The form does not allow blank domains.');
+    $this->drupalPostForm('admin/config/regional/language/detection/url', $edit, 'Save configuration');
+    $this->assertText('The domain may not be left blank for English');
     $this->rebuildContainer();
 
     // Change the domain for the Italian language.
@@ -508,8 +509,8 @@ class LanguageUILanguageNegotiationTest extends BrowserTestBase {
       'domain[en]' => $base_url_host,
       'domain[it]' => 'it.example.com',
     ];
-    $this->drupalPostForm('admin/config/regional/language/detection/url', $edit, t('Save configuration'));
-    $this->assertText('The configuration options have been saved', 'Domain configuration is saved.');
+    $this->drupalPostForm('admin/config/regional/language/detection/url', $edit, 'Save configuration');
+    $this->assertText('The configuration options have been saved');
     $this->rebuildContainer();
 
     // Try to use an invalid domain.
@@ -518,7 +519,7 @@ class LanguageUILanguageNegotiationTest extends BrowserTestBase {
       'domain[en]' => $base_url_host,
       'domain[it]' => 'it.example.com/',
     ];
-    $this->drupalPostForm('admin/config/regional/language/detection/url', $edit, t('Save configuration'));
+    $this->drupalPostForm('admin/config/regional/language/detection/url', $edit, 'Save configuration');
     $this->assertRaw(t('The domain for %language may only contain the domain name, not a trailing slash, protocol and/or port.', ['%language' => 'Italian']));
 
     // Build the link we're going to test.
@@ -528,9 +529,9 @@ class LanguageUILanguageNegotiationTest extends BrowserTestBase {
     // Base path gives problems on the testbot, so $correct_link is hard-coded.
     // @see UrlAlterFunctionalTest::assertUrlOutboundAlter (path.test).
     $italian_url = Url::fromRoute('system.admin', [], ['language' => $languages['it']])->toString();
-    $url_scheme = \Drupal::request()->isSecure() ? 'https://' : 'http://';
+    $url_scheme = Drupal::request()->isSecure() ? 'https://' : 'http://';
     $correct_link = $url_scheme . $link;
-    $this->assertEqual($italian_url, $correct_link, new FormattableMarkup('The right URL (@url) in accordance with the chosen language', ['@url' => $italian_url]));
+    $this->assertEqual($correct_link, $italian_url, new FormattableMarkup('The right URL (@url) in accordance with the chosen language', ['@url' => $italian_url]));
 
     // Test HTTPS via options.
     $italian_url = Url::fromRoute('system.admin', [], ['https' => TRUE, 'language' => $languages['it']])->toString();
@@ -555,7 +556,7 @@ class LanguageUILanguageNegotiationTest extends BrowserTestBase {
       'language_content[enabled][language-url]' => FALSE,
       'language_content[enabled][language-session]' => TRUE,
     ];
-    $this->drupalPostForm('admin/config/regional/language/detection', $edit, t('Save settings'));
+    $this->drupalPostForm('admin/config/regional/language/detection', $edit, 'Save settings');
 
     // Check if configurability persisted.
     $config = $this->config('language.types');
@@ -584,7 +585,7 @@ class LanguageUILanguageNegotiationTest extends BrowserTestBase {
     $edit = [
       'language_content[configurable]' => FALSE,
     ];
-    $this->drupalPostForm('admin/config/regional/language/detection', $edit, t('Save settings'));
+    $this->drupalPostForm('admin/config/regional/language/detection', $edit, 'Save settings');
     $this->assertSession()->statusCodeEquals(200);
 
     // Check if the language switcher block has been removed.

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\migrate\Kernel;
 
+use Drupal;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\Event\MigrateEvents;
@@ -71,7 +72,7 @@ class MigrateMessageTest extends KernelTestBase implements MigrateMessageInterfa
       ],
     ];
 
-    $this->migration = \Drupal::service('plugin.manager.migration')->createStubMigration($definition);
+    $this->migration = Drupal::service('plugin.manager.migration')->createStubMigration($definition);
   }
 
   /**
@@ -89,12 +90,12 @@ class MigrateMessageTest extends KernelTestBase implements MigrateMessageInterfa
    */
   public function testMessagesTeed() {
     // Ask to receive any messages sent to the idmap.
-    \Drupal::service('event_dispatcher')->addListener(MigrateEvents::IDMAP_MESSAGE,
+    Drupal::service('event_dispatcher')->addListener(MigrateEvents::IDMAP_MESSAGE,
       [$this, 'mapMessageRecorder']);
     $executable = new MigrateExecutable($this->migration, $this);
     $executable->import();
     $this->assertCount(1, $this->messages);
-    $this->assertIdentical(reset($this->messages), "source_message: 'a message' is not an array");
+    $this->assertSame("source_message: 'a message' is not an array", reset($this->messages));
   }
 
   /**
@@ -117,9 +118,9 @@ class MigrateMessageTest extends KernelTestBase implements MigrateMessageInterfa
     $count = 0;
     foreach ($this->migration->getIdMap()->getMessages() as $message) {
       ++$count;
-      $this->assertEqual($message, $expected_message);
+      $this->assertEqual($expected_message, $message);
     }
-    $this->assertEqual($count, 1);
+    $this->assertEqual(1, $count);
   }
 
   /**

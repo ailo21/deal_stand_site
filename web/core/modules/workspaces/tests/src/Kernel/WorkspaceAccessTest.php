@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\workspaces\Kernel;
 
+use Drupal;
 use Drupal\Core\Access\AccessResult;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\user\Traits\UserCreationTrait;
@@ -52,11 +53,15 @@ class WorkspaceAccessTest extends KernelTestBase {
    */
   public function operationCases() {
     return [
+      ['create', 'administer workspaces'],
       ['create', 'create workspace'],
+      ['view', 'administer workspaces'],
       ['view', 'view any workspace'],
       ['view', 'view own workspace'],
+      ['update', 'administer workspaces'],
       ['update', 'edit any workspace'],
       ['update', 'edit own workspace'],
+      ['delete', 'administer workspaces'],
       ['delete', 'delete any workspace'],
       ['delete', 'delete own workspace'],
     ];
@@ -80,7 +85,7 @@ class WorkspaceAccessTest extends KernelTestBase {
 
     $this->assertFalse($workspace->access($operation, $user));
 
-    \Drupal::entityTypeManager()->getAccessControlHandler('workspace')->resetCache();
+    Drupal::entityTypeManager()->getAccessControlHandler('workspace')->resetCache();
     $role = $this->createRole([$permission]);
     $user->addRole($role);
     $this->assertTrue($workspace->access($operation, $user));
@@ -104,8 +109,8 @@ class WorkspaceAccessTest extends KernelTestBase {
 
     // Simulate an external factor which decides that a workspace can not be
     // published.
-    \Drupal::state()->set('workspace_access_test.result.publish', AccessResult::forbidden());
-    \Drupal::entityTypeManager()->getAccessControlHandler('workspace')->resetCache();
+    Drupal::state()->set('workspace_access_test.result.publish', AccessResult::forbidden());
+    Drupal::entityTypeManager()->getAccessControlHandler('workspace')->resetCache();
 
     $this->expectException(WorkspaceAccessException::class);
     $workspace->publish();
@@ -126,7 +131,7 @@ class WorkspaceAccessTest extends KernelTestBase {
     // ----- child1_2_1 ($any_permission_user)
     // - top2 ($admin_permission_user)
     // --- child2_1 ($admin_permission_user)
-    $created_time = \Drupal::time()->getCurrentTime();
+    $created_time = Drupal::time()->getCurrentTime();
     Workspace::create([
       'uid' => $own_permission_user->id(),
       'id' => 'top1',
@@ -169,7 +174,7 @@ class WorkspaceAccessTest extends KernelTestBase {
     ])->save();
 
     /** @var \Drupal\Core\Entity\EntityReferenceSelection\SelectionInterface $selection_handler */
-    $selection_handler = \Drupal::service('plugin.manager.entity_reference_selection')->getInstance([
+    $selection_handler = Drupal::service('plugin.manager.entity_reference_selection')->getInstance([
       'target_type' => 'workspace',
       'handler' => 'default',
       'sort' => [

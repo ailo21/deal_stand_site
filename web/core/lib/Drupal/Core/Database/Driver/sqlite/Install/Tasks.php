@@ -2,10 +2,12 @@
 
 namespace Drupal\Core\Database\Driver\sqlite\Install;
 
+use Drupal;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Database\Driver\sqlite\Connection;
 use Drupal\Core\Database\DatabaseNotFoundException;
 use Drupal\Core\Database\Install\Tasks as InstallTasks;
+use Exception;
 
 /**
  * Specifies installation tasks for SQLite databases.
@@ -51,7 +53,7 @@ class Tasks extends InstallTasks {
     // Make the text more accurate for SQLite.
     $form['database']['#title'] = t('Database file');
     $form['database']['#description'] = t('The absolute path to the file where @drupal data will be stored. This must be writable by the web server and should exist outside of the web root.', ['@drupal' => drupal_install_profile_distribution_name()]);
-    $default_database = \Drupal::getContainer()->getParameter('site.path') . '/files/.ht.sqlite';
+    $default_database = Drupal::getContainer()->getParameter('site.path') . '/files/.ht.sqlite';
     $form['database']['#default_value'] = empty($database['database']) ? $default_database : $database['database'];
     return $form;
   }
@@ -67,16 +69,16 @@ class Tasks extends InstallTasks {
       Database::getConnection();
       $this->pass('Drupal can CONNECT to the database ok.');
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       // Attempt to create the database if it is not found.
       if ($e->getCode() == Connection::DATABASE_NOT_FOUND) {
         // Remove the database string from connection info.
         $connection_info = Database::getConnectionInfo();
         $database = $connection_info['default']['database'];
 
-        // We cannot use file_directory_temp() here because we haven't yet
-        // successfully connected to the database.
-        $connection_info['default']['database'] = \Drupal::service('file_system')->tempnam(sys_get_temp_dir(), 'sqlite');
+        // We cannot use \Drupal::service('file_system')->getTempDirectory()
+        // here because we haven't yet successfully connected to the database.
+        $connection_info['default']['database'] = Drupal::service('file_system')->tempnam(sys_get_temp_dir(), 'sqlite');
 
         // In order to change the Database::$databaseInfo array, need to remove
         // the active connection, then re-add it with the new info.
@@ -103,8 +105,8 @@ class Tasks extends InstallTasks {
         }
       }
       else {
-        // Database connection failed for some other reason than the database
-        // not existing.
+        // Database connection failed for some other reason than a non-existent
+        // database.
         $this->fail(t('Failed to connect to database. The database engine reports the following message: %error.<ul><li>Does the database file exist?</li><li>Does web server have permission to write to the database file?</li>Does the web server have permission to write to the directory the database file should be created in?</li></ul>', ['%error' => $e->getMessage()]));
         return FALSE;
       }

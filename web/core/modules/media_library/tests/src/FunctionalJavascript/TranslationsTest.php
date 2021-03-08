@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\media_library\FunctionalJavascript;
 
+use Drupal;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\file\Entity\File;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
@@ -55,7 +56,7 @@ class TranslationsTest extends WebDriverTestBase {
     $this->drupalCreateContentType(['type' => 'article', 'name' => 'Article']);
 
     // Make the media translatable and ensure the change is picked up.
-    \Drupal::service('content_translation.manager')->setEnabled('media', 'image', TRUE);
+    Drupal::service('content_translation.manager')->setEnabled('media', 'image', TRUE);
 
     // Create a media reference field on articles.
     $this->createEntityReferenceField(
@@ -69,7 +70,7 @@ class TranslationsTest extends WebDriverTestBase {
       FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED
     );
     // Add the media field to the form display.
-    \Drupal::service('entity_display.repository')->getFormDisplay('node', 'article')
+    Drupal::service('entity_display.repository')->getFormDisplay('node', 'article')
       ->setComponent('field_media', ['type' => 'media_library_widget'])
       ->save();
 
@@ -81,12 +82,14 @@ class TranslationsTest extends WebDriverTestBase {
     $image->save();
 
     // Create a translated and untranslated media item in each language.
+    // cSpell:disable
     $media_items = [
       ['nl' => 'Eekhoorn', 'es' => 'Ardilla'],
       ['es' => 'Zorro', 'nl' => 'Vos'],
       ['nl' => 'Hert'],
       ['es' => 'Tejón'],
     ];
+    // cSpell:enable
     foreach ($media_items as $translations) {
       $default_langcode = key($translations);
       $default_name = array_shift($translations);
@@ -131,6 +134,7 @@ class TranslationsTest extends WebDriverTestBase {
       $media_names[] = $media_item->getText();
     }
     sort($media_names);
+    // cSpell:disable-next-line
     $this->assertSame(['Ardilla', 'Eekhoorn', 'Hert', 'Tejón', 'Vos', 'Zorro'], $media_names);
 
     $this->drupalGet('es/admin/content/media-grid');
@@ -141,6 +145,7 @@ class TranslationsTest extends WebDriverTestBase {
       $media_names[] = $media_item->getText();
     }
     sort($media_names);
+    // cSpell:disable-next-line
     $this->assertSame(['Ardilla', 'Eekhoorn', 'Hert', 'Tejón', 'Vos', 'Zorro'], $media_names);
 
     // All media should only be shown once, and should be shown in the interface
@@ -155,6 +160,7 @@ class TranslationsTest extends WebDriverTestBase {
       $media_names[] = $media_item->getText();
     }
     sort($media_names);
+    // cSpell:disable-next-line
     $this->assertSame(['Eekhoorn', 'Hert', 'Tejón', 'Vos'], $media_names);
 
     $this->drupalGet('es/node/add/article');
@@ -167,6 +173,7 @@ class TranslationsTest extends WebDriverTestBase {
       $media_names[] = $media_item->getText();
     }
     sort($media_names);
+    // cSpell:disable-next-line
     $this->assertSame(['Ardilla', 'Hert', 'Tejón', 'Zorro'], $media_names);
   }
 

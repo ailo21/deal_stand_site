@@ -2,6 +2,7 @@
 
 namespace Drupal\user_batch_action_test\Plugin\Action;
 
+use Drupal;
 use Drupal\Core\Action\ActionBase;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Session\AccountInterface;
@@ -25,7 +26,7 @@ class BatchUserAction extends ActionBase {
 
     foreach ($entities as $entity) {
       $operations[] = [
-        [get_class($this), 'processBatch'],
+        [static::class, 'processBatch'],
         [
           [
             'entity_type' => $entity->getEntityTypeId(),
@@ -38,7 +39,7 @@ class BatchUserAction extends ActionBase {
     if ($operations) {
       $batch = [
         'operations' => $operations,
-        'finished' => [get_class($this), 'finishBatch'],
+        'finished' => [static::class, 'finishBatch'],
       ];
       batch_set($batch);
     }
@@ -69,7 +70,7 @@ class BatchUserAction extends ActionBase {
   public static function processBatch($data, &$context) {
     if (!isset($context['results']['processed'])) {
       $context['results']['processed'] = 0;
-      $context['results']['theme'] = \Drupal::service('theme.manager')->getActiveTheme(\Drupal::routeMatch())->getName();
+      $context['results']['theme'] = Drupal::service('theme.manager')->getActiveTheme(Drupal::routeMatch())->getName();
     }
     $context['results']['processed']++;
   }
@@ -83,10 +84,10 @@ class BatchUserAction extends ActionBase {
    *   Results information passed from the processing callback.
    */
   public static function finishBatch($success, $results) {
-    \Drupal::messenger()->addMessage(
-      \Drupal::translation()->formatPlural($results['processed'], 'One item has been processed.', '@count items have been processed.')
+    Drupal::messenger()->addMessage(
+      Drupal::translation()->formatPlural($results['processed'], 'One item has been processed.', '@count items have been processed.')
     );
-    \Drupal::messenger()->addMessage($results['theme'] . ' theme used');
+    Drupal::messenger()->addMessage($results['theme'] . ' theme used');
   }
 
 }

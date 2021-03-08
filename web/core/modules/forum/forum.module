@@ -42,7 +42,7 @@ function forum_help($route_name, RouteMatchInterface $route_match) {
       $output .= '<dt>' . t('Starting a discussion') . '</dt>';
       $output .= '<dd>' . t('The <a href=":create-topic">Forum topic</a> link on the <a href=":content-add">Add content</a> page creates the first post of a new threaded discussion, or thread.', [':create-topic' => Url::fromRoute('node.add', ['node_type' => 'forum'])->toString(), ':content-add' => Url::fromRoute('node.add_page')->toString()]) . '</dd>';
       $output .= '<dt>' . t('Navigating in the forum') . '</dt>';
-      $output .= '<dd>' . t('Enabling the Forum module provides a default <em>Forums</em> menu item in the Tools menu that links to the <a href=":forums">Forums page</a>.', [':forums' => Url::fromRoute('forum.index')->toString()]) . '</dd>';
+      $output .= '<dd>' . t('Enabling the Forum module provides a default <em>Forums</em> menu link in the Tools menu that links to the <a href=":forums">Forums page</a>.', [':forums' => Url::fromRoute('forum.index')->toString()]) . '</dd>';
       $output .= '<dt>' . t('Moving forum topics') . '</dt>';
       $output .= '<dd>' . t('A forum topic (and all of its comments) may be moved between forums by selecting a different forum while editing a forum topic. When moving a forum topic between forums, the <em>Leave shadow copy</em> option creates a link in the original forum pointing to the new location.') . '</dd>';
       $output .= '<dt>' . t('Locking and disabling comments') . '</dt>';
@@ -67,7 +67,7 @@ function forum_help($route_name, RouteMatchInterface $route_match) {
           'class' => ['more-link'],
         ],
       ];
-      $output .= \Drupal::service('renderer')->renderPlain($container);
+      $output .= Drupal::service('renderer')->renderPlain($container);
       return $output;
 
     case 'forum.add_container':
@@ -120,7 +120,7 @@ function forum_entity_type_build(array &$entity_types) {
  */
 function forum_entity_bundle_info_alter(&$bundles) {
   // Take over URI construction for taxonomy terms that are forums.
-  if ($vid = \Drupal::config('forum.settings')->get('vocabulary')) {
+  if ($vid = Drupal::config('forum.settings')->get('vocabulary')) {
     if (isset($bundles['taxonomy_term'][$vid])) {
       $bundles['taxonomy_term'][$vid]['uri_callback'] = 'forum_uri';
     }
@@ -149,14 +149,14 @@ function forum_entity_bundle_field_info_alter(&$fields, EntityTypeInterface $ent
  * Assigns the forum taxonomy when adding a topic from within a forum.
  */
 function forum_node_presave(EntityInterface $node) {
-  if (\Drupal::service('forum_manager')->checkNodeType($node)) {
+  if (Drupal::service('forum_manager')->checkNodeType($node)) {
     // Make sure all fields are set properly:
     $node->icon = !empty($node->icon) ? $node->icon : '';
     if (!$node->taxonomy_forums->isEmpty()) {
       $node->forum_tid = $node->taxonomy_forums->target_id;
       // Only do a shadow copy check if this is not a new node.
       if (!$node->isNew()) {
-        $old_tid = \Drupal::service('forum.index_storage')->getOriginalTermId($node);
+        $old_tid = Drupal::service('forum.index_storage')->getOriginalTermId($node);
         if ($old_tid && isset($node->forum_tid) && ($node->forum_tid != $old_tid) && !empty($node->shadow)) {
           // A shadow copy needs to be created. Retain new term and add old term.
           $node->taxonomy_forums[count($node->taxonomy_forums)] = ['target_id' => $old_tid];
@@ -170,11 +170,11 @@ function forum_node_presave(EntityInterface $node) {
  * Implements hook_ENTITY_TYPE_update() for node entities.
  */
 function forum_node_update(EntityInterface $node) {
-  if (\Drupal::service('forum_manager')->checkNodeType($node)) {
+  if (Drupal::service('forum_manager')->checkNodeType($node)) {
     // If this is not a new revision and does exist, update the forum record,
     // otherwise insert a new one.
     /** @var \Drupal\forum\ForumIndexStorageInterface $forum_index_storage */
-    $forum_index_storage = \Drupal::service('forum.index_storage');
+    $forum_index_storage = Drupal::service('forum.index_storage');
     if ($node->getRevisionId() == $node->original->getRevisionId() && $forum_index_storage->getOriginalTermId($node)) {
       if (!empty($node->forum_tid)) {
         $forum_index_storage->update($node);
@@ -212,9 +212,9 @@ function forum_node_update(EntityInterface $node) {
  * Implements hook_ENTITY_TYPE_insert() for node entities.
  */
 function forum_node_insert(EntityInterface $node) {
-  if (\Drupal::service('forum_manager')->checkNodeType($node)) {
+  if (Drupal::service('forum_manager')->checkNodeType($node)) {
     /** @var \Drupal\forum\ForumIndexStorageInterface $forum_index_storage */
-    $forum_index_storage = \Drupal::service('forum.index_storage');
+    $forum_index_storage = Drupal::service('forum.index_storage');
     if (!empty($node->forum_tid)) {
       $forum_index_storage->create($node);
     }
@@ -230,9 +230,9 @@ function forum_node_insert(EntityInterface $node) {
  * Implements hook_ENTITY_TYPE_predelete() for node entities.
  */
 function forum_node_predelete(EntityInterface $node) {
-  if (\Drupal::service('forum_manager')->checkNodeType($node)) {
+  if (Drupal::service('forum_manager')->checkNodeType($node)) {
     /** @var \Drupal\forum\ForumIndexStorageInterface $forum_index_storage */
-    $forum_index_storage = \Drupal::service('forum.index_storage');
+    $forum_index_storage = Drupal::service('forum.index_storage');
     $forum_index_storage->delete($node);
     $forum_index_storage->deleteIndex($node);
   }
@@ -244,12 +244,12 @@ function forum_node_predelete(EntityInterface $node) {
 function forum_node_storage_load($nodes) {
   $node_vids = [];
   foreach ($nodes as $node) {
-    if (\Drupal::service('forum_manager')->checkNodeType($node)) {
+    if (Drupal::service('forum_manager')->checkNodeType($node)) {
       $node_vids[] = $node->getRevisionId();
     }
   }
   if (!empty($node_vids)) {
-    $result = \Drupal::service('forum.index_storage')->read($node_vids);
+    $result = Drupal::service('forum.index_storage')->read($node_vids);
     foreach ($result as $record) {
       $nodes[$record->nid]->forum_tid = $record->tid;
     }
@@ -261,7 +261,7 @@ function forum_node_storage_load($nodes) {
  */
 function forum_comment_update(CommentInterface $comment) {
   if ($comment->getCommentedEntityTypeId() == 'node') {
-    \Drupal::service('forum.index_storage')->updateIndex($comment->getCommentedEntity());
+    Drupal::service('forum.index_storage')->updateIndex($comment->getCommentedEntity());
   }
 }
 
@@ -270,7 +270,7 @@ function forum_comment_update(CommentInterface $comment) {
  */
 function forum_comment_insert(CommentInterface $comment) {
   if ($comment->getCommentedEntityTypeId() == 'node') {
-    \Drupal::service('forum.index_storage')->updateIndex($comment->getCommentedEntity());
+    Drupal::service('forum.index_storage')->updateIndex($comment->getCommentedEntity());
   }
 }
 
@@ -279,7 +279,7 @@ function forum_comment_insert(CommentInterface $comment) {
  */
 function forum_comment_delete(CommentInterface $comment) {
   if ($comment->getCommentedEntityTypeId() == 'node') {
-    \Drupal::service('forum.index_storage')->updateIndex($comment->getCommentedEntity());
+    Drupal::service('forum.index_storage')->updateIndex($comment->getCommentedEntity());
   }
 }
 
@@ -287,7 +287,7 @@ function forum_comment_delete(CommentInterface $comment) {
  * Implements hook_form_BASE_FORM_ID_alter() for \Drupal\taxonomy\VocabularyForm.
  */
 function forum_form_taxonomy_vocabulary_form_alter(&$form, FormStateInterface $form_state, $form_id) {
-  $vid = \Drupal::config('forum.settings')->get('vocabulary');
+  $vid = Drupal::config('forum.settings')->get('vocabulary');
   $vocabulary = $form_state->getFormObject()->getEntity();
   if ($vid == $vocabulary->id()) {
     $form['help_forum_vocab'] = [
@@ -309,7 +309,7 @@ function forum_form_taxonomy_vocabulary_form_alter(&$form, FormStateInterface $f
  * Implements hook_form_FORM_ID_alter() for \Drupal\taxonomy\TermForm.
  */
 function forum_form_taxonomy_term_form_alter(&$form, FormStateInterface $form_state, $form_id) {
-  $vid = \Drupal::config('forum.settings')->get('vocabulary');
+  $vid = Drupal::config('forum.settings')->get('vocabulary');
   if (isset($form['vid']['#value']) && $form['vid']['#value'] == $vid) {
     // Hide multiple parents select from forum terms.
     $form['relations']['parent']['#access'] = FALSE;
@@ -341,7 +341,7 @@ function forum_form_node_form_alter(&$form, FormStateInterface $form_state, $for
       // If there is no default forum already selected, try to get the forum
       // ID from the URL (e.g., if we are on a page like node/add/forum/2, we
       // expect "2" to be the ID of the forum that was requested).
-      $requested_forum_id = \Drupal::request()->query->get('forum_id');
+      $requested_forum_id = Drupal::request()->query->get('forum_id');
       $widget['#default_value'] = is_numeric($requested_forum_id) ? $requested_forum_id : '';
     }
   }
@@ -462,21 +462,21 @@ function template_preprocess_forums(&$variables) {
             'created' => $topic->getCreatedTime(),
           ],
         ];
-        $variables['topics'][$id]->submitted = \Drupal::service('renderer')->render($forum_submitted);
+        $variables['topics'][$id]->submitted = Drupal::service('renderer')->render($forum_submitted);
         $forum_submitted = [
           '#theme' => 'forum_submitted',
           '#topic' => isset($topic->last_reply) ? $topic->last_reply : NULL,
         ];
-        $variables['topics'][$id]->last_reply = \Drupal::service('renderer')->render($forum_submitted);
+        $variables['topics'][$id]->last_reply = Drupal::service('renderer')->render($forum_submitted);
 
         $variables['topics'][$id]->new_text = '';
         $variables['topics'][$id]->new_url = '';
 
         if ($topic->new_replies) {
-          $page_number = \Drupal::entityTypeManager()->getStorage('comment')
+          $page_number = Drupal::entityTypeManager()->getStorage('comment')
             ->getNewCommentPageNumber($topic->comment_count, $topic->new_replies, $topic, 'comment_forum');
           $query = $page_number ? ['page' => $page_number] : NULL;
-          $variables['topics'][$id]->new_text = \Drupal::translation()->formatPlural($topic->new_replies, '1 new post<span class="visually-hidden"> in topic %title</span>', '@count new posts<span class="visually-hidden"> in topic %title</span>', ['%title' => $variables['topics'][$id]->label()]);
+          $variables['topics'][$id]->new_text = Drupal::translation()->formatPlural($topic->new_replies, '1 new post<span class="visually-hidden"> in topic %title</span>', '@count new posts<span class="visually-hidden"> in topic %title</span>', ['%title' => $variables['topics'][$id]->label()]);
           $variables['topics'][$id]->new_url = Url::fromRoute('entity.node.canonical', ['node' => $topic->id()], ['query' => $query, 'fragment' => 'new'])->toString();
         }
 
@@ -544,7 +544,7 @@ function template_preprocess_forums(&$variables) {
  *   - tid: Taxonomy term ID of the current forum.
  */
 function template_preprocess_forum_list(&$variables) {
-  $user = \Drupal::currentUser();
+  $user = Drupal::currentUser();
   $row = 0;
   // Sanitize each forum so that the template can safely print the data.
   foreach ($variables['forums'] as $id => $forum) {
@@ -562,9 +562,9 @@ function template_preprocess_forum_list(&$variables) {
     $variables['forums'][$id]->icon_class = 'default';
     $variables['forums'][$id]->icon_title = t('No new posts');
     if ($user->isAuthenticated()) {
-      $variables['forums'][$id]->new_topics = \Drupal::service('forum_manager')->unreadTopics($forum->id(), $user->id());
+      $variables['forums'][$id]->new_topics = Drupal::service('forum_manager')->unreadTopics($forum->id(), $user->id());
       if ($variables['forums'][$id]->new_topics) {
-        $variables['forums'][$id]->new_text = \Drupal::translation()->formatPlural($variables['forums'][$id]->new_topics, '1 new post<span class="visually-hidden"> in forum %title</span>', '@count new posts<span class="visually-hidden"> in forum %title</span>', ['%title' => $variables['forums'][$id]->label()]);
+        $variables['forums'][$id]->new_text = Drupal::translation()->formatPlural($variables['forums'][$id]->new_topics, '1 new post<span class="visually-hidden"> in forum %title</span>', '@count new posts<span class="visually-hidden"> in forum %title</span>', ['%title' => $variables['forums'][$id]->label()]);
         $variables['forums'][$id]->new_url = Url::fromRoute('forum.page', ['taxonomy_term' => $forum->id()], ['fragment' => 'new'])->toString();
         $variables['forums'][$id]->icon_class = 'new';
         $variables['forums'][$id]->icon_title = t('New posts');
@@ -572,7 +572,7 @@ function template_preprocess_forum_list(&$variables) {
       $variables['forums'][$id]->old_topics = $forum->num_topics - $variables['forums'][$id]->new_topics;
     }
     $forum_submitted = ['#theme' => 'forum_submitted', '#topic' => $forum->last_post];
-    $variables['forums'][$id]->last_reply = \Drupal::service('renderer')->render($forum_submitted);
+    $variables['forums'][$id]->last_reply = Drupal::service('renderer')->render($forum_submitted);
   }
 
   $variables['pager'] = [
@@ -599,7 +599,7 @@ function template_preprocess_forum_list(&$variables) {
  *   - first_new: Indicates whether this is the first topic with new posts.
  */
 function template_preprocess_forum_icon(&$variables) {
-  $variables['hot_threshold'] = \Drupal::config('forum.settings')->get('topics.hot_threshold');
+  $variables['hot_threshold'] = Drupal::config('forum.settings')->get('topics.hot_threshold');
 
   if ($variables['num_posts'] > $variables['hot_threshold']) {
     $variables['icon_status'] = $variables['new_posts'] ? 'hot-new' : 'hot';
@@ -639,7 +639,7 @@ function template_preprocess_forum_submitted(&$variables) {
   $variables['author'] = '';
   if (isset($variables['topic']->uid)) {
     $username = ['#theme' => 'username', '#account' => User::load($variables['topic']->uid)];
-    $variables['author'] = \Drupal::service('renderer')->render($username);
+    $variables['author'] = Drupal::service('renderer')->render($username);
   }
-  $variables['time'] = isset($variables['topic']->created) ? \Drupal::service('date.formatter')->formatTimeDiffSince($variables['topic']->created) : '';
+  $variables['time'] = isset($variables['topic']->created) ? Drupal::service('date.formatter')->formatTimeDiffSince($variables['topic']->created) : '';
 }

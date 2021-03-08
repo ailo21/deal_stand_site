@@ -2,7 +2,9 @@
 
 namespace Drupal\Tests\rdf\Functional;
 
+use Drupal;
 use Drupal\Tests\BrowserTestBase;
+use Exception;
 
 /**
  * Tests hook_rdf_namespaces().
@@ -49,18 +51,18 @@ class GetRdfNamespacesTest extends BrowserTestBase {
     // Get all RDF namespaces.
     $ns = rdf_get_namespaces();
 
-    $this->assertEqual($ns['rdfs'], 'http://www.w3.org/2000/01/rdf-schema#', 'A prefix declared once is included.');
-    $this->assertEqual($ns['foaf'], 'http://xmlns.com/foaf/0.1/', 'The same prefix declared in several implementations of hook_rdf_namespaces() is valid as long as all the namespaces are the same.');
-    $this->assertEqual($ns['foaf1'], 'http://xmlns.com/foaf/0.1/', 'Two prefixes can be assigned the same namespace.');
+    $this->assertEqual('http://www.w3.org/2000/01/rdf-schema#', $ns['rdfs'], 'A prefix declared once is included.');
+    $this->assertEqual('http://xmlns.com/foaf/0.1/', $ns['foaf'], 'The same prefix declared in several implementations of hook_rdf_namespaces() is valid as long as all the namespaces are the same.');
+    $this->assertEqual('http://xmlns.com/foaf/0.1/', $ns['foaf1'], 'Two prefixes can be assigned the same namespace.');
 
     // Enable rdf_conflicting_namespaces to ensure that an exception is thrown
     // when RDF namespaces are conflicting.
-    \Drupal::service('module_installer')->install(['rdf_conflicting_namespaces'], TRUE);
+    Drupal::service('module_installer')->install(['rdf_conflicting_namespaces'], TRUE);
     try {
       $ns = rdf_get_namespaces();
       $this->fail('Expected exception not thrown for conflicting namespace declaration.');
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       // Expected exception; just continue testing.
     }
   }

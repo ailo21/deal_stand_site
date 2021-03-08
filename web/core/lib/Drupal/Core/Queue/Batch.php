@@ -2,6 +2,8 @@
 
 namespace Drupal\Core\Queue;
 
+use Exception;
+
 /**
  * Defines a batch queue handler used by the Batch API.
  *
@@ -26,13 +28,13 @@ class Batch extends DatabaseQueue {
    */
   public function claimItem($lease_time = 0) {
     try {
-      $item = $this->connection->queryRange('SELECT data, item_id FROM {queue} q WHERE name = :name ORDER BY item_id ASC', 0, 1, [':name' => $this->name])->fetchObject();
+      $item = $this->connection->queryRange('SELECT [data], [item_id] FROM {queue} q WHERE [name] = :name ORDER BY [item_id] ASC', 0, 1, [':name' => $this->name])->fetchObject();
       if ($item) {
         $item->data = unserialize($item->data);
         return $item;
       }
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       $this->catchException($e);
     }
     return FALSE;
@@ -50,12 +52,12 @@ class Batch extends DatabaseQueue {
   public function getAllItems() {
     $result = [];
     try {
-      $items = $this->connection->query('SELECT data FROM {queue} q WHERE name = :name ORDER BY item_id ASC', [':name' => $this->name])->fetchAll();
+      $items = $this->connection->query('SELECT [data] FROM {queue} q WHERE [name] = :name ORDER BY [item_id] ASC', [':name' => $this->name])->fetchAll();
       foreach ($items as $item) {
         $result[] = unserialize($item->data);
       }
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       $this->catchException($e);
     }
     return $result;

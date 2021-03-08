@@ -2,6 +2,7 @@
 
 namespace Drupal\KernelTests\Core\Cache;
 
+use Drupal;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\user\Entity\Role;
@@ -37,7 +38,7 @@ class CacheContextOptimizationTest extends KernelTestBase {
    */
   public function testUserPermissionCacheContextOptimization() {
     $user1 = $this->createUser();
-    $this->assertEqual($user1->id(), 1);
+    $this->assertEqual(1, $user1->id());
 
     $authenticated_user = $this->createUser(['administer permissions']);
     $role = $authenticated_user->getRoles()[1];
@@ -48,18 +49,18 @@ class CacheContextOptimizationTest extends KernelTestBase {
         'contexts' => ['user', 'user.permissions'],
       ],
     ];
-    \Drupal::service('account_switcher')->switchTo($authenticated_user);
+    Drupal::service('account_switcher')->switchTo($authenticated_user);
     $element = $test_element;
     $element['#markup'] = 'content for authenticated users';
-    $output = \Drupal::service('renderer')->renderRoot($element);
-    $this->assertEqual($output, 'content for authenticated users');
+    $output = Drupal::service('renderer')->renderRoot($element);
+    $this->assertEqual('content for authenticated users', $output);
 
     // Verify that the render caching is working so that other tests can be
     // trusted.
     $element = $test_element;
     $element['#markup'] = 'this should not be visible';
-    $output = \Drupal::service('renderer')->renderRoot($element);
-    $this->assertEqual($output, 'content for authenticated users');
+    $output = Drupal::service('renderer')->renderRoot($element);
+    $this->assertEqual('content for authenticated users', $output);
 
     // Even though the cache contexts have been optimized to only include 'user'
     // cache context, the element should have been changed because
@@ -71,8 +72,8 @@ class CacheContextOptimizationTest extends KernelTestBase {
       ->save();
     $element = $test_element;
     $element['#markup'] = 'this should be visible';
-    $output = \Drupal::service('renderer')->renderRoot($element);
-    $this->assertEqual($output, 'this should be visible');
+    $output = Drupal::service('renderer')->renderRoot($element);
+    $this->assertEqual('this should be visible', $output);
   }
 
   /**
@@ -80,7 +81,7 @@ class CacheContextOptimizationTest extends KernelTestBase {
    */
   public function testUserRolesCacheContextOptimization() {
     $root_user = $this->createUser();
-    $this->assertEqual($root_user->id(), 1);
+    $this->assertEqual(1, $root_user->id());
 
     $authenticated_user = $this->createUser(['administer permissions']);
     $role = $authenticated_user->getRoles()[1];
@@ -91,18 +92,18 @@ class CacheContextOptimizationTest extends KernelTestBase {
         'contexts' => ['user', 'user.roles'],
       ],
     ];
-    \Drupal::service('account_switcher')->switchTo($authenticated_user);
+    Drupal::service('account_switcher')->switchTo($authenticated_user);
     $element = $test_element;
     $element['#markup'] = 'content for authenticated users';
-    $output = \Drupal::service('renderer')->renderRoot($element);
-    $this->assertEqual($output, 'content for authenticated users');
+    $output = Drupal::service('renderer')->renderRoot($element);
+    $this->assertEqual('content for authenticated users', $output);
 
     // Verify that the render caching is working so that other tests can be
     // trusted.
     $element = $test_element;
     $element['#markup'] = 'this should not be visible';
-    $output = \Drupal::service('renderer')->renderRoot($element);
-    $this->assertEqual($output, 'content for authenticated users');
+    $output = Drupal::service('renderer')->renderRoot($element);
+    $this->assertEqual('content for authenticated users', $output);
 
     // Even though the cache contexts have been optimized to only include 'user'
     // cache context, the element should have been changed because 'user.roles'
@@ -112,8 +113,8 @@ class CacheContextOptimizationTest extends KernelTestBase {
     $authenticated_user->save();
     $element = $test_element;
     $element['#markup'] = 'this should be visible';
-    $output = \Drupal::service('renderer')->renderRoot($element);
-    $this->assertEqual($output, 'this should be visible');
+    $output = Drupal::service('renderer')->renderRoot($element);
+    $this->assertEqual('this should be visible', $output);
   }
 
 }

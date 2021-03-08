@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\Core\Session;
 
+use Drupal;
 use Drupal\Core\Cache\MemoryCache\MemoryCache;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Session\UserSession;
@@ -15,7 +16,7 @@ use Drupal\user\RoleInterface;
 class UserSessionTest extends UnitTestCase {
 
   /**
-   * The user sessions used in the test
+   * The user sessions used in the test.
    *
    * @var \Drupal\Core\Session\AccountInterface[]
    */
@@ -117,7 +118,7 @@ class UserSessionTest extends UnitTestCase {
       ->will($this->returnValue($role_storage));
     $container = new ContainerBuilder();
     $container->set('entity_type.manager', $entity_type_manager);
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
 
     $this->users['user_one'] = $this->createUserSession(['role_one']);
     $this->users['user_two'] = $this->createUserSession(['role_one', 'role_two']);

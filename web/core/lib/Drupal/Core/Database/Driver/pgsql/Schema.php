@@ -5,6 +5,13 @@ namespace Drupal\Core\Database\Driver\pgsql;
 use Drupal\Core\Database\SchemaObjectExistsException;
 use Drupal\Core\Database\SchemaObjectDoesNotExistException;
 use Drupal\Core\Database\Schema as DatabaseSchema;
+use Exception;
+
+// cSpell:ignore adbin adnum adrelid adsrc attisdropped attname attnum attrdef
+// cSpell:ignore attrelid atttypid atttypmod bigserial conkey conname conrelid
+// cSpell:ignore contype fillfactor indexname indexrelid indisprimary indkey
+// cSpell:ignore indrelid nextval nspname regclass relkind relname relnamespace
+// cSpell:ignore schemaname setval
 
 /**
  * @addtogroup schemaapi
@@ -147,7 +154,7 @@ EOD;
           ':key' => $key,
         ]);
       }
-      catch (\Exception $e) {
+      catch (Exception $e) {
         $this->connection->rollbackSavepoint();
         throw $e;
       }
@@ -246,7 +253,7 @@ EOD;
         ':column' => $field,
       ]);
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       $this->connection->rollbackSavepoint();
       throw $e;
     }
@@ -554,7 +561,7 @@ EOD;
 
     // Get the schema and tablename for the old table.
     $old_full_name = str_replace('"', '', $this->connection->prefixTables('{' . $table . '}'));
-    list($old_schema, $old_table_name) = strpos($old_full_name, '.') ? explode('.', $old_full_name) : ['public', $old_full_name];
+    [$old_schema, $old_table_name] = strpos($old_full_name, '.') ? explode('.', $old_full_name) : ['public', $old_full_name];
 
     // Index names and constraint names are global in PostgreSQL, so we need to
     // rename them when renaming the table.
@@ -566,6 +573,7 @@ EOD;
 
       // If the index is already rewritten by ensureIdentifiersLength() to not
       // exceed the 63 chars limit of PostgreSQL, we need to take care of that.
+      // cSpell:disable-next-line
       // Example (drupal_Gk7Su_T1jcBHVuvSPeP22_I3Ni4GrVEgTYlIYnBJkro_idx).
       if (strpos($index->indexname, 'drupal_') !== FALSE) {
         preg_match('/^drupal_(.*)_' . preg_quote($index_type) . '/', $index->indexname, $matches);
@@ -945,12 +953,12 @@ EOD;
 
     if (isset($spec['not null'])) {
       if ($spec['not null']) {
-        $nullaction = 'SET NOT NULL';
+        $null_action = 'SET NOT NULL';
       }
       else {
-        $nullaction = 'DROP NOT NULL';
+        $null_action = 'DROP NOT NULL';
       }
-      $this->connection->query('ALTER TABLE {' . $table . '} ALTER "' . $field . '" ' . $nullaction);
+      $this->connection->query('ALTER TABLE {' . $table . '} ALTER "' . $field . '" ' . $null_action);
     }
 
     if (in_array($spec['pgsql_type'], ['serial', 'bigserial'])) {

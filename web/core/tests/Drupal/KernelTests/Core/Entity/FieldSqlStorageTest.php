@@ -2,10 +2,13 @@
 
 namespace Drupal\KernelTests\Core\Entity;
 
+use Drupal;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Entity\Exception\FieldStorageDefinitionUpdateForbiddenException;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use Exception;
+use PDO;
 
 /**
  * Tests Field SQL Storage .
@@ -93,7 +96,7 @@ class FieldSqlStorageTest extends EntityKernelTestBase {
     $this->field->save();
 
     /** @var \Drupal\Core\Entity\Sql\DefaultTableMapping $table_mapping */
-    $table_mapping = \Drupal::entityTypeManager()->getStorage($entity_type)->getTableMapping();
+    $table_mapping = Drupal::entityTypeManager()->getStorage($entity_type)->getTableMapping();
     $this->tableMapping = $table_mapping;
     $this->table = $table_mapping->getDedicatedDataTableName($this->fieldStorage);
     $this->revisionTable = $table_mapping->getDedicatedRevisionTableName($this->fieldStorage);
@@ -145,7 +148,7 @@ class FieldSqlStorageTest extends EntityKernelTestBase {
       $entity = $storage->loadRevision($revision_id);
       foreach ($values[$revision_id] as $delta => $value) {
         if ($delta < $this->fieldCardinality) {
-          $this->assertEqual($entity->{$this->fieldName}[$delta]->value, $value);
+          $this->assertEqual($value, $entity->{$this->fieldName}[$delta]->value);
         }
         else {
           $this->assertArrayNotHasKey($delta, $entity->{$this->fieldName});
@@ -157,7 +160,7 @@ class FieldSqlStorageTest extends EntityKernelTestBase {
     $entity = $storage->load($entity->id());
     foreach ($values[$revision_id] as $delta => $value) {
       if ($delta < $this->fieldCardinality) {
-        $this->assertEqual($entity->{$this->fieldName}[$delta]->value, $value);
+        $this->assertEqual($value, $entity->{$this->fieldName}[$delta]->value);
       }
       else {
         $this->assertArrayNotHasKey($delta, $entity->{$this->fieldName});
@@ -195,8 +198,8 @@ class FieldSqlStorageTest extends EntityKernelTestBase {
 
     $connection = Database::getConnection();
     // Read the tables and check the correct values have been stored.
-    $rows = $connection->select($this->table, 't')->fields('t')->execute()->fetchAllAssoc('delta', \PDO::FETCH_ASSOC);
-    $this->assertEqual(count($rows), $this->fieldCardinality);
+    $rows = $connection->select($this->table, 't')->fields('t')->execute()->fetchAllAssoc('delta', PDO::FETCH_ASSOC);
+    $this->assertCount($this->fieldCardinality, $rows);
     foreach ($rows as $delta => $row) {
       $expected = [
         'bundle' => $bundle,
@@ -207,7 +210,7 @@ class FieldSqlStorageTest extends EntityKernelTestBase {
         'delta' => $delta,
         $this->fieldName . '_value' => $values[$delta]['value'],
       ];
-      $this->assertEqual($row, $expected, "Row $delta was stored as expected.");
+      $this->assertEqual($expected, $row, "Row {$delta} was stored as expected.");
     }
 
     // Test update. Add less values and check that the previous values did not
@@ -216,10 +219,11 @@ class FieldSqlStorageTest extends EntityKernelTestBase {
     for ($delta = 0; $delta <= $this->fieldCardinality - 2; $delta++) {
       $values[$delta]['value'] = mt_rand(1, 127);
     }
+    $values_count = count($values);
     $entity->{$this->fieldName} = $values;
     $entity->save();
-    $rows = $connection->select($this->table, 't')->fields('t')->execute()->fetchAllAssoc('delta', \PDO::FETCH_ASSOC);
-    $this->assertEqual(count($rows), count($values));
+    $rows = $connection->select($this->table, 't')->fields('t')->execute()->fetchAllAssoc('delta', PDO::FETCH_ASSOC);
+    $this->assertCount($values_count, $rows);
     foreach ($rows as $delta => $row) {
       $expected = [
         'bundle' => $bundle,
@@ -230,7 +234,7 @@ class FieldSqlStorageTest extends EntityKernelTestBase {
         'delta' => $delta,
         $this->fieldName . '_value' => $values[$delta]['value'],
       ];
-      $this->assertEqual($row, $expected, "Row $delta was stored as expected.");
+      $this->assertEqual($expected, $row, "Row {$delta} was stored as expected.");
     }
 
     // Create a new revision.
@@ -246,8 +250,8 @@ class FieldSqlStorageTest extends EntityKernelTestBase {
 
     // Check that data for both revisions are in the revision table.
     foreach ($revision_values as $revision_id => $values) {
-      $rows = $connection->select($this->revisionTable, 't')->fields('t')->condition('revision_id', $revision_id)->execute()->fetchAllAssoc('delta', \PDO::FETCH_ASSOC);
-      $this->assertEqual(count($rows), min(count($values), $this->fieldCardinality));
+      $rows = $connection->select($this->revisionTable, 't')->fields('t')->condition('revision_id', $revision_id)->execute()->fetchAllAssoc('delta', PDO::FETCH_ASSOC);
+      $this->assertCount(min(count($values), $this->fieldCardinality), $rows);
       foreach ($rows as $delta => $row) {
         $expected = [
           'bundle' => $bundle,
@@ -258,14 +262,14 @@ class FieldSqlStorageTest extends EntityKernelTestBase {
           'delta' => $delta,
           $this->fieldName . '_value' => $values[$delta]['value'],
         ];
-        $this->assertEqual($row, $expected, "Row $delta was stored as expected.");
+        $this->assertEqual($expected, $row, "Row {$delta} was stored as expected.");
       }
     }
 
     // Test emptying the field.
     $entity->{$this->fieldName} = NULL;
     $entity->save();
-    $rows = $connection->select($this->table, 't')->fields('t')->execute()->fetchAllAssoc('delta', \PDO::FETCH_ASSOC);
+    $rows = $connection->select($this->table, 't')->fields('t')->execute()->fetchAllAssoc('delta', PDO::FETCH_ASSOC);
     $this->assertCount(0, $rows);
   }
 
@@ -306,7 +310,7 @@ class FieldSqlStorageTest extends EntityKernelTestBase {
     // Load the entity back and check the values.
     $entity = $storage->load($entity->id());
     foreach ($field_names as $field_name) {
-      $this->assertEqual($entity->get($field_name)->value, $values[$field_name]);
+      $this->assertEqual($values[$field_name], $entity->get($field_name)->value);
     }
   }
 
@@ -367,7 +371,7 @@ class FieldSqlStorageTest extends EntityKernelTestBase {
       $field_storage->save();
       $this->fail('Update succeeded.');
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       // Expected exception; just continue testing.
     }
 
@@ -378,7 +382,7 @@ class FieldSqlStorageTest extends EntityKernelTestBase {
     ];
     $schema = Database::getConnection()->schema();
     foreach ($tables as $table_name) {
-      $this->assertTrue($schema->tableExists($table_name), t('Table %table exists.', ['%table' => $table_name]));
+      $this->assertTrue($schema->tableExists($table_name), 'Table $table_name exists.');
     }
   }
 
@@ -404,8 +408,8 @@ class FieldSqlStorageTest extends EntityKernelTestBase {
 
     // Verify the indexes we will create do not exist yet.
     foreach ($tables as $table) {
-      $this->assertFalse(Database::getConnection()->schema()->indexExists($table, 'value'), t("No index named value exists in @table", ['@table' => $table]));
-      $this->assertFalse(Database::getConnection()->schema()->indexExists($table, 'value_format'), t("No index named value_format exists in @table", ['@table' => $table]));
+      $this->assertFalse(Database::getConnection()->schema()->indexExists($table, 'value'), 'No index named value exists in $table');
+      $this->assertFalse(Database::getConnection()->schema()->indexExists($table, 'value_format'), 'No index named value_format exists in $table');
     }
 
     // Add data so the table cannot be dropped.
@@ -423,20 +427,20 @@ class FieldSqlStorageTest extends EntityKernelTestBase {
     $field_storage->setIndexes(['value' => [['value', 255]]]);
     $field_storage->save();
     foreach ($tables as $table) {
-      $this->assertTrue(Database::getConnection()->schema()->indexExists($table, "{$field_name}_value"), t("Index on value created in @table", ['@table' => $table]));
+      $this->assertTrue(Database::getConnection()->schema()->indexExists($table, "{$field_name}_value"), "Index on value created in @table", ['@table' => $table]);
     }
 
     // Add a different index, removing the existing custom one.
     $field_storage->setIndexes(['value_format' => [['value', 127], ['format', 127]]]);
     $field_storage->save();
     foreach ($tables as $table) {
-      $this->assertTrue(Database::getConnection()->schema()->indexExists($table, "{$field_name}_value_format"), t("Index on value_format created in @table", ['@table' => $table]));
-      $this->assertFalse(Database::getConnection()->schema()->indexExists($table, "{$field_name}_value"), t("Index on value removed in @table", ['@table' => $table]));
+      $this->assertTrue(Database::getConnection()->schema()->indexExists($table, "{$field_name}_value_format"), "Index on value_format created in @table", ['@table' => $table]);
+      $this->assertFalse(Database::getConnection()->schema()->indexExists($table, "{$field_name}_value"), "Index on value removed in @table", ['@table' => $table]);
     }
 
     // Verify that the tables were not dropped in the process.
     $entity = $this->container->get('entity_type.manager')->getStorage($entity_type)->load(1);
-    $this->assertEqual($entity->$field_name->value, 'field data', t("Index changes performed without dropping the tables"));
+    $this->assertEqual('field data', $entity->{$field_name}->value, t("Index changes performed without dropping the tables"));
   }
 
   /**
@@ -458,8 +462,8 @@ class FieldSqlStorageTest extends EntityKernelTestBase {
     $schema = $field_storage->getSchema();
 
     // Retrieve the field definition and check that the foreign key is in place.
-    $this->assertEqual($schema['foreign keys'][$foreign_key_name]['table'], $foreign_key_name, 'Foreign key table name preserved through CRUD');
-    $this->assertEqual($schema['foreign keys'][$foreign_key_name]['columns'][$foreign_key_name], 'id', 'Foreign key column name preserved through CRUD');
+    $this->assertEqual($foreign_key_name, $schema['foreign keys'][$foreign_key_name]['table'], 'Foreign key table name preserved through CRUD');
+    $this->assertEqual('id', $schema['foreign keys'][$foreign_key_name]['columns'][$foreign_key_name], 'Foreign key column name preserved through CRUD');
 
     // Update the field settings, it should update the foreign key definition too.
     $foreign_key_name = 'color';
@@ -469,8 +473,8 @@ class FieldSqlStorageTest extends EntityKernelTestBase {
     $schema = $field_storage->getSchema();
 
     // Check that the foreign key is in place.
-    $this->assertEqual($schema['foreign keys'][$foreign_key_name]['table'], $foreign_key_name, 'Foreign key table name modified after update');
-    $this->assertEqual($schema['foreign keys'][$foreign_key_name]['columns'][$foreign_key_name], 'id', 'Foreign key column name modified after update');
+    $this->assertEqual($foreign_key_name, $schema['foreign keys'][$foreign_key_name]['table'], 'Foreign key table name modified after update');
+    $this->assertEqual('id', $schema['foreign keys'][$foreign_key_name]['columns'][$foreign_key_name], 'Foreign key column name modified after update');
   }
 
   /**
@@ -490,9 +494,9 @@ class FieldSqlStorageTest extends EntityKernelTestBase {
       'type' => 'test_field',
     ]);
     $expected = 'short_entity_type__short_field_name';
-    $this->assertEqual($this->tableMapping->getDedicatedDataTableName($field_storage), $expected);
+    $this->assertEqual($expected, $this->tableMapping->getDedicatedDataTableName($field_storage));
     $expected = 'short_entity_type_revision__short_field_name';
-    $this->assertEqual($this->tableMapping->getDedicatedRevisionTableName($field_storage), $expected);
+    $this->assertEqual($expected, $this->tableMapping->getDedicatedRevisionTableName($field_storage));
 
     // Short entity type, long field name
     $entity_type = 'short_entity_type';
@@ -503,9 +507,9 @@ class FieldSqlStorageTest extends EntityKernelTestBase {
       'type' => 'test_field',
     ]);
     $expected = 'short_entity_type__' . substr(hash('sha256', $field_storage->uuid()), 0, 10);
-    $this->assertEqual($this->tableMapping->getDedicatedDataTableName($field_storage), $expected);
+    $this->assertEqual($expected, $this->tableMapping->getDedicatedDataTableName($field_storage));
     $expected = 'short_entity_type_r__' . substr(hash('sha256', $field_storage->uuid()), 0, 10);
-    $this->assertEqual($this->tableMapping->getDedicatedRevisionTableName($field_storage), $expected);
+    $this->assertEqual($expected, $this->tableMapping->getDedicatedRevisionTableName($field_storage));
 
     // Long entity type, short field name
     $entity_type = 'long_entity_type_abcdefghijklmnopqrstuvwxyz';
@@ -516,9 +520,9 @@ class FieldSqlStorageTest extends EntityKernelTestBase {
       'type' => 'test_field',
     ]);
     $expected = 'long_entity_type_abcdefghijklmno__' . substr(hash('sha256', $field_storage->uuid()), 0, 10);
-    $this->assertEqual($this->tableMapping->getDedicatedDataTableName($field_storage), $expected);
+    $this->assertEqual($expected, $this->tableMapping->getDedicatedDataTableName($field_storage));
     $expected = 'long_entity_type_abcdefghijklmno_r__' . substr(hash('sha256', $field_storage->uuid()), 0, 10);
-    $this->assertEqual($this->tableMapping->getDedicatedRevisionTableName($field_storage), $expected);
+    $this->assertEqual($expected, $this->tableMapping->getDedicatedRevisionTableName($field_storage));
 
     // Long entity type and field name.
     $entity_type = 'long_entity_type_abcdefghijklmnopqrstuvwxyz';
@@ -529,17 +533,17 @@ class FieldSqlStorageTest extends EntityKernelTestBase {
       'type' => 'test_field',
     ]);
     $expected = 'long_entity_type_abcdefghijklmno__' . substr(hash('sha256', $field_storage->uuid()), 0, 10);
-    $this->assertEqual($this->tableMapping->getDedicatedDataTableName($field_storage), $expected);
+    $this->assertEqual($expected, $this->tableMapping->getDedicatedDataTableName($field_storage));
     $expected = 'long_entity_type_abcdefghijklmno_r__' . substr(hash('sha256', $field_storage->uuid()), 0, 10);
-    $this->assertEqual($this->tableMapping->getDedicatedRevisionTableName($field_storage), $expected);
+    $this->assertEqual($expected, $this->tableMapping->getDedicatedRevisionTableName($field_storage));
     // Try creating a second field and check there are no clashes.
     $field_storage2 = FieldStorageConfig::create([
       'entity_type' => $entity_type,
       'field_name' => $field_name . '2',
       'type' => 'test_field',
     ]);
-    $this->assertNotEqual($this->tableMapping->getDedicatedDataTableName($field_storage), $this->tableMapping->getDedicatedDataTableName($field_storage2));
-    $this->assertNotEqual($this->tableMapping->getDedicatedRevisionTableName($field_storage), $this->tableMapping->getDedicatedRevisionTableName($field_storage2));
+    $this->assertNotEquals($this->tableMapping->getDedicatedDataTableName($field_storage), $this->tableMapping->getDedicatedDataTableName($field_storage2));
+    $this->assertNotEquals($this->tableMapping->getDedicatedRevisionTableName($field_storage), $this->tableMapping->getDedicatedRevisionTableName($field_storage2));
 
     // Deleted field.
     $field_storage = FieldStorageConfig::create([
@@ -549,9 +553,9 @@ class FieldSqlStorageTest extends EntityKernelTestBase {
       'deleted' => TRUE,
     ]);
     $expected = 'field_deleted_data_' . substr(hash('sha256', $field_storage->uuid()), 0, 10);
-    $this->assertEqual($this->tableMapping->getDedicatedDataTableName($field_storage, TRUE), $expected);
+    $this->assertEqual($expected, $this->tableMapping->getDedicatedDataTableName($field_storage, TRUE));
     $expected = 'field_deleted_revision_' . substr(hash('sha256', $field_storage->uuid()), 0, 10);
-    $this->assertEqual($this->tableMapping->getDedicatedRevisionTableName($field_storage, TRUE), $expected);
+    $this->assertEqual($expected, $this->tableMapping->getDedicatedRevisionTableName($field_storage, TRUE));
 
     // Check that the table mapping is kept up-to-date in a request where a new
     // field storage definition is added. Since the cardinality of the field is
@@ -564,7 +568,7 @@ class FieldSqlStorageTest extends EntityKernelTestBase {
       'cardinality' => 2,
     ]);
     $field_storage->save();
-    $table_mapping = \Drupal::entityTypeManager()->getStorage('entity_test_rev')->getTableMapping();
+    $table_mapping = Drupal::entityTypeManager()->getStorage('entity_test_rev')->getTableMapping();
     $this->assertEquals($table_mapping->getDedicatedDataTableName($field_storage), $table_mapping->getFieldTableName('some_field_name'));
   }
 

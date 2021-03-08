@@ -2,10 +2,12 @@
 
 namespace Drupal\content_moderation\Plugin\Field;
 
+use Drupal;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityPublishedInterface;
 use Drupal\Core\Field\FieldItemList;
 use Drupal\Core\TypedData\ComputedItemListTrait;
+use InvalidArgumentException;
 
 /**
  * A computed field that provides a content entity's moderation state.
@@ -43,7 +45,7 @@ class ModerationStateFieldItemList extends FieldItemList {
     $entity = $this->getEntity();
 
     /** @var \Drupal\content_moderation\ModerationInformationInterface $moderation_info */
-    $moderation_info = \Drupal::service('content_moderation.moderation_information');
+    $moderation_info = Drupal::service('content_moderation.moderation_information');
     if (!$moderation_info->shouldModerateEntitiesOfBundle($entity->getEntityType(), $entity->bundle())) {
       return NULL;
     }
@@ -71,8 +73,8 @@ class ModerationStateFieldItemList extends FieldItemList {
    *   The content_moderation_state revision or FALSE if none exists.
    */
   protected function loadContentModerationStateRevision(ContentEntityInterface $entity) {
-    $moderation_info = \Drupal::service('content_moderation.moderation_information');
-    $content_moderation_storage = \Drupal::entityTypeManager()->getStorage('content_moderation_state');
+    $moderation_info = Drupal::service('content_moderation.moderation_information');
+    $content_moderation_storage = Drupal::entityTypeManager()->getStorage('content_moderation_state');
 
     $revisions = $content_moderation_storage->getQuery()
       ->condition('content_entity_type_id', $entity->getEntityTypeId())
@@ -108,7 +110,7 @@ class ModerationStateFieldItemList extends FieldItemList {
    */
   public function get($index) {
     if ($index !== 0) {
-      throw new \InvalidArgumentException('An entity can not have multiple moderation states at the same time.');
+      throw new InvalidArgumentException('An entity can not have multiple moderation states at the same time.');
     }
     return $this->traitGet($index);
   }
@@ -147,7 +149,7 @@ class ModerationStateFieldItemList extends FieldItemList {
     $entity = $this->getEntity();
 
     /** @var \Drupal\content_moderation\ModerationInformationInterface $content_moderation_info */
-    $content_moderation_info = \Drupal::service('content_moderation.moderation_information');
+    $content_moderation_info = Drupal::service('content_moderation.moderation_information');
     $workflow = $content_moderation_info->getWorkflowForEntity($entity);
 
     // Change the entity's default revision flag and the publishing status only
@@ -172,6 +174,14 @@ class ModerationStateFieldItemList extends FieldItemList {
         $published_state ? $entity->setPublished() : $entity->setUnpublished();
       }
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function generateSampleItems($count = 1) {
+    // No sample items generated since the starting moderation state is always
+    // computed based on the default state of the associated workflow.
   }
 
 }

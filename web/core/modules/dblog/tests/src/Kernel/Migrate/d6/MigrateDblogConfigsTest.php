@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\dblog\Kernel\Migrate\d6;
 
+use Drupal;
 use Drupal\Tests\SchemaCheckTestTrait;
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
 
@@ -32,8 +33,8 @@ class MigrateDblogConfigsTest extends MigrateDrupal6TestBase {
    */
   public function testBookSettings() {
     $config = $this->config('dblog.settings');
-    $this->assertIdentical(10000, $config->get('row_limit'));
-    $this->assertConfigSchema(\Drupal::service('config.typed'), 'dblog.settings', $config->get());
+    $this->assertSame(10000, $config->get('row_limit'));
+    $this->assertConfigSchema(Drupal::service('config.typed'), 'dblog.settings', $config->get());
   }
 
 }

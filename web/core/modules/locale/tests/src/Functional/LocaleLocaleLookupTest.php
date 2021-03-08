@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\locale\Functional;
 
+use Drupal;
 use Drupal\Component\Gettext\PoItem;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Tests\BrowserTestBase;
@@ -43,7 +44,7 @@ class LocaleLocaleLookupTest extends BrowserTestBase {
    */
   public function testCircularDependency() {
     // Ensure that we can enable early_translation_test on a non-english site.
-    $this->drupalPostForm('admin/modules', ['modules[early_translation_test][enable]' => TRUE], t('Install'));
+    $this->drupalPostForm('admin/modules', ['modules[early_translation_test][enable]' => TRUE], 'Install');
     $this->assertSession()->statusCodeEquals(200);
   }
 
@@ -54,11 +55,11 @@ class LocaleLocaleLookupTest extends BrowserTestBase {
     $this->drupalGet('');
     // Ensure state of fallback languages persisted by
     // locale_test_language_fallback_candidates_locale_lookup_alter() is empty.
-    $this->assertEqual(\Drupal::state()->get('locale.test_language_fallback_candidates_locale_lookup_alter_candidates'), []);
+    $this->assertEqual([], Drupal::state()->get('locale.test_language_fallback_candidates_locale_lookup_alter_candidates'));
     // Make sure there is enough information provided for alter hooks.
-    $context = \Drupal::state()->get('locale.test_language_fallback_candidates_locale_lookup_alter_context');
-    $this->assertEqual($context['langcode'], 'fr');
-    $this->assertEqual($context['operation'], 'locale_lookup');
+    $context = Drupal::state()->get('locale.test_language_fallback_candidates_locale_lookup_alter_context');
+    $this->assertEqual('fr', $context['langcode']);
+    $this->assertEqual('locale_lookup', $context['operation']);
   }
 
   /**
@@ -67,7 +68,7 @@ class LocaleLocaleLookupTest extends BrowserTestBase {
    * @dataProvider providerTestFixOldPluralStyle
    */
   public function testFixOldPluralStyle($translation_value, $expected) {
-    $string_storage = \Drupal::service('locale.storage');
+    $string_storage = Drupal::service('locale.storage');
     $string = $string_storage->findString(['source' => 'Member for', 'context' => '']);
     $lid = $string->getId();
     $string_storage->createTranslation([

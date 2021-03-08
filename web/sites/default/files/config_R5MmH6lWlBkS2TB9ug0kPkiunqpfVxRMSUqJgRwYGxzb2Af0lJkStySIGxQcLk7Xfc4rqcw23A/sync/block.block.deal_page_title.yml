@@ -1,0 +1,20 @@
+uuid: 2064f85e-b29a-4db6-a3d0-790b8ca1bd6b
+langcode: ru
+status: true
+dependencies:
+  theme:
+    - deal
+_core:
+  default_config_hash: 1TQP4b3ZnlzvIH9bj6cpCz_SyUHdJjLQkZnHpikjjhw
+id: deal_page_title
+theme: deal
+region: content
+weight: -5
+provider: null
+plugin: page_title_block
+settings:
+  id: page_title_block
+  label: 'Page title'
+  provider: core
+  label_display: '0'
+visibility: {  }

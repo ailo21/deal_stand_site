@@ -7,11 +7,14 @@
 
 namespace Drupal\Tests\Core\Render;
 
+use Drupal;
 use Drupal\Core\Cache\MemoryBackend;
 use Drupal\Core\KeyValueStore\KeyValueMemoryFactory;
 use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\Core\State\State;
 use Drupal\Core\Cache\Cache;
+use Exception;
+use LogicException;
 
 /**
  * @coversDefaultClass \Drupal\Core\Render\Renderer
@@ -69,7 +72,8 @@ class RendererBubblingTest extends RendererTestBase {
     // Load the element from cache and verify the presence of the #attached
     // JavaScript.
     $element = ['#cache' => ['keys' => ['simpletest', 'renderer', 'children_attached']]];
-    $this->assertTrue(strlen($this->renderer->renderRoot($element)) > 0, 'The element was retrieved from cache.');
+    // Verify that the element was retrieved from the cache.
+    $this->assertNotEmpty($this->renderer->renderRoot($element));
     $this->assertEquals($element['#attached']['library'], $expected_libraries, 'The element, child and subchild #attached libraries are included.');
   }
 
@@ -91,7 +95,7 @@ class RendererBubblingTest extends RendererTestBase {
           return $custom_cache;
         }
         else {
-          throw new \Exception();
+          throw new Exception();
         }
       });
     $this->cacheContextsManager->expects($this->any())
@@ -540,7 +544,7 @@ class RendererBubblingTest extends RendererTestBase {
 
     // Mock the State service.
     $memory_state = new State(new KeyValueMemoryFactory());
-    \Drupal::getContainer()->set('state', $memory_state);
+    Drupal::getContainer()->set('state', $memory_state);
     $this->controllerResolver->expects($this->any())
       ->method('getControllerFromDefinition')
       ->willReturnArgument(0);
@@ -557,8 +561,8 @@ class RendererBubblingTest extends RendererTestBase {
     // array that is cacheable and …
     // - … is cached does NOT get called. (Also mock a render cache item.)
     // - … is not cached DOES get called.
-    \Drupal::state()->set('bubbling_nested_pre_render_cached', FALSE);
-    \Drupal::state()->set('bubbling_nested_pre_render_uncached', FALSE);
+    Drupal::state()->set('bubbling_nested_pre_render_cached', FALSE);
+    Drupal::state()->set('bubbling_nested_pre_render_uncached', FALSE);
     $this->memoryCache->set('cached_nested', ['#markup' => 'Cached nested!', '#attached' => [], '#cache' => ['contexts' => [], 'tags' => []]]);
 
     // Simulate the rendering of an entire response (i.e. a root call).
@@ -577,8 +581,8 @@ class RendererBubblingTest extends RendererTestBase {
     // Second, assert that #pre_render callbacks are only executed if they don't
     // have a render cache hit (and hence a #pre_render callback for a render
     // cached item cannot bubble more metadata).
-    $this->assertTrue(\Drupal::state()->get('bubbling_nested_pre_render_uncached'));
-    $this->assertFalse(\Drupal::state()->get('bubbling_nested_pre_render_cached'));
+    $this->assertTrue(Drupal::state()->get('bubbling_nested_pre_render_uncached'));
+    $this->assertFalse(Drupal::state()->get('bubbling_nested_pre_render_cached'));
   }
 
   /**
@@ -625,7 +629,7 @@ class RendererBubblingTest extends RendererTestBase {
        ],
       '#pre_render' => [__NAMESPACE__ . '\\BubblingTest::bubblingCacheOverwritePrerender'],
     ];
-    $this->expectException(\LogicException::class);
+    $this->expectException(LogicException::class);
     $this->expectExceptionMessage('Cache keys may not be changed after initial setup. Use the contexts property instead to bubble additional metadata.');
     $this->renderer->renderRoot($data);
   }
@@ -678,7 +682,7 @@ class BubblingTest implements TrustedCallbackInterface {
    * #pre_render callback for testBubblingWithPrerender().
    */
   public static function bubblingNestedPreRenderUncached($elements) {
-    \Drupal::state()->set('bubbling_nested_pre_render_uncached', TRUE);
+    Drupal::state()->set('bubbling_nested_pre_render_uncached', TRUE);
     $elements['#markup'] = 'Nested!';
     return $elements;
   }
@@ -687,7 +691,7 @@ class BubblingTest implements TrustedCallbackInterface {
    * #pre_render callback for testBubblingWithPrerender().
    */
   public static function bubblingNestedPreRenderCached($elements) {
-    \Drupal::state()->set('bubbling_nested_pre_render_cached', TRUE);
+    Drupal::state()->set('bubbling_nested_pre_render_cached', TRUE);
     return $elements;
   }
 

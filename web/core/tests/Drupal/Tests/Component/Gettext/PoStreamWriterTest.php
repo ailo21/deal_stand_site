@@ -4,6 +4,8 @@ namespace Drupal\Tests\Component\Gettext;
 
 use Drupal\Component\Gettext\PoItem;
 use Drupal\Component\Gettext\PoStreamWriter;
+use Drupal\Tests\PhpUnitCompatibilityTrait;
+use Exception;
 use org\bovigo\vfs\vfsStream;
 use org\bovigo\vfs\vfsStreamFile;
 use PHPUnit\Framework\TestCase;
@@ -13,6 +15,8 @@ use PHPUnit\Framework\TestCase;
  * @group Gettext
  */
 class PoStreamWriterTest extends TestCase {
+
+  use PhpUnitCompatibilityTrait;
 
   /**
    * The PO writer object under test.
@@ -45,7 +49,7 @@ class PoStreamWriterTest extends TestCase {
    * @covers ::getURI
    */
   public function testGetUriException() {
-    $this->expectException(\Exception::class, 'No URI set.');
+    $this->expectException(Exception::class, 'No URI set.');
 
     $this->poWriter->getURI();
   }
@@ -56,7 +60,7 @@ class PoStreamWriterTest extends TestCase {
    */
   public function testWriteItem($poContent, $expected, $long) {
     if ($long) {
-      $this->expectException(\Exception::class, 'Unable to write data:');
+      $this->expectException(Exception::class, 'Unable to write data:');
     }
 
     // Limit the file system quota to make the write fail on long strings.
@@ -80,6 +84,7 @@ class PoStreamWriterTest extends TestCase {
    *   - Content longer than 10 bytes.
    */
   public function providerWriteData() {
+    // cSpell:disable
     return [
       ['', '', FALSE],
       ["\r\n", "\r\n", FALSE],
@@ -89,13 +94,14 @@ class PoStreamWriterTest extends TestCase {
       ['中文 890', '中文 890', FALSE],
       ['中文 89012', '中文 890', TRUE],
     ];
+    // cSpell:enable
   }
 
   /**
    * @covers ::close
    */
   public function testCloseException() {
-    $this->expectException(\Exception::class, 'Cannot close stream that is not open.');
+    $this->expectException(Exception::class, 'Cannot close stream that is not open.');
 
     $this->poWriter->close();
   }

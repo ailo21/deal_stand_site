@@ -1,0 +1,33 @@
+uuid: ab27f6a9-2cb7-4ee4-8d1b-a68a76446226
+langcode: ru
+status: true
+dependencies:
+  module:
+    - social_auth
+    - system
+    - user
+  theme:
+    - deal
+id: socialauthlogin_3
+theme: deal
+region: content
+weight: 0
+provider: null
+plugin: social_auth_login
+settings:
+  id: social_auth_login
+  label: 'Social Auth Login'
+  provider: social_auth
+  label_display: '0'
+visibility:
+  request_path:
+    id: request_path
+    pages: "/user/login\r\n/user/register"
+    negate: false
+  user_role:
+    id: user_role
+    roles:
+      anonymous: anonymous
+    negate: false
+    context_mapping:
+      user: '@user.current_user_context:current_user'

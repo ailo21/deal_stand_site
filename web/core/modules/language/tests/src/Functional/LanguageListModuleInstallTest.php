@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\language\Functional;
 
+use Drupal;
 use Drupal\Tests\BrowserTestBase;
 
 /**
@@ -37,13 +38,13 @@ class LanguageListModuleInstallTest extends BrowserTestBase {
     $this->drupalLogin($admin_user);
     $edit = [];
     $edit['modules[language][enable]'] = 'language';
-    $this->drupalPostForm('admin/modules', $edit, t('Install'));
+    $this->drupalPostForm('admin/modules', $edit, 'Install');
 
-    $this->assertEqual(\Drupal::state()->get('language_test.language_count_preinstall', 0), 1, 'Using LanguageManager::getLanguages() returns 1 language during Language installation.');
+    $this->assertEqual(1, Drupal::state()->get('language_test.language_count_preinstall', 0), 'Using LanguageManager::getLanguages() returns 1 language during Language installation.');
 
     // Get updated module list by rebuilding container.
     $this->rebuildContainer();
-    $this->assertTrue(\Drupal::moduleHandler()->moduleExists('language'), 'Language module is enabled');
+    $this->assertTrue(Drupal::moduleHandler()->moduleExists('language'), 'Language module is enabled');
   }
 
 }

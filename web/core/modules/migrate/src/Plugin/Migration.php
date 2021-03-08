@@ -2,6 +2,7 @@
 
 namespace Drupal\migrate\Plugin;
 
+use Drupal;
 use Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
@@ -345,9 +346,6 @@ class Migration extends PluginBase implements MigrationInterface, RequirementsIn
       $this->processPlugins[$index] = [];
       foreach ($this->getProcessNormalized($process) as $property => $configurations) {
         $this->processPlugins[$index][$property] = [];
-        if (!is_array($configurations) && !$this->processPlugins[$index][$property]) {
-          throw new MigrateException(sprintf("Process configuration for '$property' must be an array", $property));
-        }
         foreach ($configurations as $configuration) {
           if (isset($configuration['source'])) {
             $this->processPlugins[$index][$property][] = $this->processPluginManager->createInstance('get', $configuration, $this);
@@ -421,6 +419,13 @@ class Migration extends PluginBase implements MigrationInterface, RequirementsIn
   }
 
   /**
+   * {@inheritDoc}
+   */
+  public function getRequirements(): array {
+    return $this->requirements;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function checkRequirements() {
@@ -455,8 +460,8 @@ class Migration extends PluginBase implements MigrationInterface, RequirementsIn
   /**
    * Gets the migration plugin manager.
    *
-   * @return \Drupal\migrate\Plugin\MigratePluginManager
-   *   The plugin manager.
+   * @return \Drupal\migrate\Plugin\MigrationPluginManagerInterface
+   *   The migration plugin manager.
    */
   protected function getMigrationPluginManager() {
     return $this->migrationPluginManager;
@@ -466,14 +471,14 @@ class Migration extends PluginBase implements MigrationInterface, RequirementsIn
    * {@inheritdoc}
    */
   public function setStatus($status) {
-    \Drupal::keyValue('migrate_status')->set($this->id(), $status);
+    Drupal::keyValue('migrate_status')->set($this->id(), $status);
   }
 
   /**
    * {@inheritdoc}
    */
   public function getStatus() {
-    return \Drupal::keyValue('migrate_status')->get($this->id(), static::STATUS_IDLE);
+    return Drupal::keyValue('migrate_status')->get($this->id(), static::STATUS_IDLE);
   }
 
   /**
@@ -493,14 +498,14 @@ class Migration extends PluginBase implements MigrationInterface, RequirementsIn
    * {@inheritdoc}
    */
   public function getInterruptionResult() {
-    return \Drupal::keyValue('migrate_interruption_result')->get($this->id(), static::RESULT_INCOMPLETE);
+    return Drupal::keyValue('migrate_interruption_result')->get($this->id(), static::RESULT_INCOMPLETE);
   }
 
   /**
    * {@inheritdoc}
    */
   public function clearInterruptionResult() {
-    \Drupal::keyValue('migrate_interruption_result')->delete($this->id());
+    Drupal::keyValue('migrate_interruption_result')->delete($this->id());
   }
 
   /**
@@ -508,7 +513,7 @@ class Migration extends PluginBase implements MigrationInterface, RequirementsIn
    */
   public function interruptMigration($result) {
     $this->setStatus(MigrationInterface::STATUS_STOPPING);
-    \Drupal::keyValue('migrate_interruption_result')->set($this->id(), $result);
+    Drupal::keyValue('migrate_interruption_result')->set($this->id(), $result);
   }
 
   /**

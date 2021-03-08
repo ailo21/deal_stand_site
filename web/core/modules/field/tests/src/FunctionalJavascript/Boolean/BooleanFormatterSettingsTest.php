@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\field\FunctionalJavascript\Boolean;
 
+use Drupal;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
@@ -76,7 +77,7 @@ class BooleanFormatterSettingsTest extends WebDriverTestBase {
     ]);
     $instance->save();
 
-    $display = \Drupal::service('entity_display.repository')->getViewDisplay('node', $this->bundle)
+    $display = Drupal::service('entity_display.repository')->getViewDisplay('node', $this->bundle)
       ->setComponent($this->fieldName, [
         'type' => 'boolean',
         'settings' => [],
@@ -90,7 +91,7 @@ class BooleanFormatterSettingsTest extends WebDriverTestBase {
   public function testBooleanFormatterSettings() {
     // List the options we expect to see on the settings form. Omit the one
     // with the Unicode check/x characters, which does not appear to work
-    // well in WebTestBase.
+    // well in BrowserTestBase.
     $options = [
       'Yes / No',
       'True / False',
@@ -112,10 +113,10 @@ class BooleanFormatterSettingsTest extends WebDriverTestBase {
     foreach ($settings as $values) {
       // Set up the field settings.
       $this->drupalGet('admin/structure/types/manage/' . $this->bundle . '/fields/node.' . $this->bundle . '.' . $this->fieldName);
-      $this->drupalPostForm(NULL, [
+      $this->submitForm([
         'settings[on_label]' => $values[0],
         'settings[off_label]' => $values[1],
-      ], t('Save settings'));
+      ], 'Save settings');
 
       // Open the Manage Display page and trigger the field settings form.
       $this->drupalGet('admin/structure/types/manage/' . $this->bundle . '/display');

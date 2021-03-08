@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\rest\Kernel\Views;
 
+use Drupal;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\views\Entity\View;
 use Drupal\views\Tests\ViewTestData;
@@ -28,7 +29,7 @@ class StyleSerializerKernelTest extends ViewsKernelTestBase {
   protected function setUp($import_test_views = TRUE): void {
     parent::setUp($import_test_views);
 
-    ViewTestData::createTestViews(get_class($this), ['rest_test_views']);
+    ViewTestData::createTestViews(static::class, ['rest_test_views']);
   }
 
   /**
@@ -47,7 +48,7 @@ class StyleSerializerKernelTest extends ViewsKernelTestBase {
     $view->calculateDependencies();
     $this->assertEquals(['module' => ['rest', 'serialization', 'user']], $view->getDependencies());
 
-    \Drupal::service('module_installer')->install(['hal']);
+    Drupal::service('module_installer')->install(['hal']);
 
     $view = View::load('test_serializer_display_entity');
     $display = &$view->getDisplay('rest_export_1');

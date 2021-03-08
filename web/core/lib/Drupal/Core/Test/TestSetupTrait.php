@@ -3,6 +3,7 @@
 namespace Drupal\Core\Test;
 
 use Drupal\Core\Database\Database;
+use InvalidArgumentException;
 
 /**
  * Provides a trait for shared test setup functionality.
@@ -123,15 +124,14 @@ trait TestSetupTrait {
    * order to access and read the error log.
    *
    * The generated database table prefix is used for the Drupal installation
-   * being performed for the test. It is also used as user agent HTTP header
-   * value by the cURL-based browser of WebTestBase, which is sent to the Drupal
-   * installation of the test. During early Drupal bootstrap, the user agent
-   * HTTP header is parsed, and if it matches, all database queries use the
-   * database table prefix that has been generated here.
+   * being performed for the test. It is also used as user agent HTTP header it
+   * is also used in the user agent HTTP header value by BrowserTestBase, which
+   * is sent to the Drupal installation of the test. During early Drupal all
+   * bootstrap, the user agent HTTP header is parsed, and if it matches,
+   * database queries use the database table prefix that has been generated
+   * here.
    *
    * @see \Drupal\Tests\BrowserTestBase::prepareEnvironment()
-   * @see \Drupal\simpletest\WebTestBase::curlInitialize()
-   * @see \Drupal\simpletest\TestBase::prepareEnvironment()
    * @see drupal_valid_test_ua()
    */
   protected function prepareDatabasePrefix() {
@@ -161,7 +161,7 @@ trait TestSetupTrait {
     // Clone the current connection and replace the current prefix.
     $connection_info = Database::getConnectionInfo('default');
     if (is_null($connection_info)) {
-      throw new \InvalidArgumentException('There is no database connection so no tests can be run. You must provide a SIMPLETEST_DB environment variable to run PHPUnit based functional tests outside of run-tests.sh.');
+      throw new InvalidArgumentException('There is no database connection so no tests can be run. You must provide a SIMPLETEST_DB environment variable to run PHPUnit based functional tests outside of run-tests.sh.');
     }
     else {
       Database::renameConnection('default', 'simpletest_original_default');
@@ -183,7 +183,7 @@ trait TestSetupTrait {
    *   An array of config object names that are excluded from schema checking.
    */
   protected function getConfigSchemaExclusions() {
-    $class = get_class($this);
+    $class = static::class;
     $exceptions = [];
     while ($class) {
       if (property_exists($class, 'configSchemaCheckerExclusions')) {

@@ -2,6 +2,7 @@
 
 namespace Drupal\path\Plugin\Field\FieldWidget;
 
+use Drupal;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -27,7 +28,7 @@ class PathWidget extends WidgetBase {
     $entity = $items->getEntity();
 
     $element += [
-      '#element_validate' => [[get_class($this), 'validateFormElement']],
+      '#element_validate' => [[static::class, 'validateFormElement']],
     ];
     $element['alias'] = [
       '#type' => 'textfield',
@@ -84,11 +85,11 @@ class PathWidget extends WidgetBase {
   public static function validateFormElement(array &$element, FormStateInterface $form_state) {
     // Trim the submitted value of whitespace and slashes.
     $alias = rtrim(trim($element['alias']['#value']), " \\/");
-    if (!empty($alias)) {
+    if ($alias !== '') {
       $form_state->setValueForElement($element['alias'], $alias);
 
       /** @var \Drupal\path_alias\PathAliasInterface $path_alias */
-      $path_alias = \Drupal::entityTypeManager()->getStorage('path_alias')->create([
+      $path_alias = Drupal::entityTypeManager()->getStorage('path_alias')->create([
         'path' => $element['source']['#value'],
         'alias' => $alias,
         'langcode' => $element['langcode']['#value'],

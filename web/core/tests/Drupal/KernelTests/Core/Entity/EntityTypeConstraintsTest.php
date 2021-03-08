@@ -2,6 +2,8 @@
 
 namespace Drupal\KernelTests\Core\Entity;
 
+use Drupal;
+
 /**
  * Tests entity level validation constraints.
  *
@@ -49,7 +51,7 @@ class EntityTypeConstraintsTest extends EntityKernelTestBase {
     $this->state->set('entity_test_constraints.alter', $altered_constraints);
     // Clear the cache in state instance in the Drupal container, so it can pick
     // up the modified value.
-    \Drupal::state()->resetCache();
+    Drupal::state()->resetCache();
     $this->entityTypeManager->clearCachedDefinitions();
     $entity_type = $this->entityTypeManager->getDefinition('entity_test_constraints');
     $this->assertEqual($altered_constraints, $entity_type->getConstraints());
@@ -62,12 +64,12 @@ class EntityTypeConstraintsTest extends EntityKernelTestBase {
     $entity = $this->entityTypeManager->getStorage('entity_test_constraints')->create();
     $entity->user_id->target_id = 0;
     $violations = $entity->validate();
-    $this->assertEqual($violations->count(), 0, 'Validation passed.');
+    $this->assertEqual(0, $violations->count(), 'Validation passed.');
     $entity->save();
     $entity->changed->value = REQUEST_TIME - 86400;
     $violations = $entity->validate();
-    $this->assertEqual($violations->count(), 1, 'Validation failed.');
-    $this->assertEqual($violations[0]->getMessage(), t('The content has either been modified by another user, or you have already submitted modifications. As a result, your changes cannot be saved.'));
+    $this->assertEqual(1, $violations->count(), 'Validation failed.');
+    $this->assertEqual(t('The content has either been modified by another user, or you have already submitted modifications. As a result, your changes cannot be saved.'), $violations[0]->getMessage());
   }
 
 }

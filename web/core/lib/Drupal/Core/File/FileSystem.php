@@ -16,6 +16,7 @@ use Drupal\Core\StreamWrapper\PublicStream;
 use Drupal\Core\StreamWrapper\StreamWrapperManager;
 use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
 use Psr\Log\LoggerInterface;
+use stdClass;
 
 /**
  * Provides helpers to operate on files and stream wrappers.
@@ -466,10 +467,11 @@ class FileSystem implements FileSystemInterface {
       // Perhaps $destination is a dir/file?
       $dirname = $this->dirname($destination);
       if (!$this->prepareDirectory($dirname)) {
-        $this->logger->error("The specified file '%original_source' could not be copied because the destination directory is not properly configured. This may be caused by a problem with file or directory permissions.", [
+        $this->logger->error("The specified file '%original_source' could not be copied because the destination directory '%destination_directory' is not properly configured. This may be caused by a problem with file or directory permissions.", [
           '%original_source' => $original_source,
+          '%destination_directory' => $dirname,
         ]);
-        throw new DirectoryNotReadyException("The specified file '$original_source' could not be copied because the destination directory is not properly configured. This may be caused by a problem with file or directory permissions.");
+        throw new DirectoryNotReadyException("The specified file '$original_source' could not be copied because the destination directory '$dirname' is not properly configured. This may be caused by a problem with file or directory permissions.");
       }
     }
 
@@ -519,12 +521,22 @@ class FileSystem implements FileSystemInterface {
     }
 
     if (!is_dir($directory)) {
+      if (!($options & static::CREATE_DIRECTORY)) {
+        return FALSE;
+      }
+
       // Let mkdir() recursively create directories and use the default
       // directory permissions.
-      if ($options & static::CREATE_DIRECTORY) {
-        return @$this->mkdir($directory, NULL, TRUE);
+      $success = @$this->mkdir($directory, NULL, TRUE);
+      if ($success) {
+        return TRUE;
       }
-      return FALSE;
+      // If the operation failed, check again if the directory was created
+      // by another process/server, only report a failure if not. In this case
+      // we still need to ensure the directory is writable.
+      if (!is_dir($directory)) {
+        return FALSE;
+      }
     }
 
     $writable = is_writable($directory);
@@ -707,7 +719,7 @@ class FileSystem implements FileSystemInterface {
           elseif ($depth >= $options['min_depth'] && preg_match($mask, $filename)) {
             // Always use this match over anything already set in $files with
             // the same $options['key'].
-            $file = new \stdClass();
+            $file = new stdClass();
             $file->uri = $uri;
             $file->filename = $filename;
             $file->name = pathinfo($filename, PATHINFO_FILENAME);

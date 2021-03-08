@@ -38,9 +38,23 @@ function views_removed_post_updates() {
  */
 function views_post_update_field_names_for_multivalue_fields(&$sandbox = NULL) {
   /** @var \Drupal\views\ViewsConfigUpdater $view_config_updater */
-  $view_config_updater = \Drupal::classResolver(ViewsConfigUpdater::class);
+  $view_config_updater = Drupal::classResolver(ViewsConfigUpdater::class);
   $view_config_updater->setDeprecationsEnabled(FALSE);
-  \Drupal::classResolver(ConfigEntityUpdater::class)->update($sandbox, 'view', function ($view) use ($view_config_updater) {
+  Drupal::classResolver(ConfigEntityUpdater::class)->update($sandbox, 'view', function ($view) use ($view_config_updater) {
     return $view_config_updater->needsMultivalueBaseFieldUpdate($view);
   });
+}
+
+/**
+ * Clear errors caused by relationships to configuration entities.
+ */
+function views_post_update_configuration_entity_relationships() {
+  // Empty update to clear Views data.
+}
+
+/**
+ * Clear caches due to removal of sorting for global custom text field.
+ */
+function views_post_update_remove_sorting_global_text_field() {
+  // Empty post-update hook.
 }

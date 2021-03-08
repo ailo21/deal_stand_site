@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\node\Functional\Views;
 
+use Drupal;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Language\LanguageInterface;
@@ -77,13 +78,13 @@ class FrontPageTest extends ViewTestBase {
         'user',
       ],
     ];
-    $this->assertIdentical($expected, $view->getDependencies());
+    $this->assertSame($expected, $view->getDependencies());
 
     $view->setDisplay('page_1');
     $this->executeView($view);
     $view->preview();
 
-    $this->assertEqual($view->getTitle(), new FormattableMarkup('Welcome to @site_name', ['@site_name' => $site_name]), 'The welcome title is used for the empty view.');
+    $this->assertEqual(new FormattableMarkup('Welcome to @site_name', ['@site_name' => $site_name]), $view->getTitle(), 'The welcome title is used for the empty view.');
     $view->destroy();
 
     // Create some nodes on the frontpage view. Add more than 10 nodes in order
@@ -180,14 +181,14 @@ class FrontPageTest extends ViewTestBase {
   public function testAdminFrontPage() {
     // When a user with sufficient permissions is logged in, views_ui adds
     // contextual links to the homepage view. This verifies there are no errors.
-    \Drupal::service('module_installer')->install(['views_ui']);
+    Drupal::service('module_installer')->install(['views_ui']);
     // Log in root user with sufficient permissions.
     $this->drupalLogin($this->rootUser);
     // Test frontpage view.
     $this->drupalGet('node');
     $this->assertSession()->statusCodeEquals(200);
     // Check that the frontpage view was rendered.
-    $this->assertPattern('/class=".+view-frontpage/');
+    $this->assertSession()->responseMatches('/class=".+view-frontpage/');
   }
 
   /**
@@ -257,7 +258,7 @@ class FrontPageTest extends ViewTestBase {
       'url.site',
     ];
 
-    $cache_context_tags = \Drupal::service('cache_contexts_manager')->convertTokensToKeys($cache_contexts)->getCacheTags();
+    $cache_context_tags = Drupal::service('cache_contexts_manager')->convertTokensToKeys($cache_contexts)->getCacheTags();
 
     // Test before there are any nodes.
     $empty_node_listing_cache_tags = [
@@ -319,7 +320,7 @@ class FrontPageTest extends ViewTestBase {
       'node:14',
       'node:15',
     ];
-    $cache_context_tags = \Drupal::service('cache_contexts_manager')->convertTokensToKeys($cache_contexts)->getCacheTags();
+    $cache_context_tags = Drupal::service('cache_contexts_manager')->convertTokensToKeys($cache_contexts)->getCacheTags();
     $first_page_output_cache_tags = Cache::mergeTags($first_page_result_cache_tags, $cache_context_tags);
     $first_page_output_cache_tags = Cache::mergeTags($first_page_output_cache_tags, [
         'config:filter.format.plain_text',

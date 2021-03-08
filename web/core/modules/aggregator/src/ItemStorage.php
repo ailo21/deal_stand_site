@@ -2,14 +2,15 @@
 
 namespace Drupal\aggregator;
 
+use Drupal;
 use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Entity\Sql\SqlContentEntityStorage;
 
 /**
- * Controller class for aggregators items.
+ * Defines the storage handler class for feed item entities.
  *
- * This extends the Drupal\Core\Entity\Sql\SqlContentEntityStorage class, adding
- * required special handling for feed item entities.
+ * This extends the base storage class, adding required special handling for
+ * feed item entities.
  */
 class ItemStorage extends SqlContentEntityStorage implements ItemStorageInterface {
 
@@ -17,7 +18,7 @@ class ItemStorage extends SqlContentEntityStorage implements ItemStorageInterfac
    * {@inheritdoc}
    */
   public function getItemCount(FeedInterface $feed) {
-    $query = \Drupal::entityQuery('aggregator_item')
+    $query = Drupal::entityQuery('aggregator_item')
       ->condition('fid', $feed->id())
       ->count();
 
@@ -28,7 +29,7 @@ class ItemStorage extends SqlContentEntityStorage implements ItemStorageInterfac
    * {@inheritdoc}
    */
   public function loadAll($limit = NULL) {
-    $query = \Drupal::entityQuery('aggregator_item');
+    $query = Drupal::entityQuery('aggregator_item');
     return $this->executeFeedItemQuery($query, $limit);
   }
 
@@ -36,7 +37,7 @@ class ItemStorage extends SqlContentEntityStorage implements ItemStorageInterfac
    * {@inheritdoc}
    */
   public function loadByFeed($fid, $limit = NULL) {
-    $query = \Drupal::entityQuery('aggregator_item')
+    $query = Drupal::entityQuery('aggregator_item')
       ->condition('fid', $fid);
     return $this->executeFeedItemQuery($query, $limit);
   }

@@ -29,6 +29,7 @@ function ds_note_entity_type_build(array &$entity_types) {
  * @param $form_id
  */
 function ds_note_form_node_note_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  ksm($form);
 
   //убираем лог с редакцией из формы
   unset($form['revision_log']);
@@ -54,3 +55,4 @@ function ds_note_preprocess_page_title(&$variables) {
 
 
 }
+

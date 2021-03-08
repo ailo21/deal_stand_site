@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\system\Functional\Entity\EntityReferenceSelection;
 
+use Drupal;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\comment\Tests\CommentTestTrait;
 use Drupal\Component\Utility\Html;
@@ -93,12 +94,12 @@ class EntityReferenceSelectionAccessTest extends KernelTestBase {
    *   The name of the entity type selection handler being tested.
    */
   protected function assertReferenceable(array $selection_options, $tests, $handler_name) {
-    $handler = \Drupal::service('plugin.manager.entity_reference_selection')->getInstance($selection_options);
+    $handler = Drupal::service('plugin.manager.entity_reference_selection')->getInstance($selection_options);
 
     foreach ($tests as $test) {
       foreach ($test['arguments'] as $arguments) {
         $result = call_user_func_array([$handler, 'getReferenceableEntities'], $arguments);
-        $this->assertEqual($result, $test['result'], new FormattableMarkup('Valid result set returned by @handler.', ['@handler' => $handler_name]));
+        $this->assertEqual($test['result'], $result, new FormattableMarkup('Valid result set returned by @handler.', ['@handler' => $handler_name]));
 
         $result = call_user_func_array([$handler, 'countReferenceableEntities'], $arguments);
         if (!empty($test['result'])) {
@@ -109,7 +110,7 @@ class EntityReferenceSelectionAccessTest extends KernelTestBase {
           $count = 0;
         }
 
-        $this->assertEqual($result, $count, new FormattableMarkup('Valid count returned by @handler.', ['@handler' => $handler_name]));
+        $this->assertEqual($count, $result, new FormattableMarkup('Valid count returned by @handler.', ['@handler' => $handler_name]));
       }
     }
   }
@@ -257,14 +258,14 @@ class EntityReferenceSelectionAccessTest extends KernelTestBase {
         'name' => 'non_admin <&>',
         'mail' => 'non_admin@example.com',
         'roles' => [],
-        'pass' => user_password(),
+        'pass' => Drupal::service('password_generator')->generate(),
         'status' => 1,
       ],
       'blocked' => [
         'name' => 'blocked <&>',
         'mail' => 'blocked@example.com',
         'roles' => [],
-        'pass' => user_password(),
+        'pass' => Drupal::service('password_generator')->generate(),
         'status' => 0,
       ],
     ];

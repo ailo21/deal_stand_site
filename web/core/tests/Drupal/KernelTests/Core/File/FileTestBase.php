@@ -2,6 +2,7 @@
 
 namespace Drupal\KernelTests\Core\File;
 
+use Drupal;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\KernelTests\KernelTestBase;
 
@@ -42,7 +43,7 @@ abstract class FileTestBase extends KernelTestBase {
     // file_default_scheme(). As we are creating the configuration here remove
     // the global override.
     unset($GLOBALS['config']['system.file']);
-    \Drupal::configFactory()->getEditable('system.file')->set('default_scheme', 'public')->save();
+    Drupal::configFactory()->getEditable('system.file')->set('default_scheme', 'public')->save();
   }
 
   /**
@@ -108,7 +109,7 @@ abstract class FileTestBase extends KernelTestBase {
     if (!isset($message)) {
       $message = t('Expected file permission to be %expected, actually were %actual.', ['%actual' => decoct($actual_mode), '%expected' => decoct($expected_mode)]);
     }
-    $this->assertEqual($actual_mode, $expected_mode, $message);
+    $this->assertEqual($expected_mode, $actual_mode, $message);
   }
 
   /**
@@ -144,7 +145,7 @@ abstract class FileTestBase extends KernelTestBase {
     if (!isset($message)) {
       $message = t('Expected directory permission to be %expected, actually were %actual.', ['%actual' => decoct($actual_mode), '%expected' => decoct($expected_mode)]);
     }
-    $this->assertEqual($actual_mode, $expected_mode, $message);
+    $this->assertEqual($expected_mode, $actual_mode, $message);
   }
 
   /**
@@ -162,7 +163,7 @@ abstract class FileTestBase extends KernelTestBase {
     if (!isset($path)) {
       $path = 'public://' . $this->randomMachineName();
     }
-    $this->assertTrue(\Drupal::service('file_system')->mkdir($path));
+    $this->assertTrue(Drupal::service('file_system')->mkdir($path));
     $this->assertDirectoryExists($path);
     return $path;
   }
@@ -187,6 +188,7 @@ abstract class FileTestBase extends KernelTestBase {
     if (!isset($filepath)) {
       // Prefix with non-latin characters to ensure that all file-related
       // tests work with international filenames.
+      // cSpell:disable-next-line
       $filepath = 'Файл для тестирования ' . $this->randomMachineName();
     }
     if (!isset($scheme)) {

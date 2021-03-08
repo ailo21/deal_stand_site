@@ -1,0 +1,22 @@
+uuid: 8a442b2c-1e9a-4847-8658-88f7aa860bea
+langcode: ru
+status: true
+dependencies:
+  module:
+    - help
+  theme:
+    - deal
+_core:
+  default_config_hash: MhtNdV__HKRTab0ZPjkPNfYL4Ng4UPBucDLoC7Rg5Eo
+id: deal_help
+theme: deal
+region: content
+weight: -3
+provider: null
+plugin: help_block
+settings:
+  id: help_block
+  label: Help
+  provider: help
+  label_display: '0'
+visibility: {  }

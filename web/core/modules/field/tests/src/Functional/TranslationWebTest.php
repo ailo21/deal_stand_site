@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\field\Functional;
 
+use Drupal;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\field\Entity\FieldConfig;
@@ -75,7 +76,7 @@ class TranslationWebTest extends FieldTestBase {
     FieldConfig::create($field)->save();
     $this->field = FieldConfig::load($this->entityTypeId . '.' . $field['bundle'] . '.' . $this->fieldName);
 
-    \Drupal::service('entity_display.repository')
+    Drupal::service('entity_display.repository')
       ->getFormDisplay($this->entityTypeId, $this->entityTypeId)
       ->setComponent($this->fieldName)
       ->save();
@@ -120,7 +121,7 @@ class TranslationWebTest extends FieldTestBase {
       "{$field_name}[0][value]" => $entity->{$field_name}->value,
       'revision' => TRUE,
     ];
-    $this->drupalPostForm($this->entityTypeId . '/manage/' . $entity->id() . '/edit', $edit, t('Save'));
+    $this->drupalPostForm($this->entityTypeId . '/manage/' . $entity->id() . '/edit', $edit, 'Save');
 
     // Check translation revisions.
     $this->checkTranslationRevisions($entity->id(), $entity->getRevisionId(), $available_langcodes);

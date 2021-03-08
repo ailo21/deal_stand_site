@@ -2,6 +2,7 @@
 
 namespace Drupal\menu_link_content\Entity;
 
+use Drupal;
 use Drupal\Core\Entity\EditorialContentEntityBase;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
@@ -215,9 +216,9 @@ class MenuLinkContent extends EditorialContentEntityBase implements MenuLinkCont
     }
 
     /** @var \Drupal\Core\Menu\MenuLinkManagerInterface $menu_link_manager */
-    $menu_link_manager = \Drupal::service('plugin.manager.menu.link');
+    $menu_link_manager = Drupal::service('plugin.manager.menu.link');
 
-    // The menu link can just be updated if there is already an menu link entry
+    // The menu link can just be updated if there is already a menu link entry
     // on both entity and menu link plugin level.
     $definition = $this->getPluginDefinition();
     // Even when $update is FALSE, for top level links it is possible the link
@@ -245,7 +246,7 @@ class MenuLinkContent extends EditorialContentEntityBase implements MenuLinkCont
     parent::preDelete($storage, $entities);
 
     /** @var \Drupal\Core\Menu\MenuLinkManagerInterface $menu_link_manager */
-    $menu_link_manager = \Drupal::service('plugin.manager.menu.link');
+    $menu_link_manager = Drupal::service('plugin.manager.menu.link');
 
     foreach ($entities as $menu_link) {
       /** @var \Drupal\menu_link_content\Entity\MenuLinkContent $menu_link */

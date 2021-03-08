@@ -8,14 +8,21 @@ use Composer\Package\PackageInterface;
 use Composer\Package\RootPackageInterface;
 use Drupal\Composer\Plugin\VendorHardening\Config;
 use Drupal\Composer\Plugin\VendorHardening\VendorHardeningPlugin;
+use Drupal\Tests\PhpUnitCompatibilityTrait;
+use Drupal\Tests\Traits\PhpUnitWarnings;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
+use ReflectionProperty;
 
 /**
  * @coversDefaultClass \Drupal\Composer\Plugin\VendorHardening\VendorHardeningPlugin
  * @group VendorHardening
  */
 class VendorHardeningPluginTest extends TestCase {
+
+  use PhpUnitWarnings;
+  use PhpUnitCompatibilityTrait;
 
   public function setUp(): void {
     parent::setUp();
@@ -43,12 +50,12 @@ class VendorHardeningPluginTest extends TestCase {
       ->willReturn(['tests']);
 
     $plugin = new VendorHardeningPlugin();
-    $ref_config = new \ReflectionProperty($plugin, 'config');
+    $ref_config = new ReflectionProperty($plugin, 'config');
     $ref_config->setAccessible(TRUE);
     $ref_config->setValue($plugin, $config);
 
     $io = $this->prophesize(IOInterface::class);
-    $ref_io = new \ReflectionProperty($plugin, 'io');
+    $ref_io = new ReflectionProperty($plugin, 'io');
     $ref_io->setAccessible(TRUE);
     $ref_io->setValue($plugin, $io->reveal());
 
@@ -66,13 +73,13 @@ class VendorHardeningPluginTest extends TestCase {
     $plugin = new VendorHardeningPlugin();
 
     $io = $this->prophesize(IOInterface::class);
-    $ref_io = new \ReflectionProperty($plugin, 'io');
+    $ref_io = new ReflectionProperty($plugin, 'io');
     $ref_io->setAccessible(TRUE);
     $ref_io->setValue($plugin, $io->reveal());
 
     $this->assertFileExists(vfsStream::url('vendor/drupal/package/tests/SomeTest.php'));
 
-    $ref_clean = new \ReflectionMethod($plugin, 'cleanPathsForPackage');
+    $ref_clean = new ReflectionMethod($plugin, 'cleanPathsForPackage');
     $ref_clean->setAccessible(TRUE);
     $ref_clean->invokeArgs($plugin, [vfsStream::url('vendor'), 'drupal/package', ['tests']]);
 
@@ -104,11 +111,11 @@ class VendorHardeningPluginTest extends TestCase {
       ->willReturn([$package]);
 
     $io = $this->prophesize(IOInterface::class);
-    $ref_io = new \ReflectionProperty($plugin, 'io');
+    $ref_io = new ReflectionProperty($plugin, 'io');
     $ref_io->setAccessible(TRUE);
     $ref_io->setValue($plugin, $io->reveal());
 
-    $ref_config = new \ReflectionProperty($plugin, 'config');
+    $ref_config = new ReflectionProperty($plugin, 'config');
     $ref_config->setAccessible(TRUE);
     $ref_config->setValue($plugin, $config);
 
@@ -202,7 +209,7 @@ class VendorHardeningPluginTest extends TestCase {
       ->disableOriginalConstructor()
       ->getMock();
 
-    $ref_find_bin_overlap = new \ReflectionMethod($plugin, 'findBinOverlap');
+    $ref_find_bin_overlap = new ReflectionMethod($plugin, 'findBinOverlap');
     $ref_find_bin_overlap->setAccessible(TRUE);
 
     $this->assertSame($expected, $ref_find_bin_overlap->invokeArgs($plugin, [$binaries, $clean_paths]));

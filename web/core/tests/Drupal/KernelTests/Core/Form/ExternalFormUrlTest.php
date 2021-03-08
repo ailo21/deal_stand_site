@@ -2,6 +2,7 @@
 
 namespace Drupal\KernelTests\Core\Form;
 
+use Drupal;
 use Drupal\Core\Form\FormInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\KernelTests\KernelTestBase;
@@ -53,7 +54,7 @@ class ExternalFormUrlTest extends KernelTestBase implements FormInterface {
    */
   protected function setUp(): void {
     parent::setUp();
-    $this->installSchema('system', ['key_value_expire', 'sequences']);
+    $this->installSchema('system', ['sequences']);
     $this->installEntitySchema('user');
 
     $test_user = User::create([
@@ -61,7 +62,7 @@ class ExternalFormUrlTest extends KernelTestBase implements FormInterface {
       'mail' => 'foobar@example.com',
     ]);
     $test_user->save();
-    \Drupal::service('current_user')->setAccount($test_user);
+    Drupal::service('current_user')->setAccount($test_user);
   }
 
   /**
@@ -70,7 +71,7 @@ class ExternalFormUrlTest extends KernelTestBase implements FormInterface {
   public function testActionUrlBehavior() {
     // Create a new request which has a request uri with multiple leading
     // slashes and make it the master request.
-    $request_stack = \Drupal::service('request_stack');
+    $request_stack = Drupal::service('request_stack');
     /** @var \Symfony\Component\HttpFoundation\RequestStack $original_request */
     $original_request = $request_stack->pop();
     // Just request some more so there is no request left.
@@ -79,8 +80,8 @@ class ExternalFormUrlTest extends KernelTestBase implements FormInterface {
     $request = Request::create($original_request->getSchemeAndHttpHost() . '//example.org');
     $request_stack->push($request);
 
-    $form = \Drupal::formBuilder()->getForm($this);
-    $markup = \Drupal::service('renderer')->renderRoot($form);
+    $form = Drupal::formBuilder()->getForm($this);
+    $markup = Drupal::service('renderer')->renderRoot($form);
 
     $this->setRawContent($markup);
     $elements = $this->xpath('//form/@action');
@@ -89,13 +90,13 @@ class ExternalFormUrlTest extends KernelTestBase implements FormInterface {
 
     // Create a new request which has a request uri with a single leading slash
     // and make it the master request.
-    $request_stack = \Drupal::service('request_stack');
+    $request_stack = Drupal::service('request_stack');
     $original_request = $request_stack->pop();
     $request = Request::create($original_request->getSchemeAndHttpHost() . '/example.org');
     $request_stack->push($request);
 
-    $form = \Drupal::formBuilder()->getForm($this);
-    $markup = \Drupal::service('renderer')->renderRoot($form);
+    $form = Drupal::formBuilder()->getForm($this);
+    $markup = Drupal::service('renderer')->renderRoot($form);
 
     $this->setRawContent($markup);
     $elements = $this->xpath('//form/@action');

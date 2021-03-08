@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\comment\Functional;
 
+use Drupal;
 use Drupal\comment\Plugin\Field\FieldType\CommentItemInterface;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
@@ -63,7 +64,7 @@ class CommentRssTest extends CommentTestBase {
     ];
     $this->assertCacheContexts($cache_contexts);
 
-    $cache_context_tags = \Drupal::service('cache_contexts_manager')->convertTokensToKeys($cache_contexts)->getCacheTags();
+    $cache_context_tags = Drupal::service('cache_contexts_manager')->convertTokensToKeys($cache_contexts)->getCacheTags();
     $this->assertCacheTags(Cache::mergeTags($cache_context_tags, [
       'config:views.view.frontpage',
       'node:1', 'node_list',
@@ -72,13 +73,13 @@ class CommentRssTest extends CommentTestBase {
     ]));
 
     $raw = '<comments>' . $this->node->toUrl('canonical', ['fragment' => 'comments', 'absolute' => TRUE])->toString() . '</comments>';
-    $this->assertRaw($raw, 'Comments as part of RSS feed.');
+    $this->assertRaw($raw);
 
     // Hide comments from RSS feed and check presence.
     $this->node->set('comment', CommentItemInterface::HIDDEN);
     $this->node->save();
     $this->drupalGet('rss.xml');
-    $this->assertNoRaw($raw, 'Hidden comments is not a part of RSS feed.');
+    $this->assertNoRaw($raw);
   }
 
 }

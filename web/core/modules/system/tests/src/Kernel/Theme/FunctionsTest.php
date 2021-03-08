@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\system\Kernel\Theme;
 
+use DOMDocument;
+use Drupal;
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Render\FormattableMarkup;
@@ -182,8 +184,8 @@ class FunctionsTest extends KernelTestBase {
     // Turn off the query for the
     // \Drupal\Core\Utility\LinkGeneratorInterface::generate() method to compare
     // the active link correctly.
-    $original_query = \Drupal::request()->query->all();
-    \Drupal::request()->query->replace([]);
+    $original_query = Drupal::request()->query->all();
+    Drupal::request()->query->replace([]);
     // Verify that empty variables produce no output.
     $variables = [];
     $expected = '';
@@ -231,9 +233,9 @@ class FunctionsTest extends KernelTestBase {
     $expected_links .= '<li class="plain-text">' . Html::escape('Plain "text"') . '</li>';
     $expected_links .= '<li class="html-text"><span class="unescaped">' . Html::escape('potentially unsafe text that <should> be escaped') . '</span></li>';
     $expected_links .= '<li class="front-page"><a href="' . Url::fromRoute('<front>')->toString() . '">' . Html::escape('Front page') . '</a></li>';
-    $expected_links .= '<li class="router-test"><a href="' . \Drupal::urlGenerator()->generate('router_test.1') . '">' . Html::escape('Test route') . '</a></li>';
+    $expected_links .= '<li class="router-test"><a href="' . Drupal::urlGenerator()->generate('router_test.1') . '">' . Html::escape('Test route') . '</a></li>';
     $query = ['key' => 'value'];
-    $expected_links .= '<li class="query-test"><a href="' . \Drupal::urlGenerator()->generate('router_test.1', $query) . '">' . Html::escape('Query test route') . '</a></li>';
+    $expected_links .= '<li class="query-test"><a href="' . Drupal::urlGenerator()->generate('router_test.1', $query) . '">' . Html::escape('Query test route') . '</a></li>';
     $expected_links .= '</ul>';
 
     // Verify that passing a string as heading works.
@@ -243,7 +245,7 @@ class FunctionsTest extends KernelTestBase {
     $this->assertThemeOutput('links', $variables, $expected);
 
     // Restore the original request's query.
-    \Drupal::request()->query->replace($original_query);
+    Drupal::request()->query->replace($original_query);
 
     // Verify that passing an array as heading works (core support).
     $variables['heading'] = [
@@ -271,15 +273,15 @@ class FunctionsTest extends KernelTestBase {
     $expected_links .= '<li class="plain-text"><span class="a/class">' . Html::escape('Plain "text"') . '</span></li>';
     $expected_links .= '<li class="html-text"><span class="unescaped">' . Html::escape('potentially unsafe text that <should> be escaped') . '</span></li>';
     $expected_links .= '<li class="front-page"><a href="' . Url::fromRoute('<front>')->toString() . '">' . Html::escape('Front page') . '</a></li>';
-    $expected_links .= '<li class="router-test"><a href="' . \Drupal::urlGenerator()->generate('router_test.1') . '">' . Html::escape('Test route') . '</a></li>';
+    $expected_links .= '<li class="router-test"><a href="' . Drupal::urlGenerator()->generate('router_test.1') . '">' . Html::escape('Test route') . '</a></li>';
     $query = ['key' => 'value'];
-    $expected_links .= '<li class="query-test"><a href="' . \Drupal::urlGenerator()->generate('router_test.1', $query) . '">' . Html::escape('Query test route') . '</a></li>';
+    $expected_links .= '<li class="query-test"><a href="' . Drupal::urlGenerator()->generate('router_test.1', $query) . '">' . Html::escape('Query test route') . '</a></li>';
     $expected_links .= '</ul>';
     $expected = $expected_heading . $expected_links;
     $this->assertThemeOutput('links', $variables, $expected);
 
     // Verify the data- attributes for setting the "active" class on links.
-    \Drupal::currentUser()->setAccount(new UserSession(['uid' => 1]));
+    Drupal::currentUser()->setAccount(new UserSession(['uid' => 1]));
     $variables['set_active_class'] = TRUE;
     $expected_links = '';
     $expected_links .= '<ul id="somelinks">';
@@ -287,10 +289,10 @@ class FunctionsTest extends KernelTestBase {
     $expected_links .= '<li class="plain-text"><span class="a/class">' . Html::escape('Plain "text"') . '</span></li>';
     $expected_links .= '<li class="html-text"><span class="unescaped">' . Html::escape('potentially unsafe text that <should> be escaped') . '</span></li>';
     $expected_links .= '<li data-drupal-link-system-path="&lt;front&gt;" class="front-page"><a href="' . Url::fromRoute('<front>')->toString() . '" data-drupal-link-system-path="&lt;front&gt;">' . Html::escape('Front page') . '</a></li>';
-    $expected_links .= '<li data-drupal-link-system-path="router_test/test1" class="router-test"><a href="' . \Drupal::urlGenerator()->generate('router_test.1') . '" data-drupal-link-system-path="router_test/test1">' . Html::escape('Test route') . '</a></li>';
+    $expected_links .= '<li data-drupal-link-system-path="router_test/test1" class="router-test"><a href="' . Drupal::urlGenerator()->generate('router_test.1') . '" data-drupal-link-system-path="router_test/test1">' . Html::escape('Test route') . '</a></li>';
     $query = ['key' => 'value'];
     $encoded_query = Html::escape(Json::encode($query));
-    $expected_links .= '<li data-drupal-link-query="' . $encoded_query . '" data-drupal-link-system-path="router_test/test1" class="query-test"><a href="' . \Drupal::urlGenerator()->generate('router_test.1', $query) . '" data-drupal-link-query="' . $encoded_query . '" data-drupal-link-system-path="router_test/test1">' . Html::escape('Query test route') . '</a></li>';
+    $expected_links .= '<li data-drupal-link-query="' . $encoded_query . '" data-drupal-link-system-path="router_test/test1" class="query-test"><a href="' . Drupal::urlGenerator()->generate('router_test.1', $query) . '" data-drupal-link-query="' . $encoded_query . '" data-drupal-link-system-path="router_test/test1">' . Html::escape('Query test route') . '</a></li>';
     $expected_links .= '</ul>';
     $expected = $expected_heading . $expected_links;
     $this->assertThemeOutput('links', $variables, $expected);
@@ -303,8 +305,8 @@ class FunctionsTest extends KernelTestBase {
     // Turn off the query for the
     // \Drupal\Core\Utility\LinkGeneratorInterface::generate() method to compare
     // the active link correctly.
-    $original_query = \Drupal::request()->query->all();
-    \Drupal::request()->query->replace([]);
+    $original_query = Drupal::request()->query->all();
+    Drupal::request()->query->replace([]);
     // Verify that empty variables produce no output.
     $variables = [];
     $expected = '';
@@ -352,9 +354,9 @@ class FunctionsTest extends KernelTestBase {
     $expected_links .= '<li>' . Html::escape('Plain "text"') . '</li>';
     $expected_links .= '<li><span class="unescaped">' . Html::escape('potentially unsafe text that <should> be escaped') . '</span></li>';
     $expected_links .= '<li><a href="' . Url::fromRoute('<front>')->toString() . '">' . Html::escape('Front page') . '</a></li>';
-    $expected_links .= '<li><a href="' . \Drupal::urlGenerator()->generate('router_test.1') . '">' . Html::escape('Test route') . '</a></li>';
+    $expected_links .= '<li><a href="' . Drupal::urlGenerator()->generate('router_test.1') . '">' . Html::escape('Test route') . '</a></li>';
     $query = ['key' => 'value'];
-    $expected_links .= '<li><a href="' . \Drupal::urlGenerator()->generate('router_test.1', $query) . '">' . Html::escape('Query test route') . '</a></li>';
+    $expected_links .= '<li><a href="' . Drupal::urlGenerator()->generate('router_test.1', $query) . '">' . Html::escape('Query test route') . '</a></li>';
     $expected_links .= '</ul>';
 
     // Verify that passing a string as heading works.
@@ -364,7 +366,7 @@ class FunctionsTest extends KernelTestBase {
     $this->assertThemeOutput('links', $variables, $expected);
 
     // Restore the original request's query.
-    \Drupal::request()->query->replace($original_query);
+    Drupal::request()->query->replace($original_query);
 
     // Verify that passing an array as heading works (core support).
     $variables['heading'] = [
@@ -392,15 +394,15 @@ class FunctionsTest extends KernelTestBase {
     $expected_links .= '<li><span class="a/class">' . Html::escape('Plain "text"') . '</span></li>';
     $expected_links .= '<li><span class="unescaped">' . Html::escape('potentially unsafe text that <should> be escaped') . '</span></li>';
     $expected_links .= '<li><a href="' . Url::fromRoute('<front>')->toString() . '">' . Html::escape('Front page') . '</a></li>';
-    $expected_links .= '<li><a href="' . \Drupal::urlGenerator()->generate('router_test.1') . '">' . Html::escape('Test route') . '</a></li>';
+    $expected_links .= '<li><a href="' . Drupal::urlGenerator()->generate('router_test.1') . '">' . Html::escape('Test route') . '</a></li>';
     $query = ['key' => 'value'];
-    $expected_links .= '<li><a href="' . \Drupal::urlGenerator()->generate('router_test.1', $query) . '">' . Html::escape('Query test route') . '</a></li>';
+    $expected_links .= '<li><a href="' . Drupal::urlGenerator()->generate('router_test.1', $query) . '">' . Html::escape('Query test route') . '</a></li>';
     $expected_links .= '</ul>';
     $expected = $expected_heading . $expected_links;
     $this->assertThemeOutput('links', $variables, $expected);
 
     // Verify the data- attributes for setting the "active" class on links.
-    \Drupal::currentUser()->setAccount(new UserSession(['uid' => 1]));
+    Drupal::currentUser()->setAccount(new UserSession(['uid' => 1]));
     $variables['set_active_class'] = TRUE;
     $expected_links = '';
     $expected_links .= '<ul id="somelinks">';
@@ -408,10 +410,10 @@ class FunctionsTest extends KernelTestBase {
     $expected_links .= '<li><span class="a/class">' . Html::escape('Plain "text"') . '</span></li>';
     $expected_links .= '<li><span class="unescaped">' . Html::escape('potentially unsafe text that <should> be escaped') . '</span></li>';
     $expected_links .= '<li data-drupal-link-system-path="&lt;front&gt;"><a href="' . Url::fromRoute('<front>')->toString() . '" data-drupal-link-system-path="&lt;front&gt;">' . Html::escape('Front page') . '</a></li>';
-    $expected_links .= '<li data-drupal-link-system-path="router_test/test1"><a href="' . \Drupal::urlGenerator()->generate('router_test.1') . '" data-drupal-link-system-path="router_test/test1">' . Html::escape('Test route') . '</a></li>';
+    $expected_links .= '<li data-drupal-link-system-path="router_test/test1"><a href="' . Drupal::urlGenerator()->generate('router_test.1') . '" data-drupal-link-system-path="router_test/test1">' . Html::escape('Test route') . '</a></li>';
     $query = ['key' => 'value'];
     $encoded_query = Html::escape(Json::encode($query));
-    $expected_links .= '<li data-drupal-link-query="' . $encoded_query . '" data-drupal-link-system-path="router_test/test1"><a href="' . \Drupal::urlGenerator()->generate('router_test.1', $query) . '" data-drupal-link-query="' . $encoded_query . '" data-drupal-link-system-path="router_test/test1">' . Html::escape('Query test route') . '</a></li>';
+    $expected_links .= '<li data-drupal-link-query="' . $encoded_query . '" data-drupal-link-system-path="router_test/test1"><a href="' . Drupal::urlGenerator()->generate('router_test.1', $query) . '" data-drupal-link-query="' . $encoded_query . '" data-drupal-link-system-path="router_test/test1">' . Html::escape('Query test route') . '</a></li>';
     $expected_links .= '</ul>';
     $expected = $expected_heading . $expected_links;
     $this->assertThemeOutput('links', $variables, $expected);
@@ -479,15 +481,15 @@ class FunctionsTest extends KernelTestBase {
     // thing. We expect a single <ul> with appropriate links contained within
     // it.
     $render_array = $base_array;
-    $html = \Drupal::service('renderer')->renderRoot($render_array);
-    $dom = new \DOMDocument();
+    $html = Drupal::service('renderer')->renderRoot($render_array);
+    $dom = new DOMDocument();
     $dom->loadHTML($html);
-    $this->assertEqual($dom->getElementsByTagName('ul')->length, 1, 'One "ul" tag found in the rendered HTML.');
+    $this->assertEqual(1, $dom->getElementsByTagName('ul')->length, 'One "ul" tag found in the rendered HTML.');
     $list_elements = $dom->getElementsByTagName('li');
-    $this->assertEqual($list_elements->length, 3, 'Three "li" tags found in the rendered HTML.');
-    $this->assertEqual($list_elements->item(0)->nodeValue, 'Parent link original', 'First expected link found.');
-    $this->assertEqual($list_elements->item(1)->nodeValue, 'First child link', 'Second expected link found.');
-    $this->assertEqual($list_elements->item(2)->nodeValue, 'Second child link', 'Third expected link found.');
+    $this->assertEqual(3, $list_elements->length, 'Three "li" tags found in the rendered HTML.');
+    $this->assertEqual('Parent link original', $list_elements->item(0)->nodeValue, 'First expected link found.');
+    $this->assertEqual('First child link', $list_elements->item(1)->nodeValue, 'Second expected link found.');
+    $this->assertEqual('Second child link', $list_elements->item(2)->nodeValue, 'Third expected link found.');
     $this->assertStringNotContainsString('Parent link copy', $html, '"Parent link copy" link not found.');
     $this->assertStringNotContainsString('Third child link', $html, '"Third child link" link not found.');
 
@@ -495,24 +497,24 @@ class FunctionsTest extends KernelTestBase {
     // sure we get two separate <ul>'s with the appropriate links contained
     // within each.
     $render_array = $base_array;
-    $child_html = \Drupal::service('renderer')->renderRoot($render_array['first_child']);
-    $parent_html = \Drupal::service('renderer')->renderRoot($render_array);
+    $child_html = Drupal::service('renderer')->renderRoot($render_array['first_child']);
+    $parent_html = Drupal::service('renderer')->renderRoot($render_array);
     // First check the child HTML.
-    $dom = new \DOMDocument();
+    $dom = new DOMDocument();
     $dom->loadHTML($child_html);
-    $this->assertEqual($dom->getElementsByTagName('ul')->length, 1, 'One "ul" tag found in the rendered child HTML.');
+    $this->assertEqual(1, $dom->getElementsByTagName('ul')->length, 'One "ul" tag found in the rendered child HTML.');
     $list_elements = $dom->getElementsByTagName('li');
-    $this->assertEqual($list_elements->length, 2, 'Two "li" tags found in the rendered child HTML.');
-    $this->assertEqual($list_elements->item(0)->nodeValue, 'Parent link copy', 'First expected link found.');
-    $this->assertEqual($list_elements->item(1)->nodeValue, 'First child link', 'Second expected link found.');
+    $this->assertEqual(2, $list_elements->length, 'Two "li" tags found in the rendered child HTML.');
+    $this->assertEqual('Parent link copy', $list_elements->item(0)->nodeValue, 'First expected link found.');
+    $this->assertEqual('First child link', $list_elements->item(1)->nodeValue, 'Second expected link found.');
     // Then check the parent HTML.
-    $dom = new \DOMDocument();
+    $dom = new DOMDocument();
     $dom->loadHTML($parent_html);
-    $this->assertEqual($dom->getElementsByTagName('ul')->length, 1, 'One "ul" tag found in the rendered parent HTML.');
+    $this->assertEqual(1, $dom->getElementsByTagName('ul')->length, 'One "ul" tag found in the rendered parent HTML.');
     $list_elements = $dom->getElementsByTagName('li');
-    $this->assertEqual($list_elements->length, 2, 'Two "li" tags found in the rendered parent HTML.');
-    $this->assertEqual($list_elements->item(0)->nodeValue, 'Parent link original', 'First expected link found.');
-    $this->assertEqual($list_elements->item(1)->nodeValue, 'Second child link', 'Second expected link found.');
+    $this->assertEqual(2, $list_elements->length, 'Two "li" tags found in the rendered parent HTML.');
+    $this->assertEqual('Parent link original', $list_elements->item(0)->nodeValue, 'First expected link found.');
+    $this->assertEqual('Second child link', $list_elements->item(1)->nodeValue, 'Second expected link found.');
     $this->assertStringNotContainsString('First child link', $parent_html, '"First child link" link not found.');
     $this->assertStringNotContainsString('Third child link', $parent_html, '"Third child link" link not found.');
   }

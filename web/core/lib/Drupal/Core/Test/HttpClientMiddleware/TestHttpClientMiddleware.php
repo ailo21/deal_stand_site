@@ -3,6 +3,7 @@
 namespace Drupal\Core\Test\HttpClientMiddleware;
 
 use Drupal\Core\Utility\Error;
+use Exception;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
@@ -37,8 +38,6 @@ class TestHttpClientMiddleware {
             foreach ($headers as $header_name => $header_values) {
               if (preg_match('/^X-Drupal-Assertion-[0-9]+$/', $header_name, $matches)) {
                 foreach ($header_values as $header_value) {
-                  // Call \Drupal\simpletest\WebTestBase::error() with the parameters from
-                  // the header.
                   $parameters = unserialize(urldecode($header_value));
                   if (count($parameters) === 3) {
                     if ($parameters[1] === 'User deprecated function') {
@@ -48,11 +47,11 @@ class TestHttpClientMiddleware {
                       @trigger_error((string) $parameters[0], E_USER_DEPRECATED);
                     }
                     else {
-                      throw new \Exception($parameters[1] . ': ' . $parameters[0] . "\n" . Error::formatBacktrace([$parameters[2]]));
+                      throw new Exception($parameters[1] . ': ' . $parameters[0] . "\n" . Error::formatBacktrace([$parameters[2]]));
                     }
                   }
                   else {
-                    throw new \Exception('Error thrown with the wrong amount of parameters.');
+                    throw new Exception('Error thrown with the wrong amount of parameters.');
                   }
                 }
               }

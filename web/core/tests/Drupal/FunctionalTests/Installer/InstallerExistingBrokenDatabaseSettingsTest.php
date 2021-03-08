@@ -2,6 +2,7 @@
 
 namespace Drupal\FunctionalTests\Installer;
 
+use Drupal;
 use Drupal\Core\Database\Database;
 
 /**
@@ -35,7 +36,7 @@ class InstallerExistingBrokenDatabaseSettingsTest extends InstallerTestBase {
     $connection_info['default']['driver'] = 'DrivertestMysqlDeprecatedVersion';
     $namespace = 'Drupal\\driver_test\\Driver\\Database\\DrivertestMysqlDeprecatedVersion';
     $connection_info['default']['namespace'] = $namespace;
-    $connection_info['default']['autoload'] = Database::findDriverAutoloadDirectory($namespace, \Drupal::root());
+    $connection_info['default']['autoload'] = Database::findDriverAutoloadDirectory($namespace, Drupal::root());
 
     $this->settings['databases']['default'] = (object) [
       'value' => $connection_info,
@@ -48,7 +49,6 @@ class InstallerExistingBrokenDatabaseSettingsTest extends InstallerTestBase {
    */
   protected function setUpSettings() {
     // This form will never be reached.
-    return;
   }
 
   /**
@@ -56,7 +56,6 @@ class InstallerExistingBrokenDatabaseSettingsTest extends InstallerTestBase {
    */
   protected function setUpSite() {
     // This form will never be reached.
-    return;
   }
 
   /**

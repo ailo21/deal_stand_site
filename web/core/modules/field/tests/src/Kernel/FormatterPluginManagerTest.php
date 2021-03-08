@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\field\Kernel;
 
+use Drupal;
 use Drupal\Core\Field\BaseFieldDefinition;
 
 /**
@@ -18,7 +19,7 @@ class FormatterPluginManagerTest extends FieldKernelTestBase {
    */
   public function testNotApplicableFallback() {
     /** @var \Drupal\Core\Field\FormatterPluginManager $formatter_plugin_manager */
-    $formatter_plugin_manager = \Drupal::service('plugin.manager.field.formatter');
+    $formatter_plugin_manager = Drupal::service('plugin.manager.field.formatter');
 
     $base_field_definition = BaseFieldDefinition::create('test_field')
       // Set a name that will make isApplicable() return TRUE.
@@ -33,15 +34,15 @@ class FormatterPluginManagerTest extends FieldKernelTestBase {
     ];
 
     $instance = $formatter_plugin_manager->getInstance($formatter_options);
-    $this->assertEqual($instance->getPluginId(), 'field_test_applicable');
+    $this->assertEqual('field_test_applicable', $instance->getPluginId());
 
     // Now set name to something that makes isApplicable() return FALSE.
     $base_field_definition->setName('deny_applicable');
     $instance = $formatter_plugin_manager->getInstance($formatter_options);
 
     // Instance should be default widget.
-    $this->assertNotEqual($instance->getPluginId(), 'field_test_applicable');
-    $this->assertEqual($instance->getPluginId(), 'field_test_default');
+    $this->assertNotSame('field_test_applicable', $instance->getPluginId());
+    $this->assertEqual('field_test_default', $instance->getPluginId());
   }
 
 }

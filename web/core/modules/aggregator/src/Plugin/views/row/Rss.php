@@ -3,6 +3,7 @@
 namespace Drupal\aggregator\Plugin\views\row;
 
 use Drupal\views\Plugin\views\row\RssPluginBase;
+use stdClass;
 
 /**
  * Defines a row plugin which loads an aggregator item and renders as RSS.
@@ -26,7 +27,7 @@ class Rss extends RssPluginBase {
   public $base_table = 'aggregator_item';
 
   /**
-   * The actual field which is used to identify a aggregator item.
+   * The actual field which is used to identify an aggregator item.
    *
    * @var string
    */
@@ -43,7 +44,7 @@ class Rss extends RssPluginBase {
   public function render($row) {
     $entity = $row->_entity;
 
-    $item = new \stdClass();
+    $item = new stdClass();
     foreach ($entity as $name => $field) {
       $item->{$name} = $field->value;
     }

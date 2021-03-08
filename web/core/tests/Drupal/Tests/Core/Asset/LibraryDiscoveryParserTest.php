@@ -7,13 +7,18 @@
 
 namespace Drupal\Tests\Core\Asset;
 
+use AssertionError;
+use Drupal;
 use Drupal\Core\Asset\Exception\IncompleteLibraryDefinitionException;
 use Drupal\Core\Asset\Exception\InvalidLibraryFileException;
 use Drupal\Core\Asset\Exception\LibraryDefinitionMissingLicenseException;
 use Drupal\Core\Asset\LibrariesDirectoryFileFinder;
 use Drupal\Core\Asset\LibraryDiscoveryParser;
 use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
+use Drupal\Core\Theme\ActiveTheme;
+use Drupal\Core\Theme\ThemeManagerInterface;
 use Drupal\Tests\UnitTestCase;
+use UnexpectedValueException;
 
 /**
  * @coversDefaultClass \Drupal\Core\Asset\LibraryDiscoveryParser
@@ -50,6 +55,13 @@ class LibraryDiscoveryParserTest extends UnitTestCase {
   protected $themeManager;
 
   /**
+   * The mocked active theme.
+   *
+   * @var \Drupal\Core\Theme\ActiveTheme|\PHPUnit\Framework\MockObject\MockObject
+   */
+  protected $activeTheme;
+
+  /**
    * The mocked lock backend.
    *
    * @var \Drupal\Core\Lock\LockBackendInterface|\PHPUnit\Framework\MockObject\MockObject
@@ -77,16 +89,16 @@ class LibraryDiscoveryParserTest extends UnitTestCase {
     parent::setUp();
 
     $this->moduleHandler = $this->createMock('Drupal\Core\Extension\ModuleHandlerInterface');
-    $this->themeManager = $this->createMock('Drupal\Core\Theme\ThemeManagerInterface');
-    $mock_active_theme = $this->getMockBuilder('Drupal\Core\Theme\ActiveTheme')
+    $this->themeManager = $this->createMock(ThemeManagerInterface::class);
+    $this->activeTheme = $this->getMockBuilder(ActiveTheme::class)
       ->disableOriginalConstructor()
       ->getMock();
-    $mock_active_theme->expects($this->any())
+    $this->activeTheme->expects($this->any())
       ->method('getLibrariesOverride')
       ->willReturn([]);
     $this->themeManager->expects($this->any())
       ->method('getActiveTheme')
-      ->willReturn($mock_active_theme);
+      ->willReturn($this->activeTheme);
     $this->streamWrapperManager = $this->createMock(StreamWrapperManagerInterface::class);
     $this->librariesDirectoryFileFinder = $this->createMock(LibrariesDirectoryFileFinder::class);
     $this->libraryDiscoveryParser = new TestLibraryDiscoveryParser($this->root, $this->moduleHandler, $this->themeManager, $this->streamWrapperManager, $this->librariesDirectoryFileFinder);
@@ -111,12 +123,12 @@ class LibraryDiscoveryParserTest extends UnitTestCase {
     $library = $libraries['example'];
 
     $this->assertCount(0, $library['js']);
-    $this->assertCount(1, $library['css']);
+    $this->assertCount(2, $library['css']);
     $this->assertCount(0, $library['dependencies']);
     $this->assertEquals($path . '/css/example.css', $library['css'][0]['data']);
 
     // Ensures that VERSION is replaced by the current core version.
-    $this->assertEquals(\Drupal::VERSION, $library['version']);
+    $this->assertEquals(Drupal::VERSION, $library['version']);
   }
 
   /**
@@ -244,9 +256,9 @@ class LibraryDiscoveryParserTest extends UnitTestCase {
     $this->assertEquals('9.8.7.6', $libraries['versioned']['css'][0]['version']);
     $this->assertEquals('9.8.7.6', $libraries['versioned']['js'][0]['version']);
 
-    $this->assertEquals(\Drupal::VERSION, $libraries['core-versioned']['version']);
-    $this->assertEquals(\Drupal::VERSION, $libraries['core-versioned']['css'][0]['version']);
-    $this->assertEquals(\Drupal::VERSION, $libraries['core-versioned']['js'][0]['version']);
+    $this->assertEquals(Drupal::VERSION, $libraries['core-versioned']['version']);
+    $this->assertEquals(Drupal::VERSION, $libraries['core-versioned']['css'][0]['version']);
+    $this->assertEquals(Drupal::VERSION, $libraries['core-versioned']['js'][0]['version']);
   }
 
   /**
@@ -325,7 +337,7 @@ class LibraryDiscoveryParserTest extends UnitTestCase {
     $path = substr($path, strlen($this->root) + 1);
     $this->libraryDiscoveryParser->setPaths('module', 'js_positive_weight', $path);
 
-    $this->expectException(\UnexpectedValueException::class);
+    $this->expectException(UnexpectedValueException::class);
     $this->libraryDiscoveryParser->buildByExtension('js_positive_weight');
   }
 
@@ -545,6 +557,97 @@ class LibraryDiscoveryParserTest extends UnitTestCase {
   }
 
   /**
+   * Tests libraries with overrides.
+   *
+   * @covers ::applyLibrariesOverride
+   */
+  public function testLibraryOverride() {
+    $mock_theme_path = 'mocked_themes/kittens';
+    $this->themeManager = $this->createMock(ThemeManagerInterface::class);
+    $this->activeTheme = $this->getMockBuilder(ActiveTheme::class)
+      ->disableOriginalConstructor()
+      ->getMock();
+    $this->activeTheme->expects($this->atLeastOnce())
+      ->method('getLibrariesOverride')
+      ->willReturn([
+        $mock_theme_path => [
+          'example_module/example' => [
+            'css' => [
+              'theme' => [
+                'css/example.css' => 'css/overridden.css',
+                'css/example2.css' => FALSE,
+              ],
+            ],
+          ],
+        ],
+      ]);
+    $this->themeManager->expects($this->any())
+      ->method('getActiveTheme')
+      ->willReturn($this->activeTheme);
+    $this->libraryDiscoveryParser = new TestLibraryDiscoveryParser($this->root, $this->moduleHandler, $this->themeManager, $this->streamWrapperManager, $this->librariesDirectoryFileFinder);
+
+    $this->moduleHandler->expects($this->atLeastOnce())
+      ->method('moduleExists')
+      ->with('example_module')
+      ->will($this->returnValue(TRUE));
+
+    $path = __DIR__ . '/library_test_files';
+    $path = substr($path, strlen($this->root) + 1);
+    $this->libraryDiscoveryParser->setPaths('module', 'example_module', $path);
+
+    $libraries = $this->libraryDiscoveryParser->buildByExtension('example_module');
+    $library = $libraries['example'];
+
+    $this->assertCount(0, $library['js']);
+    $this->assertCount(1, $library['css']);
+    $this->assertCount(0, $library['dependencies']);
+    $this->assertEquals($mock_theme_path . '/css/overridden.css', $library['css'][0]['data']);
+  }
+
+  /**
+   * Tests deprecated library with an override.
+   *
+   * @covers ::applyLibrariesOverride
+   *
+   * @group legacy
+   */
+  public function testLibraryOverrideDeprecated() {
+    $this->expectDeprecation('Theme "deprecated" is overriding a deprecated library. The "deprecated/deprecated" asset library is deprecated in drupal:X.0.0 and is removed from drupal:Y.0.0. Use another library instead. See https://www.example.com');
+    $mock_theme_path = 'mocked_themes/kittens';
+    $this->themeManager = $this->createMock(ThemeManagerInterface::class);
+    $this->activeTheme = $this->getMockBuilder(ActiveTheme::class)
+      ->disableOriginalConstructor()
+      ->getMock();
+    $this->activeTheme->expects($this->atLeastOnce())
+      ->method('getLibrariesOverride')
+      ->willReturn([
+        $mock_theme_path => [
+          'deprecated/deprecated' => [
+            'css' => [
+              'theme' => [
+                'css/example.css' => 'css/overridden.css',
+              ],
+            ],
+          ],
+        ],
+      ]);
+    $this->themeManager->expects($this->any())
+      ->method('getActiveTheme')
+      ->willReturn($this->activeTheme);
+    $this->libraryDiscoveryParser = new TestLibraryDiscoveryParser($this->root, $this->moduleHandler, $this->themeManager, $this->streamWrapperManager, $this->librariesDirectoryFileFinder);
+
+    $this->moduleHandler->expects($this->atLeastOnce())
+      ->method('moduleExists')
+      ->with('deprecated')
+      ->will($this->returnValue(TRUE));
+
+    $path = __DIR__ . '/library_test_files';
+    $path = substr($path, strlen($this->root) + 1);
+    $this->libraryDiscoveryParser->setPaths('module', 'deprecated', $path);
+    $this->libraryDiscoveryParser->buildByExtension('deprecated');
+  }
+
+  /**
    * Verifies assertions catch invalid CSS declarations.
    *
    * @dataProvider providerTestCssAssert
@@ -570,7 +673,7 @@ class LibraryDiscoveryParserTest extends UnitTestCase {
     $path = substr($path, strlen($this->root) + 1);
     $this->libraryDiscoveryParser->setPaths('module', $extension, $path);
 
-    $this->expectException(\AssertionError::class);
+    $this->expectException(AssertionError::class);
     $this->expectExceptionMessage($exception_message);
     $this->libraryDiscoveryParser->buildByExtension($extension);
   }

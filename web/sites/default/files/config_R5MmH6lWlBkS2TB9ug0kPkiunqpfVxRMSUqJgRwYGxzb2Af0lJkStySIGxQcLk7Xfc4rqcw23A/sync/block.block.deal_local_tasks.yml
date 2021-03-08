@@ -1,0 +1,22 @@
+uuid: 94f6a7d3-a720-4d57-b90e-467ab8b40858
+langcode: ru
+status: true
+dependencies:
+  theme:
+    - deal
+_core:
+  default_config_hash: qHdtze2DZ2mFfaJadxjZz6epm92_SN9SAFY4yJGl8Fo
+id: deal_local_tasks
+theme: deal
+region: content
+weight: -2
+provider: null
+plugin: local_tasks_block
+settings:
+  id: local_tasks_block
+  label: Tabs
+  provider: core
+  label_display: '0'
+  primary: true
+  secondary: true
+visibility: {  }

@@ -6,6 +6,7 @@
  */
 
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Entity\ContentEntityTypeInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\Sql\SqlContentEntityStorage;
 use Drupal\Core\Render\Markup;
@@ -45,6 +46,7 @@ function views_views_data() {
     'help' => t('Provide custom text or link.'),
     'field' => [
       'id' => 'custom',
+      'click sortable' => FALSE,
     ],
   ];
 
@@ -138,7 +140,7 @@ function views_views_data() {
   ];
 
   // Registers an entity area handler per entity type.
-  foreach (\Drupal::entityTypeManager()->getDefinitions() as $entity_type_id => $entity_type) {
+  foreach (Drupal::entityTypeManager()->getDefinitions() as $entity_type_id => $entity_type) {
     // Excludes entity types, which cannot be rendered.
     if ($entity_type->hasViewBuilderClass()) {
       $label = $entity_type->getLabel();
@@ -154,8 +156,8 @@ function views_views_data() {
   }
 
   // Registers an action bulk form per entity.
-  foreach (\Drupal::entityTypeManager()->getDefinitions() as $entity_type => $entity_info) {
-    $actions = array_filter(\Drupal::entityTypeManager()->getStorage('action')->loadMultiple(), function (ActionConfigEntityInterface $action) use ($entity_type) {
+  foreach (Drupal::entityTypeManager()->getDefinitions() as $entity_type => $entity_info) {
+    $actions = array_filter(Drupal::entityTypeManager()->getStorage('action')->loadMultiple(), function (ActionConfigEntityInterface $action) use ($entity_type) {
       return $action->getType() == $entity_type;
     });
     if (empty($actions)) {
@@ -171,19 +173,19 @@ function views_views_data() {
   }
 
   // Registers views data for the entity itself.
-  foreach (\Drupal::entityTypeManager()->getDefinitions() as $entity_type_id => $entity_type) {
+  foreach (Drupal::entityTypeManager()->getDefinitions() as $entity_type_id => $entity_type) {
     if ($entity_type->hasHandlerClass('views_data')) {
       /** @var \Drupal\views\EntityViewsDataInterface $views_data */
-      $views_data = \Drupal::entityTypeManager()->getHandler($entity_type_id, 'views_data');
+      $views_data = Drupal::entityTypeManager()->getHandler($entity_type_id, 'views_data');
       $data = NestedArray::mergeDeep($data, $views_data->getViewsData());
     }
   }
 
   // Field modules can implement hook_field_views_data() to override the default
   // behavior for adding fields.
-  $module_handler = \Drupal::moduleHandler();
+  $module_handler = Drupal::moduleHandler();
 
-  $entity_type_manager = \Drupal::entityTypeManager();
+  $entity_type_manager = Drupal::entityTypeManager();
   if ($entity_type_manager->hasDefinition('field_storage_config')) {
     /** @var \Drupal\field\FieldStorageConfigInterface $field_storage */
     foreach ($entity_type_manager->getStorage('field_storage_config')->loadMultiple() as $field_storage) {
@@ -213,7 +215,7 @@ function views_views_data() {
  * in views_views_data().
  */
 function views_views_data_alter(&$data) {
-  $entity_type_manager = \Drupal::entityTypeManager();
+  $entity_type_manager = Drupal::entityTypeManager();
   if (!$entity_type_manager->hasDefinition('field_storage_config')) {
     return;
   }
@@ -239,7 +241,7 @@ function views_views_data_alter(&$data) {
  */
 function _views_field_get_entity_type_storage(FieldStorageConfigInterface $field_storage) {
   $result = FALSE;
-  $entity_type_manager = \Drupal::entityTypeManager();
+  $entity_type_manager = Drupal::entityTypeManager();
   if ($entity_type_manager->hasDefinition($field_storage->getTargetEntityTypeId())) {
     $storage = $entity_type_manager->getStorage($field_storage->getTargetEntityTypeId());
     $result = $storage instanceof SqlContentEntityStorage ? $storage : FALSE;
@@ -256,8 +258,8 @@ function views_entity_field_label($entity_type, $field_name) {
   $label_counter = [];
   $all_labels = [];
   // Count the amount of fields per label per field storage.
-  $entity_field_manager = \Drupal::service('entity_field.manager');
-  foreach (array_keys(\Drupal::service('entity_type.bundle.info')->getBundleInfo($entity_type)) as $bundle) {
+  $entity_field_manager = Drupal::service('entity_field.manager');
+  foreach (array_keys(Drupal::service('entity_type.bundle.info')->getBundleInfo($entity_type)) as $bundle) {
     $bundle_fields = array_filter($entity_field_manager->getFieldDefinitions($entity_type, $bundle), function ($field_definition) {
       return $field_definition instanceof FieldConfigInterface;
     });
@@ -297,7 +299,7 @@ function views_field_default_views_data(FieldStorageConfigInterface $field_stora
   $data = [];
 
   // Check the field type is available.
-  if (!\Drupal::service('plugin.manager.field.field_type')->hasDefinition($field_storage->getType())) {
+  if (!Drupal::service('plugin.manager.field.field_type')->hasDefinition($field_storage->getType())) {
     return $data;
   }
   // Check the field storage has fields.
@@ -321,7 +323,7 @@ function views_field_default_views_data(FieldStorageConfigInterface $field_stora
 
   // Grab information about the entity type tables.
   // We need to join to both the base table and the data table, if available.
-  $entity_type_manager = \Drupal::entityTypeManager();
+  $entity_type_manager = Drupal::entityTypeManager();
   $entity_type_id = $field_storage->getTargetEntityTypeId();
   $entity_type = $entity_type_manager->getDefinition($entity_type_id);
   if (!$base_table = $entity_type->getBaseTable()) {
@@ -383,7 +385,7 @@ function views_field_default_views_data(FieldStorageConfigInterface $field_stora
     }
     else {
       // https://www.drupal.org/node/2451657#comment-11462881
-      \Drupal::logger('views')->error(
+      Drupal::logger('views')->error(
         'A non-existent config entity name returned by FieldStorageConfigInterface::getBundles(): entity type: %entity_type, bundle: %bundle, field name: %field',
         [
           '%entity_type' => $entity_type->id(),
@@ -505,7 +507,7 @@ function views_field_default_views_data(FieldStorageConfigInterface $field_stora
   // Determine the label to use for the field. We don't have a label available
   // at the field level, so we just go through all fields and take the one
   // which is used the most frequently.
-  list($label, $all_labels) = views_entity_field_label($entity_type_id, $field_name);
+  [$label, $all_labels] = views_entity_field_label($entity_type_id, $field_name);
 
   // Expose data for the field as a whole.
   foreach ($field_tables as $type => $table_info) {
@@ -777,7 +779,7 @@ function core_field_views_data(FieldStorageConfigInterface $field_storage) {
     return $data;
   }
 
-  $entity_type_manager = \Drupal::entityTypeManager();
+  $entity_type_manager = Drupal::entityTypeManager();
   $entity_type_id = $field_storage->getTargetEntityTypeId();
   /** @var \Drupal\Core\Entity\Sql\DefaultTableMapping $table_mapping */
   $table_mapping = $entity_type_manager->getStorage($entity_type_id)->getTableMapping();
@@ -791,49 +793,51 @@ function core_field_views_data(FieldStorageConfigInterface $field_storage) {
     $target_base_table = $target_entity_type->getDataTable() ?: $target_entity_type->getBaseTable();
     $field_name = $field_storage->getName();
 
-    // Provide a relationship for the entity type with the entity reference
-    // field.
-    $args = [
-      '@label' => $target_entity_type->getLabel(),
-      '@field_name' => $field_name,
-    ];
-    $data[$table_name][$field_name]['relationship'] = [
-      'title' => t('@label referenced from @field_name', $args),
-      'label' => t('@field_name: @label', $args),
-      'group' => $entity_type->getLabel(),
-      'help' => t('Appears in: @bundles.', ['@bundles' => implode(', ', $field_storage->getBundles())]),
-      'id' => 'standard',
-      'base' => $target_base_table,
-      'entity type' => $target_entity_type_id,
-      'base field' => $target_entity_type->getKey('id'),
-      'relationship field' => $field_name . '_target_id',
-    ];
+    if ($target_entity_type instanceof ContentEntityTypeInterface) {
+      // Provide a relationship for the entity type with the entity reference
+      // field.
+      $args = [
+        '@label' => $target_entity_type->getLabel(),
+        '@field_name' => $field_name,
+      ];
+      $data[$table_name][$field_name]['relationship'] = [
+        'title' => t('@label referenced from @field_name', $args),
+        'label' => t('@field_name: @label', $args),
+        'group' => $entity_type->getLabel(),
+        'help' => t('Appears in: @bundles.', ['@bundles' => implode(', ', $field_storage->getBundles())]),
+        'id' => 'standard',
+        'base' => $target_base_table,
+        'entity type' => $target_entity_type_id,
+        'base field' => $target_entity_type->getKey('id'),
+        'relationship field' => $field_name . '_target_id',
+      ];
 
-    // Provide a reverse relationship for the entity type that is referenced by
-    // the field.
-    $args['@entity'] = $entity_type->getLabel();
-    $args['@label'] = $target_entity_type->getSingularLabel();
-    $pseudo_field_name = 'reverse__' . $entity_type_id . '__' . $field_name;
-    $data[$target_base_table][$pseudo_field_name]['relationship'] = [
-      'title' => t('@entity using @field_name', $args),
-      'label' => t('@field_name', ['@field_name' => $field_name]),
-      'group' => $target_entity_type->getLabel(),
-      'help' => t('Relate each @entity with a @field_name set to the @label.', $args),
-      'id' => 'entity_reverse',
-      'base' => $entity_type->getDataTable() ?: $entity_type->getBaseTable(),
-      'entity_type' => $entity_type_id,
-      'base field' => $entity_type->getKey('id'),
-      'field_name' => $field_name,
-      'field table' => $table_mapping->getDedicatedDataTableName($field_storage),
-      'field field' => $field_name . '_target_id',
-      'join_extra' => [
-        [
-          'field' => 'deleted',
-          'value' => 0,
-          'numeric' => TRUE,
+      // Provide a reverse relationship for the entity type that is referenced by
+      // the field.
+      $args['@entity'] = $entity_type->getLabel();
+      $args['@label'] = $target_entity_type->getSingularLabel();
+      $pseudo_field_name = 'reverse__' . $entity_type_id . '__' . $field_name;
+      $data[$target_base_table][$pseudo_field_name]['relationship'] = [
+        'title' => t('@entity using @field_name', $args),
+        'label' => t('@field_name', ['@field_name' => $field_name]),
+        'group' => $target_entity_type->getLabel(),
+        'help' => t('Relate each @entity with a @field_name set to the @label.', $args),
+        'id' => 'entity_reverse',
+        'base' => $entity_type->getDataTable() ?: $entity_type->getBaseTable(),
+        'entity_type' => $entity_type_id,
+        'base field' => $entity_type->getKey('id'),
+        'field_name' => $field_name,
+        'field table' => $table_mapping->getDedicatedDataTableName($field_storage),
+        'field field' => $field_name . '_target_id',
+        'join_extra' => [
+          [
+            'field' => 'deleted',
+            'value' => 0,
+            'numeric' => TRUE,
+          ],
         ],
-      ],
-    ];
+      ];
+    }
   }
 
   return $data;

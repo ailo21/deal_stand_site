@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\datetime\Kernel\Views;
 
+use DateTimeZone;
+use Drupal;
 use Drupal\Component\Datetime\DateTimePlus;
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItem;
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
@@ -83,7 +85,7 @@ abstract class DateTimeHandlerTestBase extends ViewsKernelTestBase {
     ];
 
     // Load test views.
-    ViewTestData::createTestViews(get_class($this), ['datetime_test']);
+    ViewTestData::createTestViews(static::class, ['datetime_test']);
   }
 
   /**
@@ -111,8 +113,8 @@ abstract class DateTimeHandlerTestBase extends ViewsKernelTestBase {
    *   Unix timestamp.
    */
   protected function getUTCEquivalentOfUserNowAsTimestamp() {
-    $user_now = new DateTimePlus('now', new \DateTimeZone(date_default_timezone_get()));
-    $utc_equivalent = new DateTimePlus($user_now->format('Y-m-d H:i:s'), new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE));
+    $user_now = new DateTimePlus('now', new DateTimeZone(date_default_timezone_get()));
+    $utc_equivalent = new DateTimePlus($user_now->format('Y-m-d H:i:s'), new DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE));
 
     return $utc_equivalent->getTimestamp();
   }
@@ -130,11 +132,11 @@ abstract class DateTimeHandlerTestBase extends ViewsKernelTestBase {
   protected function getRelativeDateValuesFromTimestamp($timestamp) {
     return [
       // Tomorrow.
-      \Drupal::service('date.formatter')->format($timestamp + 86400, 'custom', DateTimeItemInterface::DATE_STORAGE_FORMAT, DateTimeItemInterface::STORAGE_TIMEZONE),
+      Drupal::service('date.formatter')->format($timestamp + 86400, 'custom', DateTimeItemInterface::DATE_STORAGE_FORMAT, DateTimeItemInterface::STORAGE_TIMEZONE),
       // Today.
-      \Drupal::service('date.formatter')->format($timestamp, 'custom', DateTimeItemInterface::DATE_STORAGE_FORMAT, DateTimeItemInterface::STORAGE_TIMEZONE),
+      Drupal::service('date.formatter')->format($timestamp, 'custom', DateTimeItemInterface::DATE_STORAGE_FORMAT, DateTimeItemInterface::STORAGE_TIMEZONE),
       // Yesterday.
-      \Drupal::service('date.formatter')->format($timestamp - 86400, 'custom', DateTimeItemInterface::DATE_STORAGE_FORMAT, DateTimeItemInterface::STORAGE_TIMEZONE),
+      Drupal::service('date.formatter')->format($timestamp - 86400, 'custom', DateTimeItemInterface::DATE_STORAGE_FORMAT, DateTimeItemInterface::STORAGE_TIMEZONE),
     ];
   }
 

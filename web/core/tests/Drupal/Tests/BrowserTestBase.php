@@ -7,6 +7,7 @@ use Behat\Mink\Element\Element;
 use Behat\Mink\Mink;
 use Behat\Mink\Selector\SelectorsHandler;
 use Behat\Mink\Session;
+use Drupal;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Test\FunctionalTestSetupTrait;
@@ -16,13 +17,17 @@ use Drupal\FunctionalTests\AssertLegacyTrait;
 use Drupal\Tests\block\Traits\BlockCreationTrait;
 use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
 use Drupal\Tests\node\Traits\NodeCreationTrait;
-use Drupal\Tests\Traits\PHPUnit8Warnings;
+use Drupal\Tests\Traits\PhpUnitWarnings;
 use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\TestTools\Comparator\MarkupInterfaceComparator;
 use GuzzleHttp\Cookie\CookieJar;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use ReflectionClass;
+use RuntimeException;
+use Symfony\Bridge\PhpUnit\ExpectDeprecationTrait;
 use Symfony\Component\CssSelector\CssSelectorConverter;
 
 /**
@@ -64,7 +69,9 @@ abstract class BrowserTestBase extends TestCase {
     createUser as drupalCreateUser;
   }
   use XdebugRequestTrait;
-  use PHPUnit8Warnings;
+  use PhpUnitWarnings;
+  use PhpUnitCompatibilityTrait;
+  use ExpectDeprecationTrait;
 
   /**
    * The database prefix of this test run.
@@ -250,7 +257,7 @@ abstract class BrowserTestBase extends TestCase {
     // Copies cookies from the current environment, for example, XDEBUG_SESSION
     // in order to support Xdebug.
     // @see BrowserTestBase::initFrontPage()
-    $cookies = $this->extractCookiesFromRequest(\Drupal::request());
+    $cookies = $this->extractCookiesFromRequest(Drupal::request());
     foreach ($cookies as $cookie_name => $values) {
       foreach ($values as $value) {
         $session->setCookie($cookie_name, $value);
@@ -299,13 +306,13 @@ abstract class BrowserTestBase extends TestCase {
         $this->minkDefaultDriverClass = $minkDriverClass;
       }
       else {
-        throw new \InvalidArgumentException("Can't instantiate provided $minkDriverClass class by environment as default driver class.");
+        throw new InvalidArgumentException("Can't instantiate provided $minkDriverClass class by environment as default driver class.");
       }
     }
 
     if (is_array($this->minkDefaultDriverArgs)) {
       // Use ReflectionClass to instantiate class with received params.
-      $reflector = new \ReflectionClass($this->minkDefaultDriverClass);
+      $reflector = new ReflectionClass($this->minkDefaultDriverClass);
       $driver = $reflector->newInstanceArgs($this->minkDefaultDriverArgs);
     }
     else {
@@ -459,7 +466,7 @@ abstract class BrowserTestBase extends TestCase {
     }
 
     // Delete test site directory.
-    \Drupal::service('file_system')->deleteRecursive($this->siteDirectory, [$this, 'filePreDeleteCallback']);
+    Drupal::service('file_system')->deleteRecursive($this->siteDirectory, [$this, 'filePreDeleteCallback']);
   }
 
   /**
@@ -539,7 +546,7 @@ abstract class BrowserTestBase extends TestCase {
     if ($mink_driver instanceof GoutteDriver) {
       return $mink_driver->getClient()->getClient();
     }
-    throw new \RuntimeException('The Mink client type ' . get_class($mink_driver) . ' does not support getHttpClient().');
+    throw new RuntimeException('The Mink client type ' . get_class($mink_driver) . ' does not support getHttpClient().');
   }
 
   /**
@@ -575,7 +582,7 @@ abstract class BrowserTestBase extends TestCase {
     $this->prepareSettings();
     $this->doInstall();
     $this->initSettings();
-    $container = $this->initKernel(\Drupal::request());
+    $container = $this->initKernel(Drupal::request());
     $this->initConfig($container);
     $this->installDefaultThemeFromClassProperty($container);
     $this->installModulesFromClassProperty($container);
@@ -711,7 +718,7 @@ abstract class BrowserTestBase extends TestCase {
         break;
       }
 
-      if (isset($caller['class']) && $caller['class'] === get_class($this)) {
+      if (isset($caller['class']) && $caller['class'] === static::class) {
         break;
       }
 
@@ -740,7 +747,7 @@ abstract class BrowserTestBase extends TestCase {
     // string and convert the resulting key/value pairs back into a flat array.
     $query = http_build_query($values);
     foreach (explode('&', $query) as $item) {
-      list($key, $value) = explode('=', $item);
+      [$key, $value] = explode('=', $item);
       $edit[urldecode($key)] = urldecode($value);
     }
     return $edit;

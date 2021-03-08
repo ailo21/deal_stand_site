@@ -2,10 +2,11 @@
 
 namespace Drupal\Tests\Core\Menu;
 
+use Drupal;
 use Drupal\Core\Menu\MenuActiveTrail;
 use Drupal\Core\Routing\CurrentRouteMatch;
 use Drupal\Tests\UnitTestCase;
-use Symfony\Cmf\Component\Routing\RouteObjectInterface;
+use Drupal\Core\Routing\RouteObjectInterface;
 use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\HttpFoundation\Request;
@@ -79,7 +80,7 @@ class MenuActiveTrailTest extends UnitTestCase {
 
     $container = new Container();
     $container->set('cache_tags.invalidator', $this->createMock('\Drupal\Core\Cache\CacheTagsInvalidatorInterface'));
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
   }
 
   /**

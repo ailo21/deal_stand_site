@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\field\Kernel\Boolean;
 
+use Drupal;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FieldItemInterface;
 use Drupal\entity_test\Entity\EntityTest;
@@ -35,7 +36,7 @@ class BooleanItemTest extends FieldKernelTestBase {
     ])->save();
 
     // Create a form display for the default form mode.
-    \Drupal::service('entity_display.repository')
+    Drupal::service('entity_display.repository')
       ->getFormDisplay('entity_test', 'entity_test')
       ->setComponent('field_boolean', [
         'type' => 'boolean_checkbox',
@@ -59,18 +60,18 @@ class BooleanItemTest extends FieldKernelTestBase {
     $entity = EntityTest::load($id);
     $this->assertInstanceOf(FieldItemListInterface::class, $entity->field_boolean);
     $this->assertInstanceOf(FieldItemInterface::class, $entity->field_boolean[0]);
-    $this->assertEqual($entity->field_boolean->value, $value);
-    $this->assertEqual($entity->field_boolean[0]->value, $value);
+    $this->assertEqual($value, $entity->field_boolean->value);
+    $this->assertEqual($value, $entity->field_boolean[0]->value);
 
     // Verify changing the boolean value.
     $new_value = 0;
     $entity->field_boolean->value = $new_value;
-    $this->assertEqual($entity->field_boolean->value, $new_value);
+    $this->assertEqual($new_value, $entity->field_boolean->value);
 
     // Read changed entity and assert changed values.
     $entity->save();
     $entity = EntityTest::load($id);
-    $this->assertEqual($entity->field_boolean->value, $new_value);
+    $this->assertEqual($new_value, $entity->field_boolean->value);
 
     // Test sample item generation.
     $entity = EntityTest::create();

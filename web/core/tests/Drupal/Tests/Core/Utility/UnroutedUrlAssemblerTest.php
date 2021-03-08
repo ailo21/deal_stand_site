@@ -6,6 +6,7 @@ use Drupal\Core\GeneratedUrl;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Utility\UnroutedUrlAssembler;
 use Drupal\Tests\UnitTestCase;
+use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -58,7 +59,7 @@ class UnroutedUrlAssemblerTest extends UnitTestCase {
    * @covers ::assemble
    */
   public function testAssembleWithNeitherExternalNorDomainLocalUri() {
-    $this->expectException(\InvalidArgumentException::class);
+    $this->expectException(InvalidArgumentException::class);
     $this->unroutedUrlAssembler->assemble('wrong-url');
   }
 
@@ -66,7 +67,7 @@ class UnroutedUrlAssemblerTest extends UnitTestCase {
    * @covers ::assemble
    */
   public function testAssembleWithLeadingSlash() {
-    $this->expectException(\InvalidArgumentException::class);
+    $this->expectException(InvalidArgumentException::class);
     $this->unroutedUrlAssembler->assemble('/drupal.org');
   }
 
@@ -85,7 +86,7 @@ class UnroutedUrlAssemblerTest extends UnitTestCase {
   }
 
   /**
-   * Provides test data for testAssembleWithExternalUrl
+   * Provides test data for testAssembleWithExternalUrl.
    */
   public function providerTestAssembleWithExternalUrl() {
     return [

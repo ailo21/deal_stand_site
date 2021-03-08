@@ -4,6 +4,7 @@ namespace Drupal\Tests\Core\Utility;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\Core\Utility\Error;
+use stdClass;
 
 /**
  * @coversDefaultClass \Drupal\Core\Utility\Error
@@ -49,7 +50,7 @@ class ErrorTest extends UnitTestCase {
     $two_items[] = $this->createBacktraceItem('test_function_two', 'TestClass');
     $data[] = [$two_items, $this->createBacktraceItem('TestClass->test_function_two()')];
 
-    // Add blacklist functions to backtrace. They should get removed.
+    // Add ignored functions to backtrace. They should get removed.
     foreach (['debug', '_drupal_error_handler', '_drupal_exception_handler'] as $function) {
       $two_items = $single_item;
       // Push to the start of the backtrace.
@@ -102,7 +103,7 @@ class ErrorTest extends UnitTestCase {
 
     // Add a second item, with a class.
     $second_item_args = $base;
-    $second_item_args[] = $this->createBacktraceItem('test_function_2', NULL, ['string', 10, new \stdClass()]);
+    $second_item_args[] = $this->createBacktraceItem('test_function_2', NULL, ['string', 10, new stdClass()]);
 
     $data[] = [$second_item_args, "test_function() (Line: 10)\ntest_function_2('string', 10, Object) (Line: 10)\n"];
 

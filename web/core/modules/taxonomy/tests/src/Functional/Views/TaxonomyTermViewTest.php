@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\taxonomy\Functional\Views;
 
+use Drupal;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\node\Entity\Node;
@@ -29,7 +30,7 @@ class TaxonomyTermViewTest extends TaxonomyTestBase {
   protected $defaultTheme = 'stark';
 
   /**
-   * An user with permissions to administer taxonomy.
+   * A user with permissions to administer taxonomy.
    *
    * @var \Drupal\user\UserInterface
    */
@@ -68,7 +69,7 @@ class TaxonomyTermViewTest extends TaxonomyTestBase {
     $this->createEntityReferenceField('node', 'article', $this->fieldName1, NULL, 'taxonomy_term', 'default', $handler_settings, FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
 
     /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $display_repository */
-    $display_repository = \Drupal::service('entity_display.repository');
+    $display_repository = Drupal::service('entity_display.repository');
     $display_repository->getFormDisplay('node', 'article')
       ->setComponent($this->fieldName1, [
         'type' => 'options_select',
@@ -93,18 +94,18 @@ class TaxonomyTermViewTest extends TaxonomyTestBase {
     $edit['title[0][value]'] = $original_title = $this->randomMachineName();
     $edit['body[0][value]'] = $this->randomMachineName();
     $edit["{$this->fieldName1}[]"] = $term->id();
-    $this->drupalPostForm('node/add/article', $edit, t('Save'));
+    $this->drupalPostForm('node/add/article', $edit, 'Save');
     $node = $this->drupalGetNodeByTitle($edit['title[0][value]']);
 
     $this->drupalGet('taxonomy/term/' . $term->id());
     $this->assertText($term->label());
     $this->assertText($node->label());
 
-    \Drupal::service('module_installer')->install(['language', 'content_translation']);
+    Drupal::service('module_installer')->install(['language', 'content_translation']);
     ConfigurableLanguage::createFromLangcode('ur')->save();
     // Enable translation for the article content type and ensure the change is
     // picked up.
-    \Drupal::service('content_translation.manager')->setEnabled('node', 'article', TRUE);
+    Drupal::service('content_translation.manager')->setEnabled('node', 'article', TRUE);
     $roles = $this->adminUser->getRoles(TRUE);
     Role::load(reset($roles))
       ->grantPermission('create content translations')
@@ -113,7 +114,7 @@ class TaxonomyTermViewTest extends TaxonomyTestBase {
 
     $edit['title[0][value]'] = $translated_title = $this->randomMachineName();
 
-    $this->drupalPostForm('node/' . $node->id() . '/translations/add/en/ur', $edit, t('Save (this translation)'));
+    $this->drupalPostForm('node/' . $node->id() . '/translations/add/en/ur', $edit, 'Save (this translation)');
 
     $this->drupalGet('taxonomy/term/' . $term->id());
     $this->assertText($term->label());
@@ -135,7 +136,7 @@ class TaxonomyTermViewTest extends TaxonomyTestBase {
     foreach (Node::loadMultiple() as $node) {
       $node->delete();
     }
-    \Drupal::service('module_installer')->uninstall(['content_translation', 'language']);
+    Drupal::service('module_installer')->uninstall(['content_translation', 'language']);
 
     $view = Views::getView('taxonomy_term');
     $view->initDisplay();

@@ -56,7 +56,7 @@ function node_access_test_node_grants($account, $op) {
     $grants['node_access_test'] = [8888, 8889];
   }
 
-  $no_access_uid = \Drupal::state()->get('node_access_test.no_access_uid') ?: 0;
+  $no_access_uid = Drupal::state()->get('node_access_test.no_access_uid', 0);
   if ($op == 'view' && $account->id() == $no_access_uid) {
     $grants['node_access_all'] = [0];
   }
@@ -79,7 +79,7 @@ function node_access_test_node_grants($account, $op) {
 function node_access_test_node_access_records(NodeInterface $node) {
   $grants = [];
   // For NodeAccessBaseTableTestCase, only set records for private nodes.
-  if (!\Drupal::state()->get('node_access_test.private') || $node->private->value) {
+  if (!Drupal::state()->get('node_access_test.private') || $node->private->value) {
     // Groups 8888 and 8889 for the node_access_test realm both receive a view
     // grant for all controlled nodes. See node_access_test_node_grants().
     $grants[] = [
@@ -135,7 +135,7 @@ function node_access_test_add_field(NodeTypeInterface $type) {
   $field->save();
 
   // Assign widget settings for the 'default' form mode.
-  \Drupal::service('entity_display.repository')
+  Drupal::service('entity_display.repository')
     ->getFormDisplay('node', $type->id())
     ->setComponent('private', [
       'type' => 'number',
@@ -147,7 +147,7 @@ function node_access_test_add_field(NodeTypeInterface $type) {
  * Implements hook_node_access().
  */
 function node_access_test_node_access(NodeInterface $node, $op, AccountInterface $account) {
-  $secret_catalan = \Drupal::state()
+  $secret_catalan = Drupal::state()
     ->get('node_access_test_secret_catalan') ?: 0;
   if ($secret_catalan && $node->language()->getId() == 'ca') {
     // Make all Catalan content secret.
@@ -155,7 +155,7 @@ function node_access_test_node_access(NodeInterface $node, $op, AccountInterface
   }
 
   // Grant access if a specific user is specified.
-  if (\Drupal::state()->get('node_access_test.allow_uid') === $account->id()) {
+  if (Drupal::state()->get('node_access_test.allow_uid') === $account->id()) {
     return AccessResult::allowed();
   }
 

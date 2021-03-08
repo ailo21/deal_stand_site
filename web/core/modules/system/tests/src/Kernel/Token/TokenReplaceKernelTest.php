@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\system\Kernel\Token;
 
+use Drupal;
 use Drupal\Core\Url;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
@@ -52,7 +53,7 @@ class TokenReplaceKernelTest extends TokenReplaceKernelTestBase {
     }
 
     // Test token replacement when the string contains no tokens.
-    $this->assertEqual($this->tokenService->replace('No tokens here.'), 'No tokens here.');
+    $this->assertEqual('No tokens here.', $this->tokenService->replace('No tokens here.'));
   }
 
   /**
@@ -109,9 +110,9 @@ class TokenReplaceKernelTest extends TokenReplaceKernelTestBase {
     $base_bubbleable_metadata = new BubbleableMetadata();
 
     $metadata_tests = [];
-    $metadata_tests['[site:name]'] = BubbleableMetadata::createFromObject(\Drupal::config('system.site'));
-    $metadata_tests['[site:slogan]'] = BubbleableMetadata::createFromObject(\Drupal::config('system.site'));
-    $metadata_tests['[site:mail]'] = BubbleableMetadata::createFromObject(\Drupal::config('system.site'));
+    $metadata_tests['[site:name]'] = BubbleableMetadata::createFromObject(Drupal::config('system.site'));
+    $metadata_tests['[site:slogan]'] = BubbleableMetadata::createFromObject(Drupal::config('system.site'));
+    $metadata_tests['[site:mail]'] = BubbleableMetadata::createFromObject(Drupal::config('system.site'));
     $bubbleable_metadata = clone $base_bubbleable_metadata;
     $metadata_tests['[site:url]'] = $bubbleable_metadata->addCacheContexts(['url.site']);
     $metadata_tests['[site:url-brief]'] = $bubbleable_metadata;
@@ -123,8 +124,8 @@ class TokenReplaceKernelTest extends TokenReplaceKernelTestBase {
     foreach ($tests as $input => $expected) {
       $bubbleable_metadata = new BubbleableMetadata();
       $output = $this->tokenService->replace($input, [], ['langcode' => $this->interfaceLanguage->getId()], $bubbleable_metadata);
-      $this->assertEqual($output, $expected, new FormattableMarkup('System site information token %token replaced.', ['%token' => $input]));
-      $this->assertEqual($bubbleable_metadata, $metadata_tests[$input]);
+      $this->assertEqual($expected, $output, new FormattableMarkup('System site information token %token replaced.', ['%token' => $input]));
+      $this->assertEqual($metadata_tests[$input], $bubbleable_metadata);
     }
   }
 
@@ -137,7 +138,7 @@ class TokenReplaceKernelTest extends TokenReplaceKernelTestBase {
 
     // Generate and test tokens.
     $tests = [];
-    $date_formatter = \Drupal::service('date.formatter');
+    $date_formatter = Drupal::service('date.formatter');
     $tests['[date:short]'] = $date_formatter->format($date, 'short', '', NULL, $this->interfaceLanguage->getId());
     $tests['[date:medium]'] = $date_formatter->format($date, 'medium', '', NULL, $this->interfaceLanguage->getId());
     $tests['[date:long]'] = $date_formatter->format($date, 'long', '', NULL, $this->interfaceLanguage->getId());
@@ -150,7 +151,7 @@ class TokenReplaceKernelTest extends TokenReplaceKernelTestBase {
 
     foreach ($tests as $input => $expected) {
       $output = $this->tokenService->replace($input, ['date' => $date], ['langcode' => $this->interfaceLanguage->getId()]);
-      $this->assertEqual($output, $expected, new FormattableMarkup('Date token %token replaced.', ['%token' => $input]));
+      $this->assertEqual($expected, $output, new FormattableMarkup('Date token %token replaced.', ['%token' => $input]));
     }
   }
 

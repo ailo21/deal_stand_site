@@ -4,6 +4,7 @@ namespace Drupal\Tests\Component\Serialization;
 
 use Drupal\Component\Serialization\Exception\InvalidDataTypeException;
 use Drupal\Component\Serialization\YamlPecl;
+use stdClass;
 
 /**
  * Tests the YamlPecl serialization implementation.
@@ -30,7 +31,7 @@ class YamlPeclTest extends YamlTestBase {
    * Ensures that php object support is disabled.
    */
   public function testObjectSupportDisabled() {
-    $object = new \stdClass();
+    $object = new stdClass();
     $object->foo = 'bar';
     $this->assertEquals(['O:8:"stdClass":1:{s:3:"foo";s:3:"bar";}'], YamlPecl::decode(YamlPecl::encode([$object])));
     $this->assertEquals(0, ini_get('yaml.decode_php'));
@@ -52,11 +53,13 @@ class YamlPeclTest extends YamlTestBase {
    * @covers ::encode
    */
   public function testEncode() {
+    // cSpell:disable
     $this->assertEquals('---
 foo:
   bar: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus sapien ex, venenatis vitae nisi eu, posuere luctus dolor. Nullam convallis
 ...
 ', YamlPecl::encode(['foo' => ['bar' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus sapien ex, venenatis vitae nisi eu, posuere luctus dolor. Nullam convallis']]));
+    // cSpell:enable
   }
 
   /**

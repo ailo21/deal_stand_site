@@ -2,26 +2,27 @@
 
 namespace Drupal\KernelTests;
 
+use Drupal;
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Routing\PreloadableRouteProviderInterface;
-use Symfony\Cmf\Component\Routing\PagedRouteProviderInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Rebuilds the router when the provider is instantiated.
  */
-class RouteProvider implements PreloadableRouteProviderInterface, PagedRouteProviderInterface {
+class RouteProvider implements PreloadableRouteProviderInterface {
 
-  use \Drupal\Core\DependencyInjection\DependencySerializationTrait;
+  use DependencySerializationTrait;
 
   /**
    * Loads the real route provider from the container and rebuilds the router.
    *
-   * @return \Drupal\Core\Routing\PreloadableRouteProviderInterface|\Symfony\Cmf\Component\Routing\PagedRouteProviderInterface|\Symfony\Component\EventDispatcher\EventSubscriberInterface
+   * @return \Drupal\Core\Routing\PreloadableRouteProviderInterface|\Symfony\Component\EventDispatcher\EventSubscriberInterface
    *   The route provider.
    */
   protected function lazyLoadItself() {
     if (!isset($this->service)) {
-      $container = \Drupal::getContainer();
+      $container = Drupal::getContainer();
       $this->service = $container->get('simpletest.router.route_provider');
       $container->get('router.builder')->rebuild();
     }
@@ -90,20 +91,6 @@ class RouteProvider implements PreloadableRouteProviderInterface, PagedRouteProv
    */
   public function reset() {
     return $this->lazyLoadItself()->reset();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getRoutesPaged($offset, $length = NULL) {
-    return $this->lazyLoadItself()->getRoutesPaged($offset, $length);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getRoutesCount() {
-    return $this->lazyLoadItself()->getRoutesCount();
   }
 
 }

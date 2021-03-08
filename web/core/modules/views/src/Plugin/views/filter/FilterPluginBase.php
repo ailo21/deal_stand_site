@@ -2,6 +2,7 @@
 
 namespace Drupal\views\Plugin\views\filter;
 
+use Drupal;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableDependencyInterface;
 use Drupal\Core\Form\FormHelper;
@@ -77,7 +78,7 @@ abstract class FilterPluginBase extends HandlerBase implements CacheableDependen
 
   /**
    * @var bool
-   * Disable the possibility to allow a exposed input to be optional.
+   * Disable the possibility to allow an exposed input to be optional.
    */
   public $always_required = FALSE;
 
@@ -170,7 +171,7 @@ abstract class FilterPluginBase extends HandlerBase implements CacheableDependen
   }
 
   /**
-   * Display the filter on the administrative summary
+   * Display the filter on the administrative summary.
    */
   public function adminSummary() {
     return $this->operator . ' ' . $this->value;
@@ -243,7 +244,7 @@ abstract class FilterPluginBase extends HandlerBase implements CacheableDependen
   }
 
   /**
-   * Simple validate handler
+   * Simple validate handler.
    */
   public function validateOptionsForm(&$form, FormStateInterface $form_state) {
     $this->operatorValidate($form, $form_state);
@@ -257,7 +258,7 @@ abstract class FilterPluginBase extends HandlerBase implements CacheableDependen
   }
 
   /**
-   * Simple submit handler
+   * Simple submit handler.
    */
   public function submitOptionsForm(&$form, FormStateInterface $form_state) {
     // Do not store these values.
@@ -518,7 +519,7 @@ abstract class FilterPluginBase extends HandlerBase implements CacheableDependen
     // prior to rendering. That's why the preRender for it needs to run first,
     // so that when the next preRender (the one for fieldsets) runs, it gets
     // the flattened data.
-    array_unshift($form['#pre_render'], [get_class($this), 'preRenderFlattenData']);
+    array_unshift($form['#pre_render'], [static::class, 'preRenderFlattenData']);
     $form['expose']['#flatten'] = TRUE;
 
     if (empty($this->always_required)) {
@@ -739,7 +740,7 @@ abstract class FilterPluginBase extends HandlerBase implements CacheableDependen
   /**
    * Validates a filter identifier.
    *
-   * Sets the form error if $form_state is passed or a error string if
+   * Sets the form error if $form_state is passed or an error string if
    * $form_state is not passed.
    *
    * @param string $identifier
@@ -887,7 +888,7 @@ abstract class FilterPluginBase extends HandlerBase implements CacheableDependen
   }
 
   /**
-   * Render our chunk of the exposed filter form when selecting
+   * Render our chunk of the exposed filter form when selecting.
    *
    * You can override this if it doesn't do what you expect.
    */
@@ -914,6 +915,17 @@ abstract class FilterPluginBase extends HandlerBase implements CacheableDependen
       $this->exposedTranslate($form[$operator], 'operator');
 
       unset($form['operator']);
+
+      // When the operator and value forms are both in play, enclose them within
+      // a wrapper.
+      if (!empty($this->options['expose']['identifier'])) {
+        $wrapper = $this->options['expose']['identifier'] . '_wrapper';
+        $this->buildValueWrapper($form, $wrapper);
+        $form[$operator]['#title_display'] = 'invisible';
+
+        $form[$wrapper][$operator] = $form[$operator];
+        unset($form[$operator]);
+      }
     }
 
     // Build the form and set the value based on the identifier.
@@ -930,6 +942,43 @@ abstract class FilterPluginBase extends HandlerBase implements CacheableDependen
 
       if ($value != 'value') {
         unset($form['value']);
+      }
+
+      // When the operator and value forms are both in play, enclose them within
+      // a wrapper, for usability. Also wrap if the value form is comprised of
+      // multiple elements.
+      if ((!empty($this->options['expose']['use_operator']) && !empty($this->options['expose']['operator_id'])) || count(Element::children($form[$value]))) {
+        $wrapper = $value . '_wrapper';
+        $this->buildValueWrapper($form, $wrapper);
+        $form[$wrapper][$value] = $form[$value];
+        unset($form[$value]);
+      }
+    }
+  }
+
+  /**
+   * Builds wrapper for value and operator forms.
+   *
+   * @param array $form
+   *   The form.
+   * @param string $wrapper_identifer
+   *   The key to use for the wrapper element.
+   */
+  protected function buildValueWrapper(&$form, $wrapper_identifer) {
+    // If both the field and the operator are exposed, this will end up being
+    // called twice. We don't want to wipe out what's already there, so if it
+    // exists already, do nothing.
+    if (!isset($form[$wrapper_identifer])) {
+      $form[$wrapper_identifer] = [
+        '#type' => 'fieldset',
+      ];
+
+      $exposed_info = $this->exposedInfo();
+      if (!empty($exposed_info['label'])) {
+        $form[$wrapper_identifer]['#title'] = $exposed_info['label'];
+      }
+      if (!empty($exposed_info['description'])) {
+        $form[$wrapper_identifer]['#description'] = $exposed_info['description'];
       }
     }
   }
@@ -948,7 +997,7 @@ abstract class FilterPluginBase extends HandlerBase implements CacheableDependen
     // prior to rendering. That's why the preRender for it needs to run first,
     // so that when the next preRender (the one for fieldsets) runs, it gets
     // the flattened data.
-    array_unshift($form['#pre_render'], [get_class($this), 'preRenderFlattenData']);
+    array_unshift($form['#pre_render'], [static::class, 'preRenderFlattenData']);
     $form['group_info']['#flatten'] = TRUE;
 
     if (!empty($this->options['group_info']['identifier'])) {
@@ -1492,7 +1541,7 @@ abstract class FilterPluginBase extends HandlerBase implements CacheableDependen
     }
 
     // Check if we store exposed value for current user.
-    $user = \Drupal::currentUser();
+    $user = Drupal::currentUser();
     $allowed_rids = empty($this->options['expose']['remember_roles']) ? [] : array_filter($this->options['expose']['remember_roles']);
     $intersect_rids = array_intersect(array_keys($allowed_rids), $user->getRoles());
     if (empty($intersect_rids)) {

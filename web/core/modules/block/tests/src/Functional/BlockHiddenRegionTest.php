@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\block\Functional;
 
+use Drupal;
 use Drupal\Tests\BrowserTestBase;
 
 /**
@@ -52,27 +53,27 @@ class BlockHiddenRegionTest extends BrowserTestBase {
 
     // Ensure that the search form block is displayed.
     $this->drupalGet('');
-    $this->assertText('Search', 'Block was displayed on the front page.');
+    $this->assertText('Search');
 
     // Install "block_test_theme" and set it as the default theme.
     $theme = 'block_test_theme';
     // We need to install a non-hidden theme so that there is more than one
     // local task.
-    \Drupal::service('theme_installer')->install([$theme, 'stark']);
+    Drupal::service('theme_installer')->install([$theme, 'stark']);
     $this->config('system.theme')
       ->set('default', $theme)
       ->save();
     // Installing a theme will cause the kernel terminate event to rebuild the
     // router. Simulate that here.
-    \Drupal::service('router.builder')->rebuildIfNeeded();
+    Drupal::service('router.builder')->rebuildIfNeeded();
 
     // Ensure that "block_test_theme" is set as the default theme.
     $this->drupalGet('admin/structure/block');
-    $this->assertText('Block test theme(' . t('active tab') . ')', 'Default local task on blocks admin page is the block test theme.');
+    $this->assertSession()->pageTextContains('Block test theme(active tab)');
 
     // Ensure that the search form block is displayed.
     $this->drupalGet('');
-    $this->assertText('Search', 'Block was displayed on the front page.');
+    $this->assertText('Search');
   }
 
 }

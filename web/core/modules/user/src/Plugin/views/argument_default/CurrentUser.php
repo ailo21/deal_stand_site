@@ -2,12 +2,13 @@
 
 namespace Drupal\user\Plugin\views\argument_default;
 
+use Drupal;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableDependencyInterface;
 use Drupal\views\Plugin\views\argument_default\ArgumentDefaultPluginBase;
 
 /**
- * Default argument plugin to extract the current user
+ * Default argument plugin to extract the current user.
  *
  * This plugin actually has no options so it does not need to do a great deal.
  *
@@ -22,7 +23,7 @@ class CurrentUser extends ArgumentDefaultPluginBase implements CacheableDependen
    * {@inheritdoc}
    */
   public function getArgument() {
-    return \Drupal::currentUser()->id();
+    return Drupal::currentUser()->id();
   }
 
   /**

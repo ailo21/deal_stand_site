@@ -2,6 +2,7 @@
 
 namespace Drupal\FunctionalTests\Installer;
 
+use Drupal;
 use Drupal\Core\DrupalKernel;
 use Drupal\Core\Language\Language;
 use Drupal\Core\Session\UserSession;
@@ -140,7 +141,7 @@ abstract class InstallerTestBase extends BrowserTestBase {
 
     $this->container
       ->setParameter('app.root', DRUPAL_ROOT);
-    \Drupal::setContainer($this->container);
+    Drupal::setContainer($this->container);
 
     // Setup Mink.
     $this->initMink();
@@ -214,12 +215,15 @@ abstract class InstallerTestBase extends BrowserTestBase {
 
   /**
    * Installer step: Select language.
+   *
+   * @see \Drupal\Core\Installer\Form\SelectLanguageForm
    */
   protected function setUpLanguage() {
     $edit = [
       'langcode' => $this->langcode,
     ];
-    $this->drupalPostForm(NULL, $edit, $this->translations['Save and continue']);
+    // The 'Select Language' step is always English.
+    $this->submitForm($edit, 'Save and continue');
   }
 
   /**
@@ -229,7 +233,7 @@ abstract class InstallerTestBase extends BrowserTestBase {
     $edit = [
       'profile' => $this->profile,
     ];
-    $this->drupalPostForm(NULL, $edit, $this->translations['Save and continue']);
+    $this->submitForm($edit, $this->translations['Save and continue']);
   }
 
   /**
@@ -237,7 +241,7 @@ abstract class InstallerTestBase extends BrowserTestBase {
    */
   protected function setUpSettings() {
     $edit = $this->translatePostValues($this->parameters['forms']['install_settings_form']);
-    $this->drupalPostForm(NULL, $edit, $this->translations['Save and continue']);
+    $this->submitForm($edit, $this->translations['Save and continue']);
   }
 
   /**
@@ -257,7 +261,7 @@ abstract class InstallerTestBase extends BrowserTestBase {
    */
   protected function setUpSite() {
     $edit = $this->translatePostValues($this->parameters['forms']['install_configure_form']);
-    $this->drupalPostForm(NULL, $edit, $this->translations['Save and continue']);
+    $this->submitForm($edit, $this->translations['Save and continue']);
     // If we've got to this point the site is installed using the regular
     // installation workflow.
     $this->isInstalled = TRUE;

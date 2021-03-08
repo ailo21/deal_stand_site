@@ -7,10 +7,20 @@
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\Display\EntityFormDisplayInterface;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\DynamicallyFieldableEntityStorageInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\FieldDefinition;
+use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Url;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\node\Entity\NodeType;
 
@@ -484,7 +494,7 @@ use Drupal\node\Entity\NodeType;
  * - defaults: For entity form routes, use _entity_form rather than the generic
  *   _controller or _form. The value is composed of the entity type machine name
  *   and a form handler type from the entity annotation (see @ref define above
- *   more more on handlers and annotation). So, in this example, block.default
+ *   for more on handlers and annotation). So, in this example, block.default
  *   refers to the 'default' form handler on the block entity type, whose
  *   annotation contains:
  *   @code
@@ -541,7 +551,7 @@ use Drupal\node\Entity\NodeType;
  * @link container Services and Dependency Injection topic @endlink for more
  * about how to properly retrieve services.
  *
- * To query to find entities to load, use an entity query, which is a object
+ * To query to find entities to load, use an entity query, which is an object
  * implementing \Drupal\Core\Entity\Query\QueryInterface that you can retrieve
  * with:
  * @code
@@ -653,12 +663,12 @@ use Drupal\node\Entity\NodeType;
  * @param \Drupal\Core\Entity\EntityInterface $entity
  *   The entity to check access to.
  * @param string $operation
- *   The operation that is to be performed on $entity.
- * @param \Drupal\Core\Session\AccountInterface $account
- *   The account trying to access the entity. Usually one of:
+ *   The operation that is to be performed on $entity. Usually one of:
  *   - "view"
  *   - "update"
  *   - "delete"
+ * @param \Drupal\Core\Session\AccountInterface $account
+ *   The account trying to access the entity.
  *
  * @return \Drupal\Core\Access\AccessResultInterface
  *   The access result. The final result is calculated by using
@@ -677,7 +687,7 @@ use Drupal\node\Entity\NodeType;
  *
  * @ingroup entity_api
  */
-function hook_entity_access(\Drupal\Core\Entity\EntityInterface $entity, $operation, \Drupal\Core\Session\AccountInterface $account) {
+function hook_entity_access(EntityInterface $entity, $operation, AccountInterface $account) {
   // No opinion.
   return AccessResult::neutral();
 }
@@ -709,7 +719,7 @@ function hook_entity_access(\Drupal\Core\Entity\EntityInterface $entity, $operat
  *
  * @ingroup entity_api
  */
-function hook_ENTITY_TYPE_access(\Drupal\Core\Entity\EntityInterface $entity, $operation, \Drupal\Core\Session\AccountInterface $account) {
+function hook_ENTITY_TYPE_access(EntityInterface $entity, $operation, AccountInterface $account) {
   // No opinion.
   return AccessResult::neutral();
 }
@@ -736,7 +746,7 @@ function hook_ENTITY_TYPE_access(\Drupal\Core\Entity\EntityInterface $entity, $o
  *
  * @ingroup entity_api
  */
-function hook_entity_create_access(\Drupal\Core\Session\AccountInterface $account, array $context, $entity_bundle) {
+function hook_entity_create_access(AccountInterface $account, array $context, $entity_bundle) {
   // No opinion.
   return AccessResult::neutral();
 }
@@ -762,7 +772,7 @@ function hook_entity_create_access(\Drupal\Core\Session\AccountInterface $accoun
  *
  * @ingroup entity_api
  */
-function hook_ENTITY_TYPE_create_access(\Drupal\Core\Session\AccountInterface $account, array $context, $entity_bundle) {
+function hook_ENTITY_TYPE_create_access(AccountInterface $account, array $context, $entity_bundle) {
   // No opinion.
   return AccessResult::neutral();
 }
@@ -883,7 +893,7 @@ function hook_entity_bundle_info_alter(&$bundles) {
 function hook_entity_bundle_create($entity_type_id, $bundle) {
   // When a new bundle is created, the menu needs to be rebuilt to add the
   // Field UI menu item tabs.
-  \Drupal::service('router.builder')->setRebuildNeeded();
+  Drupal::service('router.builder')->setRebuildNeeded();
 }
 
 /**
@@ -900,7 +910,7 @@ function hook_entity_bundle_create($entity_type_id, $bundle) {
  */
 function hook_entity_bundle_delete($entity_type_id, $bundle) {
   // Remove the settings associated with the bundle in my_module.settings.
-  $config = \Drupal::config('my_module.settings');
+  $config = Drupal::config('my_module.settings');
   $bundle_settings = $config->get('bundle_settings');
   if (isset($bundle_settings[$entity_type_id][$bundle])) {
     unset($bundle_settings[$entity_type_id][$bundle]);
@@ -919,8 +929,8 @@ function hook_entity_bundle_delete($entity_type_id, $bundle) {
  * @ingroup entity_crud
  * @see hook_ENTITY_TYPE_create()
  */
-function hook_entity_create(\Drupal\Core\Entity\EntityInterface $entity) {
-  \Drupal::logger('example')->info('Entity created: @label', ['@label' => $entity->label()]);
+function hook_entity_create(EntityInterface $entity) {
+  Drupal::logger('example')->info('Entity created: @label', ['@label' => $entity->label()]);
 }
 
 /**
@@ -934,8 +944,8 @@ function hook_entity_create(\Drupal\Core\Entity\EntityInterface $entity) {
  * @ingroup entity_crud
  * @see hook_entity_create()
  */
-function hook_ENTITY_TYPE_create(\Drupal\Core\Entity\EntityInterface $entity) {
-  \Drupal::logger('example')->info('ENTITY_TYPE created: @label', ['@label' => $entity->label()]);
+function hook_ENTITY_TYPE_create(EntityInterface $entity) {
+  Drupal::logger('example')->info('ENTITY_TYPE created: @label', ['@label' => $entity->label()]);
 }
 
 /**
@@ -1098,8 +1108,8 @@ function hook_ENTITY_TYPE_storage_load(array $entities) {
  */
 function hook_entity_presave(Drupal\Core\Entity\EntityInterface $entity) {
   if ($entity instanceof ContentEntityInterface && $entity->isTranslatable()) {
-    $route_match = \Drupal::routeMatch();
-    \Drupal::service('content_translation.synchronizer')->synchronizeFields($entity, $entity->language()->getId(), $route_match->getParameter('source_langcode'));
+    $route_match = Drupal::routeMatch();
+    Drupal::service('content_translation.synchronizer')->synchronizeFields($entity, $entity->language()->getId(), $route_match->getParameter('source_langcode'));
   }
 }
 
@@ -1117,8 +1127,8 @@ function hook_entity_presave(Drupal\Core\Entity\EntityInterface $entity) {
  */
 function hook_ENTITY_TYPE_presave(Drupal\Core\Entity\EntityInterface $entity) {
   if ($entity->isTranslatable()) {
-    $route_match = \Drupal::routeMatch();
-    \Drupal::service('content_translation.synchronizer')->synchronizeFields($entity, $entity->language()->getId(), $route_match->getParameter('source_langcode'));
+    $route_match = Drupal::routeMatch();
+    Drupal::service('content_translation.synchronizer')->synchronizeFields($entity, $entity->language()->getId(), $route_match->getParameter('source_langcode'));
   }
 }
 
@@ -1136,7 +1146,7 @@ function hook_ENTITY_TYPE_presave(Drupal\Core\Entity\EntityInterface $entity) {
  */
 function hook_entity_insert(Drupal\Core\Entity\EntityInterface $entity) {
   // Insert the new entity into a fictional table of all entities.
-  \Drupal::database()->insert('example_entity')
+  Drupal::database()->insert('example_entity')
     ->fields([
       'type' => $entity->getEntityTypeId(),
       'id' => $entity->id(),
@@ -1160,7 +1170,7 @@ function hook_entity_insert(Drupal\Core\Entity\EntityInterface $entity) {
  */
 function hook_ENTITY_TYPE_insert(Drupal\Core\Entity\EntityInterface $entity) {
   // Insert the new entity into a fictional table of this type of entity.
-  \Drupal::database()->insert('example_entity')
+  Drupal::database()->insert('example_entity')
     ->fields([
       'id' => $entity->id(),
       'created' => REQUEST_TIME,
@@ -1184,7 +1194,7 @@ function hook_ENTITY_TYPE_insert(Drupal\Core\Entity\EntityInterface $entity) {
  */
 function hook_entity_update(Drupal\Core\Entity\EntityInterface $entity) {
   // Update the entity's entry in a fictional table of all entities.
-  \Drupal::database()->update('example_entity')
+  Drupal::database()->update('example_entity')
     ->fields([
       'updated' => REQUEST_TIME,
     ])
@@ -1208,7 +1218,7 @@ function hook_entity_update(Drupal\Core\Entity\EntityInterface $entity) {
  */
 function hook_ENTITY_TYPE_update(Drupal\Core\Entity\EntityInterface $entity) {
   // Update the entity's entry in a fictional table of this type of entity.
-  \Drupal::database()->update('example_entity')
+  Drupal::database()->update('example_entity')
     ->fields([
       'updated' => REQUEST_TIME,
     ])
@@ -1228,8 +1238,8 @@ function hook_ENTITY_TYPE_update(Drupal\Core\Entity\EntityInterface $entity) {
  * @ingroup entity_crud
  * @see hook_ENTITY_TYPE_translation_create()
  */
-function hook_entity_translation_create(\Drupal\Core\Entity\EntityInterface $translation) {
-  \Drupal::logger('example')->info('Entity translation created: @label', ['@label' => $translation->label()]);
+function hook_entity_translation_create(EntityInterface $translation) {
+  Drupal::logger('example')->info('Entity translation created: @label', ['@label' => $translation->label()]);
 }
 
 /**
@@ -1244,8 +1254,8 @@ function hook_entity_translation_create(\Drupal\Core\Entity\EntityInterface $tra
  * @ingroup entity_crud
  * @see hook_entity_translation_create()
  */
-function hook_ENTITY_TYPE_translation_create(\Drupal\Core\Entity\EntityInterface $translation) {
-  \Drupal::logger('example')->info('ENTITY_TYPE translation created: @label', ['@label' => $translation->label()]);
+function hook_ENTITY_TYPE_translation_create(EntityInterface $translation) {
+  Drupal::logger('example')->info('ENTITY_TYPE translation created: @label', ['@label' => $translation->label()]);
 }
 
 /**
@@ -1260,12 +1270,12 @@ function hook_ENTITY_TYPE_translation_create(\Drupal\Core\Entity\EntityInterface
  * @ingroup entity_crud
  * @see hook_ENTITY_TYPE_translation_insert()
  */
-function hook_entity_translation_insert(\Drupal\Core\Entity\EntityInterface $translation) {
+function hook_entity_translation_insert(EntityInterface $translation) {
   $variables = [
     '@language' => $translation->language()->getName(),
     '@label' => $translation->getUntranslated()->label(),
   ];
-  \Drupal::logger('example')->notice('The @language translation of @label has just been stored.', $variables);
+  Drupal::logger('example')->notice('The @language translation of @label has just been stored.', $variables);
 }
 
 /**
@@ -1280,12 +1290,12 @@ function hook_entity_translation_insert(\Drupal\Core\Entity\EntityInterface $tra
  * @ingroup entity_crud
  * @see hook_entity_translation_insert()
  */
-function hook_ENTITY_TYPE_translation_insert(\Drupal\Core\Entity\EntityInterface $translation) {
+function hook_ENTITY_TYPE_translation_insert(EntityInterface $translation) {
   $variables = [
     '@language' => $translation->language()->getName(),
     '@label' => $translation->getUntranslated()->label(),
   ];
-  \Drupal::logger('example')->notice('The @language translation of @label has just been stored.', $variables);
+  Drupal::logger('example')->notice('The @language translation of @label has just been stored.', $variables);
 }
 
 /**
@@ -1299,12 +1309,12 @@ function hook_ENTITY_TYPE_translation_insert(\Drupal\Core\Entity\EntityInterface
  * @ingroup entity_crud
  * @see hook_ENTITY_TYPE_translation_delete()
  */
-function hook_entity_translation_delete(\Drupal\Core\Entity\EntityInterface $translation) {
+function hook_entity_translation_delete(EntityInterface $translation) {
   $variables = [
     '@language' => $translation->language()->getName(),
     '@label' => $translation->label(),
   ];
-  \Drupal::logger('example')->notice('The @language translation of @label has just been deleted.', $variables);
+  Drupal::logger('example')->notice('The @language translation of @label has just been deleted.', $variables);
 }
 
 /**
@@ -1318,12 +1328,12 @@ function hook_entity_translation_delete(\Drupal\Core\Entity\EntityInterface $tra
  * @ingroup entity_crud
  * @see hook_entity_translation_delete()
  */
-function hook_ENTITY_TYPE_translation_delete(\Drupal\Core\Entity\EntityInterface $translation) {
+function hook_ENTITY_TYPE_translation_delete(EntityInterface $translation) {
   $variables = [
     '@language' => $translation->language()->getName(),
     '@label' => $translation->label(),
   ];
-  \Drupal::logger('example')->notice('The @language translation of @label has just been deleted.', $variables);
+  Drupal::logger('example')->notice('The @language translation of @label has just been deleted.', $variables);
 }
 
 /**
@@ -1336,12 +1346,12 @@ function hook_ENTITY_TYPE_translation_delete(\Drupal\Core\Entity\EntityInterface
  * @see hook_ENTITY_TYPE_predelete()
  */
 function hook_entity_predelete(Drupal\Core\Entity\EntityInterface $entity) {
-  $connection = \Drupal::database();
+  $connection = Drupal::database();
   // Count references to this entity in a custom table before they are removed
   // upon entity deletion.
   $id = $entity->id();
   $type = $entity->getEntityTypeId();
-  $count = \Drupal::database()->select('example_entity_data')
+  $count = Drupal::database()->select('example_entity_data')
     ->condition('type', $type)
     ->condition('id', $id)
     ->countQuery()
@@ -1365,12 +1375,12 @@ function hook_entity_predelete(Drupal\Core\Entity\EntityInterface $entity) {
  * @see hook_entity_predelete()
  */
 function hook_ENTITY_TYPE_predelete(Drupal\Core\Entity\EntityInterface $entity) {
-  $connection = \Drupal::database();
+  $connection = Drupal::database();
   // Count references to this entity in a custom table before they are removed
   // upon entity deletion.
   $id = $entity->id();
   $type = $entity->getEntityTypeId();
-  $count = \Drupal::database()->select('example_entity_data')
+  $count = Drupal::database()->select('example_entity_data')
     ->condition('type', $type)
     ->condition('id', $id)
     ->countQuery()
@@ -1397,7 +1407,7 @@ function hook_ENTITY_TYPE_predelete(Drupal\Core\Entity\EntityInterface $entity) 
  */
 function hook_entity_delete(Drupal\Core\Entity\EntityInterface $entity) {
   // Delete the entity's entry from a fictional table of all entities.
-  \Drupal::database()->delete('example_entity')
+  Drupal::database()->delete('example_entity')
     ->condition('type', $entity->getEntityTypeId())
     ->condition('id', $entity->id())
     ->execute();
@@ -1416,7 +1426,7 @@ function hook_entity_delete(Drupal\Core\Entity\EntityInterface $entity) {
  */
 function hook_ENTITY_TYPE_delete(Drupal\Core\Entity\EntityInterface $entity) {
   // Delete the entity's entry from a fictional table of all entities.
-  \Drupal::database()->delete('example_entity')
+  Drupal::database()->delete('example_entity')
     ->condition('type', $entity->getEntityTypeId())
     ->condition('id', $entity->id())
     ->execute();
@@ -1479,7 +1489,7 @@ function hook_ENTITY_TYPE_revision_delete(Drupal\Core\Entity\EntityInterface $en
  *
  * @ingroup entity_crud
  */
-function hook_entity_view(array &$build, \Drupal\Core\Entity\EntityInterface $entity, \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display, $view_mode) {
+function hook_entity_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
   // Only do the extra work if the component is configured to be displayed.
   // This assumes a 'mymodule_addition' extra field has been defined for the
   // entity bundle in hook_entity_extra_field_info().
@@ -1512,7 +1522,7 @@ function hook_entity_view(array &$build, \Drupal\Core\Entity\EntityInterface $en
  *
  * @ingroup entity_crud
  */
-function hook_ENTITY_TYPE_view(array &$build, \Drupal\Core\Entity\EntityInterface $entity, \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display, $view_mode) {
+function hook_ENTITY_TYPE_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
   // Only do the extra work if the component is configured to be displayed.
   // This assumes a 'mymodule_addition' extra field has been defined for the
   // entity bundle in hook_entity_extra_field_info().
@@ -1552,7 +1562,7 @@ function hook_ENTITY_TYPE_view(array &$build, \Drupal\Core\Entity\EntityInterfac
  * @see hook_entity_view()
  * @see hook_ENTITY_TYPE_view_alter()
  */
-function hook_entity_view_alter(array &$build, Drupal\Core\Entity\EntityInterface $entity, \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display) {
+function hook_entity_view_alter(array &$build, Drupal\Core\Entity\EntityInterface $entity, EntityViewDisplayInterface $display) {
   if ($build['#view_mode'] == 'full' && isset($build['an_additional_field'])) {
     // Change its weight.
     $build['an_additional_field']['#weight'] = -10;
@@ -1591,7 +1601,7 @@ function hook_entity_view_alter(array &$build, Drupal\Core\Entity\EntityInterfac
  * @see hook_ENTITY_TYPE_view()
  * @see hook_entity_view_alter()
  */
-function hook_ENTITY_TYPE_view_alter(array &$build, Drupal\Core\Entity\EntityInterface $entity, \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display) {
+function hook_ENTITY_TYPE_view_alter(array &$build, Drupal\Core\Entity\EntityInterface $entity, EntityViewDisplayInterface $display) {
   if ($build['#view_mode'] == 'full' && isset($build['an_additional_field'])) {
     // Change its weight.
     $build['an_additional_field']['#weight'] = -10;
@@ -1683,7 +1693,7 @@ function hook_entity_view_mode_alter(&$view_mode, Drupal\Core\Entity\EntityInter
  *
  * @ingroup entity_crud
  */
-function hook_ENTITY_TYPE_build_defaults_alter(array &$build, \Drupal\Core\Entity\EntityInterface $entity, $view_mode) {
+function hook_ENTITY_TYPE_build_defaults_alter(array &$build, EntityInterface $entity, $view_mode) {
 
 }
 
@@ -1707,7 +1717,7 @@ function hook_ENTITY_TYPE_build_defaults_alter(array &$build, \Drupal\Core\Entit
  *
  * @ingroup entity_crud
  */
-function hook_entity_build_defaults_alter(array &$build, \Drupal\Core\Entity\EntityInterface $entity, $view_mode) {
+function hook_entity_build_defaults_alter(array &$build, EntityInterface $entity, $view_mode) {
 
 }
 
@@ -1725,7 +1735,7 @@ function hook_entity_build_defaults_alter(array &$build, \Drupal\Core\Entity\Ent
  *
  * @ingroup entity_crud
  */
-function hook_entity_view_display_alter(\Drupal\Core\Entity\Display\EntityViewDisplayInterface $display, array $context) {
+function hook_entity_view_display_alter(EntityViewDisplayInterface $display, array $context) {
   // Leave field labels out of the search index.
   if ($context['entity_type'] == 'node' && $context['view_mode'] == 'search_index') {
     foreach ($display->getComponents() as $name => $options) {
@@ -1787,7 +1797,7 @@ function hook_entity_display_build_alter(&$build, $context) {
  *
  * @ingroup entity_crud
  */
-function hook_entity_prepare_form(\Drupal\Core\Entity\EntityInterface $entity, $operation, \Drupal\Core\Form\FormStateInterface $form_state) {
+function hook_entity_prepare_form(EntityInterface $entity, $operation, FormStateInterface $form_state) {
   if ($operation == 'edit') {
     $entity->label->value = 'Altered label';
     $form_state->set('label_altered', TRUE);
@@ -1813,7 +1823,7 @@ function hook_entity_prepare_form(\Drupal\Core\Entity\EntityInterface $entity, $
  *
  * @ingroup entity_crud
  */
-function hook_ENTITY_TYPE_prepare_form(\Drupal\Core\Entity\EntityInterface $entity, $operation, \Drupal\Core\Form\FormStateInterface $form_state) {
+function hook_ENTITY_TYPE_prepare_form(EntityInterface $entity, $operation, FormStateInterface $form_state) {
   if ($operation == 'edit') {
     $entity->label->value = 'Altered label';
     $form_state->set('label_altered', TRUE);
@@ -1834,7 +1844,7 @@ function hook_ENTITY_TYPE_prepare_form(\Drupal\Core\Entity\EntityInterface $enti
  *
  * @ingroup entity_crud
  */
-function hook_entity_form_display_alter(\Drupal\Core\Entity\Display\EntityFormDisplayInterface $form_display, array $context) {
+function hook_entity_form_display_alter(EntityFormDisplayInterface $form_display, array $context) {
   // Hide the 'user_picture' field from the register form.
   if ($context['entity_type'] == 'user' && $context['form_mode'] == 'register') {
     $form_display->setComponent('user_picture', [
@@ -1865,7 +1875,7 @@ function hook_entity_form_display_alter(\Drupal\Core\Entity\Display\EntityFormDi
  * @see \Drupal\Core\Entity\EntityDefinitionUpdateManagerInterface
  * @see https://www.drupal.org/node/3034742
  */
-function hook_entity_base_field_info(\Drupal\Core\Entity\EntityTypeInterface $entity_type) {
+function hook_entity_base_field_info(EntityTypeInterface $entity_type) {
   if ($entity_type->id() == 'node') {
     $fields = [];
     $fields['mymodule_text'] = BaseFieldDefinition::create('string')
@@ -1893,7 +1903,7 @@ function hook_entity_base_field_info(\Drupal\Core\Entity\EntityTypeInterface $en
  * @todo WARNING: This hook will be changed in
  * https://www.drupal.org/node/2346329.
  */
-function hook_entity_base_field_info_alter(&$fields, \Drupal\Core\Entity\EntityTypeInterface $entity_type) {
+function hook_entity_base_field_info_alter(&$fields, EntityTypeInterface $entity_type) {
   // Alter the mymodule_text field to use a custom class.
   if ($entity_type->id() == 'node' && !empty($fields['mymodule_text'])) {
     $fields['mymodule_text']->setClass('\Drupal\anothermodule\EntityComputedText');
@@ -1929,7 +1939,7 @@ function hook_entity_base_field_info_alter(&$fields, \Drupal\Core\Entity\EntityT
  * @todo WARNING: This hook will be changed in
  * https://www.drupal.org/node/2346347.
  */
-function hook_entity_bundle_field_info(\Drupal\Core\Entity\EntityTypeInterface $entity_type, $bundle, array $base_field_definitions) {
+function hook_entity_bundle_field_info(EntityTypeInterface $entity_type, $bundle, array $base_field_definitions) {
   // Add a property only to nodes of the 'article' bundle.
   if ($entity_type->id() == 'node' && $bundle == 'article') {
     $fields = [];
@@ -1958,7 +1968,7 @@ function hook_entity_bundle_field_info(\Drupal\Core\Entity\EntityTypeInterface $
  * @todo WARNING: This hook will be changed in
  * https://www.drupal.org/node/2346347.
  */
-function hook_entity_bundle_field_info_alter(&$fields, \Drupal\Core\Entity\EntityTypeInterface $entity_type, $bundle) {
+function hook_entity_bundle_field_info_alter(&$fields, EntityTypeInterface $entity_type, $bundle) {
   if ($entity_type->id() == 'node' && $bundle == 'article' && !empty($fields['mymodule_text'])) {
     // Alter the mymodule_text field to use a custom class.
     $fields['mymodule_text']->setClass('\Drupal\anothermodule\EntityComputedText');
@@ -1985,11 +1995,11 @@ function hook_entity_bundle_field_info_alter(&$fields, \Drupal\Core\Entity\Entit
  * @see \Drupal\Core\Entity\EntityDefinitionUpdateManagerInterface
  * @see https://www.drupal.org/node/3034742
  */
-function hook_entity_field_storage_info(\Drupal\Core\Entity\EntityTypeInterface $entity_type) {
-  if (\Drupal::entityTypeManager()->getStorage($entity_type->id()) instanceof DynamicallyFieldableEntityStorageInterface) {
+function hook_entity_field_storage_info(EntityTypeInterface $entity_type) {
+  if (Drupal::entityTypeManager()->getStorage($entity_type->id()) instanceof DynamicallyFieldableEntityStorageInterface) {
     // Query by filtering on the ID as this is more efficient than filtering
     // on the entity_type property directly.
-    $ids = \Drupal::entityQuery('field_storage_config')
+    $ids = Drupal::entityQuery('field_storage_config')
       ->condition('id', $entity_type->id() . '.', 'STARTS_WITH')
       ->execute();
     // Fetch all fields and key them by field name.
@@ -2013,7 +2023,7 @@ function hook_entity_field_storage_info(\Drupal\Core\Entity\EntityTypeInterface 
  *
  * @see hook_entity_field_storage_info()
  */
-function hook_entity_field_storage_info_alter(&$fields, \Drupal\Core\Entity\EntityTypeInterface $entity_type) {
+function hook_entity_field_storage_info_alter(&$fields, EntityTypeInterface $entity_type) {
   // Alter the max_length setting.
   if ($entity_type->id() == 'node' && !empty($fields['mymodule_text'])) {
     $fields['mymodule_text']->setSetting('max_length', 128);
@@ -2032,11 +2042,11 @@ function hook_entity_field_storage_info_alter(&$fields, \Drupal\Core\Entity\Enti
  *
  * @see \Drupal\Core\Entity\EntityListBuilderInterface::getOperations()
  */
-function hook_entity_operation(\Drupal\Core\Entity\EntityInterface $entity) {
+function hook_entity_operation(EntityInterface $entity) {
   $operations = [];
   $operations['translate'] = [
     'title' => t('Translate'),
-    'url' => \Drupal\Core\Url::fromRoute('foo_module.entity.translate'),
+    'url' => Url::fromRoute('foo_module.entity.translate'),
     'weight' => 50,
   ];
 
@@ -2052,7 +2062,7 @@ function hook_entity_operation(\Drupal\Core\Entity\EntityInterface $entity) {
  * @param \Drupal\Core\Entity\EntityInterface $entity
  *   The entity on which the linked operations will be performed.
  */
-function hook_entity_operation_alter(array &$operations, \Drupal\Core\Entity\EntityInterface $entity) {
+function hook_entity_operation_alter(array &$operations, EntityInterface $entity) {
   // Alter the title and weight.
   $operations['translate']['title'] = t('Translate @entity_type', [
     '@entity_type' => $entity->getEntityTypeId(),
@@ -2085,7 +2095,7 @@ function hook_entity_operation_alter(array &$operations, \Drupal\Core\Entity\Ent
  *
  * @see \Drupal\Core\Entity\EntityAccessControlHandlerInterface::fieldAccess()
  */
-function hook_entity_field_access($operation, \Drupal\Core\Field\FieldDefinitionInterface $field_definition, \Drupal\Core\Session\AccountInterface $account, \Drupal\Core\Field\FieldItemListInterface $items = NULL) {
+function hook_entity_field_access($operation, FieldDefinitionInterface $field_definition, AccountInterface $account, FieldItemListInterface $items = NULL) {
   if ($field_definition->getName() == 'field_of_interest' && $operation == 'edit') {
     return AccessResult::allowedIfHasPermission($account, 'update field of interest');
   }
@@ -2139,8 +2149,8 @@ function hook_entity_field_access_alter(array &$grants, array $context) {
  * @ingroup entity_crud
  * @see hook_ENTITY_TYPE_field_values_init()
  */
-function hook_entity_field_values_init(\Drupal\Core\Entity\FieldableEntityInterface $entity) {
-  if ($entity instanceof \Drupal\Core\Entity\ContentEntityInterface && !$entity->foo->value) {
+function hook_entity_field_values_init(FieldableEntityInterface $entity) {
+  if ($entity instanceof ContentEntityInterface && !$entity->foo->value) {
     $entity->foo->value = 'some_initial_value';
   }
 }
@@ -2158,7 +2168,7 @@ function hook_entity_field_values_init(\Drupal\Core\Entity\FieldableEntityInterf
  * @ingroup entity_crud
  * @see hook_entity_field_values_init()
  */
-function hook_ENTITY_TYPE_field_values_init(\Drupal\Core\Entity\FieldableEntityInterface $entity) {
+function hook_ENTITY_TYPE_field_values_init(FieldableEntityInterface $entity) {
   if (!$entity->foo->value) {
     $entity->foo->value = 'some_initial_value';
   }
@@ -2184,7 +2194,7 @@ function hook_ENTITY_TYPE_field_values_init(\Drupal\Core\Entity\FieldableEntityI
  */
 function hook_entity_extra_field_info() {
   $extra = [];
-  $module_language_enabled = \Drupal::moduleHandler()->moduleExists('language');
+  $module_language_enabled = Drupal::moduleHandler()->moduleExists('language');
   $description = t('Node module element');
 
   foreach (NodeType::loadMultiple() as $bundle) {

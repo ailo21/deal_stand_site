@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\system\Functional\Render;
 
+use Drupal;
 use Drupal\Tests\BrowserTestBase;
 
 /**
@@ -24,7 +25,7 @@ class AjaxPageStateTest extends BrowserTestBase {
   protected $defaultTheme = 'stark';
 
   /**
-   * User account with all available permissions
+   * User account with all available permissions.
    *
    * @var \Drupal\Core\Session\AccountInterface
    */
@@ -33,7 +34,7 @@ class AjaxPageStateTest extends BrowserTestBase {
   protected function setUp(): void {
     parent::setUp();
     // Create an administrator with all permissions.
-    $this->adminUser = $this->drupalCreateUser(array_keys(\Drupal::service('user.permissions')
+    $this->adminUser = $this->drupalCreateUser(array_keys(Drupal::service('user.permissions')
       ->getPermissions()));
 
     // Log in so there are more libraries to test for.

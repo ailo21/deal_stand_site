@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\migrate\Kernel;
 
+use Drupal;
 use Drupal\migrate\Event\MigratePostRowSaveEvent;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\Event\MigrateEvents;
@@ -27,7 +28,7 @@ class MigrateInterruptionTest extends KernelTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
-    \Drupal::service('event_dispatcher')->addListener(MigrateEvents::POST_ROW_SAVE,
+    Drupal::service('event_dispatcher')->addListener(MigrateEvents::POST_ROW_SAVE,
       [$this, 'postRowSaveEventRecorder']);
   }
 
@@ -53,17 +54,17 @@ class MigrateInterruptionTest extends KernelTestBase {
       'destination' => ['plugin' => 'dummy'],
     ];
 
-    $migration = \Drupal::service('plugin.manager.migration')->createStubMigration($definition);
+    $migration = Drupal::service('plugin.manager.migration')->createStubMigration($definition);
 
     $executable = new MigrateExecutable($migration);
     // When the import runs, the first row imported will trigger an
     // interruption.
     $result = $executable->import();
 
-    $this->assertEqual($result, MigrationInterface::RESULT_INCOMPLETE);
+    $this->assertEqual(MigrationInterface::RESULT_INCOMPLETE, $result);
 
     // The status should have been reset to IDLE.
-    $this->assertEqual($migration->getStatus(), MigrationInterface::STATUS_IDLE);
+    $this->assertEqual(MigrationInterface::STATUS_IDLE, $migration->getStatus());
   }
 
   /**

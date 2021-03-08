@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\content_translation\Functional;
 
+use Drupal;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Tests\content_moderation\Traits\ContentModerationTestTrait;
 use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
@@ -81,11 +82,11 @@ abstract class ContentTranslationPendingRevisionTestBase extends ContentTranslat
     $workflow_id = 'editorial';
     $this->drupalGet('/admin/config/workflow/workflows');
     $edit['bundles[' . $this->bundle . ']'] = TRUE;
-    $this->drupalPostForm('admin/config/workflow/workflows/manage/' . $workflow_id . '/type/' . $this->entityTypeId, $edit, t('Save'));
+    $this->drupalPostForm('admin/config/workflow/workflows/manage/' . $workflow_id . '/type/' . $this->entityTypeId, $edit, 'Save');
     // Ensure the parent environment is up-to-date.
     // @see content_moderation_workflow_insert()
-    \Drupal::service('entity_type.bundle.info')->clearCachedBundles();
-    \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
+    Drupal::service('entity_type.bundle.info')->clearCachedBundles();
+    Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
     /** @var \Drupal\Core\Routing\RouteBuilderInterface $router_builder */
     $router_builder = $this->container->get('router.builder');
     $router_builder->rebuildIfNeeded();

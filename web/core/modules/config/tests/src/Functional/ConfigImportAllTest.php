@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\config\Functional;
 
+use Drupal;
 use Drupal\Core\Config\StorageComparer;
 use Drupal\Core\Entity\ContentEntityTypeInterface;
 use Drupal\Tests\SchemaCheckTestTrait;
@@ -56,7 +57,7 @@ class ConfigImportAllTest extends ModuleTestBase {
     });
 
     // Install every module possible.
-    \Drupal::service('module_installer')->install(array_keys($all_modules));
+    Drupal::service('module_installer')->install(array_keys($all_modules));
 
     $this->assertModules(array_keys($all_modules), TRUE);
     foreach ($all_modules as $module => $info) {
@@ -74,7 +75,7 @@ class ConfigImportAllTest extends ModuleTestBase {
     // So deleting all taxonomy terms allows the Taxonomy to be uninstalled.
     // Additionally, every field is deleted so modules can be uninstalled. For
     // example, if a comment field exists then Comment cannot be uninstalled.
-    $entity_type_manager = \Drupal::entityTypeManager();
+    $entity_type_manager = Drupal::entityTypeManager();
     foreach ($entity_type_manager->getDefinitions() as $entity_type) {
       if (($entity_type instanceof ContentEntityTypeInterface || in_array($entity_type->id(), ['field_storage_config', 'filter_format'], TRUE))
         && !in_array($entity_type->getProvider(), ['system', 'user'], TRUE)) {
@@ -86,10 +87,10 @@ class ConfigImportAllTest extends ModuleTestBase {
     // Purge the field data.
     field_purge_batch(1000);
 
-    $all_modules = \Drupal::service('extension.list.module')->getList();
+    $all_modules = Drupal::service('extension.list.module')->getList();
 
     // Ensure that only core required modules and the install profile can not be uninstalled.
-    $validation_reasons = \Drupal::service('module_installer')->validateUninstall(array_keys($all_modules));
+    $validation_reasons = Drupal::service('module_installer')->validateUninstall(array_keys($all_modules));
     $this->assertEquals(['path_alias', 'system', 'user', 'standard'], array_keys($validation_reasons));
 
     $modules_to_uninstall = array_filter($all_modules, function ($module) use ($validation_reasons) {
@@ -108,7 +109,7 @@ class ConfigImportAllTest extends ModuleTestBase {
     $this->assertTrue(isset($modules_to_uninstall['editor']), 'The Editor module will be disabled');
 
     // Uninstall all modules that can be uninstalled.
-    \Drupal::service('module_installer')->uninstall(array_keys($modules_to_uninstall));
+    Drupal::service('module_installer')->uninstall(array_keys($modules_to_uninstall));
 
     $this->assertModules(array_keys($modules_to_uninstall), FALSE);
     foreach ($modules_to_uninstall as $module => $info) {
@@ -117,12 +118,12 @@ class ConfigImportAllTest extends ModuleTestBase {
     }
 
     // Import the configuration thereby re-installing all the modules.
-    $this->drupalPostForm('admin/config/development/configuration', [], t('Import all'));
+    $this->drupalPostForm('admin/config/development/configuration', [], 'Import all');
     // Modules have been installed that have services.
     $this->rebuildContainer();
 
     // Check that there are no errors.
-    $this->assertIdentical($this->configImporter()->getErrors(), []);
+    $this->assertSame([], $this->configImporter()->getErrors());
 
     // Check that all modules that were uninstalled are now reinstalled.
     $this->assertModules(array_keys($modules_to_uninstall), TRUE);
@@ -136,7 +137,7 @@ class ConfigImportAllTest extends ModuleTestBase {
       $this->container->get('config.storage.sync'),
       $this->container->get('config.storage')
     );
-    $this->assertIdentical($storage_comparer->createChangelist()->getChangelist(), $storage_comparer->getEmptyChangelist());
+    $this->assertSame($storage_comparer->getEmptyChangelist(), $storage_comparer->createChangelist()->getChangelist());
 
     // Now we have all configuration imported, test all of them for schema
     // conformance. Ensures all imported default configuration is valid when

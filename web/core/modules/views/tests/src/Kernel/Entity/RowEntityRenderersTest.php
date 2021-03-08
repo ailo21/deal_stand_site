@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\views\Kernel\Entity;
 
+use Drupal;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\node\Entity\NodeType;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
@@ -80,10 +81,7 @@ class RowEntityRenderersTest extends ViewsKernelTestBase {
     $this->installSchema('node', ['node_access']);
     $this->installConfig(['node', 'language']);
 
-    // The entity.node.canonical route must exist when nodes are rendered.
-    $this->container->get('router.builder')->rebuild();
-
-    $this->langcodes = [\Drupal::languageManager()->getDefaultLanguage()->getId()];
+    $this->langcodes = [Drupal::languageManager()->getDefaultLanguage()->getId()];
     for ($i = 0; $i < 2; $i++) {
       $langcode = 'l' . $i;
       $this->langcodes[] = $langcode;
@@ -102,7 +100,7 @@ class RowEntityRenderersTest extends ViewsKernelTestBase {
 
     $this->values = [];
     $this->ids = [];
-    $controller = \Drupal::entityTypeManager()->getStorage('node');
+    $controller = Drupal::entityTypeManager()->getStorage('node');
     $langcode_index = 0;
 
     for ($i = 0; $i < count($this->langcodes); $i++) {
@@ -261,7 +259,7 @@ class RowEntityRenderersTest extends ViewsKernelTestBase {
     foreach ($expected as $index => $expected_output) {
       if (!empty($view->result[$index])) {
         $build = $view->rowPlugin->render($view->result[$index]);
-        $output = \Drupal::service('renderer')->renderRoot($build);
+        $output = Drupal::service('renderer')->renderRoot($build);
         $result = strpos($output, $expected_output) !== FALSE;
         if (!$result) {
           break;

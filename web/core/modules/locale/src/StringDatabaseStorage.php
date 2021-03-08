@@ -2,8 +2,8 @@
 
 namespace Drupal\locale;
 
+use Drupal;
 use Drupal\Core\Database\Connection;
-use Drupal\Core\Database\Query\Condition;
 
 /**
  * Defines a class to store localized strings in the database.
@@ -76,7 +76,7 @@ class StringDatabaseStorage implements StringStorageInterface {
 
     if (!empty($values)) {
       $string = new TranslationString($values);
-      $this->checkVersion($string, \Drupal::VERSION);
+      $this->checkVersion($string, Drupal::VERSION);
       $string->setStorage($this);
       return $string;
     }
@@ -150,7 +150,7 @@ class StringDatabaseStorage implements StringStorageInterface {
             // This is a new location to add, take care not to duplicate.
             $this->connection->merge('locales_location', $this->options)
               ->keys(['sid' => $string->getId(), 'type' => $type, 'name' => $name])
-              ->fields(['version' => \Drupal::VERSION])
+              ->fields(['version' => Drupal::VERSION])
               ->execute();
             $created = TRUE;
           }
@@ -159,7 +159,7 @@ class StringDatabaseStorage implements StringStorageInterface {
       }
       if ($created) {
         // As we've set a new location, check string version too.
-        $this->checkVersion($string, \Drupal::VERSION);
+        $this->checkVersion($string, Drupal::VERSION);
       }
     }
   }
@@ -417,7 +417,7 @@ class StringDatabaseStorage implements StringStorageInterface {
       elseif ($table_alias == 't' && $join === 'leftJoin') {
         // Conditions for target fields when doing an outer join only make
         // sense if we add also OR field IS NULL.
-        $query->condition((new Condition('OR'))
+        $query->condition(($this->connection->condition('OR'))
           ->condition($field_alias, (array) $value, 'IN')
           ->isNull($field_alias)
         );
@@ -430,7 +430,7 @@ class StringDatabaseStorage implements StringStorageInterface {
     // Process other options, string filter, query limit, etc.
     if (!empty($options['filters'])) {
       if (count($options['filters']) > 1) {
-        $filter = new Condition('OR');
+        $filter = $this->connection->condition('OR');
         $query->condition($filter);
       }
       else {

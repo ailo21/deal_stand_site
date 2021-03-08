@@ -2,8 +2,9 @@
 
 namespace Drupal\Tests\migrate\Kernel;
 
-use Drupal\Component\Plugin\Exception\PluginNotFoundException;
+use Drupal;
 use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
+use InvalidArgumentException;
 
 /**
  * Tests the migrate.stub Service.
@@ -69,7 +70,7 @@ class MigrateStubTest extends MigrateTestBase {
     $this->assertSame([], $this->migrateLookup->lookup('sample_stubbing_migration', [17]));
     $ids = $this->migrateStub->createStub('sample_stubbing_migration', [17]);
     $this->assertSame([$ids], $this->migrateLookup->lookup('sample_stubbing_migration', [17]));
-    $this->assertNotNull(\Drupal::entityTypeManager()->getStorage('node')->load($ids['nid']));
+    $this->assertNotNull(Drupal::entityTypeManager()->getStorage('node')->load($ids['nid']));
   }
 
   /**
@@ -79,7 +80,7 @@ class MigrateStubTest extends MigrateTestBase {
     $this->assertSame([], $this->migrateLookup->lookup('sample_stubbing_migration', [17]));
     $ids = $this->migrateStub->createStub('sample_stubbing_migration', [17], [], FALSE);
     $this->assertSame($ids, [$this->migrateLookup->lookup('sample_stubbing_migration', [17])[0]['nid']]);
-    $this->assertNotNull(\Drupal::entityTypeManager()->getStorage('node')->load($ids[0]));
+    $this->assertNotNull(Drupal::entityTypeManager()->getStorage('node')->load($ids[0]));
   }
 
   /**
@@ -89,14 +90,14 @@ class MigrateStubTest extends MigrateTestBase {
     $this->assertSame([], $this->migrateLookup->lookup('sample_stubbing_migration', [17]));
     $ids = $this->migrateStub->createStub('sample_stubbing_migration', [17], ['title' => "Placeholder for source id 17"]);
     $this->assertSame([$ids], $this->migrateLookup->lookup('sample_stubbing_migration', [17]));
-    $node = \Drupal::entityTypeManager()->getStorage('node')->load($ids['nid']);
+    $node = Drupal::entityTypeManager()->getStorage('node')->load($ids['nid']);
     $this->assertNotNull($node);
     // Test that our default value was set as the node title.
     $this->assertSame("Placeholder for source id 17", $node->label());
 
     // Test that running the migration replaces the node title.
     $this->executeMigration('sample_stubbing_migration');
-    $node = \Drupal::entityTypeManager()->getStorage('node')->loadUnchanged($ids['nid']);
+    $node = Drupal::entityTypeManager()->getStorage('node')->loadUnchanged($ids['nid']);
     $this->assertSame("Sample 1", $node->label());
   }
 
@@ -104,7 +105,7 @@ class MigrateStubTest extends MigrateTestBase {
    * Test invalid source id count.
    */
   public function testInvalidSourceIdCount() {
-    $this->expectException(\InvalidArgumentException::class);
+    $this->expectException(InvalidArgumentException::class);
     $this->expectExceptionMessage('Expected and provided source id counts do not match.');
     $this->migrateStub->createStub('sample_stubbing_migration_with_multiple_source_ids', [17]);
   }
@@ -113,18 +114,9 @@ class MigrateStubTest extends MigrateTestBase {
    * Tests invalid source ids keys.
    */
   public function testInvalidSourceIdKeys() {
-    $this->expectException(\InvalidArgumentException::class);
-    $this->expectExceptionMessage('version_id is defined as a source ID but has no value.');
+    $this->expectException(InvalidArgumentException::class);
+    $this->expectExceptionMessage("'version_id' is defined as a source ID but has no value.");
     $this->migrateStub->createStub('sample_stubbing_migration_with_multiple_source_ids', ['id' => 17, 'not_a_key' => 17]);
-  }
-
-  /**
-   * Tests that an exception is thrown if a migration does not exist.
-   */
-  public function testErrorOnMigrationNotFound() {
-    $this->expectException(PluginNotFoundException::class);
-    $this->expectExceptionMessage("Plugin ID 'nonexistent_migration' was not found.");
-    $this->migrateStub->createStub('nonexistent_migration', [1]);
   }
 
 }

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\workspaces\Functional;
 
+use Drupal;
 use Drupal\Tests\block\Traits\BlockCreationTrait;
 use Drupal\workspaces\Entity\Workspace;
 use Drupal\workspaces\WorkspaceInterface;
@@ -14,6 +15,8 @@ use Drupal\workspaces\WorkspaceInterface;
 trait WorkspaceTestUtilities {
 
   use BlockCreationTrait;
+
+  protected $switcher_block_configured = FALSE;
 
   /**
    * Loads a single entity by its label.
@@ -31,7 +34,7 @@ trait WorkspaceTestUtilities {
    */
   protected function getOneEntityByLabel($type, $label) {
     /** @var \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager */
-    $entity_type_manager = \Drupal::service('entity_type.manager');
+    $entity_type_manager = Drupal::service('entity_type.manager');
     $property = $entity_type_manager->getDefinition($type)->getKey('label');
     $entity_list = $entity_type_manager->getStorage($type)->loadByProperties([$property => $label]);
     $entity = current($entity_list);
@@ -85,6 +88,7 @@ trait WorkspaceTestUtilities {
     $page = $this->getSession()->getPage();
 
     $this->assertTrue($page->hasContent('Workspace switcher'));
+    $this->switcher_block_configured = TRUE;
   }
 
   /**
@@ -97,10 +101,11 @@ trait WorkspaceTestUtilities {
    *   The workspace to set active.
    */
   protected function switchToWorkspace(WorkspaceInterface $workspace) {
+    $this->assertTrue($this->switcher_block_configured, 'This test was not written correctly: you must call setupWorkspaceSwitcherBlock() before switchToWorkspace()');
     /** @var \Drupal\Tests\WebAssert $session */
     $session = $this->assertSession();
     $session->buttonExists('Activate');
-    $this->drupalPostForm(NULL, ['workspace_id' => $workspace->id()], 'Activate');
+    $this->submitForm(['workspace_id' => $workspace->id()], 'Activate');
     $session->pageTextContains($workspace->label() . ' is now the active workspace.');
   }
 
@@ -113,7 +118,7 @@ trait WorkspaceTestUtilities {
   protected function switchToLive() {
     /** @var \Drupal\Tests\WebAssert $session */
     $session = $this->assertSession();
-    $this->drupalPostForm(NULL, [], 'Switch to Live');
+    $this->submitForm([], 'Switch to Live');
     $session->pageTextContains('You are now viewing the live version of the site.');
   }
 

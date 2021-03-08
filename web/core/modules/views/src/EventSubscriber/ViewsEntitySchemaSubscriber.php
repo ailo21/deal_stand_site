@@ -9,6 +9,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Sql\SqlContentEntityStorage;
 use Drupal\views\ViewEntityInterface;
 use Drupal\views\Views;
+use Exception;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
@@ -221,7 +222,7 @@ class ViewsEntitySchemaSubscriber implements EntityTypeListenerInterface, EventS
         $view->set('_updated', NULL);
         $view->trustData()->save();
       }
-      catch (\Exception $e) {
+      catch (Exception $e) {
         // In case the view could not be saved, log an error message that the
         // view needs to be updated manually instead of failing the entire
         // entity update process.
@@ -399,7 +400,7 @@ class ViewsEntitySchemaSubscriber implements EntityTypeListenerInterface, EventS
   }
 
   /**
-   * Updates views if revision support is removed
+   * Updates views if revision support is removed.
    *
    * @param \Drupal\views\Entity\View[] $all_views
    *   All views.

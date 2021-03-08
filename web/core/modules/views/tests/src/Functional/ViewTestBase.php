@@ -3,6 +3,7 @@
 namespace Drupal\Tests\views\Functional;
 
 use Behat\Mink\Exception\ElementNotFoundException;
+use Drupal;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Tests\BrowserTestBase;
@@ -18,7 +19,6 @@ use Drupal\views\ViewExecutable;
  * include the same methods.
  *
  * @see \Drupal\Tests\views\Kernel\ViewsKernelTestBase
- * @see \Drupal\simpletest\WebTestBase
  */
 abstract class ViewTestBase extends BrowserTestBase {
 
@@ -34,7 +34,7 @@ abstract class ViewTestBase extends BrowserTestBase {
   protected function setUp($import_test_views = TRUE) {
     parent::setUp();
     if ($import_test_views) {
-      ViewTestData::createTestViews(get_class($this), ['views_test_config']);
+      ViewTestData::createTestViews(static::class, ['views_test_config']);
     }
   }
 
@@ -46,10 +46,10 @@ abstract class ViewTestBase extends BrowserTestBase {
    */
   protected function enableViewsTestModule() {
     // Define the schema and views data variable before enabling the test module.
-    \Drupal::state()->set('views_test_data_schema', $this->schemaDefinition());
-    \Drupal::state()->set('views_test_data_views_data', $this->viewsData());
+    Drupal::state()->set('views_test_data_schema', $this->schemaDefinition());
+    Drupal::state()->set('views_test_data_views_data', $this->viewsData());
 
-    \Drupal::service('module_installer')->install(['views_test_data']);
+    Drupal::service('module_installer')->install(['views_test_data']);
     $this->resetAll();
     $this->rebuildContainer();
     $this->container->get('module_handler')->reload();

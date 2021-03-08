@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\user\Functional;
 
+use Drupal;
 use Drupal\Core\Flood\DatabaseBackend;
 use Drupal\Core\Test\AssertMailTrait;
 use Drupal\Core\Url;
@@ -30,7 +31,7 @@ class UserLoginHttpTest extends BrowserTestBase {
    *
    * @var array
    */
-  protected static $modules = ['hal'];
+  protected static $modules = ['hal', 'dblog'];
 
   /**
    * {@inheritdoc}
@@ -87,7 +88,7 @@ class UserLoginHttpTest extends BrowserTestBase {
       $request_body['pass'] = $pass;
     }
 
-    $result = \Drupal::httpClient()->post($user_login_url->toString(), [
+    $result = Drupal::httpClient()->post($user_login_url->toString(), [
       'body' => $this->serializer->encode($request_body, $format),
       'headers' => [
         'Accept' => "application/$format",
@@ -119,7 +120,7 @@ class UserLoginHttpTest extends BrowserTestBase {
    *   Serialization format.
    */
   protected function doTestLogin($format) {
-    $client = \Drupal::httpClient();
+    $client = Drupal::httpClient();
     // Create new user for each iteration to reset flood.
     // Grant the user administer users permissions to they can see the
     // 'roles' field.
@@ -221,7 +222,7 @@ class UserLoginHttpTest extends BrowserTestBase {
       ->setRouteParameter('_format', $format)
       ->setAbsolute();
 
-    $result = \Drupal::httpClient()->post($password_reset_url->toString(), [
+    $result = Drupal::httpClient()->post($password_reset_url->toString(), [
       'body' => $this->serializer->encode($request_body, $format),
       'headers' => [
         'Accept' => "application/$format",
@@ -288,6 +289,7 @@ class UserLoginHttpTest extends BrowserTestBase {
    * @see \Drupal\user\Tests\UserLoginTest::testGlobalLoginFloodControl
    */
   public function testGlobalLoginFloodControl() {
+    $database = Drupal::database();
     $this->config('user.flood')
       ->set('ip_limit', 2)
       // Set a high per-user limit out so that it is not relevant in the test.
@@ -307,6 +309,14 @@ class UserLoginHttpTest extends BrowserTestBase {
     // IP limit has reached to its limit. Even valid user credentials will fail.
     $response = $this->loginRequest($user->getAccountName(), $user->passRaw);
     $this->assertHttpResponseWithMessage($response, '403', 'Access is blocked because of IP based flood prevention.');
+    $last_log = $database->select('watchdog', 'w')
+      ->fields('w', ['message'])
+      ->condition('type', 'user')
+      ->orderBy('wid', 'DESC')
+      ->range(0, 1)
+      ->execute()
+      ->fetchField();
+    $this->assertEquals('Flood control blocked login attempt from %ip', $last_log, 'A watchdog message was logged for the login attempt blocked by flood control per IP.');
   }
 
   /**
@@ -348,6 +358,7 @@ class UserLoginHttpTest extends BrowserTestBase {
    * @see \Drupal\basic_auth\Tests\Authentication\BasicAuthTest::testPerUserLoginFloodControl
    */
   public function testPerUserLoginFloodControl() {
+    $database = Drupal::database();
     foreach ([TRUE, FALSE] as $uid_only_setting) {
       $this->config('user.flood')
         // Set a high global limit out so that it is not relevant in the test.
@@ -389,12 +400,22 @@ class UserLoginHttpTest extends BrowserTestBase {
       $response = $this->loginRequest($user1->getAccountName(), $user1->passRaw);
       // Depending on the uid_only setting the error message will be different.
       if ($uid_only_setting) {
-        $excepted_message = 'There have been more than 3 failed login attempts for this account. It is temporarily blocked. Try again later or request a new password.';
+        $expected_message = 'There have been more than 3 failed login attempts for this account. It is temporarily blocked. Try again later or request a new password.';
+        $expected_log = 'Flood control blocked login attempt for uid %uid';
       }
       else {
-        $excepted_message = 'Too many failed login attempts from your IP address. This IP address is temporarily blocked.';
+        $expected_message = 'Too many failed login attempts from your IP address. This IP address is temporarily blocked.';
+        $expected_log = 'Flood control blocked login attempt for uid %uid from %ip';
       }
-      $this->assertHttpResponseWithMessage($response, 403, $excepted_message);
+      $this->assertHttpResponseWithMessage($response, 403, $expected_message);
+      $last_log = $database->select('watchdog', 'w')
+        ->fields('w', ['message'])
+        ->condition('type', 'user')
+        ->orderBy('wid', 'DESC')
+        ->range(0, 1)
+        ->execute()
+        ->fetchField();
+      $this->assertEquals($expected_log, $last_log, 'A watchdog message was logged for the login attempt blocked by flood control per user.');
     }
 
   }
@@ -435,7 +456,7 @@ class UserLoginHttpTest extends BrowserTestBase {
    * Test csrf protection of User Logout route.
    */
   public function testLogoutCsrfProtection() {
-    $client = \Drupal::httpClient();
+    $client = Drupal::httpClient();
     $login_status_url = $this->getLoginStatusUrlString();
     $account = $this->drupalCreateUser();
     $name = $account->getAccountName();
@@ -543,7 +564,7 @@ class UserLoginHttpTest extends BrowserTestBase {
     preg_match('#.+user/reset/.+#', $email['body'], $urls);
     $resetURL = $urls[0];
     $this->drupalGet($resetURL);
-    $this->drupalPostForm(NULL, NULL, 'Log in');
+    $this->submitForm([], 'Log in');
   }
 
 }

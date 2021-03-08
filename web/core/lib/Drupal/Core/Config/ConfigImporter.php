@@ -2,6 +2,7 @@
 
 namespace Drupal\Core\Config;
 
+use Drupal;
 use Drupal\Core\Config\Importer\MissingContentEvent;
 use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\Extension\ModuleHandlerInterface;
@@ -13,6 +14,8 @@ use Drupal\Core\Entity\EntityStorageException;
 use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
+use Exception;
+use InvalidArgumentException;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -23,7 +26,7 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
  *
  * @see \Drupal\Core\Config\StorageComparerInterface
  *
- * The ConfigImporter has a identifier which is used to construct event names.
+ * The ConfigImporter has an identifier which is used to construct event names.
  * The events fired during an import are:
  * - ConfigEvents::IMPORT_VALIDATE: Events listening can throw a
  *   \Drupal\Core\Config\ConfigImporterException to prevent an import from
@@ -503,17 +506,17 @@ class ConfigImporter {
    */
   public function doSyncStep($sync_step, &$context) {
     if (!is_array($sync_step) && method_exists($this, $sync_step)) {
-      \Drupal::service('config.installer')->setSyncing(TRUE);
+      Drupal::service('config.installer')->setSyncing(TRUE);
       $this->$sync_step($context);
     }
     elseif (is_callable($sync_step)) {
-      \Drupal::service('config.installer')->setSyncing(TRUE);
+      Drupal::service('config.installer')->setSyncing(TRUE);
       call_user_func_array($sync_step, [&$context, $this]);
     }
     else {
-      throw new \InvalidArgumentException('Invalid configuration synchronization step');
+      throw new InvalidArgumentException('Invalid configuration synchronization step');
     }
-    \Drupal::service('config.installer')->setSyncing(FALSE);
+    Drupal::service('config.installer')->setSyncing(FALSE);
   }
 
   /**
@@ -640,7 +643,7 @@ class ConfigImporter {
     if (!empty($missing_content)) {
       $event = new MissingContentEvent($missing_content);
       // Fire an event to allow listeners to create the missing content.
-      $this->eventDispatcher->dispatch(ConfigEvents::IMPORT_MISSING_CONTENT, $event);
+      $this->eventDispatcher->dispatch($event, ConfigEvents::IMPORT_MISSING_CONTENT);
       $sandbox['missing_content']['data'] = $event->getMissingContent();
     }
     $current_count = count($sandbox['missing_content']['data']);
@@ -660,7 +663,7 @@ class ConfigImporter {
    *   The batch context.
    */
   protected function finish(&$context) {
-    $this->eventDispatcher->dispatch(ConfigEvents::IMPORT, new ConfigImporterEvent($this));
+    $this->eventDispatcher->dispatch(new ConfigImporterEvent($this), ConfigEvents::IMPORT);
     // The import is now complete.
     $this->lock->release(static::LOCK_NAME);
     $this->reset();
@@ -742,7 +745,7 @@ class ConfigImporter {
           $this->logError($this->t('Rename operation for simple configuration. Existing configuration @old_name and staged configuration @new_name.', ['@old_name' => $names['old_name'], '@new_name' => $names['new_name']]));
         }
       }
-      $this->eventDispatcher->dispatch(ConfigEvents::IMPORT_VALIDATE, new ConfigImporterEvent($this));
+      $this->eventDispatcher->dispatch(new ConfigImporterEvent($this), ConfigEvents::IMPORT_VALIDATE);
       if (count($this->getErrors())) {
         $errors = array_merge(['There were errors validating the config synchronization.'], $this->getErrors());
         throw new ConfigImporterException(implode(PHP_EOL, $errors));
@@ -779,7 +782,7 @@ class ConfigImporter {
         $this->importConfig($collection, $op, $name);
       }
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       $this->logError($this->t('Unexpected error during import with operation @op for @name: @message', ['@op' => $op, '@name' => $name, '@message' => $e->getMessage()]));
       // Error for that operation was logged, mark it as processed so that
       // the import can continue.
@@ -800,7 +803,7 @@ class ConfigImporter {
   protected function processExtension($type, $op, $name) {
     // Set the config installer to use the sync directory instead of the
     // extensions own default config directories.
-    \Drupal::service('config.installer')
+    Drupal::service('config.installer')
       ->setSourceStorage($this->storageComparer->getSourceStorage());
     if ($type == 'module') {
       $this->moduleInstaller->$op([$name], FALSE);
@@ -822,7 +825,7 @@ class ConfigImporter {
         $this->configManager->getConfigFactory()->reset('system.theme');
         $this->processedSystemTheme = TRUE;
       }
-      \Drupal::service('theme_installer')->$op([$name]);
+      Drupal::service('theme_installer')->$op([$name]);
     }
 
     $this->setProcessedExtension($type, $op, $name);
@@ -1039,7 +1042,7 @@ class ConfigImporter {
   }
 
   /**
-   * Determines if a import is already running.
+   * Determines if an import is already running.
    *
    * @return bool
    *   TRUE if an import is already running, FALSE if not.
@@ -1060,7 +1063,7 @@ class ConfigImporter {
     $vars = get_object_vars($this);
     foreach ($vars as $key => $value) {
       if (is_object($value) && isset($value->_serviceId)) {
-        $this->$key = \Drupal::service($value->_serviceId);
+        $this->$key = Drupal::service($value->_serviceId);
       }
     }
   }

@@ -2,6 +2,7 @@
 
 namespace Drupal\views_ui\Form\Ajax;
 
+use Drupal;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\CloseModalDialogCommand;
@@ -18,6 +19,7 @@ use Drupal\views\Ajax\ShowButtonsCommand;
 use Drupal\views\Ajax\TriggerPreviewCommand;
 use Drupal\views\ViewEntityInterface;
 use Drupal\views_ui\Ajax\SetFormCommand;
+use ReflectionClass;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
@@ -87,10 +89,10 @@ abstract class ViewsFormBase extends FormBase implements ViewsFormInterface {
   public function getForm(ViewEntityInterface $view, $display_id, $js) {
     $form_state = $this->getFormState($view, $display_id, $js);
     $view = $form_state->get('view');
-    $key = $form_state->get('form_key');
+    $form_key = $form_state->get('form_key');
 
     // @todo Remove the need for this.
-    \Drupal::moduleHandler()->loadInclude('views_ui', 'inc', 'admin');
+    Drupal::moduleHandler()->loadInclude('views_ui', 'inc', 'admin');
 
     // Reset the cache of IDs. Drupal rather aggressively prevents ID
     // duplication but this causes it to remember IDs that are no longer even
@@ -101,14 +103,14 @@ abstract class ViewsFormBase extends FormBase implements ViewsFormInterface {
     // it off; if it isn't, the user clicked somewhere else and the stack is
     // now irrelevant.
     if (!empty($view->stack)) {
-      $identifier = implode('-', array_filter([$key, $view->id(), $display_id, $form_state->get('type'), $form_state->get('id')]));
+      $identifier = implode('-', array_filter([$form_key, $view->id(), $display_id, $form_state->get('type'), $form_state->get('id')]));
       // Retrieve the first form from the stack without changing the integer keys,
       // as they're being used for the "2 of 3" progress indicator.
       reset($view->stack);
-      $key = key($view->stack);
+      $stack_key = key($view->stack);
       $top = current($view->stack);
       next($view->stack);
-      unset($view->stack[$key]);
+      unset($view->stack[$stack_key]);
 
       if (array_shift($top) != $identifier) {
         $view->stack = [];
@@ -118,7 +120,7 @@ abstract class ViewsFormBase extends FormBase implements ViewsFormInterface {
     // Automatically remove the form cache if it is set and the key does
     // not match. This way navigating away from the form without hitting
     // update will work.
-    if (isset($view->form_cache) && $view->form_cache['key'] != $key) {
+    if (isset($view->form_cache) && $view->form_cache['key'] !== $form_key) {
       unset($view->form_cache);
     }
 
@@ -136,7 +138,7 @@ abstract class ViewsFormBase extends FormBase implements ViewsFormInterface {
       $top = array_shift($stack);
 
       // Build the new form state for the next form in the stack.
-      $reflection = new \ReflectionClass($view::$forms[$top[1]]);
+      $reflection = new ReflectionClass($view::$forms[$top[1]]);
       /** @var $form_state \Drupal\Core\Form\FormStateInterface */
       $form_state = $reflection->newInstanceArgs(array_slice($top, 3, 2))->getFormState($view, $top[2], $form_state->get('ajax'));
       $form_class = get_class($form_state->getFormObject());
@@ -166,7 +168,7 @@ abstract class ViewsFormBase extends FormBase implements ViewsFormInterface {
     // If this form was for view-wide changes, there's no need to regenerate
     // the display section of the form.
     if ($display_id !== '') {
-      \Drupal::entityTypeManager()->getFormObject('view', 'edit')->rebuildCurrentTab($view, $response, $display_id);
+      Drupal::entityTypeManager()->getFormObject('view', 'edit')->rebuildCurrentTab($view, $response, $display_id);
     }
 
     return $response;
@@ -195,7 +197,7 @@ abstract class ViewsFormBase extends FormBase implements ViewsFormInterface {
    */
   protected function ajaxFormWrapper($form_class, FormStateInterface &$form_state) {
     /** @var \Drupal\Core\Render\RendererInterface $renderer */
-    $renderer = \Drupal::service('renderer');
+    $renderer = Drupal::service('renderer');
 
     // This won't override settings already in.
     if (!$form_state->has('rerender')) {
@@ -212,7 +214,7 @@ abstract class ViewsFormBase extends FormBase implements ViewsFormInterface {
     // metadata is bubbled up.
     $render_context = new RenderContext();
     $callable = function () use ($form_class, &$form_state) {
-      return \Drupal::formBuilder()->buildForm($form_class, $form_state);
+      return Drupal::formBuilder()->buildForm($form_class, $form_state);
     };
     $form = $renderer->executeInRenderContext($render_context, $callable);
 

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\system\Functional\Database;
 
+use Drupal;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Database\Database;
 use Symfony\Component\HttpFoundation\Request;
@@ -107,7 +108,7 @@ class SelectPagerDefaultTest extends DatabaseTestBase {
     $ages = $outer_query
       ->execute()
       ->fetchCol();
-    $this->assertEqual($ages, [25, 26, 27, 28], 'Inner pager query returned the correct ages.');
+    $this->assertEqual([25, 26, 27, 28], $ages, 'Inner pager query returned the correct ages.');
   }
 
   /**
@@ -128,7 +129,7 @@ class SelectPagerDefaultTest extends DatabaseTestBase {
     $ages = $query
       ->execute()
       ->fetchCol();
-    $this->assertEqual($ages, ['George', 'Ringo'], 'Pager query with having expression returned the correct ages.');
+    $this->assertEqual(['George', 'Ringo'], $ages, 'Pager query with having expression returned the correct ages.');
   }
 
   /**
@@ -140,7 +141,7 @@ class SelectPagerDefaultTest extends DatabaseTestBase {
     $request->query->replace([
       'page' => '3, 2, 1, 0',
     ]);
-    \Drupal::getContainer()->get('request_stack')->push($request);
+    Drupal::getContainer()->get('request_stack')->push($request);
 
     $connection = Database::getConnection();
     $name = $connection->select('test', 't')
@@ -151,7 +152,7 @@ class SelectPagerDefaultTest extends DatabaseTestBase {
       ->limit(1)
       ->execute()
       ->fetchField();
-    $this->assertEqual($name, 'Paul', 'Pager query #1 with a specified element ID returned the correct results.');
+    $this->assertEqual('Paul', $name, 'Pager query #1 with a specified element ID returned the correct results.');
 
     // Setting an element smaller than the previous one
     // should not overwrite the pager $maxElement with a smaller value.
@@ -163,7 +164,7 @@ class SelectPagerDefaultTest extends DatabaseTestBase {
       ->limit(1)
       ->execute()
       ->fetchField();
-    $this->assertEqual($name, 'George', 'Pager query #2 with a specified element ID returned the correct results.');
+    $this->assertEqual('George', $name, 'Pager query #2 with a specified element ID returned the correct results.');
 
     $name = $connection->select('test', 't')
       ->extend('Drupal\Core\Database\Query\PagerSelectExtender')
@@ -172,7 +173,7 @@ class SelectPagerDefaultTest extends DatabaseTestBase {
       ->limit(1)
       ->execute()
       ->fetchField();
-    $this->assertEqual($name, 'John', 'Pager query #3 with a generated element ID returned the correct results.');
+    $this->assertEqual('John', $name, 'Pager query #3 with a generated element ID returned the correct results.');
 
   }
 

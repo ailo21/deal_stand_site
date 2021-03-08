@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\language\Kernel;
 
+use Drupal;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\KernelTests\KernelTestBase;
 
@@ -27,12 +28,12 @@ class LanguageConfigOverrideInstallTest extends KernelTestBase {
     // Need to enable test module after creating the language otherwise saving
     // the language will install the configuration.
     $this->enableModules(['language_config_override_test']);
-    \Drupal::state()->set('config_events_test.event', FALSE);
+    Drupal::state()->set('config_events_test.event', FALSE);
     $this->installConfig(['language_config_override_test']);
-    $event_recorder = \Drupal::state()->get('config_events_test.event', FALSE);
+    $event_recorder = Drupal::state()->get('config_events_test.event', FALSE);
     $this->assertFalse($event_recorder);
-    $config = \Drupal::service('language.config_factory_override')->getOverride('de', 'language_config_override_test.settings');
-    $this->assertEqual($config->get('name'), 'Deutsch');
+    $config = Drupal::service('language.config_factory_override')->getOverride('de', 'language_config_override_test.settings');
+    $this->assertEqual('Deutsch', $config->get('name'));
   }
 
 }

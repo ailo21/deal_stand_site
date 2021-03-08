@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\Core\Render;
 
+use Drupal;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Render\BubbleableMetadata;
@@ -58,7 +59,7 @@ class BubbleableMetadataTest extends UnitTestCase {
     $container = new ContainerBuilder();
     $container->set('cache_contexts_manager', $cache_contexts_manager);
     $container->set('renderer', $renderer);
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
 
     $this->assertEquals($expected, $a->merge($b));
   }
@@ -372,9 +373,9 @@ class BubbleableMetadataTest extends UnitTestCase {
     // adds the exact same settings twice and hence tests idempotency, the
     // second adds *almost* the same settings twice: the second time, some
     // values are altered, and some key-value pairs are added.
-    $settings_two['moduleName']['thingiesOnPage']['id1'] = [];
     $this->assertSame($settings_one, $merged['drupalSettings']['commonTestRealWorldIdentical']);
     $expected_settings_two = $settings_two_a;
+    $expected_settings_two['moduleName']['thingiesOnPage']['id1'] = [];
     $expected_settings_two['moduleName']['ui'][0] = 'button D';
     $expected_settings_two['moduleName']['ui'][1] = 'button E';
     $expected_settings_two['moduleName']['ui'][2] = 'button C';
@@ -395,7 +396,7 @@ class BubbleableMetadataTest extends UnitTestCase {
   }
 
   /**
-   * Data provider for testMergeAttachmentsFeedMerging
+   * Data provider for testMergeAttachmentsFeedMerging.
    *
    * @return array
    */
@@ -454,7 +455,7 @@ class BubbleableMetadataTest extends UnitTestCase {
   }
 
   /**
-   * Data provider for testMergeAttachmentsHtmlHeadMerging
+   * Data provider for testMergeAttachmentsHtmlHeadMerging.
    *
    * @return array
    */
@@ -527,7 +528,7 @@ class BubbleableMetadataTest extends UnitTestCase {
   }
 
   /**
-   * Data provider for testMergeAttachmentsHtmlHeadLinkMerging
+   * Data provider for testMergeAttachmentsHtmlHeadLinkMerging.
    *
    * @return array
    */
@@ -593,7 +594,7 @@ class BubbleableMetadataTest extends UnitTestCase {
   }
 
   /**
-   * Data provider for testMergeAttachmentsHttpHeaderMerging
+   * Data provider for testMergeAttachmentsHttpHeaderMerging.
    *
    * @return array
    */
@@ -659,7 +660,7 @@ class BubbleableMetadataTest extends UnitTestCase {
     $cache_contexts_manager->method('assertValidTokens')->willReturn(TRUE);
     $container = new ContainerBuilder();
     $container->set('cache_contexts_manager', $cache_contexts_manager);
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
 
     $this->assertEquals($expected, $a->addCacheableDependency($b));
   }

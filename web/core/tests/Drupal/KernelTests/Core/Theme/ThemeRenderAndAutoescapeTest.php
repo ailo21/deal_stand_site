@@ -7,6 +7,7 @@
 
 namespace Drupal\KernelTests\Core\Theme;
 
+use Drupal;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\GeneratedLink;
 use Drupal\Core\Link;
@@ -14,6 +15,7 @@ use Drupal\Core\Render\RenderContext;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
 use Drupal\KernelTests\KernelTestBase;
+use Exception;
 
 /**
  * Tests the theme_render_and_autoescape() function.
@@ -26,15 +28,6 @@ class ThemeRenderAndAutoescapeTest extends KernelTestBase {
    * {@inheritdoc}
    */
   protected static $modules = ['system'];
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function setUp(): void {
-    parent::setUp();
-
-    \Drupal::service('router.builder')->rebuild();
-  }
 
   /**
    * @dataProvider providerTestThemeRenderAndAutoescape
@@ -50,7 +43,7 @@ class ThemeRenderAndAutoescapeTest extends KernelTestBase {
       return theme_render_and_autoescape($arg);
     };
     /** @var \Drupal\Core\Render\RendererInterface $renderer */
-    $renderer = \Drupal::service('renderer');
+    $renderer = Drupal::service('renderer');
     $output = $renderer->executeInRenderContext($context, $theme_render_and_autoescape);
     $this->assertEquals($expected, $output);
     $this->assertIsString($output);
@@ -84,7 +77,7 @@ class ThemeRenderAndAutoescapeTest extends KernelTestBase {
    * Ensures invalid content is handled correctly.
    */
   public function testThemeEscapeAndRenderNotPrintable() {
-    $this->expectException(\Exception::class);
+    $this->expectException(Exception::class);
     theme_render_and_autoescape(new NonPrintable());
   }
 
@@ -103,7 +96,7 @@ class ThemeRenderAndAutoescapeTest extends KernelTestBase {
       return theme_render_and_autoescape($link);
     };
     /** @var \Drupal\Core\Render\RendererInterface $renderer */
-    $renderer = \Drupal::service('renderer');
+    $renderer = Drupal::service('renderer');
     $output = $renderer->executeInRenderContext($context, $theme_render_and_autoescape);
     $this->assertEquals('<a href="http://example.com"></a>', $output);
     /** @var \Drupal\Core\Render\BubbleableMetadata $metadata */
@@ -124,7 +117,7 @@ class ThemeRenderAndAutoescapeTest extends KernelTestBase {
       return theme_render_and_autoescape($link);
     };
     /** @var \Drupal\Core\Render\RendererInterface $renderer */
-    $renderer = \Drupal::service('renderer');
+    $renderer = Drupal::service('renderer');
     $output = $renderer->executeInRenderContext($context, $theme_render_and_autoescape);
     $this->assertEquals('<a href="/' . urlencode('<none>') . '"></a>', $output);
     /** @var \Drupal\Core\Render\BubbleableMetadata $metadata */

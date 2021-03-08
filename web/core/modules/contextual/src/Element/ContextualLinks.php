@@ -2,6 +2,7 @@
 
 namespace Drupal\contextual\Element;
 
+use Drupal;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Render\Element\RenderElement;
 use Drupal\Core\Url;
@@ -17,7 +18,7 @@ class ContextualLinks extends RenderElement {
    * {@inheritdoc}
    */
   public function getInfo() {
-    $class = get_class($this);
+    $class = static::class;
     return [
       '#pre_render' => [
         [$class, 'preRenderLinks'],
@@ -100,7 +101,7 @@ class ContextualLinks extends RenderElement {
    * @return \Drupal\Core\Menu\ContextualLinkManager
    */
   protected static function contextualLinkManager() {
-    return \Drupal::service('plugin.manager.menu.contextual_link');
+    return Drupal::service('plugin.manager.menu.contextual_link');
   }
 
   /**
@@ -109,7 +110,7 @@ class ContextualLinks extends RenderElement {
    * @return \Drupal\Core\Extension\ModuleHandlerInterface
    */
   protected static function moduleHandler() {
-    return \Drupal::moduleHandler();
+    return Drupal::moduleHandler();
   }
 
 }

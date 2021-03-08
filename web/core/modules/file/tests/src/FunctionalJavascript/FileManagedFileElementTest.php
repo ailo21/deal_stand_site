@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\file\FunctionalJavascript;
 
+use Drupal;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 
 /**
@@ -55,7 +56,7 @@ class FileManagedFileElementTest extends WebDriverTestBase {
   public function testManagedFile() {
     // Perform the tests with all permutations of $form['#tree'],
     // $element['#extended'], and $element['#multiple'].
-    $filename = \Drupal::service('file_system')->tempnam('temporary://', "testManagedFile") . '.txt';
+    $filename = Drupal::service('file_system')->tempnam('temporary://', "testManagedFile") . '.txt';
     file_put_contents($filename, $this->randomString(128));
     foreach ([0, 1] as $tree) {
       foreach ([0, 1] as $extended) {
@@ -73,7 +74,7 @@ class FileManagedFileElementTest extends WebDriverTestBase {
           $this->assertNotEmpty($uploaded_file);
           $last_fid = $this->getLastFileId();
           $this->assertGreaterThan($last_fid_prior, $last_fid, 'New file got uploaded.');
-          $this->drupalPostForm(NULL, [], t('Save'));
+          $this->submitForm([], 'Save');
 
           // Remove, then Submit.
           $remove_button_title = $multiple ? t('Remove selected') : t('Remove');
@@ -84,7 +85,7 @@ class FileManagedFileElementTest extends WebDriverTestBase {
           }
           $this->getSession()->getPage()->pressButton($remove_button_title);
           $this->assertSession()->assertWaitOnAjaxRequest();
-          $this->drupalPostForm(NULL, [], t('Save'));
+          $this->submitForm([], 'Save');
           $this->assertSession()->responseContains(t('The file ids are %fids.', ['%fids' => '']));
 
           // Upload, then Remove, then Submit.
@@ -99,7 +100,7 @@ class FileManagedFileElementTest extends WebDriverTestBase {
           $this->getSession()->getPage()->pressButton($remove_button_title);
           $this->assertSession()->assertWaitOnAjaxRequest();
 
-          $this->drupalPostForm(NULL, [], t('Save'));
+          $this->submitForm([], 'Save');
           $this->assertSession()->responseContains(t('The file ids are %fids.', ['%fids' => '']));
         }
       }
@@ -110,7 +111,7 @@ class FileManagedFileElementTest extends WebDriverTestBase {
    * Retrieves the fid of the last inserted file.
    */
   protected function getLastFileId() {
-    return (int) \Drupal::entityQueryAggregate('file')->aggregate('fid', 'max')->execute()[0]['fid_max'];
+    return (int) Drupal::entityQueryAggregate('file')->aggregate('fid', 'max')->execute()[0]['fid_max'];
   }
 
 }

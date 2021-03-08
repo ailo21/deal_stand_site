@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\text\Kernel\Migrate;
 
+use Drupal;
 use Drupal\Tests\SchemaCheckTestTrait;
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
 
@@ -27,8 +28,8 @@ class MigrateTextConfigsTest extends MigrateDrupal6TestBase {
    */
   public function testTextSettings() {
     $config = $this->config('text.settings');
-    $this->assertIdentical(456, $config->get('default_summary_length'));
-    $this->assertConfigSchema(\Drupal::service('config.typed'), 'text.settings', $config->get());
+    $this->assertSame(456, $config->get('default_summary_length'));
+    $this->assertConfigSchema(Drupal::service('config.typed'), 'text.settings', $config->get());
   }
 
 }

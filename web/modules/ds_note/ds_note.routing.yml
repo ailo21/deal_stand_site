@@ -5,3 +5,11 @@ ds_note.test:
     _controller: '\Drupal\ds_note\Controller\TestController::build'
   requirements:
     _permission: 'access content'
+
+ds_note.add:
+  path: '/add'
+  defaults:
+    _title: 'Разместить объявление'
+    _form: 'Drupal\ds_note\Form\AddForm'
+  requirements:
+    _permission: 'access content'

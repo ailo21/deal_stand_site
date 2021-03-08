@@ -8,10 +8,12 @@
 namespace Drupal\Tests\Core\Extension;
 
 use Composer\Autoload\ClassLoader;
+use Drupal;
 use Drupal\Core\Extension\Extension;
 use Drupal\Core\Extension\ThemeExtensionList;
 use Drupal\Core\Extension\ThemeHandler;
 use Drupal\Tests\UnitTestCase;
+use Exception;
 
 /**
  * @coversDefaultClass \Drupal\Core\Extension\ThemeHandler
@@ -65,7 +67,7 @@ class ThemeHandlerTest extends UnitTestCase {
       ->method('get')
       ->with('class_loader')
       ->will($this->returnValue($this->createMock(ClassLoader::class)));
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
   }
 
   /**
@@ -104,7 +106,7 @@ class ThemeHandlerTest extends UnitTestCase {
       $this->themeHandler->addTheme($theme);
       $this->assertTrue(TRUE, 'Empty libraries key in theme.info.yml does not cause PHP warning');
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       $this->fail('Empty libraries key in theme.info.yml causes PHP warning.');
     }
   }
@@ -144,8 +146,4 @@ class StubThemeHandler extends ThemeHandler {
     $this->registryRebuild = TRUE;
   }
 
-}
-
-if (!defined('DRUPAL_MINIMUM_PHP')) {
-  define('DRUPAL_MINIMUM_PHP', '7.3.0');
 }

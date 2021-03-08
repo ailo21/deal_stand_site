@@ -5,6 +5,7 @@ namespace Drupal\Tests\Core\Plugin\Context;
 use Drupal\Core\Plugin\Context\ContextDefinition;
 use Drupal\Core\TypedData\TypedDataManagerInterface;
 use Drupal\Tests\UnitTestCase;
+use Exception;
 
 /**
  * Tests the ContextDefinition class.
@@ -153,12 +154,12 @@ class ContextDefinitionTest extends UnitTestCase {
       ->method('getDataType')
       ->willReturn($data_type);
 
-    $this->expectException(\Exception::class);
+    $this->expectException(Exception::class);
     $mock_context_definition->getDataDefinition();
   }
 
   /**
-   * Data provider for testGetConstraint
+   * Data provider for testGetConstraint.
    */
   public function providerGetConstraint() {
     return [

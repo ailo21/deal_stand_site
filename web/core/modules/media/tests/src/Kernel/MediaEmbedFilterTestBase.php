@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\media\Kernel;
 
+use DOMXPath;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\Core\Entity\Entity\EntityViewMode;
@@ -16,6 +17,7 @@ use Drupal\media\Entity\Media;
 use Drupal\Tests\media\Traits\MediaTypeCreationTrait;
 use Drupal\Tests\TestFileCreationTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
+use SimpleXMLElement;
 
 /**
  * Base class for Media Embed filter tests.
@@ -82,7 +84,7 @@ abstract class MediaEmbedFilterTestBase extends KernelTestBase {
 
     // Create a user with required permissions. Ensure that we don't use user 1
     // because that user is treated in special ways by access control handlers.
-    $admin_user = $this->drupalCreateUser([]);
+    $this->drupalCreateUser([]);
     $user = $this->drupalCreateUser([
       'access content',
       'view media',
@@ -154,7 +156,7 @@ abstract class MediaEmbedFilterTestBase extends KernelTestBase {
    */
   protected function createEmbedCode(array $attributes) {
     $dom = Html::load('<drupal-media>This placeholder should not be rendered.</drupal-media>');
-    $xpath = new \DOMXPath($dom);
+    $xpath = new DOMXPath($dom);
     $drupal_entity = $xpath->query('//drupal-media')[0];
     foreach ($attributes as $attribute => $value) {
       $drupal_entity->setAttribute($attribute, $value);
@@ -196,7 +198,7 @@ abstract class MediaEmbedFilterTestBase extends KernelTestBase {
    * @param array $expected_attributes
    *   An array of expected attributes.
    */
-  protected function assertHasAttributes(\SimpleXMLElement $element, array $expected_attributes) {
+  protected function assertHasAttributes(SimpleXMLElement $element, array $expected_attributes) {
     foreach ($expected_attributes as $attribute => $value) {
       if ($value === NULL) {
         $this->assertNull($element[$attribute]);

@@ -2,6 +2,7 @@
 
 namespace Drupal\Core\Database\Query;
 
+use Drupal;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Database\Connection;
 
@@ -79,7 +80,7 @@ class Select extends Query implements SelectInterface {
   protected $having;
 
   /**
-   * Whether or not this query should be DISTINCT
+   * Whether or not this query should be DISTINCT.
    *
    * @var bool
    */
@@ -112,7 +113,7 @@ class Select extends Query implements SelectInterface {
   protected $prepared = FALSE;
 
   /**
-   * The FOR UPDATE status
+   * The FOR UPDATE status.
    *
    * @var bool
    */
@@ -477,7 +478,7 @@ class Select extends Query implements SelectInterface {
       foreach ($this->alterTags as $tag => $value) {
         $hooks[] = 'query_' . $tag;
       }
-      \Drupal::moduleHandler()->alter($hooks, $query);
+      Drupal::moduleHandler()->alter($hooks, $query);
     }
 
     $this->prepared = TRUE;

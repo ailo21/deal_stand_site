@@ -15,8 +15,7 @@ use Symfony\Component\HttpFoundation\Request;
  *
  * @param $class_loader
  *   The class loader. Normally Composer's ClassLoader, as included by the
- *   front controller, but may also be decorated; e.g.,
- *   \Symfony\Component\ClassLoader\ApcClassLoader, \Symfony\Component\ClassLoader\WinCacheClassLoader, or \Symfony\Component\ClassLoader\XcacheClassLoader
+ *   front controller, but may also be decorated.
  * @param \Symfony\Component\HttpFoundation\Request $request
  *   The current request.
  *
@@ -50,7 +49,7 @@ function drupal_rebuild($class_loader, Request $request) {
   }
 
   // Disable recording of cached pages.
-  \Drupal::service('page_cache_kill_switch')->trigger();
+  Drupal::service('page_cache_kill_switch')->trigger();
 
   drupal_flush_all_caches();
 

@@ -15,6 +15,7 @@ use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Template\Attribute;
+use stdClass;
 
 /**
  * @coversDefaultClass \Drupal\Core\Render\Renderer
@@ -487,7 +488,7 @@ class RendererTest extends RendererTestBase {
     $output = $this->renderer->renderRoot($elements);
 
     // The lowest weight element should appear last in $output.
-    $this->assertTrue(strpos($output, $second) > strpos($output, $first), 'Elements were sorted correctly by weight.');
+    $this->assertGreaterThan(strpos($output, $first), strpos($output, $second));
 
     // Confirm that the $elements array has '#sorted' set to TRUE.
     $this->assertTrue($elements['#sorted'], "'#sorted' => TRUE was added to the array");
@@ -522,7 +523,7 @@ class RendererTest extends RendererTestBase {
     $output = $this->renderer->renderRoot($elements);
 
     // The elements should appear in output in the same order as the array.
-    $this->assertTrue(strpos($output, $second) < strpos($output, $first), 'Elements were not sorted.');
+    $this->assertLessThan(strpos($output, $first), strpos($output, $second));
   }
 
   /**
@@ -1022,7 +1023,7 @@ class RendererTest extends RendererTestBase {
             'max-age' => 600,
           ],
         ],
-        new \stdClass(),
+        new stdClass(),
         [
           '#cache' => [
             'contexts' => ['theme'],

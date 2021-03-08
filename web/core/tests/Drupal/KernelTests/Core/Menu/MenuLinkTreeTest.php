@@ -2,6 +2,7 @@
 
 namespace Drupal\KernelTests\Core\Menu;
 
+use Drupal;
 use Drupal\Core\Menu\MenuLinkTreeElement;
 use Drupal\Core\Menu\MenuTreeParameters;
 use Drupal\KernelTests\KernelTestBase;
@@ -49,7 +50,6 @@ class MenuLinkTreeTest extends KernelTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
-    \Drupal::service('router.builder')->rebuild();
     $this->installEntitySchema('user');
     $this->installEntitySchema('menu_link_content');
 
@@ -61,12 +61,12 @@ class MenuLinkTreeTest extends KernelTestBase {
    * Tests deleting all the links in a menu.
    */
   public function testDeleteLinksInMenu() {
-    \Drupal::entityTypeManager()->getStorage('menu')->create(['id' => 'menu1'])->save();
-    \Drupal::entityTypeManager()->getStorage('menu')->create(['id' => 'menu2'])->save();
+    Drupal::entityTypeManager()->getStorage('menu')->create(['id' => 'menu1'])->save();
+    Drupal::entityTypeManager()->getStorage('menu')->create(['id' => 'menu2'])->save();
 
-    \Drupal::entityTypeManager()->getStorage('menu_link_content')->create(['link' => ['uri' => 'internal:/menu_name_test'], 'menu_name' => 'menu1', 'bundle' => 'menu_link_content', 'title' => 'Link test'])->save();
-    \Drupal::entityTypeManager()->getStorage('menu_link_content')->create(['link' => ['uri' => 'internal:/menu_name_test'], 'menu_name' => 'menu1', 'bundle' => 'menu_link_content', 'title' => 'Link test'])->save();
-    \Drupal::entityTypeManager()->getStorage('menu_link_content')->create(['link' => ['uri' => 'internal:/menu_name_test'], 'menu_name' => 'menu2', 'bundle' => 'menu_link_content', 'title' => 'Link test'])->save();
+    Drupal::entityTypeManager()->getStorage('menu_link_content')->create(['link' => ['uri' => 'internal:/menu_name_test'], 'menu_name' => 'menu1', 'bundle' => 'menu_link_content', 'title' => 'Link test'])->save();
+    Drupal::entityTypeManager()->getStorage('menu_link_content')->create(['link' => ['uri' => 'internal:/menu_name_test'], 'menu_name' => 'menu1', 'bundle' => 'menu_link_content', 'title' => 'Link test'])->save();
+    Drupal::entityTypeManager()->getStorage('menu_link_content')->create(['link' => ['uri' => 'internal:/menu_name_test'], 'menu_name' => 'menu2', 'bundle' => 'menu_link_content', 'title' => 'Link test'])->save();
 
     $output = $this->linkTree->load('menu1', new MenuTreeParameters());
     $this->assertCount(2, $output);
@@ -120,16 +120,16 @@ class MenuLinkTreeTest extends KernelTestBase {
       return array_reduce($tree, $sum);
     };
 
-    $this->assertEqual($count($tree), 8);
+    $this->assertEqual(8, $count($tree));
     $parameters = new MenuTreeParameters();
     $parameters->setRoot('test.example2');
     $tree = $this->linkTree->load($instance->getMenuName(), $parameters);
     $top_link = reset($tree);
     $this->assertCount(1, $top_link->subtree);
     $child = reset($top_link->subtree);
-    $this->assertEqual($child->link->getPluginId(), $links[3]->getPluginId());
+    $this->assertEqual($links[3]->getPluginId(), $child->link->getPluginId());
     $height = $this->linkTree->getSubtreeHeight('test.example2');
-    $this->assertEqual($height, 3);
+    $this->assertEqual(3, $height);
   }
 
 }

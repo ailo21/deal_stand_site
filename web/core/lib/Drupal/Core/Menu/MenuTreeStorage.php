@@ -11,6 +11,9 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Database\DatabaseException;
 use Drupal\Core\Database\Query\SelectInterface;
+use Exception;
+use InvalidArgumentException;
+use PDO;
 
 /**
  * Provides a menu tree storage using the database.
@@ -241,7 +244,7 @@ class MenuTreeStorage implements MenuTreeStorageInterface {
     try {
       return $query->execute();
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       // If there was an exception, try to create the table.
       if ($this->ensureTableExists()) {
         return $query->execute();
@@ -331,7 +334,7 @@ class MenuTreeStorage implements MenuTreeStorageInterface {
       }
       $this->updateParentalStatus($link);
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       $transaction->rollBack();
       throw $e;
     }
@@ -663,11 +666,11 @@ class MenuTreeStorage implements MenuTreeStorageInterface {
     foreach ($properties as $name => $value) {
       if (!in_array($name, $this->definitionFields(), TRUE)) {
         $fields = implode(', ', $this->definitionFields());
-        throw new \InvalidArgumentException("An invalid property name, $name was specified. Allowed property names are: $fields.");
+        throw new InvalidArgumentException("An invalid property name, $name was specified. Allowed property names are: $fields.");
       }
       $query->condition($name, $value);
     }
-    $loaded = $this->safeExecuteSelect($query)->fetchAllAssoc('id', \PDO::FETCH_ASSOC);
+    $loaded = $this->safeExecuteSelect($query)->fetchAllAssoc('id', PDO::FETCH_ASSOC);
     foreach ($loaded as $id => $link) {
       $loaded[$id] = $this->prepareLink($link);
     }
@@ -696,7 +699,7 @@ class MenuTreeStorage implements MenuTreeStorageInterface {
     $query->orderBy('depth');
     $query->orderBy('weight');
     $query->orderBy('id');
-    $loaded = $this->safeExecuteSelect($query)->fetchAllAssoc('id', \PDO::FETCH_ASSOC);
+    $loaded = $this->safeExecuteSelect($query)->fetchAllAssoc('id', PDO::FETCH_ASSOC);
     foreach ($loaded as $id => $link) {
       $loaded[$id] = $this->prepareLink($link);
     }
@@ -713,7 +716,7 @@ class MenuTreeStorage implements MenuTreeStorageInterface {
       $query = $this->connection->select($this->table, $this->options);
       $query->fields($this->table, $this->definitionFields());
       $query->condition('id', $missing_ids, 'IN');
-      $loaded = $this->safeExecuteSelect($query)->fetchAllAssoc('id', \PDO::FETCH_ASSOC);
+      $loaded = $this->safeExecuteSelect($query)->fetchAllAssoc('id', PDO::FETCH_ASSOC);
       foreach ($loaded as $id => $link) {
         $this->definitions[$id] = $this->prepareLink($link);
       }
@@ -759,7 +762,7 @@ class MenuTreeStorage implements MenuTreeStorageInterface {
     $query = $this->connection->select($this->table, $this->options);
     $query->fields($this->table);
     $query->condition('id', $ids, 'IN');
-    $loaded = $this->safeExecuteSelect($query)->fetchAllAssoc('id', \PDO::FETCH_ASSOC);
+    $loaded = $this->safeExecuteSelect($query)->fetchAllAssoc('id', PDO::FETCH_ASSOC);
     foreach ($loaded as &$link) {
       foreach ($this->serializedFields() as $name) {
         if (isset($link[$name])) {
@@ -780,7 +783,7 @@ class MenuTreeStorage implements MenuTreeStorageInterface {
     //   https://www.drupal.org/node/2302043
     $subquery->fields($this->table, ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8', 'p9']);
     $subquery->condition('id', $id);
-    $result = current($subquery->execute()->fetchAll(\PDO::FETCH_ASSOC));
+    $result = current($subquery->execute()->fetchAll(PDO::FETCH_ASSOC));
     $ids = array_filter($result);
     if ($ids) {
       $query = $this->connection->select($this->table, $this->options);
@@ -967,7 +970,7 @@ class MenuTreeStorage implements MenuTreeStorageInterface {
       }
     }
 
-    $links = $this->safeExecuteSelect($query)->fetchAllAssoc('id', \PDO::FETCH_ASSOC);
+    $links = $this->safeExecuteSelect($query)->fetchAllAssoc('id', PDO::FETCH_ASSOC);
 
     return $links;
   }
@@ -1002,8 +1005,8 @@ class MenuTreeStorage implements MenuTreeStorageInterface {
     $route_names = [];
     foreach (array_keys($tree) as $id) {
       $definitions[$id] = $this->definitions[$id];
-      if (!empty($definition['route_name'])) {
-        $route_names[$definition['route_name']] = $definition['route_name'];
+      if (!empty($definitions[$id]['route_name'])) {
+        $route_names[$definitions[$id]['route_name']] = $definitions[$id]['route_name'];
       }
       if ($tree[$id]['subtree']) {
         $route_names += $this->doCollectRoutesAndDefinitions($tree[$id]['subtree'], $definitions);
@@ -1174,7 +1177,7 @@ class MenuTreeStorage implements MenuTreeStorageInterface {
       // exception and do nothing.
       return TRUE;
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       throw new PluginException($e->getMessage(), NULL, $e);
     }
     return FALSE;
@@ -1247,7 +1250,7 @@ class MenuTreeStorage implements MenuTreeStorageInterface {
           'default' => '',
         ],
         'route_name' => [
-          'description' => 'The machine name of a defined Symfony Route this menu item represents.',
+          'description' => 'The machine name of a defined Symfony Route this menu link represents.',
           'type' => 'varchar_ascii',
           'length' => 255,
         ],
@@ -1304,7 +1307,7 @@ class MenuTreeStorage implements MenuTreeStorageInterface {
           'default' => 'system',
         ],
         'enabled' => [
-          'description' => 'A flag for whether the link should be rendered in menus. (0 = a disabled menu item that may be shown on admin screens, 1 = a normal, visible link)',
+          'description' => 'A flag for whether the link should be rendered in menus. (0 = a disabled menu link that may be shown on admin screens, 1 = a normal, visible link)',
           'type' => 'int',
           'not null' => TRUE,
           'default' => 1,

@@ -5,6 +5,7 @@ namespace Drupal\Core\Database\Driver\sqlite;
 use Drupal\Core\Database\SchemaObjectExistsException;
 use Drupal\Core\Database\SchemaObjectDoesNotExistException;
 use Drupal\Core\Database\Schema as DatabaseSchema;
+use Exception;
 
 /**
  * @ingroup schemaapi
@@ -17,7 +18,7 @@ use Drupal\Core\Database\Schema as DatabaseSchema;
 class Schema extends DatabaseSchema {
 
   /**
-   * Override DatabaseSchema::$defaultSchema
+   * Override DatabaseSchema::$defaultSchema.
    *
    * @var string
    */
@@ -366,7 +367,7 @@ class Schema extends DatabaseSchema {
       // Build the mapping between the old fields and the new fields.
       $mapping = [];
       if (isset($specification['initial_from_field'])) {
-        // If we have a initial value, copy it over.
+        // If we have an initial value, copy it over.
         if (isset($specification['initial'])) {
           $expression = 'COALESCE(' . $specification['initial_from_field'] . ', :default_initial_value)';
           $arguments = [':default_initial_value' => $specification['initial']];
@@ -381,7 +382,7 @@ class Schema extends DatabaseSchema {
         ];
       }
       elseif (isset($specification['initial'])) {
-        // If we have a initial value, copy it over.
+        // If we have an initial value, copy it over.
         $mapping[$field] = [
           'expression' => ':newfieldinitial',
           'arguments' => [':newfieldinitial' => $specification['initial']],
@@ -500,7 +501,7 @@ class Schema extends DatabaseSchema {
         $length = NULL;
       }
       if (isset($mapped_fields[$type])) {
-        list($type, $size) = explode(':', $mapped_fields[$type]);
+        [$type, $size] = explode(':', $mapped_fields[$type]);
         $schema['fields'][$row->name] = [
           'type' => $type,
           'size' => $size,
@@ -518,7 +519,7 @@ class Schema extends DatabaseSchema {
         }
       }
       else {
-        throw new \Exception("Unable to parse the column type " . $row->type);
+        throw new Exception("Unable to parse the column type " . $row->type);
       }
     }
     ksort($schema['primary key']);

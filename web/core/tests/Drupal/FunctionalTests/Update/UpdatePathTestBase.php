@@ -2,6 +2,7 @@
 
 namespace Drupal\FunctionalTests\Update;
 
+use Drupal;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\Test\TestRunnerKernel;
@@ -118,7 +119,7 @@ abstract class UpdatePathTestBase extends BrowserTestBase {
   protected $strictConfigSchema = FALSE;
 
   /**
-   * Overrides WebTestBase::setUp() for update testing.
+   * Overrides BrowserTestBase::setUp() for update testing.
    *
    * The main difference in this method is that rather than performing the
    * installation via the installer, a database is loaded. Additional work is
@@ -162,15 +163,15 @@ abstract class UpdatePathTestBase extends BrowserTestBase {
 
     // Add the config directories to settings.php.
     $sync_directory = Settings::get('config_sync_directory');
-    \Drupal::service('file_system')->prepareDirectory($sync_directory, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
+    Drupal::service('file_system')->prepareDirectory($sync_directory, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
 
     // Ensure the default temp directory exist and is writable. The configured
     // temp directory may be removed during update.
-    \Drupal::service('file_system')->prepareDirectory($this->tempFilesDirectory, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
+    Drupal::service('file_system')->prepareDirectory($this->tempFilesDirectory, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
 
     // Set the container. parent::rebuildAll() would normally do this, but this
     // not safe to do here, because the database has not been updated yet.
-    $this->container = \Drupal::getContainer();
+    $this->container = Drupal::getContainer();
 
     $this->replaceUser1();
 
@@ -284,7 +285,7 @@ abstract class UpdatePathTestBase extends BrowserTestBase {
     $container
       ->register('string_translation', 'Drupal\Core\StringTranslation\TranslationManager')
       ->addArgument(new Reference('language.default'));
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
 
     require_once __DIR__ . '/../../../../includes/install.inc';
     $connection_info = Database::getConnectionInfo();

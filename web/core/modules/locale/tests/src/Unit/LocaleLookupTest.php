@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\locale\Unit;
 
+use Drupal;
 use Drupal\Component\Gettext\PoItem;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\locale\LocaleLookup;
@@ -86,7 +87,7 @@ class LocaleLookupTest extends UnitTestCase {
 
     $container = new ContainerBuilder();
     $container->set('current_user', $this->user);
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
   }
 
   /**
@@ -134,6 +135,7 @@ class LocaleLookupTest extends UnitTestCase {
    */
   public function testResolveCacheMissWithFallback($langcode, $string, $context, $expected) {
     // These are fake words!
+    // cSpell:disable
     $translations = [
       'en' => [
         'test' => 'test',
@@ -153,6 +155,7 @@ class LocaleLookupTest extends UnitTestCase {
         'missing pl' => 'chybějící pl',
       ],
     ];
+    // cSpell:enable
     $this->storage->expects($this->any())
       ->method('findTranslation')
       ->will($this->returnCallback(function ($argument) use ($translations) {
@@ -189,6 +192,7 @@ class LocaleLookupTest extends UnitTestCase {
    * Provides test data for testResolveCacheMissWithFallback().
    */
   public function resolveCacheMissWithFallbackProvider() {
+    // cSpell:disable
     return [
       ['cs', 'test', 'irrelevant', 'test v české'],
       ['cs', 'fake', 'irrelevant', 'falešný'],
@@ -203,6 +207,7 @@ class LocaleLookupTest extends UnitTestCase {
       ['pl', 'missing cs', 'irrelevant', 'zaginiony czech'],
       ['pl', 'missing both', 'irrelevant', 'missing both'],
     ];
+    // cSpell:enable
   }
 
   /**

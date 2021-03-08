@@ -75,9 +75,9 @@ function color_form_system_theme_settings_alter(&$form, FormStateInterface $form
  * Replaces style sheets declared in libraries with color-altered style sheets.
  */
 function color_library_info_alter(&$libraries, $extension) {
-  $themes = array_keys(\Drupal::service('theme_handler')->listInfo());
+  $themes = array_keys(Drupal::service('theme_handler')->listInfo());
   if (in_array($extension, $themes)) {
-    $color_paths = \Drupal::config('color.theme.' . $extension)->get('stylesheets');
+    $color_paths = Drupal::config('color.theme.' . $extension)->get('stylesheets');
     if (!empty($color_paths)) {
       foreach (array_keys($libraries) as $name) {
         if (isset($libraries[$name]['css'])) {
@@ -90,7 +90,7 @@ function color_library_info_alter(&$libraries, $extension) {
                 // Color module currently requires unique file names to be used,
                 // which allows us to compare different file paths.
                 /** @var \Drupal\Core\File\FileSystemInterface $file_system */
-                $file_system = \Drupal::service('file_system');
+                $file_system = Drupal::service('file_system');
                 if ($file_system->basename($path) == $file_system->basename($color_path)) {
                   // Replace the path to the new css file.
                   // This keeps the order of the stylesheets intact.
@@ -130,7 +130,7 @@ function color_get_info($theme) {
   }
 
   $path = drupal_get_path('theme', $theme);
-  $file = \Drupal::root() . '/' . $path . '/color/color.inc';
+  $file = Drupal::root() . '/' . $path . '/color/color.inc';
   if ($path && file_exists($file)) {
     include $file;
     // Add in default values.
@@ -171,7 +171,7 @@ function color_get_palette($theme, $default = FALSE) {
   // Getting a mutable override-free object because this function is only used
   // in forms. Color configuration is used to write CSS to the file system
   // making configuration overrides pointless.
-  return \Drupal::configFactory()->getEditable('color.theme.' . $theme)->get('palette') ?: $palette;
+  return Drupal::configFactory()->getEditable('color.theme.' . $theme)->get('palette') ?: $palette;
 }
 
 /**
@@ -201,7 +201,7 @@ function color_scheme_form($complete_form, FormStateInterface $form_state, $them
   // in a form and therefore without doing this would bleed overrides into
   // active configuration. Furthermore, color configuration is used to write
   // CSS to the file system making configuration overrides pointless.
-  $current_scheme = \Drupal::configFactory()->getEditable('color.theme.' . $theme)->get('palette');
+  $current_scheme = Drupal::configFactory()->getEditable('color.theme.' . $theme)->get('palette');
   foreach ($schemes as $key => $scheme) {
     if ($current_scheme == $scheme) {
       $scheme_name = $key;
@@ -286,7 +286,7 @@ function template_preprocess_color_scheme_form(&$variables) {
   }
 
   // Attempt to load preview HTML if the theme provides it.
-  $preview_html_path = \Drupal::root() . '/' . (isset($info['preview_html']) ? drupal_get_path('theme', $theme) . '/' . $info['preview_html'] : drupal_get_path('module', 'color') . '/preview.html');
+  $preview_html_path = Drupal::root() . '/' . (isset($info['preview_html']) ? drupal_get_path('theme', $theme) . '/' . $info['preview_html'] : drupal_get_path('module', 'color') . '/preview.html');
   $variables['html_preview']['#markup'] = file_get_contents($preview_html_path);
 }
 
@@ -314,7 +314,7 @@ function color_palette_color_value($element, $input, FormStateInterface $form_st
     // necessary, falling back on the default value.
     $value = Textfield::valueCallback($element, $input, $form_state);
     $complete_form = $form_state->getCompleteForm();
-    if (!$value || !isset($complete_form['#token']) || color_valid_hexadecimal_string($value) || \Drupal::csrfToken()->validate($form_state->getValue('form_token'), $complete_form['#token'])) {
+    if (!$value || !isset($complete_form['#token']) || color_valid_hexadecimal_string($value) || Drupal::csrfToken()->validate($form_state->getValue('form_token'), $complete_form['#token'])) {
       return $value;
     }
     else {
@@ -371,7 +371,7 @@ function color_scheme_form_submit($form, FormStateInterface $form_state) {
     return;
   }
 
-  $config = \Drupal::configFactory()->getEditable('color.theme.' . $theme);
+  $config = Drupal::configFactory()->getEditable('color.theme.' . $theme);
 
   // Resolve palette.
   if ($scheme != '') {
@@ -387,7 +387,7 @@ function color_scheme_form_submit($form, FormStateInterface $form_state) {
   if (isset($info['base_image'])) {
     // Fetch source image dimensions.
     $source = drupal_get_path('theme', $theme) . '/' . $info['base_image'];
-    list($width, $height) = getimagesize($source);
+    [$width, $height] = getimagesize($source);
 
     // We need at least a copy of the source and a target buffer of the same
     // size (both at 32bpp).
@@ -398,14 +398,14 @@ function color_scheme_form_submit($form, FormStateInterface $form_state) {
     // scheme change based on a faulty memory calculation.
     $usage = memory_get_usage(TRUE);
     $memory_limit = ini_get('memory_limit');
-    $size = Bytes::toInt($memory_limit);
+    $size = Bytes::toNumber($memory_limit);
     if (!Environment::checkMemoryLimit($usage + $required, $memory_limit)) {
-      \Drupal::messenger()->addError(t('There is not enough memory available to PHP to change this theme\'s color scheme. You need at least %size more. Check the <a href="http://php.net/manual/ini.core.php#ini.sect.resource-limits">PHP documentation</a> for more information.', ['%size' => format_size($usage + $required - $size)]));
+      Drupal::messenger()->addError(t('There is not enough memory available to PHP to change this theme\'s color scheme. You need at least %size more. Check the <a href="http://php.net/manual/ini.core.php#ini.sect.resource-limits">PHP documentation</a> for more information.', ['%size' => format_size($usage + $required - $size)]));
       return;
     }
   }
 
-  $file_system = \Drupal::service('file_system');
+  $file_system = Drupal::service('file_system');
   // Delete old files.
   $files = $config->get('files');
   if (isset($files)) {
@@ -414,7 +414,7 @@ function color_scheme_form_submit($form, FormStateInterface $form_state) {
     }
   }
   if (isset($file) && $file = dirname($file)) {
-    @\Drupal::service('file_system')->rmdir($file);
+    @Drupal::service('file_system')->rmdir($file);
   }
 
   // No change in color config, use the standard theme from color.inc.
@@ -428,7 +428,7 @@ function color_scheme_form_submit($form, FormStateInterface $form_state) {
   $paths['color'] = 'public://color';
   $paths['target'] = $paths['color'] . '/' . $id;
   /** @var \Drupal\Core\File\FileSystemInterface $file_system */
-  $file_system = \Drupal::service('file_system');
+  $file_system = Drupal::service('file_system');
   foreach ($paths as $path) {
     $file_system->prepareDirectory($path, FileSystemInterface::CREATE_DIRECTORY);
   }
@@ -445,7 +445,7 @@ function color_scheme_form_submit($form, FormStateInterface $form_state) {
 
   // Copy over neutral images.
   /** @var \Drupal\Core\File\FileSystemInterface $file_system */
-  $file_system = \Drupal::service('file_system');
+  $file_system = Drupal::service('file_system');
   foreach ($info['copy'] as $file) {
     $base = $file_system->basename($file);
     $source = $paths['source'] . $file;
@@ -517,7 +517,7 @@ function _color_rewrite_stylesheet($theme, &$info, &$paths, $palette, $style) {
   // Split off the "Don't touch" section of the stylesheet.
   $split = "Color Module: Don't touch";
   if (strpos($style, $split) !== FALSE) {
-    list($style, $fixed) = explode($split, $style);
+    [$style, $fixed] = explode($split, $style);
   }
 
   // Find all colors in the stylesheet and the chunks in between.
@@ -578,11 +578,11 @@ function _color_rewrite_stylesheet($theme, &$info, &$paths, $palette, $style) {
  * Saves the rewritten stylesheet to disk.
  */
 function _color_save_stylesheet($file, $style, &$paths) {
-  $filepath = \Drupal::service('file_system')->saveData($style, $file, FileSystemInterface::EXISTS_REPLACE);
+  $filepath = Drupal::service('file_system')->saveData($style, $file, FileSystemInterface::EXISTS_REPLACE);
   $paths['files'][] = $filepath;
 
   // Set standard file permissions for webserver-generated files.
-  \Drupal::service('file_system')->chmod($file);
+  Drupal::service('file_system')->chmod($file);
 }
 
 /**
@@ -631,9 +631,9 @@ function _color_render_images($theme, &$info, &$paths, $palette) {
 
   // Cut out slices.
   foreach ($info['slices'] as $file => $coord) {
-    list($x, $y, $width, $height) = $coord;
+    [$x, $y, $width, $height] = $coord;
     /** @var \Drupal\Core\File\FileSystemInterface $file_system */
-    $file_system = \Drupal::service('file_system');
+    $file_system = Drupal::service('file_system');
     $base = $file_system->basename($file);
     $image = $file_system->realpath($paths['target'] . $base);
 
@@ -641,7 +641,7 @@ function _color_render_images($theme, &$info, &$paths, $palette) {
     if ($file == 'screenshot.png') {
       $slice = imagecreatetruecolor(150, 90);
       imagecopyresampled($slice, $target, 0, 0, $x, $y, 150, 90, $width, $height);
-      \Drupal::configFactory()->getEditable('color.theme.' . $theme)
+      Drupal::configFactory()->getEditable('color.theme.' . $theme)
         ->set('screenshot', $image)
         ->save();
     }

@@ -2,6 +2,7 @@
 
 namespace Drupal\book;
 
+use Drupal;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -114,7 +115,7 @@ class BookManager implements BookManagerInterface {
       // @todo: use route name for links, not system path.
       foreach ($book_links as $link) {
         $nid = $link['nid'];
-        if (isset($nodes[$nid]) && $nodes[$nid]->status) {
+        if (isset($nodes[$nid]) && $nodes[$nid]->access('view')) {
           $link['url'] = $nodes[$nid]->toUrl();
           $link['title'] = $nodes[$nid]->label();
           $link['type'] = $nodes[$nid]->bundle();
@@ -220,7 +221,7 @@ class BookManager implements BookManagerInterface {
       // The node can become a new book, if it is not one already.
       $options = [$nid => $this->t('- Create a new book -')] + $options;
     }
-    if (!$node->book['bid']) {
+    if (!$node->book['bid'] || $nid === 'new' || $node->book['original_bid'] === 0) {
       // The node is not currently in the hierarchy.
       $options = [0 => $this->t('- None -')] + $options;
     }
@@ -476,7 +477,7 @@ class BookManager implements BookManagerInterface {
    */
   public function bookTreeAllData($bid, $link = NULL, $max_depth = NULL) {
     $tree = &drupal_static(__METHOD__, []);
-    $language_interface = \Drupal::languageManager()->getCurrentLanguage();
+    $language_interface = Drupal::languageManager()->getCurrentLanguage();
 
     // Use $nid as a flag for whether the data being loaded is for the whole
     // tree.
@@ -666,7 +667,7 @@ class BookManager implements BookManagerInterface {
   protected function doBookTreeBuild($bid, array $parameters = []) {
     // Static cache of already built menu trees.
     $trees = &drupal_static(__METHOD__, []);
-    $language_interface = \Drupal::languageManager()->getCurrentLanguage();
+    $language_interface = Drupal::languageManager()->getCurrentLanguage();
 
     // Build the cache id; sort parents to prevent duplicate storage and remove
     // default parameter values.
@@ -677,7 +678,7 @@ class BookManager implements BookManagerInterface {
 
     // If we do not have this tree in the static cache, check {cache_data}.
     if (!isset($trees[$tree_cid])) {
-      $cache = \Drupal::cache('data')->get($tree_cid);
+      $cache = Drupal::cache('data')->get($tree_cid);
       if ($cache && $cache->data) {
         $trees[$tree_cid] = $cache->data;
       }
@@ -699,7 +700,7 @@ class BookManager implements BookManagerInterface {
       $this->bookTreeCollectNodeLinks($data['tree'], $data['node_links']);
 
       // Cache the data, if it is not already in the cache.
-      \Drupal::cache('data')->set($tree_cid, $data, Cache::PERMANENT, ['bid:' . $bid]);
+      Drupal::cache('data')->set($tree_cid, $data, Cache::PERMANENT, ['bid:' . $bid]);
       $trees[$tree_cid] = $data;
     }
 
@@ -957,12 +958,10 @@ class BookManager implements BookManagerInterface {
 
       // @todo This should be actually filtering on the desired node status
       //   field language and just fall back to the default language.
-      $nids = \Drupal::entityQuery('node')
-        ->condition('nid', $nids, 'IN')
-        ->condition('status', 1)
-        ->execute();
+      $book_links = $this->bookOutlineStorage->loadMultiple($nids);
 
-      foreach ($nids as $nid) {
+      foreach ($book_links as $book_link) {
+        $nid = $book_link['nid'];
         foreach ($node_links[$nid] as $mlid => $link) {
           $node_links[$nid][$mlid]['access'] = TRUE;
         }
@@ -1002,19 +1001,14 @@ class BookManager implements BookManagerInterface {
    * {@inheritdoc}
    */
   public function bookLinkTranslate(&$link) {
-    $node = NULL;
-    // Access will already be set in the tree functions.
-    if (!isset($link['access'])) {
-      $node = $this->entityTypeManager->getStorage('node')->load($link['nid']);
-      $link['access'] = $node && $node->access('view');
-    }
+    // Check access via the api, since the query node_access tag doesn't check
+    // for unpublished nodes.
+    // @todo - load the nodes en-mass rather than individually.
+    // @see https://www.drupal.org/project/drupal/issues/2470896
+    $node = $this->entityTypeManager->getStorage('node')->load($link['nid']);
+    $link['access'] = $node && $node->access('view');
     // For performance, don't localize a link the user can't access.
     if ($link['access']) {
-      // @todo - load the nodes en-mass rather than individually.
-      if (!$node) {
-        $node = $this->entityTypeManager->getStorage('node')
-          ->load($link['nid']);
-      }
       // The node label will be the value for the current user's language.
       $link['title'] = $node->label();
       $link['options'] = [];
@@ -1110,12 +1104,12 @@ class BookManager implements BookManagerInterface {
     $cid = 'book-links:subtree-cid:' . $link['nid'];
 
     if (!isset($tree[$cid])) {
-      $tree_cid_cache = \Drupal::cache('data')->get($cid);
+      $tree_cid_cache = Drupal::cache('data')->get($cid);
 
       if ($tree_cid_cache && $tree_cid_cache->data) {
         // If the cache entry exists, it will just be the cid for the actual
         // data. This avoids duplication of large amounts of data.
-        $cache = \Drupal::cache('data')->get($tree_cid_cache->data);
+        $cache = Drupal::cache('data')->get($tree_cid_cache->data);
 
         if ($cache && isset($cache->data)) {
           $data = $cache->data;
@@ -1136,12 +1130,12 @@ class BookManager implements BookManagerInterface {
         $tree_cid = 'book-links:subtree-data:' . hash('sha256', serialize($data));
         // Cache the data, if it is not already in the cache.
 
-        if (!\Drupal::cache('data')->get($tree_cid)) {
-          \Drupal::cache('data')->set($tree_cid, $data, Cache::PERMANENT, ['bid:' . $link['bid']]);
+        if (!Drupal::cache('data')->get($tree_cid)) {
+          Drupal::cache('data')->set($tree_cid, $data, Cache::PERMANENT, ['bid:' . $link['bid']]);
         }
         // Cache the cid of the (shared) data using the book and item-specific
         // cid.
-        \Drupal::cache('data')->set($cid, $tree_cid, Cache::PERMANENT, ['bid:' . $link['bid']]);
+        Drupal::cache('data')->set($cid, $tree_cid, Cache::PERMANENT, ['bid:' . $link['bid']]);
       }
       // Check access for the current user to each item in the tree.
       $this->bookTreeCheckAccess($data['tree'], $data['node_links']);

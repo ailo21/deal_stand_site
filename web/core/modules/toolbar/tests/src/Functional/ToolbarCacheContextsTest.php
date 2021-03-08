@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\toolbar\Functional;
 
+use Drupal;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\EventSubscriber\MainContentViewSubscriber;
 use Drupal\Tests\system\Functional\Cache\AssertPageCacheContextsAndTagsTrait;
@@ -70,9 +71,9 @@ class ToolbarCacheContextsTest extends BrowserTestBase {
     $this->installExtraModules(['dynamic_page_cache']);
     $this->drupalLogin($this->adminUser);
     $this->drupalGet('test-page');
-    $this->assertSame('MISS', $this->getSession()->getResponseHeader('X-Drupal-Dynamic-Cache'));
+    $this->assertSession()->responseHeaderEquals('X-Drupal-Dynamic-Cache', 'MISS');
     $this->drupalGet('test-page');
-    $this->assertSame('HIT', $this->getSession()->getResponseHeader('X-Drupal-Dynamic-Cache'));
+    $this->assertSession()->responseHeaderEquals('X-Drupal-Dynamic-Cache', 'HIT');
   }
 
   /**
@@ -91,13 +92,13 @@ class ToolbarCacheContextsTest extends BrowserTestBase {
     $this->installExtraModules(['contextual']);
     $this->adminUser2 = $this->drupalCreateUser(array_merge($this->perms, ['access contextual links']));
     $this->assertToolbarCacheContexts(['user.permissions'], 'Expected cache contexts found with contextual module enabled.');
-    \Drupal::service('module_installer')->uninstall(['contextual']);
+    Drupal::service('module_installer')->uninstall(['contextual']);
 
     // Test with the tour module enabled.
     $this->installExtraModules(['tour']);
     $this->adminUser2 = $this->drupalCreateUser(array_merge($this->perms, ['access tour']));
     $this->assertToolbarCacheContexts(['user.permissions'], 'Expected cache contexts found with tour module enabled.');
-    \Drupal::service('module_installer')->uninstall(['tour']);
+    Drupal::service('module_installer')->uninstall(['tour']);
   }
 
   /**
@@ -142,10 +143,10 @@ class ToolbarCacheContextsTest extends BrowserTestBase {
    *   An array of module names.
    */
   protected function installExtraModules(array $module_list) {
-    \Drupal::service('module_installer')->install($module_list);
+    Drupal::service('module_installer')->install($module_list);
 
     // Installing modules updates the container and needs a router rebuild.
-    $this->container = \Drupal::getContainer();
+    $this->container = Drupal::getContainer();
     $this->container->get('router.builder')->rebuildIfNeeded();
   }
 

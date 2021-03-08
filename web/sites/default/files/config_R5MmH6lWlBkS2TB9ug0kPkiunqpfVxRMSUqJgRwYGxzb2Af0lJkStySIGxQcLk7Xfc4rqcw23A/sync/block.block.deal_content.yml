@@ -1,0 +1,22 @@
+uuid: 6635f8ac-5e21-4299-969c-1495bd3e35ae
+langcode: ru
+status: true
+dependencies:
+  module:
+    - system
+  theme:
+    - deal
+_core:
+  default_config_hash: fNNLN48MSGSLiqwIFywCuxH2Dk_IxDbaP0kYhg_IPrg
+id: deal_content
+theme: deal
+region: content
+weight: 1
+provider: null
+plugin: system_main_block
+settings:
+  id: system_main_block
+  label: 'Main page content'
+  provider: system
+  label_display: '0'
+visibility: {  }

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\field\Kernel;
 
+use Drupal;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\field\Entity\FieldConfig;
@@ -64,7 +65,7 @@ class BulkDeleteTest extends FieldKernelTestBase {
       $actual_invocations = $actual_hooks[$hook];
 
       // Check that the number of invocations is correct.
-      $this->assertEqual(count($actual_invocations), count($invocations), "$hook() was called the expected number of times.");
+      $this->assertSame(count($invocations), count($actual_invocations), "$hook() was called the expected number of times.");
 
       // Check that the hook was called for each expected argument.
       foreach ($invocations as $argument) {
@@ -163,7 +164,7 @@ class BulkDeleteTest extends FieldKernelTestBase {
     $bundle = reset($this->bundles);
     $field_storage = reset($this->fieldStorages);
     $field_name = $field_storage->getName();
-    $storage = \Drupal::entityTypeManager()->getStorage('entity_test');
+    $storage = Drupal::entityTypeManager()->getStorage('entity_test');
 
     // There are 10 entities of this bundle.
     $found = $storage
@@ -177,10 +178,10 @@ class BulkDeleteTest extends FieldKernelTestBase {
     $field->delete();
 
     // The field still exists, deleted.
-    $fields = \Drupal::entityTypeManager()->getStorage('field_config')->loadByProperties(['field_storage_uuid' => $field_storage->uuid(), 'deleted' => TRUE, 'include_deleted' => TRUE]);
+    $fields = Drupal::entityTypeManager()->getStorage('field_config')->loadByProperties(['field_storage_uuid' => $field_storage->uuid(), 'deleted' => TRUE, 'include_deleted' => TRUE]);
     $this->assertCount(1, $fields, 'There is one deleted field');
     $field = $fields[$field->uuid()];
-    $this->assertEqual($field->getTargetBundle(), $bundle, 'The deleted field is for the correct bundle');
+    $this->assertEqual($bundle, $field->getTargetBundle(), 'The deleted field is for the correct bundle');
 
     // Check that the actual stored content did not change during delete.
     /** @var \Drupal\Core\Entity\Sql\DefaultTableMapping $table_mapping */
@@ -191,7 +192,7 @@ class BulkDeleteTest extends FieldKernelTestBase {
       ->fields('t')
       ->execute();
     foreach ($result as $row) {
-      $this->assertEqual($this->entities[$row->entity_id]->{$field_name}->value, $row->$column);
+      $this->assertEqual($row->{$column}, $this->entities[$row->entity_id]->{$field_name}->value);
     }
 
     // There are 0 entities of this bundle with non-deleted data.
@@ -248,7 +249,7 @@ class BulkDeleteTest extends FieldKernelTestBase {
     $deleted_field_uuid = $deleted_field->uuid();
 
     // Reload the field storage.
-    $field_storages = \Drupal::entityTypeManager()->getStorage('field_storage_config')->loadByProperties(['uuid' => $deleted_field_storage->uuid(), 'include_deleted' => TRUE]);
+    $field_storages = Drupal::entityTypeManager()->getStorage('field_storage_config')->loadByProperties(['uuid' => $deleted_field_storage->uuid(), 'include_deleted' => TRUE]);
     $deleted_field_storage = reset($field_storages);
 
     // Create the field again.
@@ -265,9 +266,10 @@ class BulkDeleteTest extends FieldKernelTestBase {
     ])->save();
 
     // The field still exists, deleted, with the same field name.
-    $fields = \Drupal::entityTypeManager()->getStorage('field_config')->loadByProperties(['uuid' => $deleted_field_uuid, 'include_deleted' => TRUE]);
-    $this->assertTrue(isset($fields[$deleted_field_uuid]) && $fields[$deleted_field_uuid]->isDeleted(), 'The field exists and is deleted');
-    $this->assertTrue(isset($fields[$deleted_field_uuid]) && $fields[$deleted_field_uuid]->getName() == $field_name);
+    $fields = Drupal::entityTypeManager()->getStorage('field_config')->loadByProperties(['uuid' => $deleted_field_uuid, 'include_deleted' => TRUE]);
+    $this->assertArrayHasKey($deleted_field_uuid, $fields);
+    $this->assertTrue($fields[$deleted_field_uuid]->isDeleted());
+    $this->assertSame($field_name, $fields[$deleted_field_uuid]->getName());
 
     for ($i = 0; $i < 10; $i++) {
       $entity = $this->container->get('entity_type.manager')
@@ -278,7 +280,7 @@ class BulkDeleteTest extends FieldKernelTestBase {
     }
 
     // Check that the two field storages have different tables.
-    $storage = \Drupal::entityTypeManager()->getStorage($this->entityTypeId);
+    $storage = Drupal::entityTypeManager()->getStorage($this->entityTypeId);
     /** @var \Drupal\Core\Entity\Sql\DefaultTableMapping $table_mapping */
     $table_mapping = $storage->getTableMapping();
     $deleted_table_name = $table_mapping->getDedicatedDataTableName($deleted_field_storage, TRUE);
@@ -288,22 +290,22 @@ class BulkDeleteTest extends FieldKernelTestBase {
 
     // Ensure the new field still has its table and the deleted one has been
     // removed.
-    $this->assertTrue(\Drupal::database()->schema()->tableExists($active_table_name));
-    $this->assertFalse(\Drupal::database()->schema()->tableExists($deleted_table_name));
+    $this->assertTrue(Drupal::database()->schema()->tableExists($active_table_name));
+    $this->assertFalse(Drupal::database()->schema()->tableExists($deleted_table_name));
 
     // The field has been removed from the system.
-    $fields = \Drupal::entityTypeManager()->getStorage('field_config')->loadByProperties(['field_storage_uuid' => $deleted_field_storage->uuid(), 'deleted' => TRUE, 'include_deleted' => TRUE]);
+    $fields = Drupal::entityTypeManager()->getStorage('field_config')->loadByProperties(['field_storage_uuid' => $deleted_field_storage->uuid(), 'deleted' => TRUE, 'include_deleted' => TRUE]);
     $this->assertCount(0, $fields, 'The field is gone');
 
     // Verify there are still 10 entries in the main table.
-    $count = \Drupal::database()
+    $count = Drupal::database()
       ->select('entity_test__' . $field_name, 'f')
       ->fields('f', ['entity_id'])
       ->condition('bundle', $bundle)
       ->countQuery()
       ->execute()
       ->fetchField();
-    $this->assertEqual($count, 10);
+    $this->assertEqual(10, $count);
   }
 
   /**
@@ -332,11 +334,11 @@ class BulkDeleteTest extends FieldKernelTestBase {
       field_purge_batch($batch_size);
 
       // There are $count deleted entities left.
-      $found = \Drupal::entityQuery('entity_test')
+      $found = Drupal::entityQuery('entity_test')
         ->condition('type', $bundle)
         ->condition($field_name . '.deleted', 1)
         ->execute();
-      $this->assertEqual(count($found), $count, 'Correct number of entities found after purging 2');
+      $this->assertCount($count, $found, 'Correct number of entities found after purging 2');
     }
 
     // Check hooks invocations.
@@ -348,19 +350,19 @@ class BulkDeleteTest extends FieldKernelTestBase {
     $this->checkHooksInvocations($hooks, $actual_hooks);
 
     // The field still exists, deleted.
-    $fields = \Drupal::entityTypeManager()->getStorage('field_config')->loadByProperties(['field_storage_uuid' => $field_storage->uuid(), 'deleted' => TRUE, 'include_deleted' => TRUE]);
+    $fields = Drupal::entityTypeManager()->getStorage('field_config')->loadByProperties(['field_storage_uuid' => $field_storage->uuid(), 'deleted' => TRUE, 'include_deleted' => TRUE]);
     $this->assertCount(1, $fields, 'There is one deleted field');
 
     // Purge the field.
     field_purge_batch($batch_size);
 
     // The field is gone.
-    $fields = \Drupal::entityTypeManager()->getStorage('field_config')->loadByProperties(['field_storage_uuid' => $field_storage->uuid(), 'deleted' => TRUE, 'include_deleted' => TRUE]);
+    $fields = Drupal::entityTypeManager()->getStorage('field_config')->loadByProperties(['field_storage_uuid' => $field_storage->uuid(), 'deleted' => TRUE, 'include_deleted' => TRUE]);
     $this->assertCount(0, $fields, 'The field is gone');
 
     // The field storage still exists, not deleted, because it has a second
     // field.
-    $storages = \Drupal::entityTypeManager()->getStorage('field_storage_config')->loadByProperties(['uuid' => $field_storage->uuid(), 'include_deleted' => TRUE]);
+    $storages = Drupal::entityTypeManager()->getStorage('field_storage_config')->loadByProperties(['uuid' => $field_storage->uuid(), 'include_deleted' => TRUE]);
     $this->assertTrue(isset($storages[$field_storage->uuid()]), 'The field storage exists and is not deleted');
   }
 
@@ -396,18 +398,20 @@ class BulkDeleteTest extends FieldKernelTestBase {
     $this->checkHooksInvocations($hooks, $actual_hooks);
 
     // The field still exists, deleted.
-    $fields = \Drupal::entityTypeManager()->getStorage('field_config')->loadByProperties(['uuid' => $field->uuid(), 'include_deleted' => TRUE]);
-    $this->assertTrue(isset($fields[$field->uuid()]) && $fields[$field->uuid()]->isDeleted(), 'The field exists and is deleted');
+    $fields = Drupal::entityTypeManager()->getStorage('field_config')->loadByProperties(['uuid' => $field->uuid(), 'include_deleted' => TRUE]);
+    $this->assertArrayHasKey($field->uuid(), $fields);
+    $this->assertTrue($fields[$field->uuid()]->isDeleted());
 
     // Purge again to purge the field.
     field_purge_batch(0);
 
     // The field is gone.
-    $fields = \Drupal::entityTypeManager()->getStorage('field_config')->loadByProperties(['uuid' => $field->uuid(), 'include_deleted' => TRUE]);
+    $fields = Drupal::entityTypeManager()->getStorage('field_config')->loadByProperties(['uuid' => $field->uuid(), 'include_deleted' => TRUE]);
     $this->assertCount(0, $fields, 'The field is purged.');
     // The field storage still exists, not deleted.
-    $storages = \Drupal::entityTypeManager()->getStorage('field_storage_config')->loadByProperties(['uuid' => $field_storage->uuid(), 'include_deleted' => TRUE]);
-    $this->assertTrue(isset($storages[$field_storage->uuid()]) && !$storages[$field_storage->uuid()]->isDeleted(), 'The field storage exists and is not deleted');
+    $storages = Drupal::entityTypeManager()->getStorage('field_storage_config')->loadByProperties(['uuid' => $field_storage->uuid(), 'include_deleted' => TRUE]);
+    $this->assertArrayHasKey($field_storage->uuid(), $storages);
+    $this->assertFalse($storages[$field_storage->uuid()]->isDeleted());
 
     // Delete the second field.
     $bundle = next($this->bundles);
@@ -428,18 +432,20 @@ class BulkDeleteTest extends FieldKernelTestBase {
     $this->checkHooksInvocations($hooks, $actual_hooks);
 
     // The field and the storage still exist, deleted.
-    $fields = \Drupal::entityTypeManager()->getStorage('field_config')->loadByProperties(['uuid' => $field->uuid(), 'include_deleted' => TRUE]);
-    $this->assertTrue(isset($fields[$field->uuid()]) && $fields[$field->uuid()]->isDeleted(), 'The field exists and is deleted');
-    $storages = \Drupal::entityTypeManager()->getStorage('field_storage_config')->loadByProperties(['uuid' => $field_storage->uuid(), 'include_deleted' => TRUE]);
-    $this->assertTrue(isset($storages[$field_storage->uuid()]) && $storages[$field_storage->uuid()]->isDeleted(), 'The field storage exists and is deleted');
+    $fields = Drupal::entityTypeManager()->getStorage('field_config')->loadByProperties(['uuid' => $field->uuid(), 'include_deleted' => TRUE]);
+    $this->assertArrayHasKey($field->uuid(), $fields);
+    $this->assertTrue($fields[$field->uuid()]->isDeleted());
+    $storages = Drupal::entityTypeManager()->getStorage('field_storage_config')->loadByProperties(['uuid' => $field_storage->uuid(), 'include_deleted' => TRUE]);
+    $this->assertArrayHasKey($field_storage->uuid(), $storages);
+    $this->assertTrue($storages[$field_storage->uuid()]->isDeleted());
 
     // Purge again to purge the field and the storage.
     field_purge_batch(0);
 
     // The field and the storage are gone.
-    $fields = \Drupal::entityTypeManager()->getStorage('field_config')->loadByProperties(['uuid' => $field->uuid(), 'include_deleted' => TRUE]);
+    $fields = Drupal::entityTypeManager()->getStorage('field_config')->loadByProperties(['uuid' => $field->uuid(), 'include_deleted' => TRUE]);
     $this->assertCount(0, $fields, 'The field is purged.');
-    $storages = \Drupal::entityTypeManager()->getStorage('field_storage_config')->loadByProperties(['uuid' => $field_storage->uuid(), 'include_deleted' => TRUE]);
+    $storages = Drupal::entityTypeManager()->getStorage('field_storage_config')->loadByProperties(['uuid' => $field_storage->uuid(), 'include_deleted' => TRUE]);
     $this->assertCount(0, $storages, 'The field storage is purged.');
   }
 

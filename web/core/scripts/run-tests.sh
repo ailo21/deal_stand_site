@@ -149,7 +149,7 @@ if ($args['clean']) {
 }
 
 if (!Composer::upgradePHPUnitCheck(Version::id())) {
-  simpletest_script_print_error("PHPUnit testing framework version 7 or greater is required when running on PHP 7.3 or greater. Run the command 'composer run-script drupal-phpunit-upgrade' in order to fix this.");
+  simpletest_script_print_error("PHPUnit testing framework version 9 or greater is required when running on PHP 7.4 or greater. Run the command 'composer run-script drupal-phpunit-upgrade' in order to fix this.");
   exit(SIMPLETEST_SCRIPT_EXIT_FAILURE);
 }
 
@@ -276,11 +276,13 @@ All arguments are long options.
 
   --class     Run tests identified by specific class names, instead of group names.
               A specific test method can be added, for example,
-              'Drupal\book\Tests\BookTest::testBookExport'.
+              'Drupal\book\Tests\BookTest::testBookExport'. This argument must
+              be last on the command line.
 
   --file      Run tests identified by specific file names, instead of group names.
               Specify the path and the extension
-              (i.e. 'core/modules/user/user.test').
+              (i.e. 'core/modules/user/user.test'). This argument must be last
+              on the command line.
 
   --types
 
@@ -908,9 +910,9 @@ function simpletest_script_command($test_id, $test_class) {
 /**
  * Removes all remnants of a test runner.
  *
- * In case a (e.g., fatal) error occurs after the test site has been fully setup
- * and the error happens in many tests, the environment that executes the tests
- * can easily run out of memory or disk space. This function ensures that all
+ * In case a fatal error occurs after the test site has been fully setup and
+ * the error happens in many tests, the environment that executes the tests can
+ * easily run out of memory or disk space. This function ensures that all
  * created resources are properly cleaned up after every executed test.
  *
  * This clean-up only exists in this script, since SimpleTest module itself does

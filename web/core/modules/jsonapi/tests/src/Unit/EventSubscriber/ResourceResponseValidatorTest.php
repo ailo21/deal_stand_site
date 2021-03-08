@@ -12,7 +12,8 @@ use Drupal\rest\ResourceResponse;
 use Drupal\Tests\UnitTestCase;
 use Prophecy\Argument;
 use Psr\Log\LoggerInterface;
-use Symfony\Cmf\Component\Routing\RouteObjectInterface;
+use Drupal\Core\Routing\RouteObjectInterface;
+use ReflectionObject;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -101,7 +102,7 @@ class ResourceResponseValidatorTest extends UnitTestCase {
    */
   public function testValidateResponse($request, $response, $expected, $description) {
     // Expose protected ResourceResponseSubscriber::validateResponse() method.
-    $object = new \ReflectionObject($this->subscriber);
+    $object = new ReflectionObject($this->subscriber);
     $method = $object->getMethod('validateResponse');
     $method->setAccessible(TRUE);
 
@@ -190,7 +191,7 @@ EOD
     ];
 
     $test_cases = array_map(function ($input) use ($defaults) {
-      list($json, $expected, $description, $route_name, $resource_type) = array_values($input + $defaults);
+      [$json, $expected, $description, $route_name, $resource_type] = array_values($input + $defaults);
       return [
         $this->createRequest($route_name, $resource_type),
         $this->createResponse($json),

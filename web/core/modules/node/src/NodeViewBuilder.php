@@ -2,6 +2,7 @@
 
 namespace Drupal\node;
 
+use Drupal;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityViewBuilder;
 use Drupal\Core\Render\Element\Link;
@@ -30,7 +31,7 @@ class NodeViewBuilder extends EntityViewBuilder implements TrustedCallbackInterf
       if ($display->getComponent('links')) {
         $build[$id]['links'] = [
           '#lazy_builder' => [
-            get_called_class() . '::renderLinks', [
+            static::class . '::renderLinks', [
               $entity->id(),
               $view_mode,
               $entity->language()->getId(),
@@ -94,7 +95,7 @@ class NodeViewBuilder extends EntityViewBuilder implements TrustedCallbackInterf
     ];
 
     if (!$is_in_preview) {
-      $storage = \Drupal::entityTypeManager()->getStorage('node');
+      $storage = Drupal::entityTypeManager()->getStorage('node');
       /** @var \Drupal\node\NodeInterface $revision */
       $revision = !isset($revision_id) ? $storage->load($node_entity_id) : $storage->loadRevision($revision_id);
       $entity = $revision->getTranslation($langcode);
@@ -105,7 +106,7 @@ class NodeViewBuilder extends EntityViewBuilder implements TrustedCallbackInterf
         'view_mode' => $view_mode,
         'langcode' => $langcode,
       ];
-      \Drupal::moduleHandler()->alter('node_links', $links, $entity, $hook_context);
+      Drupal::moduleHandler()->alter('node_links', $links, $entity, $hook_context);
     }
     return $links;
   }

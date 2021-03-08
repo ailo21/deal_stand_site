@@ -2,6 +2,7 @@
 
 namespace Drupal\contextual\Element;
 
+use Drupal;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\Template\Attribute;
@@ -19,7 +20,7 @@ class ContextualLinksPlaceholder extends RenderElement {
    * {@inheritdoc}
    */
   public function getInfo() {
-    $class = get_class($this);
+    $class = static::class;
     return [
       '#pre_render' => [
         [$class, 'preRenderPlaceholder'],
@@ -45,7 +46,7 @@ class ContextualLinksPlaceholder extends RenderElement {
    * @see _contextual_links_to_id()
    */
   public static function preRenderPlaceholder(array $element) {
-    $token = Crypt::hmacBase64($element['#id'], Settings::getHashSalt() . \Drupal::service('private_key')->get());
+    $token = Crypt::hmacBase64($element['#id'], Settings::getHashSalt() . Drupal::service('private_key')->get());
     $attribute = new Attribute([
       'data-contextual-id' => $element['#id'],
       'data-contextual-token' => $token,

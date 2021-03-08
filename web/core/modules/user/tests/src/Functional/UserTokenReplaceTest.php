@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\user\Functional;
 
+use Drupal;
 use Drupal\Core\Url;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Render\BubbleableMetadata;
@@ -41,15 +42,15 @@ class UserTokenReplaceTest extends BrowserTestBase {
    * Creates a user, then tests the tokens generated from it.
    */
   public function testUserTokenReplacement() {
-    $token_service = \Drupal::token();
-    $language_interface = \Drupal::languageManager()->getCurrentLanguage();
+    $token_service = Drupal::token();
+    $language_interface = Drupal::languageManager()->getCurrentLanguage();
     $url_options = [
       'absolute' => TRUE,
       'language' => $language_interface,
     ];
 
-    \Drupal::state()->set('user_hooks_test_user_format_name_alter', TRUE);
-    \Drupal::state()->set('user_hooks_test_user_format_name_alter_safe', TRUE);
+    Drupal::state()->set('user_hooks_test_user_format_name_alter', TRUE);
+    Drupal::state()->set('user_hooks_test_user_format_name_alter_safe', TRUE);
 
     // Create two users and log them in one after another.
     $user1 = $this->drupalCreateUser([]);
@@ -59,7 +60,7 @@ class UserTokenReplaceTest extends BrowserTestBase {
     $this->drupalLogin($user2);
 
     $account = User::load($user1->id());
-    $global_account = User::load(\Drupal::currentUser()->id());
+    $global_account = User::load(Drupal::currentUser()->id());
 
     /** @var \Drupal\Core\Datetime\DateFormatterInterface $date_formatter */
     $date_formatter = $this->container->get('date.formatter');
@@ -111,8 +112,8 @@ class UserTokenReplaceTest extends BrowserTestBase {
     foreach ($tests as $input => $expected) {
       $bubbleable_metadata = new BubbleableMetadata();
       $output = $token_service->replace($input, ['user' => $account], ['langcode' => $language_interface->getId()], $bubbleable_metadata);
-      $this->assertEqual($output, $expected, new FormattableMarkup('User token %token replaced.', ['%token' => $input]));
-      $this->assertEqual($bubbleable_metadata, $metadata_tests[$input]);
+      $this->assertEqual($expected, $output, new FormattableMarkup('User token %token replaced.', ['%token' => $input]));
+      $this->assertEqual($metadata_tests[$input], $bubbleable_metadata);
     }
 
     // Generate tokens for the anonymous user.
@@ -125,14 +126,14 @@ class UserTokenReplaceTest extends BrowserTestBase {
     $metadata_tests = [];
     $metadata_tests['[user:uid]'] = $base_bubbleable_metadata;
     $bubbleable_metadata = clone $base_bubbleable_metadata;
-    $bubbleable_metadata->addCacheableDependency(\Drupal::config('user.settings'));
+    $bubbleable_metadata->addCacheableDependency(Drupal::config('user.settings'));
     $metadata_tests['[user:display-name]'] = $bubbleable_metadata;
 
     foreach ($tests as $input => $expected) {
       $bubbleable_metadata = new BubbleableMetadata();
       $output = $token_service->replace($input, ['user' => $anonymous_user], ['langcode' => $language_interface->getId()], $bubbleable_metadata);
-      $this->assertEqual($output, $expected, new FormattableMarkup('Sanitized user token %token replaced.', ['%token' => $input]));
-      $this->assertEqual($bubbleable_metadata, $metadata_tests[$input]);
+      $this->assertEqual($expected, $output, new FormattableMarkup('Sanitized user token %token replaced.', ['%token' => $input]));
+      $this->assertEqual($metadata_tests[$input], $bubbleable_metadata);
     }
 
     // Generate login and cancel link.
@@ -150,14 +151,14 @@ class UserTokenReplaceTest extends BrowserTestBase {
     // Generate tokens with the user's preferred language.
     $account->preferred_langcode = 'de';
     $account->save();
-    $link = Url::fromRoute('user.page', [], ['language' => \Drupal::languageManager()->getLanguage($account->getPreferredLangcode()), 'absolute' => TRUE])->toString();
+    $link = Url::fromRoute('user.page', [], ['language' => Drupal::languageManager()->getLanguage($account->getPreferredLangcode()), 'absolute' => TRUE])->toString();
     foreach ($tests as $input => $expected) {
       $output = $token_service->replace($input, ['user' => $account], ['callback' => 'user_mail_tokens', 'clear' => TRUE]);
       $this->assertStringStartsWith($link, $output, "Generated URL is in the user's preferred language.");
     }
 
     // Generate tokens with one specific language.
-    $link = Url::fromRoute('user.page', [], ['language' => \Drupal::languageManager()->getLanguage('de'), 'absolute' => TRUE])->toString();
+    $link = Url::fromRoute('user.page', [], ['language' => Drupal::languageManager()->getLanguage('de'), 'absolute' => TRUE])->toString();
     foreach ($tests as $input => $expected) {
       foreach ([$user1, $user2] as $account) {
         $output = $token_service->replace($input, ['user' => $account], ['langcode' => 'de', 'callback' => 'user_mail_tokens', 'clear' => TRUE]);
@@ -167,11 +168,11 @@ class UserTokenReplaceTest extends BrowserTestBase {
 
     // Generate user display name tokens when safe markup is returned.
     // @see user_hooks_test_user_format_name_alter()
-    \Drupal::state()->set('user_hooks_test_user_format_name_alter_safe', TRUE);
+    Drupal::state()->set('user_hooks_test_user_format_name_alter_safe', TRUE);
     $input = '[user:display-name] [current-user:display-name]';
     $expected = "<em>{$user1->id()}</em> <em>{$user2->id()}</em>";
     $output = $token_service->replace($input, ['user' => $user1]);
-    $this->assertEqual($output, $expected, new FormattableMarkup('User token %token does not escape safe markup.', ['%token' => 'display-name']));
+    $this->assertEqual($expected, $output, new FormattableMarkup('User token %token does not escape safe markup.', ['%token' => 'display-name']));
   }
 
 }

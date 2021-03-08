@@ -7,9 +7,12 @@ use Behat\Mink\Driver\GoutteDriver;
 use Behat\Mink\Mink;
 use Behat\Mink\Session;
 use Drupal\Component\FileSystem\FileSystem as DrupalFilesystem;
-use Drupal\Tests\Traits\PHPUnit8Warnings;
+use Drupal\Tests\PhpUnitCompatibilityTrait;
+use Drupal\Tests\Traits\PhpUnitWarnings;
+use InvalidArgumentException;
+use Iterator;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\BrowserKit\Client as SymfonyClient;
+use RuntimeException;
 use Symfony\Component\Filesystem\Filesystem as SymfonyFilesystem;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Lock\LockFactory;
@@ -53,7 +56,8 @@ use Symfony\Component\Process\Process;
 abstract class BuildTestBase extends TestCase {
 
   use ExternalCommandRequirementsTrait;
-  use PHPUnit8Warnings;
+  use PhpUnitWarnings;
+  use PhpUnitCompatibilityTrait;
 
   /**
    * The working directory where this test will manipulate files.
@@ -218,14 +222,7 @@ abstract class BuildTestBase extends TestCase {
    * @return \Behat\Mink\Session
    */
   protected function initMink() {
-    // If the Symfony BrowserKit client can followMetaRefresh(), we should use
-    // the Goutte descendent instead of ours.
-    if (method_exists(SymfonyClient::class, 'followMetaRefresh')) {
-      $client = new Client();
-    }
-    else {
-      $client = new DrupalMinkClient();
-    }
+    $client = new Client();
     $client->followMetaRefresh(TRUE);
     $driver = new GoutteDriver($client);
     $session = new Session($driver);
@@ -319,7 +316,7 @@ abstract class BuildTestBase extends TestCase {
    * @return \Symfony\Component\Process\Process
    */
   public function executeCommand($command_line, $working_dir = NULL) {
-    $this->commandProcess = new Process($command_line);
+    $this->commandProcess = Process::fromShellCommandline($command_line);
     $this->commandProcess->setWorkingDirectory($this->getWorkingPath($working_dir))
       ->setTimeout(300)
       ->setIdleTimeout(300);
@@ -358,7 +355,7 @@ abstract class BuildTestBase extends TestCase {
    */
   public function visit($request_uri = '/', $working_dir = NULL) {
     if ($request_uri[0] !== '/') {
-      throw new \InvalidArgumentException('URI: ' . $request_uri . ' must be relative. Example: /some/path?foo=bar');
+      throw new InvalidArgumentException('URI: ' . $request_uri . ' must be relative. Example: /some/path?foo=bar');
     }
     // Try to make a server.
     $this->standUpServer($working_dir);
@@ -438,7 +435,7 @@ abstract class BuildTestBase extends TestCase {
       }
       usleep(1000);
     }
-    throw new \RuntimeException(sprintf("Unable to start the web server.\nERROR OUTPUT:\n%s", $ps->getErrorOutput()));
+    throw new RuntimeException(sprintf("Unable to start the web server.\nERROR OUTPUT:\n%s", $ps->getErrorOutput()));
   }
 
   /**
@@ -489,7 +486,7 @@ abstract class BuildTestBase extends TestCase {
         }
       }
     }
-    throw new \RuntimeException('Unable to find a port available to run the web server.');
+    throw new RuntimeException('Unable to find a port available to run the web server.');
   }
 
   /**
@@ -545,7 +542,7 @@ abstract class BuildTestBase extends TestCase {
    *   (optional) Relative path within the test workspace file system that will
    *   contain the copy of the codebase. Defaults to the workspace directory.
    */
-  public function copyCodebase(\Iterator $iterator = NULL, $working_dir = NULL) {
+  public function copyCodebase(Iterator $iterator = NULL, $working_dir = NULL) {
     $working_path = $this->getWorkingPath($working_dir);
 
     if ($iterator === NULL) {

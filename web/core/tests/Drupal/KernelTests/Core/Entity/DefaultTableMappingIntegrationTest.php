@@ -2,6 +2,7 @@
 
 namespace Drupal\KernelTests\Core\Entity;
 
+use Drupal;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Tests\system\Functional\Entity\Traits\EntityDefinitionTestTrait;
@@ -78,18 +79,55 @@ class DefaultTableMappingIntegrationTest extends EntityKernelTestBase {
   }
 
   /**
+   * @covers ::getAllFieldTableNames
+   */
+  public function testGetAllFieldTableNames() {
+    // Check a field that is stored in all the shared tables.
+    $expected = [
+      'entity_test_mulrev',
+      'entity_test_mulrev_property_data',
+      'entity_test_mulrev_revision',
+      'entity_test_mulrev_property_revision',
+    ];
+    $this->assertEquals($expected, $this->tableMapping->getAllFieldTableNames('id'));
+
+    // Check a field that is stored only in the base table.
+    $expected = ['entity_test_mulrev'];
+    $this->assertEquals($expected, $this->tableMapping->getAllFieldTableNames('uuid'));
+
+    // Check a field that is stored only in the revision table.
+    $expected = ['entity_test_mulrev_revision'];
+    $this->assertEquals($expected, $this->tableMapping->getAllFieldTableNames('revision_default'));
+
+    // Check a field that field that is stored in the data and revision data
+    // tables.
+    $expected = [
+      'entity_test_mulrev_property_data',
+      'entity_test_mulrev_property_revision',
+    ];
+    $this->assertEquals($expected, $this->tableMapping->getAllFieldTableNames('name'));
+
+    // Check a field that is stored in dedicated data and revision data tables.
+    $expected = [
+      'entity_test_mulrev__multivalued_base_field',
+      'entity_test_mulrev_r__f86e511394',
+    ];
+    $this->assertEquals($expected, $this->tableMapping->getAllFieldTableNames('multivalued_base_field'));
+  }
+
+  /**
    * Tests DefaultTableMapping::getTableNames().
    *
    * @covers ::getTableNames
    */
   public function testGetTableNames() {
-    $storage_definitions = \Drupal::service('entity_field.manager')->getFieldStorageDefinitions('entity_test_mulrev');
+    $storage_definitions = Drupal::service('entity_field.manager')->getFieldStorageDefinitions('entity_test_mulrev');
     $dedicated_data_table = $this->tableMapping->getDedicatedDataTableName($storage_definitions['multivalued_base_field']);
     $dedicated_revision_table = $this->tableMapping->getDedicatedRevisionTableName($storage_definitions['multivalued_base_field']);
 
     // Check that both the data and the revision tables exist for a multi-valued
     // base field.
-    $database_schema = \Drupal::database()->schema();
+    $database_schema = Drupal::database()->schema();
     $this->assertTrue($database_schema->tableExists($dedicated_data_table));
     $this->assertTrue($database_schema->tableExists($dedicated_revision_table));
 

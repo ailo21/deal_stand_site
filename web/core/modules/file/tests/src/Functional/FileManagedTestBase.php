@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\file\Functional;
 
+use Drupal;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\file\Entity\File;
 use Drupal\file\FileInterface;
@@ -35,7 +36,7 @@ abstract class FileManagedTestBase extends BrowserTestBase {
    *   'save', 'insert', etc.
    */
   public function assertFileHooksCalled($expected) {
-    \Drupal::state()->resetCache();
+    Drupal::state()->resetCache();
 
     // Determine which hooks were called.
     $actual = array_keys(array_filter(file_test_get_all_calls()));
@@ -77,13 +78,13 @@ abstract class FileManagedTestBase extends BrowserTestBase {
         $message = new FormattableMarkup('hook_file_@name was called correctly.', ['@name' => $hook]);
       }
       elseif ($expected_count == 0) {
-        $message = \Drupal::translation()->formatPlural($actual_count, 'hook_file_@name was not expected to be called but was actually called once.', 'hook_file_@name was not expected to be called but was actually called @count times.', ['@name' => $hook, '@count' => $actual_count]);
+        $message = Drupal::translation()->formatPlural($actual_count, 'hook_file_@name was not expected to be called but was actually called once.', 'hook_file_@name was not expected to be called but was actually called @count times.', ['@name' => $hook, '@count' => $actual_count]);
       }
       else {
         $message = new FormattableMarkup('hook_file_@name was expected to be called %expected times but was called %actual times.', ['@name' => $hook, '%expected' => $expected_count, '%actual' => $actual_count]);
       }
     }
-    $this->assertEqual($actual_count, $expected_count, $message);
+    $this->assertEqual($expected_count, $actual_count, $message);
   }
 
   /**
@@ -113,8 +114,8 @@ abstract class FileManagedTestBase extends BrowserTestBase {
    *   File object to compare.
    */
   public function assertDifferentFile(FileInterface $file1, FileInterface $file2) {
-    $this->assertNotEqual($file1->id(), $file2->id(), t('Files have different ids: %file1 != %file2.', ['%file1' => $file1->id(), '%file2' => $file2->id()]), 'Different file');
-    $this->assertNotEqual($file1->getFileUri(), $file2->getFileUri(), t('Files have different paths: %file1 != %file2.', ['%file1' => $file1->getFileUri(), '%file2' => $file2->getFileUri()]), 'Different file');
+    $this->assertNotEquals($file1->id(), $file2->id(), t('Files have different ids: %file1 != %file2.', ['%file1' => $file1->id(), '%file2' => $file2->id()]));
+    $this->assertNotEquals($file1->getFileUri(), $file2->getFileUri(), t('Files have different paths: %file1 != %file2.', ['%file1' => $file1->getFileUri(), '%file2' => $file2->getFileUri()]));
   }
 
   /**
@@ -149,7 +150,7 @@ abstract class FileManagedTestBase extends BrowserTestBase {
    */
   public function createFile($filepath = NULL, $contents = NULL, $scheme = NULL) {
     // Don't count hook invocations caused by creating the file.
-    \Drupal::state()->set('file_test.count_hook_invocations', FALSE);
+    Drupal::state()->set('file_test.count_hook_invocations', FALSE);
     $file = File::create([
       'uri' => $this->createUri($filepath, $contents, $scheme),
       'uid' => 1,
@@ -157,9 +158,10 @@ abstract class FileManagedTestBase extends BrowserTestBase {
     $file->save();
     // Write the record directly rather than using the API so we don't invoke
     // the hooks.
-    $this->assertTrue($file->id() > 0, 'The file was added to the database.', 'Create test file');
+    // Verify that the file was added to the database.
+    $this->assertGreaterThan(0, $file->id());
 
-    \Drupal::state()->set('file_test.count_hook_invocations', TRUE);
+    Drupal::state()->set('file_test.count_hook_invocations', TRUE);
     return $file;
   }
 
@@ -183,6 +185,7 @@ abstract class FileManagedTestBase extends BrowserTestBase {
     if (!isset($filepath)) {
       // Prefix with non-latin characters to ensure that all file-related
       // tests work with international filenames.
+      // cSpell:disable-next-line
       $filepath = 'Файл для тестирования ' . $this->randomMachineName();
     }
     if (!isset($scheme)) {

@@ -2,11 +2,13 @@
 
 namespace Drupal\Tests\Core\Config;
 
+use Drupal;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Render\Markup;
 use Drupal\Tests\UnitTestCase;
 use Drupal\Core\Config\Config;
 use Drupal\Core\Config\ConfigValueException;
+use Error;
 use PHPUnit\Framework\Error\Warning;
 
 /**
@@ -64,7 +66,7 @@ class ConfigTest extends UnitTestCase {
 
     $container = new ContainerBuilder();
     $container->set('cache_tags.invalidator', $this->cacheTagsInvalidator);
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
   }
 
   /**
@@ -270,7 +272,7 @@ class ConfigTest extends UnitTestCase {
     $this->config->set('testData', 1);
 
     // Attempt to treat the single value as a nested item.
-    $this->expectException(Warning::class);
+    $this->expectException(PHP_VERSION_ID >= 80000 ? Error::class : Warning::class);
     $this->config->set('testData.illegalOffset', 1);
   }
 

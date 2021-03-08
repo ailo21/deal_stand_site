@@ -4,10 +4,14 @@ namespace Drupal\FunctionalJavascriptTests;
 
 use Behat\Mink\Exception\DriverException;
 use Drupal\Tests\BrowserTestBase;
+use Exception;
+use PHPUnit\Runner\BaseTestRunner;
+use RuntimeException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use UnexpectedValueException;
 
 /**
- * Runs a browser test using a driver that supports Javascript.
+ * Runs a browser test using a driver that supports JavaScript.
  *
  * Base class for testing browser interaction implemented in JavaScript.
  *
@@ -35,7 +39,7 @@ abstract class WebDriverTestBase extends BrowserTestBase {
    */
   protected function initMink() {
     if (!is_a($this->minkDefaultDriverClass, DrupalSelenium2Driver::class, TRUE)) {
-      throw new \UnexpectedValueException(sprintf("%s has to be an instance of %s", $this->minkDefaultDriverClass, DrupalSelenium2Driver::class));
+      throw new UnexpectedValueException(sprintf("%s has to be an instance of %s", $this->minkDefaultDriverClass, DrupalSelenium2Driver::class));
     }
     $this->minkDefaultDriverArgs = ['chrome', NULL, 'http://localhost:4444'];
 
@@ -50,7 +54,7 @@ abstract class WebDriverTestBase extends BrowserTestBase {
         throw $e;
       }
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       $this->markTestSkipped('An unexpected error occurred while starting Mink: ' . $e->getMessage());
     }
   }
@@ -81,6 +85,11 @@ abstract class WebDriverTestBase extends BrowserTestBase {
    */
   protected function tearDown() {
     if ($this->mink) {
+      $status = $this->getStatus();
+      if ($status === BaseTestRunner::STATUS_ERROR || $status === BaseTestRunner::STATUS_WARNING || $status === BaseTestRunner::STATUS_FAILURE) {
+        // Ensure we capture the output at point of failure.
+        @$this->htmlOutput();
+      }
       // Wait for all requests to finish. It is possible that an AJAX request is
       // still on-going.
       $result = $this->getSession()->wait(5000, '(typeof(jQuery)=="undefined" || (0 === jQuery.active && 0 === jQuery(\':animated\').length))');
@@ -90,7 +99,7 @@ abstract class WebDriverTestBase extends BrowserTestBase {
         // missing database tables, because tear down will have removed them.
         // Rather than allow it to fail, throw an explicit exception now
         // explaining what the problem is.
-        throw new \RuntimeException('Unfinished AJAX requests while tearing down a test');
+        throw new RuntimeException('Unfinished AJAX requests while tearing down a test');
       }
 
       $warnings = $this->getSession()->evaluateScript("JSON.parse(sessionStorage.getItem('js_deprecation_log_test.warnings') || JSON.stringify([]))");
@@ -129,7 +138,7 @@ abstract class WebDriverTestBase extends BrowserTestBase {
    * @see \Behat\Mink\Driver\DriverInterface::evaluateScript()
    */
   protected function assertJsCondition($condition, $timeout = 10000, $message = '') {
-    $message = $message ?: "Javascript condition met:\n" . $condition;
+    $message = $message ?: "JavaScript condition met:\n" . $condition;
     $result = $this->getSession()->getDriver()->wait($timeout, $condition);
     $this->assertTrue($result, $message);
   }

@@ -2,10 +2,13 @@
 
 namespace Drupal\Core\TypedData;
 
+use ArrayAccess;
+use Drupal;
+
 /**
  * A typed data definition class for defining data based on defined data types.
  */
-class DataDefinition implements DataDefinitionInterface, \ArrayAccess {
+class DataDefinition implements DataDefinitionInterface, ArrayAccess {
 
   use TypedDataTrait;
 
@@ -192,7 +195,7 @@ class DataDefinition implements DataDefinitionInterface, \ArrayAccess {
       return $this->definition['class'];
     }
     else {
-      $type_definition = \Drupal::typedDataManager()->getDefinition($this->getDataType());
+      $type_definition = Drupal::typedDataManager()->getDefinition($this->getDataType());
       return $type_definition['class'];
     }
   }
@@ -377,6 +380,8 @@ class DataDefinition implements DataDefinitionInterface, \ArrayAccess {
    *   Whether the data value should be internal.
    *
    * @return $this
+   *
+   * @see \Drupal\Core\TypedData\DataDefinitionInterface::isInternal
    */
   public function setInternal($internal) {
     $this->definition['internal'] = $internal;

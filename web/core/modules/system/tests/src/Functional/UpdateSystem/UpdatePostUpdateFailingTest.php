@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\system\Functional\UpdateSystem;
 
+use Drupal;
 use Drupal\Core\Database\Database;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\UpdatePathTestTrait;
@@ -65,9 +66,9 @@ class UpdatePostUpdateFailingTest extends BrowserTestBase {
     $this->runUpdates();
 
     // There should be no post update hooks registered as being run.
-    $this->assertIdentical([], \Drupal::state()->get('post_update_test_execution', []));
+    $this->assertSame([], Drupal::state()->get('post_update_test_execution', []));
 
-    $key_value = \Drupal::keyValue('update__post_update');
+    $key_value = Drupal::keyValue('update__post_update');
     $this->assertEqual([], $key_value->get('existing_updates', []));
   }
 
@@ -78,7 +79,7 @@ class UpdatePostUpdateFailingTest extends BrowserTestBase {
     // First update, should not be run since this module's update hooks fail.
     $this->assertRaw('8001 -   This update will fail.');
     $this->assertRaw('8002 -   A further update.');
-    $this->assertEscaped("First update, should not be run since this module's update hooks fail.");
+    $this->assertSession()->assertEscaped("First update, should not be run since this module's update hooks fail.");
   }
 
 }

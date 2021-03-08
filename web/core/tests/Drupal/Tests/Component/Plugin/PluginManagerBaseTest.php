@@ -2,16 +2,22 @@
 
 namespace Drupal\Tests\Component\Plugin;
 
+use BadMethodCallException;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Component\Plugin\Mapper\MapperInterface;
 use Drupal\Component\Plugin\PluginManagerBase;
+use Drupal\Tests\PhpUnitCompatibilityTrait;
 use PHPUnit\Framework\TestCase;
+use ReflectionProperty;
+use stdClass;
 
 /**
  * @coversDefaultClass \Drupal\Component\Plugin\PluginManagerBase
  * @group Plugin
  */
 class PluginManagerBaseTest extends TestCase {
+
+  use PhpUnitCompatibilityTrait;
 
   /**
    * A callback method for mocking FactoryInterface objects.
@@ -52,7 +58,7 @@ class PluginManagerBaseTest extends TestCase {
       ->getMockForAbstractClass();
     // PluginManagerBase::createInstance() looks for a factory object and then
     // calls createInstance() on it. So we have to mock a factory object.
-    $factory_ref = new \ReflectionProperty($manager, 'factory');
+    $factory_ref = new ReflectionProperty($manager, 'factory');
     $factory_ref->setAccessible(TRUE);
     $factory_ref->setValue($manager, $this->getMockFactoryInterface(1));
 
@@ -73,7 +79,7 @@ class PluginManagerBaseTest extends TestCase {
     // implements FallbackPluginManagerInterface.
     $manager = new StubFallbackPluginManager();
     // Put our stubbed factory on the base object.
-    $factory_ref = new \ReflectionProperty($manager, 'factory');
+    $factory_ref = new ReflectionProperty($manager, 'factory');
     $factory_ref->setAccessible(TRUE);
 
     // Set up the configuration array.
@@ -100,7 +106,7 @@ class PluginManagerBaseTest extends TestCase {
       'foo' => 'F00',
       'bar' => 'bAr',
     ];
-    $instance = new \stdClass();
+    $instance = new stdClass();
     $mapper = $this->prophesize(MapperInterface::class);
     $mapper->getInstance($options)
       ->shouldBeCalledTimes(1)
@@ -121,7 +127,7 @@ class PluginManagerBaseTest extends TestCase {
     $manager = $this->getMockBuilder(PluginManagerBase::class)
       ->getMockForAbstractClass();
     // Set the expected exception thrown by ::getInstance.
-    $this->expectException(\BadMethodCallException::class);
+    $this->expectException(BadMethodCallException::class);
     $this->expectExceptionMessage(sprintf('%s does not support this method unless %s::$mapper is set.', get_class($manager), get_class($manager)));
     $manager->getInstance($options);
   }

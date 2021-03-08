@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\taxonomy\Kernel\Views;
 
+use Drupal;
 use Drupal\Core\Link;
 use Drupal\Core\Render\RenderContext;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
@@ -53,7 +54,7 @@ class TaxonomyFieldTidTest extends ViewsKernelTestBase {
     $vocabulary = $this->createVocabulary();
     $this->term1 = $this->createTerm($vocabulary);
 
-    ViewTestData::createTestViews(get_class($this), ['taxonomy_test_views']);
+    ViewTestData::createTestViews(static::class, ['taxonomy_test_views']);
   }
 
   /**
@@ -61,7 +62,7 @@ class TaxonomyFieldTidTest extends ViewsKernelTestBase {
    */
   public function testViewsHandlerTidField() {
     /** @var \Drupal\Core\Render\RendererInterface $renderer */
-    $renderer = \Drupal::service('renderer');
+    $renderer = Drupal::service('renderer');
 
     $view = Views::getView('test_taxonomy_tid_field');
     $this->executeView($view);

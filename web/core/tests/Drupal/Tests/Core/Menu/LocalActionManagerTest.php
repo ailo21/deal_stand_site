@@ -7,6 +7,7 @@
 
 namespace Drupal\Tests\Core\Menu;
 
+use Drupal;
 use Drupal\Component\Plugin\Discovery\DiscoveryInterface;
 use Drupal\Component\Plugin\Factory\FactoryInterface;
 use Drupal\Core\Access\AccessManagerInterface;
@@ -97,7 +98,7 @@ class LocalActionManagerTest extends UnitTestCase {
   protected $discovery;
 
   /**
-   * The tested local action manager
+   * The tested local action manager.
    *
    * @var \Drupal\Tests\Core\Menu\TestLocalActionManager
    */
@@ -119,7 +120,7 @@ class LocalActionManagerTest extends UnitTestCase {
 
     $container = new Container();
     $container->set('cache_contexts_manager', $cache_contexts_manager->reveal());
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
 
     $access_result = (new AccessResultForbidden())->cachePerPermissions();
     $this->accessManager = $this->createMock('Drupal\Core\Access\AccessManagerInterface');
@@ -200,7 +201,7 @@ class LocalActionManagerTest extends UnitTestCase {
 
     $container = new Container();
     $container->set('cache_contexts_manager', $cache_contexts_manager->reveal());
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
 
     // Single available and single expected plugins.
     $data[] = [

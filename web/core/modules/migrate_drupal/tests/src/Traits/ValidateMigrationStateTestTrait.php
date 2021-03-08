@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\migrate_drupal\Traits;
 
+use Drupal;
 use Drupal\Component\Discovery\YamlDiscovery;
 use Drupal\KernelTests\FileSystemModuleDiscoveryDataProviderTrait;
 use Drupal\migrate_drupal\MigrationConfigurationTrait;
@@ -86,9 +87,9 @@ trait ValidateMigrationStateTestTrait {
     // destination is not used yet but can be later for validating the
     // source/destination pairs with the actual source/destination pairs in the
     // migrate plugins.
-    $system_info = (new YamlDiscovery('migrate_drupal', array_map(function (&$value) {
+    $system_info = (new YamlDiscovery('migrate_drupal', array_map(function ($value) {
       return $value . '/migrations/state/';
-    }, \Drupal::moduleHandler()->getModuleDirectories())))->findAll();
+    }, Drupal::moduleHandler()->getModuleDirectories())))->findAll();
 
     $declared = [];
     $states = [MigrationState::FINISHED, MigrationState::NOT_FINISHED];

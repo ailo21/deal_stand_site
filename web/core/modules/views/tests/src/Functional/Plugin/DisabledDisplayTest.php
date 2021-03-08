@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\views\Functional\Plugin;
 
+use Drupal;
 use Drupal\Tests\views\Functional\ViewTestBase;
 
 /**
@@ -65,7 +66,7 @@ class DisabledDisplayTest extends ViewTestBase {
     // Enabled page display should return content.
     $this->drupalGet('test-disabled-display');
     $result = $this->xpath('//h1[@class="page-title"]');
-    $this->assertEqual($result[0]->getText(), 'test_disabled_display', 'The enabled page_1 display is accessible.');
+    $this->assertEqual('test_disabled_display', $result[0]->getText(), 'The enabled page_1 display is accessible.');
 
     // Disabled page view should 404.
     $this->drupalGet('test-disabled-display-2');
@@ -79,12 +80,12 @@ class DisabledDisplayTest extends ViewTestBase {
       $this->assertTrue($enabled, 'Display ' . $display_id . ' is now enabled');
     }
 
-    \Drupal::service('router.builder')->rebuildIfNeeded();
+    Drupal::service('router.builder')->rebuildIfNeeded();
 
     // Check that the originally disabled page_2 display is now enabled.
     $this->drupalGet('test-disabled-display-2');
     $result = $this->xpath('//h1[@class="page-title"]');
-    $this->assertEqual($result[0]->getText(), 'test_disabled_display', 'The enabled page_2 display is accessible.');
+    $this->assertEqual('test_disabled_display', $result[0]->getText(), 'The enabled page_2 display is accessible.');
 
     // Disable each disabled display and save the view.
     foreach ($display_ids as $display_id) {
@@ -94,7 +95,7 @@ class DisabledDisplayTest extends ViewTestBase {
       $this->assertFalse($enabled, 'Display ' . $display_id . ' is now disabled');
     }
 
-    \Drupal::service('router.builder')->rebuild();
+    Drupal::service('router.builder')->rebuild();
 
     // Check that the page_1 display still works.
     $this->drupalGet('test-disabled-display');

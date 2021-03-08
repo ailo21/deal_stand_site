@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\Core\Menu;
 
+use Drupal;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableDependencyInterface;
@@ -13,6 +14,7 @@ use Drupal\Core\Menu\LocalTaskInterface;
 use Drupal\Core\Menu\LocalTaskManager;
 use Drupal\Tests\UnitTestCase;
 use Prophecy\Argument;
+use ReflectionProperty;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -262,11 +264,11 @@ class LocalTaskManagerTest extends UnitTestCase {
 
     $this->manager = new LocalTaskManager($this->argumentResolver, $request_stack, $this->routeMatch, $this->routeProvider, $module_handler, $this->cacheBackend, $language_manager, $this->accessManager, $this->account);
 
-    $property = new \ReflectionProperty('Drupal\Core\Menu\LocalTaskManager', 'discovery');
+    $property = new ReflectionProperty('Drupal\Core\Menu\LocalTaskManager', 'discovery');
     $property->setAccessible(TRUE);
     $property->setValue($this->manager, $this->pluginDiscovery);
 
-    $property = new \ReflectionProperty('Drupal\Core\Menu\LocalTaskManager', 'factory');
+    $property = new ReflectionProperty('Drupal\Core\Menu\LocalTaskManager', 'factory');
     $property->setAccessible(TRUE);
     $property->setValue($this->manager, $this->factory);
 
@@ -436,7 +438,7 @@ class LocalTaskManagerTest extends UnitTestCase {
       ->willReturn(new ParameterBag());
 
     $cacheability = new CacheableMetadata();
-    $local_tasks = $this->manager->getTasksBuild('menu_local_task_test_tasks_view', $cacheability);
+    $this->manager->getTasksBuild('menu_local_task_test_tasks_view', $cacheability);
 
     // Ensure that all cacheability metadata is merged together.
     $this->assertEquals(['tag.example1', 'tag.example2'], $cacheability->getCacheTags());
@@ -477,7 +479,7 @@ class LocalTaskManagerTest extends UnitTestCase {
   }
 
   protected function setupNullCacheabilityMetadataValidation() {
-    $container = \Drupal::hasContainer() ? \Drupal::getContainer() : new ContainerBuilder();
+    $container = Drupal::hasContainer() ? Drupal::getContainer() : new ContainerBuilder();
 
     $cache_context_manager = $this->prophesize(CacheContextsManager::class);
 
@@ -486,7 +488,7 @@ class LocalTaskManagerTest extends UnitTestCase {
     }
 
     $container->set('cache_contexts_manager', $cache_context_manager->reveal());
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
   }
 
 }

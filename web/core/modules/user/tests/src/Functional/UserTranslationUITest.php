@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\user\Functional;
 
+use Drupal;
 use Drupal\Tests\content_translation\Functional\ContentTranslationUITestBase;
 
 /**
@@ -41,7 +42,7 @@ class UserTranslationUITest extends ContentTranslationUITestBase {
     $this->name = $this->randomMachineName();
     parent::setUp();
 
-    \Drupal::entityTypeManager()->getStorage('user')->resetCache();
+    Drupal::entityTypeManager()->getStorage('user')->resetCache();
   }
 
   /**
@@ -102,7 +103,7 @@ class UserTranslationUITest extends ContentTranslationUITestBase {
       'edit-form',
       ['language' => $this->container->get('language_manager')->getLanguage('en')]
     );
-    $this->drupalPostForm($url, [], t('Cancel account'));
+    $this->drupalPostForm($url, [], 'Cancel account');
     $this->assertSession()->statusCodeEquals(200);
   }
 

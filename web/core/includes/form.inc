@@ -577,7 +577,7 @@ function template_preprocess_form_element_label(&$variables) {
  *     array('my_function_2', array()),
  *   ),
  *   'finished' => 'my_finished_callback',
- *   'file' => 'path_to_file_containing_myfunctions',
+ *   'file' => 'path_to_file_containing_my_functions',
  * );
  * batch_set($batch);
  * // Only needed if not inside a form _submit handler.
@@ -880,9 +880,9 @@ function batch_process($redirect = NULL, Url $url = NULL, $redirect_callback = N
       'current_set' => 0,
       'progressive' => TRUE,
       'url' => isset($url) ? $url : Url::fromRoute('system.batch_page.html'),
-      'source_url' => Url::fromRouteMatch(\Drupal::routeMatch())->mergeOptions(['query' => \Drupal::request()->query->all()]),
+      'source_url' => Url::fromRouteMatch(Drupal::routeMatch())->mergeOptions(['query' => Drupal::request()->query->all()]),
       'batch_redirect' => $redirect,
-      'theme' => \Drupal::theme()->getActiveTheme()->getName(),
+      'theme' => Drupal::theme()->getActiveTheme()->getName(),
       'redirect_callback' => $redirect_callback,
     ];
     $batch += $process_info;
@@ -890,11 +890,11 @@ function batch_process($redirect = NULL, Url $url = NULL, $redirect_callback = N
     // The batch is now completely built. Allow other modules to make changes
     // to the batch so that it is easier to reuse batch processes in other
     // environments.
-    \Drupal::moduleHandler()->alter('batch', $batch);
+    Drupal::moduleHandler()->alter('batch', $batch);
 
     // Assign an arbitrary id: don't rely on a serial column in the 'batch'
     // table, since non-progressive batches skip database storage completely.
-    $batch['id'] = \Drupal::database()->nextId();
+    $batch['id'] = Drupal::database()->nextId();
 
     // Move operations to a job queue. Non-progressive batches will use a
     // memory-based queue.
@@ -919,14 +919,14 @@ function batch_process($redirect = NULL, Url $url = NULL, $redirect_callback = N
 
       // Clear the way for the redirection to the batch processing page, by
       // saving and unsetting the 'destination', if there is any.
-      $request = \Drupal::request();
+      $request = Drupal::request();
       if ($request->query->has('destination')) {
         $batch['destination'] = $request->query->get('destination');
         $request->query->remove('destination');
       }
 
       // Store the batch.
-      \Drupal::service('batch.storage')->create($batch);
+      Drupal::service('batch.storage')->create($batch);
 
       // Set the batch number in the session to guarantee that it will stay alive.
       $_SESSION['batches'][$batch['id']] = TRUE;
@@ -1021,7 +1021,7 @@ function _batch_queue($batch_set) {
     $class = $batch_set['queue']['class'];
 
     if (!isset($queues[$class][$name])) {
-      $queues[$class][$name] = new $class($name, \Drupal::database());
+      $queues[$class][$name] = new $class($name, Drupal::database());
     }
     return $queues[$class][$name];
   }

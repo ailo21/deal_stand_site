@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\locale\Functional;
 
+use Drupal;
 use Drupal\Tests\BrowserTestBase;
 
 /**
@@ -24,7 +25,7 @@ class LocaleNonInteractiveInstallTest extends BrowserTestBase {
    */
   protected function getVersionStringToTest() {
     include_once $this->root . '/core/includes/install.core.inc';
-    $version = _install_get_version_info(\Drupal::VERSION);
+    $version = _install_get_version_info(Drupal::VERSION);
     return $version['major'] . '.0.0';
   }
 
@@ -37,7 +38,7 @@ class LocaleNonInteractiveInstallTest extends BrowserTestBase {
     $parameters['parameters']['langcode'] = 'de';
     // Create a po file so we don't attempt to download one from
     // localize.drupal.org and to have a test translation that will not change.
-    \Drupal::service('file_system')->mkdir($this->publicFilesDirectory . '/translations', NULL, TRUE);
+    Drupal::service('file_system')->mkdir($this->publicFilesDirectory . '/translations', NULL, TRUE);
     $contents = <<<ENDPO
 msgid ""
 msgstr ""
@@ -56,6 +57,7 @@ ENDPO;
    */
   public function testInstallerTranslations() {
     $this->drupalGet('user/login');
+    // cSpell:disable-next-line
     $this->assertSession()->responseContains('Geben sie das Passwort für ihren Benutzernamen ein.');
   }
 

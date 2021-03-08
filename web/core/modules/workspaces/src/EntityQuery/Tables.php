@@ -2,6 +2,7 @@
 
 namespace Drupal\workspaces\EntityQuery;
 
+use Drupal;
 use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Entity\EntityType;
 use Drupal\Core\Entity\Query\Sql\Tables as BaseTables;
@@ -42,7 +43,7 @@ class Tables extends BaseTables {
   public function __construct(SelectInterface $sql_query) {
     parent::__construct($sql_query);
 
-    $this->workspaceManager = \Drupal::service('workspaces.manager');
+    $this->workspaceManager = Drupal::service('workspaces.manager');
 
     // The join between the first 'workspace_association' table and base table
     // of the query is done in
@@ -63,7 +64,7 @@ class Tables extends BaseTables {
     // looking for workspace-specific revisions, we have to force the parent
     // method to always pick the revision tables if the field being queried is
     // revisionable.
-    if ($active_workspace_id = $this->sqlQuery->getMetaData('active_workspace_id')) {
+    if ($this->sqlQuery->getMetaData('active_workspace_id')) {
       $previous_all_revisions = $this->sqlQuery->getMetaData('all_revisions');
       $this->sqlQuery->addMetaData('all_revisions', TRUE);
     }
@@ -94,7 +95,7 @@ class Tables extends BaseTables {
       // to also look for a possible workspace-specific revision using COALESCE.
       $condition_parts = explode(' = ', $join_condition);
       $condition_parts_1 = str_replace(['[', ']'], '', $condition_parts[1]);
-      list($base_table, $id_field) = explode('.', $condition_parts_1);
+      [$base_table, $id_field] = explode('.', $condition_parts_1);
 
       if (isset($this->baseTablesEntityType[$base_table])) {
         $entity_type_id = $this->baseTablesEntityType[$base_table];

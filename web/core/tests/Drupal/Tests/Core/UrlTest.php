@@ -7,6 +7,7 @@
 
 namespace Drupal\Tests\Core;
 
+use Drupal;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Access\AccessManagerInterface;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
@@ -14,12 +15,14 @@ use Drupal\Core\GeneratedUrl;
 use Drupal\Core\Routing\RouteMatch;
 use Drupal\Core\Url;
 use Drupal\Tests\UnitTestCase;
-use Symfony\Cmf\Component\Routing\RouteObjectInterface;
+use Drupal\Core\Routing\RouteObjectInterface;
+use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Exception\InvalidParameterException;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 use Symfony\Component\Routing\Route;
+use UnexpectedValueException;
 
 /**
  * @coversDefaultClass \Drupal\Core\Url
@@ -33,7 +36,7 @@ class UrlTest extends UnitTestCase {
   protected $container;
 
   /**
-   * The URL generator
+   * The URL generator.
    *
    * @var \Drupal\Core\Routing\UrlGeneratorInterface|\PHPUnit\Framework\MockObject\MockObject
    */
@@ -114,7 +117,7 @@ class UrlTest extends UnitTestCase {
     $this->container->set('url_generator', $this->urlGenerator);
     $this->container->set('path_alias.manager', $this->pathAliasManager);
     $this->container->set('path.validator', $this->pathValidator);
-    \Drupal::setContainer($this->container);
+    Drupal::setContainer($this->container);
   }
 
   /**
@@ -218,7 +221,7 @@ class UrlTest extends UnitTestCase {
    * @dataProvider providerFromInvalidInternalUri
    */
   public function testFromInvalidUserInput($path) {
-    $this->expectException(\InvalidArgumentException::class);
+    $this->expectException(InvalidArgumentException::class);
     $url = Url::fromUserInput($path);
   }
 
@@ -317,7 +320,7 @@ class UrlTest extends UnitTestCase {
    * @covers ::getUri
    */
   public function testGetUriForInternalUrl($urls) {
-    $this->expectException(\UnexpectedValueException::class);
+    $this->expectException(UnexpectedValueException::class);
     foreach ($urls as $url) {
       $url->getUri();
     }
@@ -419,7 +422,7 @@ class UrlTest extends UnitTestCase {
    */
   public function testGetRouteNameWithExternalUrl() {
     $url = Url::fromUri('http://example.com');
-    $this->expectException(\UnexpectedValueException::class);
+    $this->expectException(UnexpectedValueException::class);
     $url->getRouteName();
   }
 
@@ -446,7 +449,7 @@ class UrlTest extends UnitTestCase {
    */
   public function testGetRouteParametersWithExternalUrl() {
     $url = Url::fromUri('http://example.com');
-    $this->expectException(\UnexpectedValueException::class);
+    $this->expectException(UnexpectedValueException::class);
     $url->getRouteParameters();
   }
 
@@ -551,7 +554,7 @@ class UrlTest extends UnitTestCase {
   }
 
   /**
-   * Data provider for testing entity URIs
+   * Data provider for testing entity URIs.
    */
   public function providerTestEntityUris() {
     return [
@@ -653,7 +656,7 @@ class UrlTest extends UnitTestCase {
   }
 
   /**
-   * Data provider for testing string entity URIs
+   * Data provider for testing string entity URIs.
    */
   public function providerTestToUriStringForEntity() {
     return [
@@ -755,7 +758,7 @@ class UrlTest extends UnitTestCase {
    * @dataProvider providerFromInvalidInternalUri
    */
   public function testFromInvalidInternalUri($path) {
-    $this->expectException(\InvalidArgumentException::class);
+    $this->expectException(InvalidArgumentException::class);
     Url::fromUri('internal:' . $path);
   }
 
@@ -827,7 +830,7 @@ class UrlTest extends UnitTestCase {
    * @covers ::fromUri
    */
   public function testFromRouteUriWithMissingRouteName() {
-    $this->expectException(\InvalidArgumentException::class);
+    $this->expectException(InvalidArgumentException::class);
     $this->expectExceptionMessage("The route URI 'route:' is invalid.");
     Url::fromUri('route:');
   }

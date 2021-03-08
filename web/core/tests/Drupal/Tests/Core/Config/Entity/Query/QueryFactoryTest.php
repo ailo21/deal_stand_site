@@ -5,6 +5,8 @@ namespace Drupal\Tests\Core\Config\Entity\Query;
 use Drupal\Core\Config\Config;
 use Drupal\Core\Config\Entity\Query\QueryFactory;
 use Drupal\Tests\UnitTestCase;
+use LogicException;
+use ReflectionMethod;
 
 /**
  * @coversDefaultClass \Drupal\Core\Config\Entity\Query\QueryFactory
@@ -24,7 +26,7 @@ class QueryFactoryTest extends UnitTestCase {
     $config_manager = $this->createMock('Drupal\Core\Config\ConfigManagerInterface');
     $config_entity_type = $this->createMock('Drupal\Core\Config\Entity\ConfigEntityTypeInterface');
     $query_factory = new QueryFactory($config_factory, $key_value_factory, $config_manager);
-    $method = new \ReflectionMethod($query_factory, 'getKeys');
+    $method = new ReflectionMethod($query_factory, 'getKeys');
     $method->setAccessible(TRUE);
 
     $actual = $method->invoke($query_factory, $config, $key, 'get', $config_entity_type);
@@ -61,7 +63,7 @@ class QueryFactoryTest extends UnitTestCase {
       $this->getConfigObject('test')->set('uuid', 'abc'),
     ];
 
-    // Tests a existent sub key.
+    // Tests an existent sub key.
     $tests[] = [
       ['uuid.blah:abc'],
       'uuid.blah',
@@ -109,9 +111,9 @@ class QueryFactoryTest extends UnitTestCase {
       ->willReturn('test_config_entity_type');
     $query_factory = new QueryFactory($config_factory, $key_value_factory, $config_manager);
 
-    $method = new \ReflectionMethod($query_factory, 'getKeys');
+    $method = new ReflectionMethod($query_factory, 'getKeys');
     $method->setAccessible(TRUE);
-    $this->expectException(\LogicException::class);
+    $this->expectException(LogicException::class);
     $this->expectExceptionMessage('test_config_entity_type lookup key test.* ends with a wildcard this can not be used as a lookup');
     $method->invoke($query_factory, $this->getConfigObject('test'), 'test.*', 'get', $config_entity_type);
   }

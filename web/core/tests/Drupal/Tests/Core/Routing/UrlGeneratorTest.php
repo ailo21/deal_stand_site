@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\Core\Routing;
 
+use Drupal;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\PathProcessor\OutboundPathProcessorInterface;
@@ -85,7 +86,7 @@ class UrlGeneratorTest extends UnitTestCase {
     $cache_contexts_manager->method('assertValidTokens')->willReturn(TRUE);
     $container = new ContainerBuilder();
     $container->set('cache_contexts_manager', $cache_contexts_manager);
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
 
     $routes = new RouteCollection();
     $first_route = new Route('/test/one');
@@ -430,7 +431,7 @@ class UrlGeneratorTest extends UnitTestCase {
   }
 
   /**
-   * Confirms that explicitly setting the base_url works with generated routes
+   * Confirms that explicitly setting the base_url works with generated routes.
    */
   public function testBaseURLGeneration() {
     $options = ['base_url' => 'http://www.example.com:8888'];

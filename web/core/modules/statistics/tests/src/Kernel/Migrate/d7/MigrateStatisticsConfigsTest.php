@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\statistics\Kernel\Migrate\d7;
 
+use Drupal;
 use Drupal\Tests\SchemaCheckTestTrait;
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
 
@@ -32,8 +33,8 @@ class MigrateStatisticsConfigsTest extends MigrateDrupal7TestBase {
    */
   public function testStatisticsSettings() {
     $config = $this->config('statistics.settings');
-    $this->assertIdentical(1, $config->get('count_content_views'));
-    $this->assertConfigSchema(\Drupal::service('config.typed'), 'statistics.settings', $config->get());
+    $this->assertSame(1, $config->get('count_content_views'));
+    $this->assertConfigSchema(Drupal::service('config.typed'), 'statistics.settings', $config->get());
   }
 
 }

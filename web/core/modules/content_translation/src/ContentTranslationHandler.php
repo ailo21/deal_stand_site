@@ -2,6 +2,7 @@
 
 namespace Drupal\content_translation;
 
+use Drupal;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
@@ -174,7 +175,7 @@ class ContentTranslationHandler implements ContentTranslationHandlerInterface, E
         ->setSetting('target_type', 'user')
         ->setSetting('handler', 'default')
         ->setRevisionable(TRUE)
-        ->setDefaultValueCallback(get_class($this) . '::getDefaultOwnerId')
+        ->setDefaultValueCallback(static::class . '::getDefaultOwnerId')
         ->setTranslatable(TRUE);
     }
 
@@ -291,7 +292,11 @@ class ContentTranslationHandler implements ContentTranslationHandlerInterface, E
     if (!$this->currentUser->hasPermission('translate any entity') && $permission_granularity = $entity_type->getPermissionGranularity()) {
       $translate_permission = $this->currentUser->hasPermission($permission_granularity == 'bundle' ? "translate {$entity->bundle()} {$entity->getEntityTypeId()}" : "translate {$entity->getEntityTypeId()}");
     }
-    return AccessResult::allowedIf($translate_permission && $this->currentUser->hasPermission("$op content translations"))->cachePerPermissions();
+    $access = AccessResult::allowedIf(($translate_permission && $this->currentUser->hasPermission("$op content translations")))->cachePerPermissions();
+    if (!$access->isAllowed()) {
+      return AccessResult::allowedIfHasPermission($this->currentUser, 'translate editable entities')->andIf($entity->access('update', $this->currentUser, TRUE));
+    }
+    return $access;
   }
 
   /**
@@ -406,7 +411,7 @@ class ContentTranslationHandler implements ContentTranslationHandlerInterface, E
           }
         }
         /** @var \Drupal\Core\Access\AccessResultInterface $delete_access */
-        $delete_access = \Drupal::service('content_translation.delete_access')->checkAccess($entity);
+        $delete_access = Drupal::service('content_translation.delete_access')->checkAccess($entity);
         $access = $delete_access->isAllowed() && (
           $this->getTranslationAccess($entity, 'delete')->isAllowed() ||
           ($entity->access('delete') && $this->entityType->hasLinkTemplate('delete-form'))
@@ -514,7 +519,7 @@ class ContentTranslationHandler implements ContentTranslationHandlerInterface, E
         // Validation is done by static::entityFormValidate().
         '#validate_reference' => FALSE,
         '#maxlength' => 60,
-        '#description' => t('Leave blank for %anonymous.', ['%anonymous' => \Drupal::config('user.settings')->get('anonymous')]),
+        '#description' => t('Leave blank for %anonymous.', ['%anonymous' => Drupal::config('user.settings')->get('anonymous')]),
       ];
 
       $date = $new_translation ? REQUEST_TIME : $metadata->getCreatedTime();
@@ -800,7 +805,7 @@ class ContentTranslationHandler implements ContentTranslationHandlerInterface, E
    *   The user ID.
    */
   public static function getDefaultOwnerId() {
-    return \Drupal::currentUser()->id();
+    return Drupal::currentUser()->id();
   }
 
 }

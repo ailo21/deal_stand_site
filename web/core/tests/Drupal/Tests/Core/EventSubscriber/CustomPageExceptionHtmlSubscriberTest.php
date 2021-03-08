@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\Core\EventSubscriber;
 
+use Drupal;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
@@ -31,7 +32,7 @@ class CustomPageExceptionHtmlSubscriberTest extends UnitTestCase {
   protected $kernel;
 
   /**
-   * The mocked config factory
+   * The mocked config factory.
    *
    * @var \Drupal\Core\Config\ConfigFactoryInterface|\PHPUnit\Framework\MockObject\MockObject
    */
@@ -109,7 +110,7 @@ class CustomPageExceptionHtmlSubscriberTest extends UnitTestCase {
       ->willReturn(Url::fromRoute('foo', ['foo' => 'bar']));
     $container = new ContainerBuilder();
     $container->set('path.validator', $path_validator);
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
 
     // You can't create an exception in PHP without throwing it. Store the
     // current error_log, and disable it temporarily.

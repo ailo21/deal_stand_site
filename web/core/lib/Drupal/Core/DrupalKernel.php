@@ -3,7 +3,10 @@
 namespace Drupal\Core;
 
 use Composer\Autoload\ClassLoader;
+use DirectoryIterator;
+use Drupal;
 use Drupal\Component\Assertion\Handle;
+use Drupal\Component\EventDispatcher\Event;
 use Drupal\Component\FileCache\FileCacheFactory;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Cache\DatabaseBackend;
@@ -24,6 +27,8 @@ use Drupal\Core\Security\PharExtensionInterceptor;
 use Drupal\Core\Security\RequestSanitizer;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\Test\TestDatabase;
+use Exception;
+use LogicException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -35,6 +40,7 @@ use Symfony\Component\HttpKernel\TerminableInterface;
 use TYPO3\PharStreamWrapper\Manager as PharStreamWrapperManager;
 use TYPO3\PharStreamWrapper\Behavior as PharStreamWrapperBehavior;
 use TYPO3\PharStreamWrapper\PharStreamWrapper;
+use UnexpectedValueException;
 
 /**
  * The DrupalKernel class is the core of Drupal itself.
@@ -416,7 +422,7 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
    */
   public function setSitePath($path) {
     if ($this->booted && $path !== $this->sitePath) {
-      throw new \LogicException('Site path cannot be changed after calling boot()');
+      throw new LogicException('Site path cannot be changed after calling boot()');
     }
     $this->sitePath = $path;
   }
@@ -445,7 +451,7 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
 
     // Ensure that findSitePath is set.
     if (!$this->sitePath) {
-      throw new \Exception('Kernel does not have site path set before calling boot()');
+      throw new Exception('Kernel does not have site path set before calling boot()');
     }
 
     // Initialize the FileCacheFactory component. We have to do it here instead
@@ -489,7 +495,7 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
           $behavior->withAssertion(new PharExtensionInterceptor())
         );
       }
-      catch (\LogicException $e) {
+      catch (LogicException $e) {
         // Continue if the PharStreamWrapperManager is already initialized. For
         // example, this occurs during a module install.
         // @see \Drupal\Core\Extension\ModuleInstaller::install()
@@ -529,10 +535,10 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
    */
   public function setContainer(ContainerInterface $container = NULL) {
     if (isset($this->container)) {
-      throw new \Exception('The container should not override an existing container.');
+      throw new Exception('The container should not override an existing container.');
     }
     if ($this->booted) {
-      throw new \Exception('The container cannot be set after a booted kernel.');
+      throw new Exception('The container cannot be set after a booted kernel.');
     }
 
     $this->container = $container;
@@ -573,7 +579,7 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
     // Sanitize the request.
     $request = RequestSanitizer::sanitize(
       $request,
-      (array) Settings::get(RequestSanitizer::SANITIZE_WHITELIST, []),
+      (array) Settings::get(RequestSanitizer::SANITIZE_INPUT_SAFE_KEYS, []),
       (bool) Settings::get(RequestSanitizer::SANITIZE_LOG, FALSE)
     );
 
@@ -705,7 +711,7 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
         $response = $this->getHttpKernel()->handle($request, $type, $catch);
       }
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       if ($catch === FALSE) {
         throw $e;
       }
@@ -736,7 +742,7 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
    * @throws \Exception
    *   If the passed in exception cannot be turned into a response.
    */
-  protected function handleException(\Exception $e, $request, $type) {
+  protected function handleException(Exception $e, $request, $type) {
     if ($this->shouldRedirectToInstaller($e, $this->container ? $this->container->get('database') : NULL)) {
       return new RedirectResponse($request->getBasePath() . '/core/install.php', 302, ['Cache-Control' => 'no-cache']);
     }
@@ -835,7 +841,7 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
    *   The cache key used for the service container.
    */
   protected function getContainerCacheKey() {
-    $parts = ['service_container', $this->environment, \Drupal::VERSION, Settings::get('deployment_identifier'), PHP_OS, serialize(Settings::get('container_yamls'))];
+    $parts = ['service_container', $this->environment, Drupal::VERSION, Settings::get('deployment_identifier'), PHP_OS, serialize(Settings::get('container_yamls'))];
     return implode(':', $parts);
   }
 
@@ -947,12 +953,12 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
       }
     }
 
-    \Drupal::setContainer($this->container);
+    Drupal::setContainer($this->container);
 
     // Allow other parts of the codebase to react on container initialization in
     // subrequest.
     if (!empty($subrequest)) {
-      $this->container->get('event_dispatcher')->dispatch(self::CONTAINER_INITIALIZE_SUBREQUEST_FINISHED);
+      $this->container->get('event_dispatcher')->dispatch(new Event(), self::CONTAINER_INITIALIZE_SUBREQUEST_FINISHED);
     }
 
     // If needs dumping flag was set, dump the container.
@@ -982,9 +988,6 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
     if ($app_root === NULL) {
       $app_root = static::guessApplicationRoot();
     }
-
-    // Include our bootstrap file.
-    require_once $app_root . '/core/includes/bootstrap.inc';
 
     // Enforce E_STRICT, but allow users to set levels not part of E_STRICT.
     error_reporting(E_STRICT | E_ALL);
@@ -1224,7 +1227,7 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
     foreach (['Core', 'Component'] as $parent_directory) {
       $path = 'core/lib/Drupal/' . $parent_directory;
       $parent_namespace = 'Drupal\\' . $parent_directory;
-      foreach (new \DirectoryIterator($this->root . '/' . $path) as $component) {
+      foreach (new DirectoryIterator($this->root . '/' . $path) as $component) {
         /** @var $component \DirectoryIterator */
         $pathname = $component->getPathname();
         if (!$component->isDot() && $component->isDir() && (
@@ -1342,7 +1345,7 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
     try {
       $this->bootstrapContainer->get('cache.container')->set($this->getContainerCacheKey(), $container_definition);
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       // There is no way to get from the Cache API if the cache set was
       // successful or not, hence an Exception is caught and the caller informed
       // about the error condition.
@@ -1353,7 +1356,7 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
   }
 
   /**
-   * Gets a http kernel from the container
+   * Gets a http kernel from the container.
    *
    * @return \Symfony\Component\HttpKernel\HttpKernelInterface
    */
@@ -1373,7 +1376,7 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
       try {
         $this->configStorage = BootstrapConfigStorageFactory::get($this->classLoader);
       }
-      catch (\Exception $e) {
+      catch (Exception $e) {
         $this->configStorage = new NullStorage();
       }
     }
@@ -1498,7 +1501,7 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
     try {
       $http_host = $request->getHost();
     }
-    catch (\UnexpectedValueException $e) {
+    catch (UnexpectedValueException $e) {
       return FALSE;
     }
 
@@ -1556,7 +1559,7 @@ class DrupalKernel implements DrupalKernelInterface, TerminableInterface {
       Request::setFactory([$request_factory, 'createRequest']);
 
     }
-    catch (\UnexpectedValueException $e) {
+    catch (UnexpectedValueException $e) {
       return FALSE;
     }
 

@@ -3,6 +3,7 @@
 namespace Drupal\Core\Cache\Context;
 
 use Drupal\Core\Cache\CacheableMetadata;
+use LogicException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -106,7 +107,7 @@ class CacheContextsManager {
     // Iterate over cache contexts that have been optimized away and get their
     // cacheability metadata.
     foreach (static::parseTokens(array_diff($context_tokens, $optimized_tokens)) as $context_token) {
-      list($context_id, $parameter) = $context_token;
+      [$context_id, $parameter] = $context_token;
       $context = $this->getService($context_id);
       $cacheable_metadata = $cacheable_metadata->merge($context->getCacheableMetadata($parameter));
     }
@@ -114,7 +115,7 @@ class CacheContextsManager {
     sort($optimized_tokens);
     $keys = [];
     foreach (array_combine($optimized_tokens, static::parseTokens($optimized_tokens)) as $context_token => $context) {
-      list($context_id, $parameter) = $context;
+      [$context_id, $parameter] = $context;
       $keys[] = '[' . $context_token . ']=' . $this->getService($context_id)->getContext($parameter);
     }
 
@@ -164,7 +165,7 @@ class CacheContextsManager {
       $parameter = NULL;
       $context_id = $context_token;
       if (strpos($context_token, ':') !== FALSE) {
-        list($context_id, $parameter) = explode(':', $context_token);
+        [$context_id, $parameter] = explode(':', $context_token);
       }
 
       // Context tokens without:
@@ -236,7 +237,7 @@ class CacheContextsManager {
       $context_id = $context;
       $parameter = NULL;
       if (strpos($context, ':') !== FALSE) {
-        list($context_id, $parameter) = explode(':', $context, 2);
+        [$context_id, $parameter] = explode(':', $context, 2);
       }
       $contexts_with_parameters[] = [$context_id, $parameter];
     }
@@ -267,7 +268,7 @@ class CacheContextsManager {
 
     foreach ($context_tokens as $context_token) {
       if (!is_string($context_token)) {
-        throw new \LogicException(sprintf('Cache contexts must be strings, %s given.', gettype($context_token)));
+        throw new LogicException(sprintf('Cache contexts must be strings, %s given.', gettype($context_token)));
       }
 
       if (isset($this->validContextTokens[$context_token])) {
@@ -288,13 +289,13 @@ class CacheContextsManager {
         $this->validContextTokens[$context_token] = TRUE;
       }
       else {
-        throw new \LogicException(sprintf('"%s" is not a valid cache context ID.', $context_id));
+        throw new LogicException(sprintf('"%s" is not a valid cache context ID.', $context_id));
       }
     }
   }
 
   /**
-   * Asserts the context tokens are valid
+   * Asserts the context tokens are valid.
    *
    * Similar to ::validateTokens, this method returns boolean TRUE when the
    * context tokens are valid, and FALSE when they are not instead of returning
@@ -315,7 +316,7 @@ class CacheContextsManager {
     try {
       $this->validateTokens($context_tokens);
     }
-    catch (\LogicException $e) {
+    catch (LogicException $e) {
       return FALSE;
     }
 

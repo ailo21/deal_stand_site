@@ -7,6 +7,7 @@ use Drupal\Core\Database\Database;
 use Drupal\Core\Url;
 use Drupal\Tests\rest\Functional\CookieResourceTestTrait;
 use Drupal\Tests\rest\Functional\ResourceTestBase;
+use UnexpectedValueException;
 
 /**
  * Tests the watchdog database log resource.
@@ -86,9 +87,9 @@ class DbLogResourceTest extends ResourceTestBase {
     $response = $this->request('GET', $url, $request_options);
     $this->assertResourceResponse(200, FALSE, $response, ['config:rest.resource.dblog', 'http_response'], ['user.permissions'], FALSE, 'MISS');
     $log = Json::decode((string) $response->getBody());
-    $this->assertEqual($log['wid'], $id, 'Log ID is correct.');
-    $this->assertEqual($log['type'], 'rest', 'Type of log message is correct.');
-    $this->assertEqual($log['message'], 'Test message', 'Log message text is correct.');
+    $this->assertEqual($id, $log['wid'], 'Log ID is correct.');
+    $this->assertEqual('rest', $log['type'], 'Type of log message is correct.');
+    $this->assertEqual('Test message', $log['message'], 'Log message text is correct.');
 
     // Request an unknown log entry.
     $url->setRouteParameter('id', 9999);
@@ -111,7 +112,7 @@ class DbLogResourceTest extends ResourceTestBase {
         break;
 
       default:
-        throw new \UnexpectedValueException();
+        throw new UnexpectedValueException();
     }
   }
 
@@ -124,11 +125,6 @@ class DbLogResourceTest extends ResourceTestBase {
    * {@inheritdoc}
    */
   protected function getExpectedUnauthorizedAccessMessage($method) {}
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function getExpectedBcUnauthorizedAccessMessage($method) {}
 
   /**
    * {@inheritdoc}

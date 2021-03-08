@@ -2,11 +2,15 @@
 
 namespace Drupal\Tests\Core;
 
+use Drupal;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Url;
 use Drupal\Tests\UnitTestCase;
+use Exception;
+use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
+use UnexpectedValueException;
 
 /**
  * @coversDefaultClass \Drupal\Core\Url
@@ -15,7 +19,7 @@ use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 class UnroutedUrlTest extends UnitTestCase {
 
   /**
-   * The URL assembler
+   * The URL assembler.
    *
    * @var \Drupal\Core\Utility\UnroutedUrlAssemblerInterface|\PHPUnit\Framework\MockObject\MockObject
    */
@@ -57,7 +61,7 @@ class UnroutedUrlTest extends UnitTestCase {
     $container = new ContainerBuilder();
     $container->set('router.no_access_checks', $this->router);
     $container->set('unrouted_url_assembler', $this->urlAssembler);
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
   }
 
   /**
@@ -103,7 +107,7 @@ class UnroutedUrlTest extends UnitTestCase {
    * @dataProvider providerFromInvalidUri
    */
   public function testFromInvalidUri($uri) {
-    $this->expectException(\InvalidArgumentException::class);
+    $this->expectException(InvalidArgumentException::class);
     $url = Url::fromUri($uri);
   }
 
@@ -181,7 +185,7 @@ class UnroutedUrlTest extends UnitTestCase {
    */
   public function testGetRouteName($uri) {
     $url = Url::fromUri($uri);
-    $this->expectException(\UnexpectedValueException::class);
+    $this->expectException(UnexpectedValueException::class);
     $url->getRouteName();
   }
 
@@ -195,7 +199,7 @@ class UnroutedUrlTest extends UnitTestCase {
    */
   public function testGetRouteParameters($uri) {
     $url = Url::fromUri($uri);
-    $this->expectException(\UnexpectedValueException::class);
+    $this->expectException(UnexpectedValueException::class);
     $url->getRouteParameters();
   }
 
@@ -209,7 +213,7 @@ class UnroutedUrlTest extends UnitTestCase {
    */
   public function testGetInternalPath($uri) {
     $url = Url::fromUri($uri);
-    $this->expectException(\Exception::class);
+    $this->expectException(Exception::class);
     $url->getInternalPath();
   }
 

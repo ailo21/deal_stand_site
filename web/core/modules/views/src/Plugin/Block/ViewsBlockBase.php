@@ -2,6 +2,7 @@
 
 namespace Drupal\views\Plugin\Block;
 
+use Drupal;
 use Drupal\Core\Url;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Block\BlockBase;
@@ -64,7 +65,7 @@ abstract class ViewsBlockBase extends BlockBase implements ContainerFactoryPlugi
   public function __construct(array $configuration, $plugin_id, $plugin_definition, ViewExecutableFactory $executable_factory, EntityStorageInterface $storage, AccountInterface $user) {
     $this->pluginId = $plugin_id;
     $delta = $this->getDerivativeId();
-    list($name, $this->displayID) = explode('-', $delta, 2);
+    [$name, $this->displayID] = explode('-', $delta, 2);
     // Load the view.
     $view = $storage->load($name);
     $this->view = $executable_factory->get($view);
@@ -166,7 +167,7 @@ abstract class ViewsBlockBase extends BlockBase implements ContainerFactoryPlugi
       '#fieldset' => 'views_label_fieldset',
     ];
 
-    if ($this->view->storage->access('edit') && \Drupal::moduleHandler()->moduleExists('views_ui')) {
+    if ($this->view->storage->access('edit') && Drupal::moduleHandler()->moduleExists('views_ui')) {
       $form['views_label']['#description'] = $this->t('Changing the title here means it cannot be dynamically altered anymore. (Try changing it directly in <a href=":url">@name</a>.)', [':url' => Url::fromRoute('entity.view.edit_display_form', ['view' => $this->view->storage->id(), 'display_id' => $this->displayID])->toString(), '@name' => $this->view->storage->label()]);
     }
     else {
@@ -193,7 +194,7 @@ abstract class ViewsBlockBase extends BlockBase implements ContainerFactoryPlugi
    * Converts Views block content to a renderable array with contextual links.
    *
    * @param string|array $output
-   *   An string|array representing the block. This will be modified to be a
+   *   A string|array representing the block. This will be modified to be a
    *   renderable array, containing the optional '#contextual_links' property (if
    *   there are any contextual links associated with the block).
    * @param string $block_type

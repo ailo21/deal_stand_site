@@ -7,6 +7,7 @@
 
 namespace Drupal\Tests\views\Unit;
 
+use Drupal;
 use Drupal\Core\Config\Entity\ConfigEntityType;
 use Drupal\Core\Entity\ContentEntityType;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
@@ -149,7 +150,7 @@ class EntityViewsDataTest extends UnitTestCase {
     $container->set('entity_field.manager', $this->entityFieldManager);
     $container->set('typed_data_manager', $typed_data_manager);
     $container->set('state', $state->reveal());
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
   }
 
   /**
@@ -1129,7 +1130,7 @@ class EntityViewsDataTest extends UnitTestCase {
   }
 
   /**
-   * Tests views data for a entity reference field.
+   * Tests views data for an entity reference field.
    */
   protected function assertEntityReferenceField($data) {
     $this->assertEquals('field', $data['field']['id']);
@@ -1192,27 +1193,6 @@ class TestEntityType extends ContentEntityType {
   public function setKey($key, $value) {
     $this->entity_keys[$key] = $value;
     return $this;
-  }
-
-}
-
-namespace Drupal\entity_test\Entity;
-
-if (!function_exists('t')) {
-
-  function t($string, array $args = []) {
-    return strtr($string, $args);
-  }
-
-}
-
-
-namespace Drupal\Core\Entity;
-
-if (!function_exists('t')) {
-
-  function t($string, array $args = []) {
-    return strtr($string, $args);
   }
 
 }

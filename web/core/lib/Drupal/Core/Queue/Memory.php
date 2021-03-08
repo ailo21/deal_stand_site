@@ -2,6 +2,9 @@
 
 namespace Drupal\Core\Queue;
 
+use Drupal;
+use stdClass;
+
 /**
  * Static queue implementation.
  *
@@ -12,6 +15,7 @@ namespace Drupal\Core\Queue;
  * @ingroup queue
  */
 class Memory implements QueueInterface {
+
   /**
    * The queue data.
    *
@@ -41,10 +45,10 @@ class Memory implements QueueInterface {
    * {@inheritdoc}
    */
   public function createItem($data) {
-    $item = new \stdClass();
+    $item = new stdClass();
     $item->item_id = $this->idSequence++;
     $item->data = $data;
-    $item->created = time();
+    $item->created = Drupal::time()->getCurrentTime();
     $item->expire = 0;
     $this->queue[$item->item_id] = $item;
     return $item->item_id;
@@ -63,7 +67,7 @@ class Memory implements QueueInterface {
   public function claimItem($lease_time = 30) {
     foreach ($this->queue as $key => $item) {
       if ($item->expire == 0) {
-        $item->expire = time() + $lease_time;
+        $item->expire = Drupal::time()->getCurrentTime() + $lease_time;
         $this->queue[$key] = $item;
         return $item;
       }

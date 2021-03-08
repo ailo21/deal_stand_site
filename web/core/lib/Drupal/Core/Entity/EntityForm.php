@@ -2,6 +2,7 @@
 
 namespace Drupal\Core\Entity;
 
+use Drupal;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -99,7 +100,7 @@ class EntityForm extends FormBase implements EntityFormInterface {
     // Ensure that edit forms have the correct cacheability metadata so they can
     // be cached.
     if (!$this->entity->isNew()) {
-      \Drupal::service('renderer')->addCacheableDependency($form, $this->entity);
+      Drupal::service('renderer')->addCacheableDependency($form, $this->entity);
     }
 
     // Retrieve the form array using the possibly updated entity in form state.
@@ -304,7 +305,7 @@ class EntityForm extends FormBase implements EntityFormInterface {
   }
 
   /**
-   * Copies top-level form values to entity properties
+   * Copies top-level form values to entity properties.
    *
    * This should not change existing entity properties that are not being edited
    * by this form.

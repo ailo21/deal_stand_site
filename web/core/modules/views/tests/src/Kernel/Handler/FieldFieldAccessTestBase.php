@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\views\Kernel\Handler;
 
+use Drupal;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
 use Drupal\views\Entity\View;
@@ -14,14 +15,14 @@ use Drupal\views\Views;
 abstract class FieldFieldAccessTestBase extends ViewsKernelTestBase {
 
   /**
-   * Stores an user entity with access to fields.
+   * Stores a user entity with access to fields.
    *
    * @var \Drupal\user\UserInterface
    */
   protected $userWithAccess;
 
   /**
-   * Stores an user entity without access to fields.
+   * Stores a user entity without access to fields.
    *
    * @var \Drupal\user\UserInterface
    */
@@ -81,9 +82,9 @@ abstract class FieldFieldAccessTestBase extends ViewsKernelTestBase {
    *   The expected field content.
    */
   protected function assertFieldAccess($entity_type_id, $field_name, $field_content) {
-    \Drupal::state()->set('views_field_access_test-field', $field_name);
+    Drupal::state()->set('views_field_access_test-field', $field_name);
 
-    $entity_type = \Drupal::entityTypeManager()->getDefinition($entity_type_id);
+    $entity_type = Drupal::entityTypeManager()->getDefinition($entity_type_id);
     $view_id = $this->randomMachineName();
     $data_table = $entity_type->getDataTable();
     // Use the data table as long as the field is not 'uuid'. This is the only
@@ -112,10 +113,10 @@ abstract class FieldFieldAccessTestBase extends ViewsKernelTestBase {
     $entity->save();
 
     /** @var \Drupal\Core\Session\AccountSwitcherInterface $account_switcher */
-    $account_switcher = \Drupal::service('account_switcher');
+    $account_switcher = Drupal::service('account_switcher');
 
     /** @var \Drupal\Core\Render\RendererInterface $renderer */
-    $renderer = \Drupal::service('renderer');
+    $renderer = Drupal::service('renderer');
 
     $account_switcher->switchTo($this->userWithAccess);
     $executable = Views::getView($view_id);
@@ -133,7 +134,7 @@ abstract class FieldFieldAccessTestBase extends ViewsKernelTestBase {
     $this->assertNoText($field_content);
     $this->assertFalse(isset($executable->field[$field_name]));
 
-    \Drupal::state()->delete('views_field_access_test-field');
+    Drupal::state()->delete('views_field_access_test-field');
   }
 
 }

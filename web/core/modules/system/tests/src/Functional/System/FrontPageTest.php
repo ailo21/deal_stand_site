@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\system\Functional\System;
 
+use Drupal;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Tests\BrowserTestBase;
 
@@ -45,7 +46,7 @@ class FrontPageTest extends BrowserTestBase {
     // Configure 'node' as front page.
     $this->config('system.site')->set('page.front', '/node')->save();
     // Enable front page logging in system_test.module.
-    \Drupal::state()->set('system_test.front_page_output', 1);
+    Drupal::state()->set('system_test.front_page_output', 1);
   }
 
   /**
@@ -59,35 +60,37 @@ class FrontPageTest extends BrowserTestBase {
     ];
     $this->drupalCreateNode($settings);
     $this->drupalGet('');
-    $this->assertTitle('Home | Drupal');
+    $this->assertSession()->titleEquals('Home | Drupal');
 
-    $this->assertText(t('On front page.'), 'Path is the front page.');
+    // Check that path is the front page.
+    $this->assertText('On front page.');
     $this->drupalGet('node');
-    $this->assertText(t('On front page.'), 'Path is the front page.');
+    $this->assertText('On front page.');
     $this->drupalGet($this->nodePath);
-    $this->assertNoText(t('On front page.'), 'Path is not the front page.');
+    $this->assertNoText('On front page.');
 
     // Change the front page to an invalid path.
     $edit = ['site_frontpage' => '/kittens'];
-    $this->drupalPostForm('admin/config/system/site-information', $edit, t('Save configuration'));
-    $this->assertText(t("Either the path '@path' is invalid or you do not have access to it.", ['@path' => $edit['site_frontpage']]));
+    $this->drupalPostForm('admin/config/system/site-information', $edit, 'Save configuration');
+    $this->assertText("Either the path '" . $edit['site_frontpage'] . "' is invalid or you do not have access to it.");
 
     // Change the front page to a path without a starting slash.
     $edit = ['site_frontpage' => $this->nodePath];
-    $this->drupalPostForm('admin/config/system/site-information', $edit, t('Save configuration'));
+    $this->drupalPostForm('admin/config/system/site-information', $edit, 'Save configuration');
     $this->assertRaw(new FormattableMarkup("The path '%path' has to start with a slash.", ['%path' => $edit['site_frontpage']]));
 
     // Change the front page to a valid path.
     $edit['site_frontpage'] = '/' . $this->nodePath;
-    $this->drupalPostForm('admin/config/system/site-information', $edit, t('Save configuration'));
-    $this->assertText(t('The configuration options have been saved.'), 'The front page path has been saved.');
-
+    $this->drupalPostForm('admin/config/system/site-information', $edit, 'Save configuration');
+    // Check that the front page path has been saved.
+    $this->assertText(t('The configuration options have been saved.'));
+    // Check that path is the front page.
     $this->drupalGet('');
-    $this->assertText(t('On front page.'), 'Path is the front page.');
+    $this->assertText('On front page.');
     $this->drupalGet('node');
-    $this->assertNoText(t('On front page.'), 'Path is not the front page.');
+    $this->assertNoText('On front page.');
     $this->drupalGet($this->nodePath);
-    $this->assertText(t('On front page.'), 'Path is the front page.');
+    $this->assertText('On front page.');
   }
 
 }

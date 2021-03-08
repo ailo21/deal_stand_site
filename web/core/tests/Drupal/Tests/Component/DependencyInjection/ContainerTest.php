@@ -8,7 +8,10 @@
 namespace Drupal\Tests\Component\DependencyInjection;
 
 use Drupal\Component\Utility\Crypt;
+use Drupal\Tests\PhpUnitCompatibilityTrait;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+use stdClass;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
 use Symfony\Component\DependencyInjection\Exception\LogicException;
@@ -23,6 +26,8 @@ use Prophecy\Argument;
  * @group DependencyInjection
  */
 class ContainerTest extends TestCase {
+
+  use PhpUnitCompatibilityTrait;
 
   /**
    * The tested container.
@@ -410,7 +415,7 @@ class ContainerTest extends TestCase {
    * @covers ::createService
    */
   public function testGetForSyntheticService() {
-    $synthetic_service = new \stdClass();
+    $synthetic_service = new stdClass();
     $this->container->set('synthetic', $synthetic_service);
     $test_service = $this->container->get('synthetic');
     $this->assertSame($synthetic_service, $test_service);
@@ -434,7 +439,7 @@ class ContainerTest extends TestCase {
    * @covers ::createService
    */
   public function testGetWithFileInclude() {
-    $file_service = $this->container->get('container_test_file_service_test');
+    $this->container->get('container_test_file_service_test');
     $this->assertTrue(function_exists('container_test_file_service_test_service_function'));
     $this->assertEquals('Hello Container', container_test_file_service_test_service_function());
   }
@@ -689,7 +694,7 @@ class ContainerTest extends TestCase {
    *   Associated array with parameters and services.
    */
   protected function getMockContainerDefinition() {
-    $fake_service = new \stdClass();
+    $fake_service = new stdClass();
     $parameters = [];
     $parameters['some_parameter_class'] = get_class($fake_service);
     $parameters['some_private_config'] = 'really_private_lama';
@@ -1177,7 +1182,7 @@ class MockService {
    *   The instantiated service object.
    */
   public static function getFactoryMethod($class, $arguments = []) {
-    $r = new \ReflectionClass($class);
+    $r = new ReflectionClass($class);
     $service = ($r->getConstructor() === NULL) ? $r->newInstance() : $r->newInstanceArgs($arguments);
 
     return $service;

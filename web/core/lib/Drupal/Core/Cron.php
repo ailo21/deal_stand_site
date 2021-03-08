@@ -2,18 +2,22 @@
 
 namespace Drupal\Core;
 
+use Drupal;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Component\Utility\Environment;
 use Drupal\Component\Utility\Timer;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\Core\Queue\QueueFactory;
+use Drupal\Core\Queue\DelayableQueueInterface;
 use Drupal\Core\Queue\QueueWorkerManagerInterface;
+use Drupal\Core\Queue\DelayedRequeueException;
 use Drupal\Core\Queue\RequeueException;
 use Drupal\Core\Queue\SuspendQueueException;
 use Drupal\Core\Session\AccountSwitcherInterface;
 use Drupal\Core\Session\AnonymousUserSession;
 use Drupal\Core\State\StateInterface;
+use Exception;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -106,7 +110,7 @@ class Cron implements CronInterface {
     $this->accountSwitcher = $account_switcher;
     $this->logger = $logger;
     $this->queueManager = $queue_manager;
-    $this->time = $time ?: \Drupal::service('datetime.time');
+    $this->time = $time ?: Drupal::service('datetime.time');
   }
 
   /**
@@ -180,6 +184,18 @@ class Cron implements CronInterface {
             $queue_worker->processItem($item->data);
             $queue->deleteItem($item);
           }
+          catch (DelayedRequeueException $e) {
+            // The worker requested the task not be immediately re-queued.
+            // - If the queue doesn't support ::delayItem(), we should leave the
+            // item's current expiry time alone.
+            // - If the queue does support ::delayItem(), we should allow the
+            // queue to update the item's expiry using the requested delay.
+            if ($queue instanceof DelayableQueueInterface) {
+              // This queue can handle a custom delay; use the duration provided
+              // by the exception.
+              $queue->delayItem($item, $e->getDelay());
+            }
+          }
           catch (RequeueException $e) {
             // The worker requested the task be immediately requeued.
             $queue->releaseItem($item);
@@ -194,7 +210,7 @@ class Cron implements CronInterface {
             // Skip to the next queue.
             continue 2;
           }
-          catch (\Exception $e) {
+          catch (Exception $e) {
             // In case of any other kind of exception, log it and leave the item
             // in the queue to be processed again later.
             watchdog_exception('cron', $e);
@@ -211,7 +227,7 @@ class Cron implements CronInterface {
     $module_previous = '';
 
     // If detailed logging isn't enabled, don't log individual execution times.
-    $time_logging_enabled = \Drupal::config('system.cron')->get('logging');
+    $time_logging_enabled = Drupal::config('system.cron')->get('logging');
     $logger = $time_logging_enabled ? $this->logger : new NullLogger();
 
     // Iterate through the modules calling their cron handlers (if any):
@@ -235,7 +251,7 @@ class Cron implements CronInterface {
       try {
         $this->moduleHandler->invoke($module, 'cron');
       }
-      catch (\Exception $e) {
+      catch (Exception $e) {
         watchdog_exception('cron', $e);
       }
 

@@ -11,10 +11,11 @@ is_admin: false
 permissions:
   - 'access comments'
   - 'access content'
+  - 'access devel information'
   - 'access site-wide contact form'
   - 'restful delete ds_rest_notes'
   - 'restful get ds_rest_categorylist'
   - 'restful get ds_rest_notes'
   - 'restful post ds_rest_notes'
   - 'search content'
-  - 'use text format restricted_html'
+  - 'switch users'

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\node\Functional;
 
+use Drupal;
 use Drupal\Core\Database\Database;
 
 /**
@@ -82,7 +83,7 @@ class NodeAccessGrantsCacheContextTest extends NodeTestBase {
       if ($uid > 0) {
         $this->drupalLogin($this->userMapping[$uid]);
       }
-      $this->assertIdentical($context, $this->container->get('cache_context.user.node_grants')->getContext('view'));
+      $this->assertSame($context, $this->container->get('cache_context.user.node_grants')->getContext('view'));
     }
     $this->drupalLogout();
   }
@@ -111,7 +112,7 @@ class NodeAccessGrantsCacheContextTest extends NodeTestBase {
     Database::getConnection()->insert('node_access')->fields($record)->execute();
 
     // Put user accessUser (uid 0) in the realm.
-    \Drupal::state()->set('node_access_test.no_access_uid', 0);
+    Drupal::state()->set('node_access_test.no_access_uid', 0);
     drupal_static_reset('node_access_view_all_nodes');
     $this->assertUserCacheContext([
       0 => 'view.all',
@@ -121,7 +122,7 @@ class NodeAccessGrantsCacheContextTest extends NodeTestBase {
     ]);
 
     // Put user accessUser (uid 2) in the realm.
-    \Drupal::state()->set('node_access_test.no_access_uid', $this->accessUser->id());
+    Drupal::state()->set('node_access_test.no_access_uid', $this->accessUser->id());
     drupal_static_reset('node_access_view_all_nodes');
     $this->assertUserCacheContext([
       0 => 'view.all:0;node_access_test_author:0',
@@ -131,7 +132,7 @@ class NodeAccessGrantsCacheContextTest extends NodeTestBase {
     ]);
 
     // Put user noAccessUser (uid 3) in the realm.
-    \Drupal::state()->set('node_access_test.no_access_uid', $this->noAccessUser->id());
+    Drupal::state()->set('node_access_test.no_access_uid', $this->noAccessUser->id());
     drupal_static_reset('node_access_view_all_nodes');
     $this->assertUserCacheContext([
       0 => 'view.all:0;node_access_test_author:0',

@@ -2,11 +2,14 @@
 
 namespace Drupal\Core\Config;
 
+use DirectoryIterator;
+use Drupal;
 use Drupal\Component\FileCache\FileCacheFactory;
 use Drupal\Component\FileSecurity\FileSecurity;
 use Drupal\Component\Serialization\Exception\InvalidDataTypeException;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Serialization\Yaml;
+use FilesystemIterator;
 
 /**
  * Defines the file storage.
@@ -115,7 +118,7 @@ class FileStorage implements StorageInterface {
       $data = $this->decode($data);
     }
     catch (InvalidDataTypeException $e) {
-      throw new UnsupportedDataTypeConfigException('Invalid data type in config ' . $name . ', found in file' . $filepath . ' : ' . $e->getMessage());
+      throw new UnsupportedDataTypeConfigException('Invalid data type in config ' . $name . ', found in file ' . $filepath . ': ' . $e->getMessage());
     }
     $this->fileCache->set($filepath, $data);
 
@@ -248,7 +251,7 @@ class FileStorage implements StorageInterface {
     }
     if ($success && $this->collection != StorageInterface::DEFAULT_COLLECTION) {
       // Remove empty directories.
-      if (!(new \FilesystemIterator($this->getCollectionDirectory()))->valid()) {
+      if (!(new FilesystemIterator($this->getCollectionDirectory()))->valid()) {
         $this->getFileSystem()->rmdir($this->getCollectionDirectory());
       }
     }
@@ -314,7 +317,7 @@ class FileStorage implements StorageInterface {
   protected function getAllCollectionNamesHelper($directory) {
     $collections = [];
     $pattern = '/\.' . preg_quote($this->getFileExtension(), '/') . '$/';
-    foreach (new \DirectoryIterator($directory) as $fileinfo) {
+    foreach (new DirectoryIterator($directory) as $fileinfo) {
       if ($fileinfo->isDir() && !$fileinfo->isDot()) {
         $collection = $fileinfo->getFilename();
         // Recursively call getAllCollectionNamesHelper() to discover if there
@@ -366,7 +369,7 @@ class FileStorage implements StorageInterface {
    *   The file system service.
    */
   private function getFileSystem() {
-    return \Drupal::service('file_system');
+    return Drupal::service('file_system');
   }
 
 }

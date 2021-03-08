@@ -2,6 +2,7 @@
 
 namespace Drupal\KernelTests\Core\Routing;
 
+use Drupal;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\Traits\Core\PathAliasTestTrait;
@@ -102,12 +103,12 @@ class ContentNegotiationRoutingTest extends KernelTestBase {
       }
 
       /** @var \Symfony\Component\HttpKernel\HttpKernelInterface $kernel */
-      $kernel = \Drupal::getContainer()->get('http_kernel');
+      $kernel = Drupal::getContainer()->get('http_kernel');
       $response = $kernel->handle($request);
       // Verbose message since simpletest doesn't let us provide a message and
       // see the error.
       $this->assertTrue(TRUE, $message);
-      $this->assertEqual($response->getStatusCode(), Response::HTTP_OK);
+      $this->assertEqual(Response::HTTP_OK, $response->getStatusCode());
       $this->assertStringContainsString($content_type, $response->headers->get('Content-type'));
     }
   }
@@ -117,7 +118,6 @@ class ContentNegotiationRoutingTest extends KernelTestBase {
    */
   public function testFullNegotiation() {
     $this->enableModules(['accept_header_routing_test']);
-    \Drupal::service('router.builder')->rebuild();
     $tests = [
       // ['path', 'accept', 'content-type'],
 
@@ -140,9 +140,9 @@ class ContentNegotiationRoutingTest extends KernelTestBase {
       $request->headers->set('Accept', $accept_header);
 
       /** @var \Symfony\Component\HttpKernel\HttpKernelInterface $kernel */
-      $kernel = \Drupal::getContainer()->get('http_kernel');
+      $kernel = Drupal::getContainer()->get('http_kernel');
       $response = $kernel->handle($request);
-      $this->assertEqual($response->getStatusCode(), Response::HTTP_OK, "Testing path:$path Accept:$accept_header Content-type:$content_type");
+      $this->assertEqual(Response::HTTP_OK, $response->getStatusCode(), "Testing path:{$path} Accept:{$accept_header} Content-type:{$content_type}");
     }
   }
 

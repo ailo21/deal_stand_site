@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\system\Functional\Form;
 
+use Drupal;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\TestFileCreationTrait;
 
@@ -50,14 +51,14 @@ class StateValuesCleanAdvancedTest extends BrowserTestBase {
     $this->assertFileExists($this->image->uri);
 
     // "Browse" for the desired file.
-    $edit = ['files[image]' => \Drupal::service('file_system')->realpath($this->image->uri)];
+    $edit = ['files[image]' => Drupal::service('file_system')->realpath($this->image->uri)];
 
     // Post the form.
-    $this->drupalPostForm('form_test/form-state-values-clean-advanced', $edit, t('Submit'));
+    $this->drupalPostForm('form_test/form-state-values-clean-advanced', $edit, 'Submit');
 
     // Expecting a 200 HTTP code.
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertRaw(t('You WIN!'), 'Found the success message.');
+    $this->assertRaw(t('You WIN!'));
   }
 
 }

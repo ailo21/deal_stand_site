@@ -2,6 +2,7 @@
 
 namespace Drupal\views\Plugin\views\field;
 
+use Drupal;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Render\MarkupInterface;
 use Drupal\Component\Utility\UrlHelper;
@@ -320,7 +321,7 @@ abstract class FieldPluginBase extends HandlerBase implements FieldHandlerInterf
         '' => $this->t('- Use default -'),
         '0' => $this->t('- None -'),
       ];
-      $elements += \Drupal::config('views.settings')->get('field_rewrite_elements');
+      $elements += Drupal::config('views.settings')->get('field_rewrite_elements');
     }
 
     return $elements;
@@ -1108,7 +1109,7 @@ abstract class FieldPluginBase extends HandlerBase implements FieldHandlerInterf
   }
 
   /**
-   * Provide extra data to the administration form
+   * Provide extra data to the administration form.
    */
   public function adminSummary() {
     return $this->label();
@@ -1837,7 +1838,7 @@ abstract class FieldPluginBase extends HandlerBase implements FieldHandlerInterf
    */
   protected function linkGenerator() {
     if (!isset($this->linkGenerator)) {
-      $this->linkGenerator = \Drupal::linkGenerator();
+      $this->linkGenerator = Drupal::linkGenerator();
     }
     return $this->linkGenerator;
   }
@@ -1849,7 +1850,7 @@ abstract class FieldPluginBase extends HandlerBase implements FieldHandlerInterf
    */
   protected function getRenderer() {
     if (!isset($this->renderer)) {
-      $this->renderer = \Drupal::service('renderer');
+      $this->renderer = Drupal::service('renderer');
     }
 
     return $this->renderer;

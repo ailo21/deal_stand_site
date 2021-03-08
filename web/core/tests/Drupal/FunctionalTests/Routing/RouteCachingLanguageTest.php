@@ -2,6 +2,7 @@
 
 namespace Drupal\FunctionalTests\Routing;
 
+use Drupal;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\language\Entity\ConfigurableLanguage;
@@ -34,7 +35,7 @@ class RouteCachingLanguageTest extends BrowserTestBase {
   protected $defaultTheme = 'stark';
 
   /**
-   * An user with permissions to administer content types.
+   * A user with permissions to administer content types.
    *
    * @var \Drupal\user\UserInterface
    */
@@ -75,7 +76,7 @@ class RouteCachingLanguageTest extends BrowserTestBase {
       'settings[node][page][fields][body]' => 1,
       'settings[node][page][settings][language][language_alterable]' => 1,
     ];
-    $this->drupalPostForm('admin/config/regional/content-language', $edit, t('Save configuration'));
+    $this->drupalPostForm('admin/config/regional/content-language', $edit, 'Save configuration');
 
     // Create a field with settings to validate.
     $field_storage = FieldStorageConfig::create([
@@ -94,12 +95,12 @@ class RouteCachingLanguageTest extends BrowserTestBase {
     ]);
     $field->save();
 
-    \Drupal::service('entity_display.repository')->getFormDisplay('node', 'page', 'default')
+    Drupal::service('entity_display.repository')->getFormDisplay('node', 'page', 'default')
       ->setComponent('field_link', [
         'type' => 'link_default',
       ])
       ->save();
-    \Drupal::service('entity_display.repository')->getViewDisplay('node', 'page', 'full')
+    Drupal::service('entity_display.repository')->getViewDisplay('node', 'page', 'full')
       ->setComponent('field_link', [
         'type' => 'link',
       ])
@@ -116,7 +117,7 @@ class RouteCachingLanguageTest extends BrowserTestBase {
     // how links are built.
     $this->resetAll();
 
-    $definitions = \Drupal::service('entity_field.manager')->getFieldDefinitions('node', 'page');
+    $definitions = Drupal::service('entity_field.manager')->getFieldDefinitions('node', 'page');
     $this->assertTrue($definitions['path']->isTranslatable(), 'Node path is translatable.');
     $this->assertTrue($definitions['body']->isTranslatable(), 'Node body is translatable.');
   }
@@ -137,7 +138,7 @@ class RouteCachingLanguageTest extends BrowserTestBase {
       'title[0][value]' => 'Target page',
       'path[0][alias]' => '/target-page',
     ];
-    $this->drupalPostForm('node/add/page', $edit, t('Save'), $source_url_options);
+    $this->drupalPostForm('node/add/page', $edit, 'Save', $source_url_options);
 
     // Confirm that the alias works.
     $assert_session = $this->assertSession();
@@ -153,7 +154,7 @@ class RouteCachingLanguageTest extends BrowserTestBase {
       'field_link[0][title]' => 'Target page',
       'path[0][alias]' => '/link-page',
     ];
-    $this->drupalPostForm('node/add/page', $edit, t('Save'), $source_url_options);
+    $this->drupalPostForm('node/add/page', $edit, 'Save', $source_url_options);
 
     // Make sure the link node is displayed with a working link.
     $assert_session->pageTextContains('Link page');
@@ -174,7 +175,7 @@ class RouteCachingLanguageTest extends BrowserTestBase {
       'title[0][value]' => 'Translated link page',
       'path[0][alias]' => '/translated-link-page',
     ];
-    $this->drupalPostForm(NULL, $edit, 'Save (this translation)');
+    $this->submitForm($edit, 'Save (this translation)');
 
     $assert_session->pageTextContains('Translated link page');
 

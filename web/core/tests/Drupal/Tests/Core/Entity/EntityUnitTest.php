@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\Core\Entity;
 
+use Drupal;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
@@ -10,7 +11,6 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityTypeRepositoryInterface;
 use Drupal\Core\Language\Language;
 use Drupal\entity_test\Entity\EntityTestMul;
-use Drupal\Tests\Traits\ExpectDeprecationTrait;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -19,8 +19,6 @@ use Drupal\Tests\UnitTestCase;
  * @group Access
  */
 class EntityUnitTest extends UnitTestCase {
-
-  use ExpectDeprecationTrait;
 
   /**
    * The entity under test.
@@ -122,7 +120,7 @@ class EntityUnitTest extends UnitTestCase {
     $container->set('uuid', $this->uuid);
     $container->set('language_manager', $this->languageManager);
     $container->set('cache_tags.invalidator', $this->cacheTagsInvalidator);
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
 
     $this->entity = $this->getMockForAbstractClass('\Drupal\Core\Entity\EntityBase', [$this->values, $this->entityTypeId]);
   }
@@ -270,7 +268,7 @@ class EntityUnitTest extends UnitTestCase {
       ->with($this->entityTypeId)
       ->will($this->returnValue($storage));
 
-    \Drupal::getContainer()->set('entity_type.repository', $entity_type_repository);
+    Drupal::getContainer()->set('entity_type.repository', $entity_type_repository);
 
     // Call Entity::load statically and check that it returns the mock entity.
     $this->assertSame($this->entity, $class_name::load(1));
@@ -304,7 +302,7 @@ class EntityUnitTest extends UnitTestCase {
       ->with($this->entityTypeId)
       ->will($this->returnValue($storage));
 
-    \Drupal::getContainer()->set('entity_type.repository', $entity_type_repository);
+    Drupal::getContainer()->set('entity_type.repository', $entity_type_repository);
 
     // Call Entity::loadMultiple statically and check that it returns the mock
     // entity.
@@ -336,7 +334,7 @@ class EntityUnitTest extends UnitTestCase {
       ->with($this->entityTypeId)
       ->will($this->returnValue($storage));
 
-    \Drupal::getContainer()->set('entity_type.repository', $entity_type_repository);
+    Drupal::getContainer()->set('entity_type.repository', $entity_type_repository);
 
     // Call Entity::create() statically and check that it returns the mock
     // entity.
@@ -587,7 +585,7 @@ class EntityUnitTest extends UnitTestCase {
 
     $container = new ContainerBuilder();
     $container->set('cache_contexts_manager', $cache_contexts_manager);
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
 
     // There are no cache contexts by default.
     $this->assertEquals([], $this->entity->getCacheContexts());

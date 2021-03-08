@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\file\Kernel;
 
+use Drupal;
 use Drupal\Core\Database\Database;
 use Drupal\file\Entity\File;
 
@@ -42,7 +43,7 @@ class DeleteTest extends FileManagedUnitTestBase {
 
     $file_usage->delete($file, 'testing', 'test', 1);
     $usage = $file_usage->listUsage($file);
-    $this->assertEqual($usage['testing']['test'], [1 => 1], 'Test file is still in use.');
+    $this->assertEqual([1 => 1], $usage['testing']['test'], 'Test file is still in use.');
     $this->assertFileExists($file->getFileUri());
     $this->assertNotEmpty(File::load($file->id()), 'File still exists in the database.');
 
@@ -69,7 +70,7 @@ class DeleteTest extends FileManagedUnitTestBase {
       ])
       ->condition('fid', $file->id())
       ->execute();
-    \Drupal::service('cron')->run();
+    Drupal::service('cron')->run();
 
     // file_cron() loads
     $this->assertFileHooksCalled(['delete']);
@@ -83,20 +84,20 @@ class DeleteTest extends FileManagedUnitTestBase {
   public function testCronDeleteNonExistingTemporary() {
     $file = $this->createFile();
     // Delete the file, but leave it in the file_managed table.
-    \Drupal::service('file_system')->delete($file->getFileUri());
+    Drupal::service('file_system')->delete($file->getFileUri());
     $this->assertFileNotExists($file->getFileUri());
     $this->assertInstanceOf(File::class, File::load($file->id()));
 
     // Call file_cron() to clean up the file. Make sure the changed timestamp
     // of the file is older than the system.file.temporary_maximum_age
     // configuration value.
-    \Drupal::database()->update('file_managed')
+    Drupal::database()->update('file_managed')
       ->fields([
         'changed' => REQUEST_TIME - ($this->config('system.file')->get('temporary_maximum_age') + 1),
       ])
       ->condition('fid', $file->id())
       ->execute();
-    \Drupal::service('cron')->run();
+    Drupal::service('cron')->run();
 
     $this->assertNull(File::load($file->id()), 'File was removed from the database.');
   }

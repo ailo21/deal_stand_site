@@ -2,13 +2,14 @@
 
 namespace Drupal\Core\Render\Element;
 
+use Drupal;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Provides a matched path render element.
  *
  * Provides a form element to enter a path which can be optionally validated and
- * stored as either a \Drupal\Core\Url value object or a array containing a
+ * stored as either a \Drupal\Core\Url value object or an array containing a
  * route name and route parameters pair.
  *
  * @FormElement("path")
@@ -35,7 +36,7 @@ class PathElement extends Textfield {
    */
   public function getInfo() {
     $info = parent::getInfo();
-    $class = get_class($this);
+    $class = static::class;
     $info['#validate_path'] = TRUE;
     $info['#convert_path'] = self::CONVERT_ROUTE;
     $info['#element_validate'] = [
@@ -61,7 +62,7 @@ class PathElement extends Textfield {
   public static function validateMatchedPath(&$element, FormStateInterface $form_state, &$complete_form) {
     if (!empty($element['#value']) && ($element['#validate_path'] || $element['#convert_path'] != self::CONVERT_NONE)) {
       /** @var \Drupal\Core\Url $url */
-      if ($url = \Drupal::service('path.validator')->getUrlIfValid($element['#value'])) {
+      if ($url = Drupal::service('path.validator')->getUrlIfValid($element['#value'])) {
         if ($url->isExternal()) {
           $form_state->setError($element, t('You cannot use an external URL, please enter a relative path.'));
           return;

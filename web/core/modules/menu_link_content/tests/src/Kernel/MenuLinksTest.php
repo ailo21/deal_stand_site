@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\menu_link_content\Kernel;
 
+use Drupal;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Menu\MenuTreeParameters;
 use Drupal\entity_test\Entity\EntityTestExternal;
@@ -42,7 +43,7 @@ class MenuLinksTest extends KernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    $this->menuLinkManager = \Drupal::service('plugin.manager.menu.link');
+    $this->menuLinkManager = Drupal::service('plugin.manager.menu.link');
 
     $this->installSchema('system', ['sequences']);
     $this->installSchema('user', ['users_data']);
@@ -127,7 +128,7 @@ class MenuLinksTest extends KernelTestBase {
       $menu_link_plugin = $this->menuLinkManager->createInstance($links[$id]);
       $expected_parent = isset($links[$parent]) ? $links[$parent] : '';
 
-      $this->assertEqual($menu_link_plugin->getParent(), $expected_parent, new FormattableMarkup('Menu link %id has parent of %parent, expected %expected_parent.', ['%id' => $id, '%parent' => $menu_link_plugin->getParent(), '%expected_parent' => $expected_parent]));
+      $this->assertEqual($expected_parent, $menu_link_plugin->getParent(), new FormattableMarkup('Menu link %id has parent of %parent, expected %expected_parent.', ['%id' => $id, '%parent' => $menu_link_plugin->getParent(), '%expected_parent' => $expected_parent]));
     }
   }
 
@@ -144,7 +145,7 @@ class MenuLinksTest extends KernelTestBase {
     $link = MenuLinkContent::create($options);
     $link->save();
     // Make sure the changed timestamp is set.
-    $this->assertEqual($link->getChangedTime(), REQUEST_TIME, 'Creating a menu link sets the "changed" timestamp.');
+    $this->assertEqual(REQUEST_TIME, $link->getChangedTime(), 'Creating a menu link sets the "changed" timestamp.');
     $options = [
       'title' => 'Test Link',
     ];
@@ -152,7 +153,7 @@ class MenuLinksTest extends KernelTestBase {
     $link->changed->value = 0;
     $link->save();
     // Make sure the changed timestamp is updated.
-    $this->assertEqual($link->getChangedTime(), REQUEST_TIME, 'Changing a menu link sets "changed" timestamp.');
+    $this->assertEqual(REQUEST_TIME, $link->getChangedTime(), 'Changing a menu link sets "changed" timestamp.');
   }
 
   /**
@@ -190,18 +191,18 @@ class MenuLinksTest extends KernelTestBase {
 
     // Check is menu links present in the menu.
     $menu_tree_condition = (new MenuTreeParameters())->addCondition('route_name', 'entity.user.canonical');
-    $this->assertCount(1, \Drupal::menuTree()->load('menu_test', $menu_tree_condition));
+    $this->assertCount(1, Drupal::menuTree()->load('menu_test', $menu_tree_condition));
     $menu_tree_condition_collection = (new MenuTreeParameters())->addCondition('route_name', 'entity.user.collection');
-    $this->assertCount(1, \Drupal::menuTree()->load('menu_test', $menu_tree_condition_collection));
+    $this->assertCount(1, Drupal::menuTree()->load('menu_test', $menu_tree_condition_collection));
 
     // Delete the user.
     $user->delete();
 
     // The "canonical" menu item has to be deleted.
-    $this->assertCount(0, \Drupal::menuTree()->load('menu_test', $menu_tree_condition));
+    $this->assertCount(0, Drupal::menuTree()->load('menu_test', $menu_tree_condition));
 
     // The "collection" menu item should still present in the menu.
-    $this->assertCount(1, \Drupal::menuTree()->load('menu_test', $menu_tree_condition_collection));
+    $this->assertCount(1, Drupal::menuTree()->load('menu_test', $menu_tree_condition_collection));
   }
 
   /**
@@ -227,8 +228,8 @@ class MenuLinksTest extends KernelTestBase {
     $this->menuLinkManager->updateDefinition($links['child-1'], ['parent' => $links['child-2']]);
     // Verify that the entity was updated too.
     $menu_link_plugin = $this->menuLinkManager->createInstance($links['child-1']);
-    $entity = \Drupal::service('entity.repository')->loadEntityByUuid('menu_link_content', $menu_link_plugin->getDerivativeId());
-    $this->assertEqual($entity->getParentId(), $links['child-2']);
+    $entity = Drupal::service('entity.repository')->loadEntityByUuid('menu_link_content', $menu_link_plugin->getDerivativeId());
+    $this->assertEqual($links['child-2'], $entity->getParentId());
 
     $expected_hierarchy = [
       'parent' => '',
@@ -308,17 +309,16 @@ class MenuLinksTest extends KernelTestBase {
    * Tests uninstalling a module providing default links.
    */
   public function testModuleUninstalledMenuLinks() {
-    \Drupal::service('module_installer')->install(['menu_test']);
-    \Drupal::service('router.builder')->rebuild();
-    \Drupal::service('plugin.manager.menu.link')->rebuild();
+    Drupal::service('module_installer')->install(['menu_test']);
+    Drupal::service('plugin.manager.menu.link')->rebuild();
     $menu_links = $this->menuLinkManager->loadLinksByRoute('menu_test.menu_test');
     $this->assertCount(1, $menu_links);
     $menu_link = reset($menu_links);
-    $this->assertEqual($menu_link->getPluginId(), 'menu_test');
+    $this->assertEqual('menu_test', $menu_link->getPluginId());
 
     // Uninstall the module and ensure the menu link got removed.
-    \Drupal::service('module_installer')->uninstall(['menu_test']);
-    \Drupal::service('plugin.manager.menu.link')->rebuild();
+    Drupal::service('module_installer')->uninstall(['menu_test']);
+    Drupal::service('plugin.manager.menu.link')->rebuild();
     $menu_links = $this->menuLinkManager->loadLinksByRoute('menu_test.menu_test');
     $this->assertCount(0, $menu_links);
   }
@@ -330,7 +330,7 @@ class MenuLinksTest extends KernelTestBase {
    */
   public function testPendingRevisions() {
     /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
-    $storage = \Drupal::entityTypeManager()->getStorage('menu_link_content');
+    $storage = Drupal::entityTypeManager()->getStorage('menu_link_content');
 
     // Add new menu items in a hierarchy.
     $default_root_1_title = $this->randomMachineName(8);
@@ -382,7 +382,7 @@ class MenuLinksTest extends KernelTestBase {
     $this->assertEquals('/#test', $child1_pending_revision->getUrlObject()->toString());
 
     // Check that saving a pending revision does not affect the menu tree.
-    $menu_tree = \Drupal::menuTree()->load('menu_test', new MenuTreeParameters());
+    $menu_tree = Drupal::menuTree()->load('menu_test', new MenuTreeParameters());
     $parent_link = reset($menu_tree);
     $this->assertEquals($default_root_1_title, $parent_link->link->getTitle());
     $this->assertEquals('/#root_1', $parent_link->link->getUrlObject()->toString());

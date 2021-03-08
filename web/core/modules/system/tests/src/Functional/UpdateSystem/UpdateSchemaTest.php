@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\system\Functional\UpdateSystem;
 
+use Drupal;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
@@ -59,11 +60,11 @@ class UpdateSchemaTest extends BrowserTestBase {
     $connection = Database::getConnection();
 
     // Verify that the 8000 schema is in place.
-    $this->assertEqual(drupal_get_installed_schema_version('update_test_schema'), 8000);
+    $this->assertEqual(8000, drupal_get_installed_schema_version('update_test_schema'));
     $this->assertFalse($connection->schema()->indexExists('update_test_schema_table', 'test'), 'Version 8000 of the update_test_schema module is installed.');
 
     // Increment the schema version.
-    \Drupal::state()->set('update_test_schema_version', 8001);
+    Drupal::state()->set('update_test_schema_version', 8001);
 
     $this->drupalLogin($this->user);
     $this->drupalGet($this->updateUrl, ['external' => TRUE]);
@@ -75,7 +76,7 @@ class UpdateSchemaTest extends BrowserTestBase {
     $this->checkForMetaRefresh();
 
     // Ensure schema has changed.
-    $this->assertEqual(drupal_get_installed_schema_version('update_test_schema', TRUE), 8001);
+    $this->assertEqual(8001, drupal_get_installed_schema_version('update_test_schema', TRUE));
     // Ensure the index was added for column a.
     $this->assertTrue($connection->schema()->indexExists('update_test_schema_table', 'test'), 'Version 8001 of the update_test_schema module is installed.');
 
@@ -83,7 +84,7 @@ class UpdateSchemaTest extends BrowserTestBase {
     require_once $this->root . '/core/includes/update.inc';
     update_set_schema('update_test_schema', 8003);
     // Ensure schema has changed.
-    $this->assertEqual(drupal_get_installed_schema_version('update_test_schema'), 8003);
+    $this->assertEqual(8003, drupal_get_installed_schema_version('update_test_schema'));
 
   }
 

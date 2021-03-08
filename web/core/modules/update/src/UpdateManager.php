@@ -2,6 +2,7 @@
 
 namespace Drupal\update;
 
+use Drupal;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Extension\ModuleExtensionList;
@@ -20,7 +21,7 @@ class UpdateManager implements UpdateManagerInterface {
   use StringTranslationTrait;
 
   /**
-   * The update settings
+   * The update settings.
    *
    * @var \Drupal\Core\Config\Config
    */
@@ -76,7 +77,7 @@ class UpdateManager implements UpdateManagerInterface {
   protected $moduleExtensionList;
 
   /**
-   * Constructs a UpdateManager.
+   * Constructs an UpdateManager.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The config factory.
@@ -181,7 +182,7 @@ class UpdateManager implements UpdateManagerInterface {
       'update.confirmation_page',
       'system.themes_page',
     ];
-    if (in_array(\Drupal::routeMatch()->getRouteName(), $route_names)) {
+    if (in_array(Drupal::routeMatch()->getRouteName(), $route_names)) {
       $this->keyValueStore->delete($key);
     }
     else {

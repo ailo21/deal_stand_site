@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\update\Functional;
 
+use Drupal;
+
 /**
  * Tests the Update Manager module upload via authorize.php functionality.
  *
@@ -48,7 +50,7 @@ class FileTransferAuthorizeFormTest extends UpdateTestBase {
    */
   public function testViaAuthorize($url) {
     // Ensure the that we can select which file transfer backend to use.
-    \Drupal::state()->set('test_uploaders_via_prompt', TRUE);
+    Drupal::state()->set('test_uploaders_via_prompt', TRUE);
 
     // Ensure the module does not already exist.
     $this->drupalGet('admin/modules');
@@ -57,13 +59,13 @@ class FileTransferAuthorizeFormTest extends UpdateTestBase {
     $edit = [
       'project_url' => $url,
     ];
-    $this->drupalPostForm('admin/modules/install', $edit, t('Install'));
+    $this->drupalPostForm('admin/modules/install', $edit, 'Install');
     $edit = [
       'connection_settings[authorize_filetransfer_default]' => 'system_test',
       'connection_settings[system_test][update_test_username]' => $this->randomMachineName(),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Continue'));
-    $this->assertText(t('Installation was completed successfully.'));
+    $this->submitForm($edit, 'Continue');
+    $this->assertText('Installation was completed successfully.');
 
     // Ensure the module is available to install.
     $this->drupalGet('admin/modules');

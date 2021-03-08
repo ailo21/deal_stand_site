@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\views\Functional;
 
+use Drupal;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\comment\CommentInterface;
 use Drupal\comment\Tests\CommentTestTrait;
@@ -150,14 +151,12 @@ class DefaultViewsTest extends ViewTestBase {
           $view->preExecute($this->viewArgMap[$name]);
         }
 
-        $this->assert(TRUE, new FormattableMarkup('View @view will be executed.', ['@view' => $view->storage->id()]));
         $view->execute();
 
         $tokens = ['@name' => $name, '@display_id' => $display_id];
         $this->assertTrue($view->executed, new FormattableMarkup('@name:@display_id has been executed.', $tokens));
 
-        $count = count($view->result);
-        $this->assertTrue($count > 0, new FormattableMarkup('@count results returned', ['@count' => $count]));
+        $this->assertNotEmpty($view->result);
         $view->destroy();
       }
     }
@@ -237,7 +236,7 @@ class DefaultViewsTest extends ViewTestBase {
 
     $view->storage->setStatus(TRUE);
     $view->save();
-    \Drupal::service('router.builder')->rebuild();
+    Drupal::service('router.builder')->rebuild();
 
     $this->drupalGet('archive');
     $this->assertSession()->statusCodeEquals(200);

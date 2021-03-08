@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\media_library\FunctionalJavascript;
 
+use DOMXPath;
 use Drupal\Component\Utility\Html;
 use Drupal\editor\Entity\Editor;
 use Drupal\file\Entity\File;
@@ -171,8 +172,8 @@ class CKEditorIntegrationTest extends WebDriverTestBase {
 
     $targetSelector = 'ul.ckeditor-toolbar-group-buttons';
     $buttonSelector = 'li[data-drupal-ckeditor-button-name="DrupalMediaLibrary"]';
-    $this->assertNotEmpty($target = $assert_session->waitForElementVisible('css', $targetSelector));
-    $this->assertNotEmpty($button = $assert_session->elementExists('css', $buttonSelector));
+    $this->assertNotEmpty($assert_session->waitForElementVisible('css', $targetSelector));
+    $this->assertNotEmpty($assert_session->elementExists('css', $buttonSelector));
     $this->sortableTo($buttonSelector, 'ul.ckeditor-available-buttons', $targetSelector);
     $page->pressButton('Save configuration');
     $assert_session->pageTextContains('The Embed media filter must be enabled to use the Insert from Media Library button.');
@@ -241,7 +242,7 @@ class CKEditorIntegrationTest extends WebDriverTestBase {
     $this->pressEditorButton('source');
     $value = $assert_session->elementExists('css', 'textarea.cke_source')->getValue();
     $dom = Html::load($value);
-    $xpath = new \DOMXPath($dom);
+    $xpath = new DOMXPath($dom);
     $drupal_media = $xpath->query('//drupal-media')[0];
     $expected_attributes = [
       'data-entity-type' => 'media',

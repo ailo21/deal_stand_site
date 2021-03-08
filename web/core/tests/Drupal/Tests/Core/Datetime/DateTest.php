@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\Core\Datetime;
 
+use DateTime;
+use Drupal;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Datetime\DateFormatter;
 use Drupal\Core\Datetime\FormattedDateDiff;
@@ -74,7 +76,7 @@ class DateTest extends UnitTestCase {
     $container = new ContainerBuilder();
     $container->set('config.factory', $config_factory);
     $container->set('string_translation', $this->getStringTranslationStub());
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
 
     $this->dateFormatter = new DateFormatter($this->entityTypeManager, $this->languageManager, $this->stringTranslation, $this->getConfigFactoryStub(), $this->requestStack);
 
@@ -412,7 +414,7 @@ class DateTest extends UnitTestCase {
         'max-age' => $max_age,
       ],
     ];
-    $this->assertArrayEquals($expected, $object->toRenderable());
+    $this->assertEquals($expected, $object->toRenderable());
 
     // Test retrieving the formatted time difference string.
     $this->assertEquals($string, $object->getString());
@@ -434,7 +436,7 @@ class DateTest extends UnitTestCase {
    *   The UNIX timestamp.
    */
   private function createTimestamp($dateTimeString) {
-    return \DateTime::createFromFormat('Y-m-d G:i:s', $dateTimeString)->getTimestamp();
+    return DateTime::createFromFormat('Y-m-d G:i:s', $dateTimeString)->getTimestamp();
   }
 
 }

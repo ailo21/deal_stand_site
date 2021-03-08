@@ -5,6 +5,7 @@ namespace Drupal\Tests\migrate\Unit;
 use Drupal\migrate\Plugin\MigrateIdMapInterface;
 use Drupal\migrate\Row;
 use Drupal\Tests\UnitTestCase;
+use Exception;
 
 /**
  * @coversDefaultClass \Drupal\migrate\Row
@@ -115,8 +116,8 @@ class RowTest extends UnitTestCase {
     $invalid_values = [
       'title' => 'node X',
     ];
-    $this->expectException(\Exception::class);
-    $row = new Row($invalid_values, $this->testSourceIds);
+    $this->expectException(Exception::class);
+    new Row($invalid_values, $this->testSourceIds);
   }
 
   /**
@@ -130,7 +131,7 @@ class RowTest extends UnitTestCase {
     $row->rehash();
     $this->assertSame($this->testHashMod, $row->getHash(), 'Hash changed correctly.');
     $row->freezeSource();
-    $this->expectException(\Exception::class);
+    $this->expectException(Exception::class);
     $row->setSourceProperty('title', 'new title');
   }
 
@@ -140,7 +141,7 @@ class RowTest extends UnitTestCase {
   public function testSetFrozenRow() {
     $row = new Row($this->testValues, $this->testSourceIds);
     $row->freezeSource();
-    $this->expectException(\Exception::class);
+    $this->expectException(Exception::class);
     $this->expectExceptionMessage("The source is frozen and can't be changed any more");
     $row->setSourceProperty('title', 'new title');
   }
@@ -366,7 +367,7 @@ class RowTest extends UnitTestCase {
    */
   public function testGetMultiple(array $keys, array $expected_values) {
     $row = $this->createRowWithDestinationProperties($this->testGetSourceProperties, $this->testGetSourceIds, $this->testGetDestinationProperties);
-    $this->assertArrayEquals(array_combine($keys, $expected_values), $row->getMultiple($keys));
+    $this->assertEquals(array_combine($keys, $expected_values), $row->getMultiple($keys));
   }
 
   /**

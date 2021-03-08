@@ -4,13 +4,18 @@ namespace Drupal\Tests\Composer\Plugin\VendorHardening;
 
 use Composer\Package\RootPackageInterface;
 use Drupal\Composer\Plugin\VendorHardening\Config;
+use Drupal\Tests\Traits\PhpUnitWarnings;
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
+use ReflectionProperty;
 
 /**
  * @coversDefaultClass Drupal\Composer\Plugin\VendorHardening\Config
  * @group VendorHardening
  */
 class ConfigTest extends TestCase {
+
+  use PhpUnitWarnings;
 
   /**
    * @covers ::getPathsForPackage
@@ -42,10 +47,10 @@ class ConfigTest extends TestCase {
 
     $config = new Config($root);
 
-    $ref_default = new \ReflectionProperty($config, 'defaultConfig');
+    $ref_default = new ReflectionProperty($config, 'defaultConfig');
     $ref_default->setAccessible(TRUE);
 
-    $ref_plugin_config = new \ReflectionMethod($config, 'getAllCleanupPaths');
+    $ref_plugin_config = new ReflectionMethod($config, 'getAllCleanupPaths');
     $ref_plugin_config->setAccessible(TRUE);
 
     $this->assertEquals(
@@ -72,7 +77,7 @@ class ConfigTest extends TestCase {
 
     $config = new Config($root);
 
-    $ref_plugin_config = new \ReflectionMethod($config, 'getAllCleanupPaths');
+    $ref_plugin_config = new ReflectionMethod($config, 'getAllCleanupPaths');
     $ref_plugin_config->setAccessible(TRUE);
 
     $plugin_config = $ref_plugin_config->invoke($config);
@@ -99,11 +104,11 @@ class ConfigTest extends TestCase {
 
     $config = new Config($root);
 
-    $ref_plugin_config = new \ReflectionMethod($config, 'getAllCleanupPaths');
+    $ref_plugin_config = new ReflectionMethod($config, 'getAllCleanupPaths');
     $ref_plugin_config->setAccessible(TRUE);
 
     // Put some mixed-case in the defaults.
-    $ref_default = new \ReflectionProperty($config, 'defaultConfig');
+    $ref_default = new ReflectionProperty($config, 'defaultConfig');
     $ref_default->setAccessible(TRUE);
     $ref_default->setValue($config, [
       'BeHatted/Mank' => ['tests'],

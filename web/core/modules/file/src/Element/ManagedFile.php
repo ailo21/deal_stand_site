@@ -2,6 +2,7 @@
 
 namespace Drupal\file\Element;
 
+use Drupal;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
@@ -26,7 +27,7 @@ class ManagedFile extends FormElement {
    * {@inheritdoc}
    */
   public function getInfo() {
-    $class = get_class($this);
+    $class = static::class;
     return [
       '#input' => TRUE,
       '#process' => [
@@ -103,7 +104,7 @@ class ManagedFile extends FormElement {
               // Temporary files that belong to other users should never be
               // allowed.
               if ($file->isTemporary()) {
-                if ($file->getOwnerId() != \Drupal::currentUser()->id()) {
+                if ($file->getOwnerId() != Drupal::currentUser()->id()) {
                   $force_default = TRUE;
                   break;
                 }
@@ -112,9 +113,9 @@ class ManagedFile extends FormElement {
                 // they do need to be able to reuse their own files from earlier
                 // submissions of the same form, so to allow that, check for the
                 // token added by $this->processManagedFile().
-                elseif (\Drupal::currentUser()->isAnonymous()) {
+                elseif (Drupal::currentUser()->isAnonymous()) {
                   $token = NestedArray::getValue($form_state->getUserInput(), array_merge($element['#parents'], ['file_' . $file->id(), 'fid_token']));
-                  $file_hmac = Crypt::hmacBase64('file-' . $file->id(), \Drupal::service('private_key')->get() . Settings::getHashSalt());
+                  $file_hmac = Crypt::hmacBase64('file-' . $file->id(), Drupal::service('private_key')->get() . Settings::getHashSalt());
                   if ($token === NULL || !hash_equals($file_hmac, $token)) {
                     $force_default = TRUE;
                     break;
@@ -177,7 +178,7 @@ class ManagedFile extends FormElement {
    */
   public static function uploadAjaxCallback(&$form, FormStateInterface &$form_state, Request $request) {
     /** @var \Drupal\Core\Render\RendererInterface $renderer */
-    $renderer = \Drupal::service('renderer');
+    $renderer = Drupal::service('renderer');
 
     $form_parents = explode('/', $request->query->get('element_parents'));
 
@@ -229,7 +230,7 @@ class ManagedFile extends FormElement {
     $ajax_wrapper_id = Html::getUniqueId('ajax-wrapper');
 
     $ajax_settings = [
-      'callback' => [get_called_class(), 'uploadAjaxCallback'],
+      'callback' => [static::class, 'uploadAjaxCallback'],
       'options' => [
         'query' => [
           'element_parents' => implode('/', $element['#array_parents']),
@@ -341,7 +342,7 @@ class ManagedFile extends FormElement {
         if ($element['#multiple']) {
           $element['file_' . $delta]['selected'] = [
             '#type' => 'checkbox',
-            '#title' => \Drupal::service('renderer')->renderPlain($file_link),
+            '#title' => Drupal::service('renderer')->renderPlain($file_link),
           ];
         }
         else {
@@ -352,10 +353,10 @@ class ManagedFile extends FormElement {
         // that they have permission to use this file on subsequent submissions
         // of the same form (for example, after an Ajax upload or form
         // validation error).
-        if ($file->isTemporary() && \Drupal::currentUser()->isAnonymous()) {
+        if ($file->isTemporary() && Drupal::currentUser()->isAnonymous()) {
           $element['file_' . $delta]['fid_token'] = [
             '#type' => 'hidden',
-            '#value' => Crypt::hmacBase64('file-' . $delta, \Drupal::service('private_key')->get() . Settings::getHashSalt()),
+            '#value' => Crypt::hmacBase64('file-' . $delta, Drupal::service('private_key')->get() . Settings::getHashSalt()),
           ];
         }
       }
@@ -429,7 +430,7 @@ class ManagedFile extends FormElement {
           // automatically, it is safe to add and remove usages, as it would
           // simply return to the current state.
           // @see https://www.drupal.org/node/2891902
-          if ($file->isPermanent() && \Drupal::config('file.settings')->get('make_unused_managed_files_temporary')) {
+          if ($file->isPermanent() && Drupal::config('file.settings')->get('make_unused_managed_files_temporary')) {
             $references = static::fileUsage()->listUsage($file);
             if (empty($references)) {
               // We expect the field name placeholder value to be wrapped in t()
@@ -465,7 +466,7 @@ class ManagedFile extends FormElement {
    * @return \Drupal\file\FileUsage\FileUsageInterface
    */
   protected static function fileUsage() {
-    return \Drupal::service('file.usage');
+    return Drupal::service('file.usage');
   }
 
 }

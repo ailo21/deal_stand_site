@@ -2,6 +2,7 @@
 
 namespace Drupal\Core\Template;
 
+use ArrayAccess;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Cache\CacheableDependencyInterface;
@@ -14,6 +15,10 @@ use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Routing\UrlGeneratorInterface;
 use Drupal\Core\Theme\ThemeManagerInterface;
 use Drupal\Core\Url;
+use Exception;
+use RecursiveArrayIterator;
+use RecursiveIteratorIterator;
+use Traversable;
 use Twig\Environment;
 use Twig\Extension\AbstractExtension;
 use Twig\Markup as TwigMarkup;
@@ -422,7 +427,7 @@ class TwigExtension extends AbstractExtension {
         $return = $arg->toString();
       }
       else {
-        throw new \Exception('Object of type ' . get_class($arg) . ' cannot be printed.');
+        throw new Exception('Object of type ' . get_class($arg) . ' cannot be printed.');
       }
     }
 
@@ -501,7 +506,7 @@ class TwigExtension extends AbstractExtension {
    *   RenderableInterface or toString().
    *
    * @return mixed
-   *   The rendered output or an \Twig\Markup object.
+   *   The rendered output or a \Twig\Markup object.
    *
    * @see render
    * @see TwigNodeVisitor
@@ -537,7 +542,7 @@ class TwigExtension extends AbstractExtension {
         return $arg->toString();
       }
       else {
-        throw new \Exception('Object of type ' . get_class($arg) . ' cannot be printed.');
+        throw new Exception('Object of type ' . get_class($arg) . ' cannot be printed.');
       }
     }
 
@@ -566,7 +571,7 @@ class TwigExtension extends AbstractExtension {
    *   The strings joined together.
    */
   public function safeJoin(Environment $env, $value, $glue = '') {
-    if ($value instanceof \Traversable) {
+    if ($value instanceof Traversable) {
       $value = iterator_to_array($value, FALSE);
     }
 
@@ -608,7 +613,7 @@ class TwigExtension extends AbstractExtension {
    *   The filtered renderable array.
    */
   public function withoutFilter($element) {
-    if ($element instanceof \ArrayAccess) {
+    if ($element instanceof ArrayAccess) {
       $filtered_element = clone $element;
     }
     else {
@@ -619,7 +624,7 @@ class TwigExtension extends AbstractExtension {
     // Since the remaining arguments can be a mix of arrays and strings, we use
     // some native PHP iterator classes to allow us to recursively iterate over
     // everything in a single pass.
-    $iterator = new \RecursiveIteratorIterator(new \RecursiveArrayIterator($args));
+    $iterator = new RecursiveIteratorIterator(new RecursiveArrayIterator($args));
     foreach ($iterator as $key) {
       unset($filtered_element[$key]);
     }

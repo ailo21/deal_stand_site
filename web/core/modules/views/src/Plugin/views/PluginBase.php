@@ -2,6 +2,7 @@
 
 namespace Drupal\views\Plugin\views;
 
+use Drupal;
 use Drupal\Component\Plugin\DependentPluginInterface;
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Form\FormStateInterface;
@@ -88,7 +89,7 @@ abstract class PluginBase extends ComponentPluginBase implements ContainerFactor
   public $displayHandler;
 
   /**
-   * Plugins's definition
+   * Plugins's definition.
    *
    * @var array
    */
@@ -268,7 +269,7 @@ abstract class PluginBase extends ComponentPluginBase implements ContainerFactor
     // be moved into one because of the $form_state->getValues() hierarchy. Those
     // elements can add a #fieldset => 'fieldset_name' property, and they'll
     // be moved to their fieldset during pre_render.
-    $form['#pre_render'][] = [get_class($this), 'preRenderAddFieldsetMarkup'];
+    $form['#pre_render'][] = [static::class, 'preRenderAddFieldsetMarkup'];
   }
 
   /**
@@ -336,7 +337,7 @@ abstract class PluginBase extends ComponentPluginBase implements ContainerFactor
    * {@inheritdoc}
    */
   public function globalTokenReplace($string = '', array $options = []) {
-    return \Drupal::token()->replace($string, ['view' => $this->view], $options);
+    return Drupal::token()->replace($string, ['view' => $this->view], $options);
   }
 
   /**
@@ -427,7 +428,7 @@ abstract class PluginBase extends ComponentPluginBase implements ContainerFactor
    * {@inheritdoc}
    */
   public function getAvailableGlobalTokens($prepared = FALSE, array $types = []) {
-    $info = \Drupal::token()->getInfo();
+    $info = Drupal::token()->getInfo();
     // Site and view tokens should always be available.
     $types += ['site', 'view'];
     $available = array_intersect_key($info['tokens'], array_flip($types));
@@ -556,7 +557,7 @@ abstract class PluginBase extends ComponentPluginBase implements ContainerFactor
    *   included in the list.
    */
   protected function listLanguages($flags = LanguageInterface::STATE_ALL, array $current_values = NULL) {
-    $manager = \Drupal::languageManager();
+    $manager = Drupal::languageManager();
     $languages = $manager->getLanguages($flags);
     $list = [];
 
@@ -603,7 +604,7 @@ abstract class PluginBase extends ComponentPluginBase implements ContainerFactor
           // If this (non-configurable) type is among the current values,
           // add that option too, so it is not lost. If not among the current
           // values, skip displaying it to avoid user confusion.
-          if (isset($type['name']) && !isset($list[$id]) && in_array($id, $current_values)) {
+          if (isset($type['name']) && !isset($list[$id]) && in_array($id, $current_values, TRUE)) {
             $list[$id] = $this->t('@type language selected for page', ['@type' => $type['name']]);
           }
         }
@@ -632,7 +633,7 @@ abstract class PluginBase extends ComponentPluginBase implements ContainerFactor
    */
   public static function queryLanguageSubstitutions() {
     $changes = [];
-    $manager = \Drupal::languageManager();
+    $manager = Drupal::languageManager();
 
     // Handle default language.
     $default = $manager->getDefaultLanguage()->getId();
@@ -656,7 +657,7 @@ abstract class PluginBase extends ComponentPluginBase implements ContainerFactor
    */
   protected function getRenderer() {
     if (!isset($this->renderer)) {
-      $this->renderer = \Drupal::service('renderer');
+      $this->renderer = Drupal::service('renderer');
     }
 
     return $this->renderer;

@@ -30,17 +30,17 @@ use GuzzleHttp\Exception\RequestException;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
- * Disabled option on forms and settings
+ * Disabled option on forms and settings.
  */
 const DRUPAL_DISABLED = 0;
 
 /**
- * Optional option on forms and settings
+ * Optional option on forms and settings.
  */
 const DRUPAL_OPTIONAL = 1;
 
 /**
- * Required option on forms and settings
+ * Required option on forms and settings.
  */
 const DRUPAL_REQUIRED = 2;
 
@@ -82,7 +82,7 @@ function system_help($route_name, RouteMatchInterface $route_match) {
       $output .= '<dt>' . t('Using maintenance mode') . '</dt>';
       $output .= '<dd>' . t('When you are performing site maintenance, you can prevent non-administrative users (including anonymous visitors) from viewing your site by putting it in <a href=":maintenance-mode">Maintenance mode</a>. This will prevent unauthorized users from making changes to the site while you are performing maintenance, or from seeing a broken site while updates are in progress.', [':maintenance-mode' => Url::fromRoute('system.site_maintenance_mode')->toString()]) . '</dd>';
       $output .= '<dt>' . t('Configuring for performance') . '</dt>';
-      $output .= '<dd>' . t('On the <a href=":performance-page">Performance page</a>, the site can be configured to aggregate CSS and JavaScript files, making the total request size smaller. Note that, for small- to medium-sized websites, the <a href=":page-cache">Internal Page Cache module</a> should be installed so that pages are efficiently cached and reused for anonymous users. Finally, for websites of all sizes, the <a href=":dynamic-page-cache">Dynamic Page Cache module</a> should also be installed so that the non-personalized parts of pages are efficiently cached (for all users).', [':performance-page' => Url::fromRoute('system.performance_settings')->toString(), ':page-cache' => (\Drupal::moduleHandler()->moduleExists('page_cache')) ? Url::fromRoute('help.page', ['name' => 'page_cache'])->toString() : '#', ':dynamic-page-cache' => (\Drupal::moduleHandler()->moduleExists('dynamic_page_cache')) ? Url::fromRoute('help.page', ['name' => 'dynamic_page_cache'])->toString() : '#']) . '</dd>';
+      $output .= '<dd>' . t('On the <a href=":performance-page">Performance page</a>, the site can be configured to aggregate CSS and JavaScript files, making the total request size smaller. Note that, for small- to medium-sized websites, the <a href=":page-cache">Internal Page Cache module</a> should be installed so that pages are efficiently cached and reused for anonymous users. Finally, for websites of all sizes, the <a href=":dynamic-page-cache">Dynamic Page Cache module</a> should also be installed so that the non-personalized parts of pages are efficiently cached (for all users).', [':performance-page' => Url::fromRoute('system.performance_settings')->toString(), ':page-cache' => (Drupal::moduleHandler()->moduleExists('page_cache')) ? Url::fromRoute('help.page', ['name' => 'page_cache'])->toString() : '#', ':dynamic-page-cache' => (Drupal::moduleHandler()->moduleExists('dynamic_page_cache')) ? Url::fromRoute('help.page', ['name' => 'dynamic_page_cache'])->toString() : '#']) . '</dd>';
       $output .= '<dt>' . t('Configuring cron') . '</dt>';
       $output .= '<dd>' . t('In order for the site and its modules to continue to operate well, a set of routine administrative operations must run on a regular basis; these operations are known as <em>cron</em> tasks. On the <a href=":cron">Cron page</a>, you can configure cron to run periodically as part of server responses by installing the <em>Automated Cron</em> module, or you can turn this off and trigger cron from an outside process on your web server. You can verify the status of cron tasks by visiting the <a href=":status">Status report page</a>. For more information, see the <a href=":handbook">online documentation for configuring cron jobs</a>.', [':status' => Url::fromRoute('system.status')->toString(), ':handbook' => 'https://www.drupal.org/cron', ':cron' => Url::fromRoute('system.cron_settings')->toString()]) . '</dd>';
       $output .= '<dt>' . t('Configuring the file system') . '</dt>';
@@ -97,13 +97,13 @@ function system_help($route_name, RouteMatchInterface $route_match) {
 
     case 'system.themes_page':
       $output = '<p>' . t('Set and configure the default theme for your website.  Alternative <a href=":themes">themes</a> are available.', [':themes' => 'https://www.drupal.org/project/themes']) . '</p>';
-      if (\Drupal::moduleHandler()->moduleExists('block')) {
+      if (Drupal::moduleHandler()->moduleExists('block')) {
         $output .= '<p>' . t('You can place blocks for each theme on the <a href=":blocks">block layout</a> page.', [':blocks' => Url::fromRoute('block.admin_display')->toString()]) . '</p>';
       }
       return $output;
 
     case 'system.theme_settings_theme':
-      $theme_list = \Drupal::service('theme_handler')->listInfo();
+      $theme_list = Drupal::service('theme_handler')->listInfo();
       $theme = $theme_list[$route_match->getParameter('theme')];
       return '<p>' . t('These options control the display settings for the %name theme. When your site is displayed using this theme, these settings will be used.', ['%name' => $theme->info['name']]) . '</p>';
 
@@ -112,7 +112,7 @@ function system_help($route_name, RouteMatchInterface $route_match) {
 
     case 'system.modules_list':
       $output = '<p>' . t('Download additional <a href=":modules">contributed modules</a> to extend your site\'s functionality.', [':modules' => 'https://www.drupal.org/project/modules']) . '</p>';
-      if (!\Drupal::moduleHandler()->moduleExists('update')) {
+      if (!Drupal::moduleHandler()->moduleExists('update')) {
         $output .= '<p>' . t('Regularly review available updates to maintain a secure and current site. Always run the <a href=":update-php">update script</a> each time a module is updated. Enable the <a href=":update-manager">Update Manager module</a> to update and install modules and themes.', [':update-php' => Url::fromRoute('system.db_update')->toString(), ':update-manager' => Url::fromRoute('system.modules_list', [], ['fragment' => 'module-update'])->toString()]) . '</p>';
       }
       return $output;
@@ -133,13 +133,13 @@ function system_help($route_name, RouteMatchInterface $route_match) {
       break;
 
     case 'system.site_maintenance_mode':
-      if (\Drupal::currentUser()->id() == 1) {
+      if (Drupal::currentUser()->id() == 1) {
         return '<p>' . t('Use maintenance mode when making major updates, particularly if the updates could disrupt visitors or the update process. Examples include upgrading, importing or exporting content, modifying a theme, modifying content types, and making backups.') . '</p>';
       }
       break;
 
     case 'system.status':
-      return '<p>' . t("Here you can find a short overview of your site's parameters as well as any problems detected with your installation. It may be useful to copy and paste this information into support requests filed on Drupal.org's support forums and project issue queues. Before filing a support request, ensure that your web server meets the <a href=\":system-requirements\">system requirements.</a>", [':system-requirements' => 'https://www.drupal.org/requirements']) . '</p>';
+      return '<p>' . t("Here you can find a short overview of your site's parameters as well as any problems detected with your installation. It may be useful to copy and paste this information into support requests filed on Drupal.org's support forums and project issue queues. Before filing a support request, ensure that your web server meets the <a href=\":system-requirements\">system requirements.</a>", [':system-requirements' => 'https://www.drupal.org/docs/system-requirements']) . '</p>';
   }
 }
 
@@ -269,7 +269,7 @@ function system_hook_info() {
  * Implements hook_theme_suggestions_HOOK().
  */
 function system_theme_suggestions_html(array $variables) {
-  $path_args = explode('/', trim(\Drupal::service('path.current')->getPath(), '/'));
+  $path_args = explode('/', trim(Drupal::service('path.current')->getPath(), '/'));
   return theme_get_suggestions($path_args, 'html');
 }
 
@@ -277,7 +277,7 @@ function system_theme_suggestions_html(array $variables) {
  * Implements hook_theme_suggestions_HOOK().
  */
 function system_theme_suggestions_page(array $variables) {
-  $path_args = explode('/', trim(\Drupal::service('path.current')->getPath(), '/'));
+  $path_args = explode('/', trim(Drupal::service('path.current')->getPath(), '/'));
   $suggestions = theme_get_suggestions($path_args, 'page');
 
   $http_error_suggestions = [
@@ -285,7 +285,7 @@ function system_theme_suggestions_page(array $variables) {
     'system.403' => 'page__403',
     'system.404' => 'page__404',
   ];
-  $route_name = \Drupal::routeMatch()->getRouteName();
+  $route_name = Drupal::routeMatch()->getRouteName();
   if (isset($http_error_suggestions[$route_name])) {
     $suggestions[] = 'page__4xx';
     $suggestions[] = $http_error_suggestions[$route_name];
@@ -304,7 +304,7 @@ function system_theme_suggestions_maintenance_page(array $variables) {
   // allow themers to override the page and the content completely.
   $offline = defined('MAINTENANCE_MODE');
   try {
-    \Drupal::service('path.matcher')->isFrontPage();
+    Drupal::service('path.matcher')->isFrontPage();
   }
   catch (Exception $e) {
     // The database is not yet available.
@@ -442,7 +442,7 @@ function template_preprocess_entity_add_list(&$variables) {
  *   Nothing, this function just initializes variables in the user's session.
  */
 function system_authorized_init($callback, $file, $arguments = [], $page_title = NULL) {
-  $session = \Drupal::request()->getSession();
+  $session = Drupal::request()->getSession();
   // First, figure out what file transfer backends the site supports, and put
   // all of those in the SESSION so that authorize.php has access to all of
   // them via the class autoloader, even without a full bootstrap.
@@ -572,12 +572,12 @@ function system_filetransfer_info() {
 function system_page_attachments(array &$page) {
   // Ensure the same CSS is loaded in template_preprocess_maintenance_page().
   $page['#attached']['library'][] = 'system/base';
-  if (\Drupal::service('router.admin_context')->isAdminRoute()) {
+  if (Drupal::service('router.admin_context')->isAdminRoute()) {
     $page['#attached']['library'][] = 'system/admin';
   }
 
   // Attach libraries used by this theme.
-  $active_theme = \Drupal::theme()->getActiveTheme();
+  $active_theme = Drupal::theme()->getActiveTheme();
   foreach ($active_theme->getLibraries() as $library) {
     $page['#attached']['library'][] = $library;
   }
@@ -594,7 +594,7 @@ function system_page_attachments(array &$page) {
   }
 
   // Get the major Drupal version.
-  list($version,) = explode('.', \Drupal::VERSION);
+  [$version,] = explode('.', Drupal::VERSION);
 
   // Attach default meta tags.
   $meta_default = [
@@ -652,7 +652,7 @@ function system_page_attachments(array &$page) {
   // @see \Drupal\Core\Utility\LinkGenerator::generate()
   // @see template_preprocess_links()
   // @see \Drupal\Core\EventSubscriber\ActiveLinkResponseFilter
-  if (\Drupal::currentUser()->isAuthenticated()) {
+  if (Drupal::currentUser()->isAuthenticated()) {
     $page['#attached']['library'][] = 'core/drupal.active-link';
   }
 }
@@ -673,12 +673,12 @@ function system_js_settings_build(&$settings, AttachedAssetsInterface $assets) {
   //   Response in which we must send the list of extra asset libraries that are
   //   being added in this AJAX Response.
   /** @var \Drupal\Core\Asset\LibraryDependencyResolver $library_dependency_resolver */
-  $library_dependency_resolver = \Drupal::service('library.dependency_resolver');
+  $library_dependency_resolver = Drupal::service('library.dependency_resolver');
   if (isset($settings['ajaxPageState']) || in_array('core/drupal.ajax', $library_dependency_resolver->getLibrariesWithDependencies($assets->getAlreadyLoadedLibraries()))) {
     // Provide the page with information about the theme that's used, so that
     // a later AJAX request can be rendered using the same theme.
     // @see \Drupal\Core\Theme\AjaxBasePageNegotiator
-    $theme_key = \Drupal::theme()->getActiveTheme()->getName();
+    $theme_key = Drupal::theme()->getActiveTheme()->getName();
     $settings['ajaxPageState']['theme'] = $theme_key;
   }
 }
@@ -692,29 +692,29 @@ function system_js_settings_build(&$settings, AttachedAssetsInterface $assets) {
 function system_js_settings_alter(&$settings, AttachedAssetsInterface $assets) {
   // As this is being output in the final response always use the master
   // request.
-  $request = \Drupal::requestStack()->getMasterRequest();
+  $request = Drupal::requestStack()->getMasterRequest();
   $current_query = $request->query->all();
 
   // Let output path processors set a prefix.
   /** @var \Drupal\Core\PathProcessor\OutboundPathProcessorInterface $path_processor */
-  $path_processor = \Drupal::service('path_processor_manager');
+  $path_processor = Drupal::service('path_processor_manager');
   $options = ['prefix' => ''];
   $path_processor->processOutbound('/', $options);
   $pathPrefix = $options['prefix'];
 
-  $route_match = \Drupal::routeMatch();
+  $route_match = Drupal::routeMatch();
   if ($route_match instanceof StackedRouteMatchInterface) {
     $route_match = $route_match->getMasterRouteMatch();
   }
   $current_path = $route_match->getRouteName() ? Url::fromRouteMatch($route_match)->getInternalPath() : '';
-  $current_path_is_admin = \Drupal::service('router.admin_context')->isAdminRoute($route_match->getRouteObject());
+  $current_path_is_admin = Drupal::service('router.admin_context')->isAdminRoute($route_match->getRouteObject());
   $path_settings = [
     'baseUrl' => $request->getBaseUrl() . '/',
     'pathPrefix' => $pathPrefix,
     'currentPath' => $current_path,
     'currentPathIsAdmin' => $current_path_is_admin,
-    'isFront' => \Drupal::service('path.matcher')->isFrontPage(),
-    'currentLanguage' => \Drupal::languageManager()->getCurrentLanguage(LanguageInterface::TYPE_URL)->getId(),
+    'isFront' => Drupal::service('path.matcher')->isFrontPage(),
+    'currentLanguage' => Drupal::languageManager()->getCurrentLanguage(LanguageInterface::TYPE_URL)->getId(),
   ];
   if (!empty($current_query)) {
     ksort($current_query);
@@ -733,15 +733,15 @@ function system_js_settings_alter(&$settings, AttachedAssetsInterface $assets) {
   // Add the theme token to ajaxPageState, ensuring the database is available
   // before doing so. Also add the loaded libraries to ajaxPageState.
   /** @var \Drupal\Core\Asset\LibraryDependencyResolver $library_dependency_resolver */
-  $library_dependency_resolver = \Drupal::service('library.dependency_resolver');
+  $library_dependency_resolver = Drupal::service('library.dependency_resolver');
   if (isset($settings['ajaxPageState']) || in_array('core/drupal.ajax', $library_dependency_resolver->getLibrariesWithDependencies($assets->getAlreadyLoadedLibraries()))) {
     if (!defined('MAINTENANCE_MODE')) {
       // The theme token is only validated when the theme requested is not the
       // default, so don't generate it unless necessary.
       // @see \Drupal\Core\Theme\AjaxBasePageNegotiator::determineActiveTheme()
-      $active_theme_key = \Drupal::theme()->getActiveTheme()->getName();
-      if ($active_theme_key !== \Drupal::service('theme_handler')->getDefault()) {
-        $settings['ajaxPageState']['theme_token'] = \Drupal::csrfToken()
+      $active_theme_key = Drupal::theme()->getActiveTheme()->getName();
+      if ($active_theme_key !== Drupal::service('theme_handler')->getDefault()) {
+        $settings['ajaxPageState']['theme_token'] = Drupal::csrfToken()
           ->get($active_theme_key);
       }
     }
@@ -771,8 +771,8 @@ function system_form_alter(&$form, FormStateInterface $form_state) {
   // that case we need to ensure that the immutable flag is sot, so future POST
   // request won't take over the form state of another user.
   /** @var \Drupal\Core\PageCache\RequestPolicyInterface $request_policy */
-  $request_policy = \Drupal::service('page_cache_request_policy');
-  $request = \Drupal::requestStack()->getCurrentRequest();
+  $request_policy = Drupal::service('page_cache_request_policy');
+  $request = Drupal::requestStack()->getCurrentRequest();
   $request_is_cacheable = $request_policy->check($request) === RequestPolicyInterface::ALLOW;
   if ($request_is_cacheable) {
     $form_state->addBuildInfo('immutable', TRUE);
@@ -820,9 +820,9 @@ function system_check_directory($form_element, FormStateInterface $form_state) {
     return $form_element;
   }
 
-  $logger = \Drupal::logger('file system');
+  $logger = Drupal::logger('file system');
   /** @var \Drupal\Core\File\FileSystemInterface $file_system */
-  $file_system = \Drupal::service('file_system');
+  $file_system = Drupal::service('file_system');
   if (!is_dir($directory) && !$file_system->mkdir($directory, NULL, TRUE)) {
     // If the directory does not exist and cannot be created.
     $form_state->setErrorByName($form_element['#parents'][0], t('The directory %directory does not exist and could not be created.', ['%directory' => $directory]));
@@ -862,7 +862,7 @@ function system_check_directory($form_element, FormStateInterface $form_state) {
  */
 function system_region_list($theme, $show = REGIONS_ALL) {
   if (!$theme instanceof Extension) {
-    $themes = \Drupal::service('theme_handler')->listInfo();
+    $themes = Drupal::service('theme_handler')->listInfo();
     if (!isset($themes[$theme])) {
       return [];
     }
@@ -951,7 +951,7 @@ function system_default_region($theme) {
 function system_admin_compact_mode() {
   // PHP converts dots into underscores in cookie names to avoid problems with
   // its parser, so we use a converted cookie name.
-  return \Drupal::request()->cookies->get('Drupal_visitor_admin_compact_mode', \Drupal::config('system.site')->get('admin_compact_mode'));
+  return Drupal::request()->cookies->get('Drupal_visitor_admin_compact_mode', Drupal::config('system.site')->get('admin_compact_mode'));
 }
 
 /**
@@ -969,7 +969,7 @@ function system_admin_compact_mode() {
 function system_get_module_admin_tasks($module, array $info) {
   $tree = &drupal_static(__FUNCTION__);
 
-  $menu_tree = \Drupal::menuTree();
+  $menu_tree = Drupal::menuTree();
 
   if (!isset($tree)) {
     $parameters = new MenuTreeParameters();
@@ -1004,12 +1004,12 @@ function system_get_module_admin_tasks($module, array $info) {
 
   // Append link for permissions.
   /** @var \Drupal\user\PermissionHandlerInterface $permission_handler */
-  $permission_handler = \Drupal::service('user.permissions');
+  $permission_handler = Drupal::service('user.permissions');
 
   if ($permission_handler->moduleProvidesPermissions($module)) {
     /** @var \Drupal\Core\Access\AccessManagerInterface $access_manager */
-    $access_manager = \Drupal::service('access_manager');
-    if ($access_manager->checkNamedRoute('user.admin_permissions', [], \Drupal::currentUser())) {
+    $access_manager = Drupal::service('access_manager');
+    if ($access_manager->checkNamedRoute('user.admin_permissions', [], Drupal::currentUser())) {
       /** @var \Drupal\Core\Url $url */
       $url = new Url('user.admin_permissions');
       $url->setOption('fragment', 'module-' . $module);
@@ -1032,20 +1032,20 @@ function system_get_module_admin_tasks($module, array $info) {
  */
 function system_cron() {
   // Clean up the flood.
-  \Drupal::flood()->garbageCollection();
+  Drupal::flood()->garbageCollection();
 
   foreach (Cache::getBins() as $cache_backend) {
     $cache_backend->garbageCollection();
   }
 
   // Clean up the expirable key value database store.
-  if (\Drupal::service('keyvalue.expirable.database') instanceof KeyValueDatabaseExpirableFactory) {
-    \Drupal::service('keyvalue.expirable.database')->garbageCollection();
+  if (Drupal::service('keyvalue.expirable.database') instanceof KeyValueDatabaseExpirableFactory) {
+    Drupal::service('keyvalue.expirable.database')->garbageCollection();
   }
 
   // Clean up any garbage in the queue service.
-  $queue_worker_manager = \Drupal::service('plugin.manager.queue_worker');
-  $queue_factory = \Drupal::service('queue');
+  $queue_worker_manager = Drupal::service('plugin.manager.queue_worker');
+  $queue_factory = Drupal::service('queue');
 
   foreach (array_keys($queue_worker_manager->getDefinitions()) as $queue_name) {
     $queue = $queue_factory->get($queue_name);
@@ -1057,14 +1057,14 @@ function system_cron() {
 
   // Ensure that all of Drupal's standard directories (e.g., the public files
   // directory and config directory) have appropriate .htaccess files.
-  \Drupal::service('file.htaccess_writer')->ensure();
+  Drupal::service('file.htaccess_writer')->ensure();
 }
 
 /**
  * Implements hook_mail().
  */
 function system_mail($key, &$message, $params) {
-  $token_service = \Drupal::token();
+  $token_service = Drupal::token();
 
   $context = $params['context'];
 
@@ -1156,35 +1156,35 @@ function system_time_zones($blank = NULL, $grouped = FALSE) {
 function system_retrieve_file($url, $destination = NULL, $managed = FALSE, $replace = FileSystemInterface::EXISTS_RENAME) {
   $parsed_url = parse_url($url);
   /** @var \Drupal\Core\File\FileSystemInterface $file_system */
-  $file_system = \Drupal::service('file_system');
+  $file_system = Drupal::service('file_system');
   if (!isset($destination)) {
-    $path = file_build_uri(\Drupal::service('file_system')->basename($parsed_url['path']));
+    $path = file_build_uri(Drupal::service('file_system')->basename($parsed_url['path']));
   }
   else {
     if (is_dir($file_system->realpath($destination))) {
       // Prevent URIs with triple slashes when glueing parts together.
-      $path = str_replace('///', '//', "$destination/") . \Drupal::service('file_system')->basename($parsed_url['path']);
+      $path = str_replace('///', '//', "$destination/") . Drupal::service('file_system')->basename($parsed_url['path']);
     }
     else {
       $path = $destination;
     }
   }
   try {
-    $data = (string) \Drupal::httpClient()
+    $data = (string) Drupal::httpClient()
       ->get($url)
       ->getBody();
     $local = $managed ? file_save_data($data, $path, $replace) : $file_system->saveData($data, $path, $replace);
   }
   catch (RequestException $exception) {
-    \Drupal::messenger()->addError(t('Failed to fetch file due to error "%error"', ['%error' => $exception->getMessage()]));
+    Drupal::messenger()->addError(t('Failed to fetch file due to error "%error"', ['%error' => $exception->getMessage()]));
     return FALSE;
   }
   catch (FileException $e) {
-    \Drupal::messenger()->addError(t('Failed to save file due to error "%error"', ['%error' => $e->getMessage()]));
+    Drupal::messenger()->addError(t('Failed to save file due to error "%error"', ['%error' => $e->getMessage()]));
     return FALSE;
   }
   if (!$local) {
-    \Drupal::messenger()->addError(t('@remote could not be saved to @path.', ['@remote' => $url, '@path' => $path]));
+    Drupal::messenger()->addError(t('@remote could not be saved to @path.', ['@remote' => $url, '@path' => $path]));
   }
 
   return $local;
@@ -1242,11 +1242,65 @@ function system_modules_uninstalled($modules) {
     return;
   }
 
-  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $entity_definition_update_manager = Drupal::entityDefinitionUpdateManager();
   foreach ($entity_definition_update_manager->getEntityTypes() as $entity_type) {
     if ($entity_type instanceof ContentEntityTypeInterface && $entity_type->hasRevisionMetadataKey('workspace')) {
       $entity_type->setRevisionMetadataKey('workspace', NULL);
       $entity_definition_update_manager->updateEntityType($entity_type);
     }
+  }
+}
+
+/**
+ * Determines if Claro is the admin theme but not the active theme.
+ *
+ * @return bool
+ *   TRUE if Claro is the admin theme but not the active theme.
+ */
+function _system_is_claro_admin_and_not_active() {
+  $admin_theme = Drupal::configFactory()->get('system.theme')->get('admin');
+  $active_theme = Drupal::theme()->getActiveTheme()->getName();
+  return $active_theme !== 'claro' && $admin_theme === 'claro';
+}
+
+/**
+ * Implements hook_library_info_alter().
+ */
+function system_library_info_alter(&$libraries, $extension) {
+  // If Claro is the admin theme but not the active theme, grant Claro the
+  // ability to override the toolbar library with its own assets.
+  if ($extension === 'toolbar' && _system_is_claro_admin_and_not_active()) {
+    require_once DRUPAL_ROOT . '/core/themes/claro/claro.theme';
+    claro_system_module_invoked_library_info_alter($libraries, $extension);
+  }
+}
+
+/**
+ * Implements hook_preprocess_toolbar().
+ */
+function system_preprocess_toolbar(array &$variables, $hook, $info) {
+  // When Claro is the admin theme, Claro overrides the active theme's if that
+  // active theme is not Claro. Because of these potential overrides, the
+  // toolbar cache should be invalidated any time the default or admin theme
+  // changes.
+  $variables['#cache']['tags'][] = 'config:system.theme';
+
+  // If Claro is the admin theme but not the active theme, still include Claro's
+  // toolbar preprocessing.
+  if (_system_is_claro_admin_and_not_active()) {
+    require_once DRUPAL_ROOT . '/core/themes/claro/claro.theme';
+    claro_preprocess_toolbar($variables, $hook, $info);
+  }
+}
+
+/**
+ * Implements hook_theme_registry_alter().
+ */
+function system_theme_registry_alter(array &$theme_registry) {
+  // If Claro is the admin theme but not the active theme, use Claro's toolbar
+  // templates.
+  if (_system_is_claro_admin_and_not_active()) {
+    require_once DRUPAL_ROOT . '/core/themes/claro/claro.theme';
+    claro_system_module_invoked_theme_registry_alter($theme_registry);
   }
 }

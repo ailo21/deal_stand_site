@@ -6,6 +6,8 @@ use PHPUnit\Framework\AssertionFailedError;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\TestSuite;
 use PHPUnit\Util\ErrorHandler;
+use PHPUnit\Util\Test;
+use ReflectionClass;
 
 /**
  * Listens for PHPUnit tests and fails those with invalid coverage annotations.
@@ -60,7 +62,10 @@ trait DrupalStandardsListenerTrait {
       return;
     }
     // Gather our annotations.
-    $annotations = $test->getAnnotations();
+    $annotations = Test::parseTestMethodAnnotations(
+      static::class,
+      $test->getName()
+    );
     // Glean the @coversDefaultClass annotation.
     $default_class = '';
     $valid_default_class = FALSE;
@@ -98,7 +103,7 @@ trait DrupalStandardsListenerTrait {
         $class = $covers;
         $method = '';
         if (strpos($covers, '::') !== FALSE) {
-          list($class, $method) = explode('::', $covers);
+          [$class, $method] = explode('::', $covers);
         }
         // Check for the existence of the class if it's specified by @covers.
         if (!empty($class)) {
@@ -141,7 +146,7 @@ trait DrupalStandardsListenerTrait {
         }
         // Finally, after all that, let's see if the method exists.
         if (!empty($class) && !empty($method)) {
-          $ref_class = new \ReflectionClass($class);
+          $ref_class = new ReflectionClass($class);
           if (!$ref_class->hasMethod($method)) {
             $this->fail($test, '@covers method does not exist ' . $class . '::' . $method);
           }

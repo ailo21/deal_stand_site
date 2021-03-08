@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\comment\Kernel\Views;
 
+use Drupal;
 use Drupal\comment\Entity\Comment;
 use Drupal\comment\Entity\CommentType;
 use Drupal\entity_test\Entity\EntityTest;
@@ -54,13 +55,18 @@ class CommentAdminViewTest extends ViewsKernelTestBase {
     // Create the anonymous role.
     $this->installConfig(['user']);
 
+    // Create user 1 so that the user created later in the test has a different
+    // user ID.
+    // @todo Remove in https://www.drupal.org/node/540008.
+    User::create(['uid' => 1, 'name' => 'user1'])->save();
+
     // Enable another language.
     ConfigurableLanguage::createFromLangcode('ur')->save();
     // Rebuild the container to update the default language container variable.
     $this->container->get('kernel')->rebuildContainer();
 
     // Create an anonymous user.
-    $storage = \Drupal::entityTypeManager()->getStorage('user');
+    $storage = Drupal::entityTypeManager()->getStorage('user');
     // Insert a row for the anonymous user.
     $storage
       ->create([
@@ -72,7 +78,7 @@ class CommentAdminViewTest extends ViewsKernelTestBase {
     // Created admin role.
     $admin_role = Role::create([
       'id' => 'admin',
-      'permissions' => ['administer comments'],
+      'permissions' => ['administer comments', 'skip comment approval'],
     ]);
     $admin_role->save();
     // Create the admin user.
@@ -147,10 +153,10 @@ class CommentAdminViewTest extends ViewsKernelTestBase {
     $comment = $this->comments[0];
     $comment_anonymous = $this->comments[1];
     /* @var \Drupal\Core\Session\AccountSwitcherInterface $account_switcher */
-    $account_switcher = \Drupal::service('account_switcher');
+    $account_switcher = Drupal::service('account_switcher');
 
     /* @var \Drupal\Core\Render\RendererInterface $renderer */
-    $renderer = \Drupal::service('renderer');
+    $renderer = Drupal::service('renderer');
 
     $account_switcher->switchTo($this->adminUser);
     $executable = Views::getView('comment');

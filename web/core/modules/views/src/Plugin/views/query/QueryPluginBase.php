@@ -2,6 +2,9 @@
 
 namespace Drupal\views\Plugin\views\query;
 
+use DateTime;
+use DateTimeZone;
+use Drupal;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableDependencyInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -136,7 +139,7 @@ abstract class QueryPluginBase extends PluginBase implements CacheableDependency
   }
 
   /**
-   * Set an OFFSET on the query, specifying a number of results to skip
+   * Set an OFFSET on the query, specifying a number of results to skip.
    */
   public function setOffset($offset) {
     $this->offset = $offset;
@@ -293,7 +296,7 @@ abstract class QueryPluginBase extends PluginBase implements CacheableDependency
       if (isset($table_data['table']['entity type'])) {
 
         // If this is not one of the entity base tables, skip it.
-        $entity_type = \Drupal::entityTypeManager()->getDefinition($table_data['table']['entity type']);
+        $entity_type = Drupal::entityTypeManager()->getDefinition($table_data['table']['entity type']);
         $entity_base_tables = [$entity_type->getBaseTable(), $entity_type->getDataTable(), $entity_type->getRevisionTable(), $entity_type->getRevisionDataTable()];
         if (!in_array($relationship->definition['base'], $entity_base_tables)) {
           continue;
@@ -316,7 +319,7 @@ abstract class QueryPluginBase extends PluginBase implements CacheableDependency
 
     // Determine which of the tables are revision tables.
     foreach ($entity_tables as $table_alias => $table) {
-      $entity_type = \Drupal::entityTypeManager()->getDefinition($table['entity_type']);
+      $entity_type = Drupal::entityTypeManager()->getDefinition($table['entity_type']);
       if ($entity_type->getRevisionTable() == $table['base']) {
         $entity_tables[$table_alias]['revision'] = TRUE;
       }
@@ -339,7 +342,7 @@ abstract class QueryPluginBase extends PluginBase implements CacheableDependency
     $contexts = [];
     if (($views_data = Views::viewsData()->get($this->view->storage->get('base_table'))) && !empty($views_data['table']['entity type'])) {
       $entity_type_id = $views_data['table']['entity type'];
-      $entity_type = \Drupal::entityTypeManager()->getDefinition($entity_type_id);
+      $entity_type = Drupal::entityTypeManager()->getDefinition($entity_type_id);
       $contexts = $entity_type->getListCacheContexts();
     }
     return $contexts;
@@ -375,8 +378,8 @@ abstract class QueryPluginBase extends PluginBase implements CacheableDependency
     $timezone = $this->setupTimezone();
     $offset = 0;
     if ($timezone) {
-      $dtz = new \DateTimeZone($timezone);
-      $dt = new \DateTime('now', $dtz);
+      $dtz = new DateTimeZone($timezone);
+      $dt = new DateTime('now', $dtz);
       $offset = $dtz->getOffset($dt);
     }
     return $offset;

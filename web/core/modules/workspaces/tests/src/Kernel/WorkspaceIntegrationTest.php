@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\workspaces\Kernel;
 
+use Drupal;
 use Drupal\Core\Entity\EntityStorageException;
 use Drupal\Core\Form\FormState;
 use Drupal\entity_test\Entity\EntityTestMulRevPub;
@@ -76,7 +77,7 @@ class WorkspaceIntegrationTest extends KernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    $this->entityTypeManager = \Drupal::entityTypeManager();
+    $this->entityTypeManager = Drupal::entityTypeManager();
 
     $this->installEntitySchema('entity_test_mulrev');
     $this->installEntitySchema('entity_test_mulrevpub');
@@ -86,7 +87,7 @@ class WorkspaceIntegrationTest extends KernelTestBase {
 
     $this->installConfig(['filter', 'node', 'system', 'language', 'content_translation']);
 
-    $this->installSchema('system', ['key_value_expire', 'sequences']);
+    $this->installSchema('system', ['sequences']);
     $this->installSchema('node', ['node_access']);
 
     $language = ConfigurableLanguage::createFromLangcode('de');
@@ -100,7 +101,7 @@ class WorkspaceIntegrationTest extends KernelTestBase {
 
     // Create two nodes, a published and an unpublished one, so we can test the
     // behavior of the module with default/existing content.
-    $this->createdTimestamp = \Drupal::time()->getRequestTime();
+    $this->createdTimestamp = Drupal::time()->getRequestTime();
     $this->nodes[] = $this->createNode(['title' => 'live - 1 - r1 - published', 'body' => 'node 1', 'created' => $this->createdTimestamp++, 'status' => TRUE]);
     $this->nodes[] = $this->createNode(['title' => 'live - 2 - r2 - unpublished', 'body' => 'node 2', 'created' => $this->createdTimestamp++, 'status' => FALSE]);
 
@@ -339,7 +340,7 @@ class WorkspaceIntegrationTest extends KernelTestBase {
 
     // Deploy 'stage' to 'live'.
     /** @var \Drupal\workspaces\WorkspacePublisher $workspace_publisher */
-    $workspace_publisher = \Drupal::service('workspaces.operation_factory')->getPublisher($this->workspaces['stage']);
+    $workspace_publisher = Drupal::service('workspaces.operation_factory')->getPublisher($this->workspaces['stage']);
 
     // Check which revisions need to be pushed.
     $expected = [
@@ -782,7 +783,7 @@ class WorkspaceIntegrationTest extends KernelTestBase {
       $this->assertIdenticalResultset($view, $expected_frontpage, ['nid' => 'nid']);
 
       $rendered_view = $view->render('page_1');
-      $output = \Drupal::service('renderer')->renderRoot($rendered_view);
+      $output = Drupal::service('renderer')->renderRoot($rendered_view);
       $this->setRawContent($output);
       foreach ($expected_values as $expected_entity_values) {
         if ($expected_entity_values[$entity_keys['published']] === TRUE && $expected_entity_values['default_revision'] === TRUE) {
@@ -914,11 +915,11 @@ class WorkspaceIntegrationTest extends KernelTestBase {
     });
 
     // Check entity query counts.
-    $result = $storage->getQuery()->count()->execute();
-    $this->assertEquals(count($expected_default_revisions), $result);
+    $result = (int) $storage->getQuery()->count()->execute();
+    $this->assertSame(count($expected_default_revisions), $result);
 
-    $result = $storage->getAggregateQuery()->count()->execute();
-    $this->assertEquals(count($expected_default_revisions), $result);
+    $result = (int) $storage->getAggregateQuery()->count()->execute();
+    $this->assertSame(count($expected_default_revisions), $result);
 
     // Check entity queries with no conditions.
     $result = $storage->getQuery()->execute();

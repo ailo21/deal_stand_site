@@ -2,6 +2,7 @@
 
 namespace Drupal\Core\Entity;
 
+use Drupal;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\RefinableCacheableDependencyTrait;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
@@ -70,7 +71,7 @@ abstract class EntityBase implements EntityInterface {
    * @return \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   protected function entityTypeManager() {
-    return \Drupal::entityTypeManager();
+    return Drupal::entityTypeManager();
   }
 
   /**
@@ -79,7 +80,7 @@ abstract class EntityBase implements EntityInterface {
    * @return \Drupal\Core\Entity\EntityTypeBundleInfoInterface
    */
   protected function entityTypeBundleInfo() {
-    return \Drupal::service('entity_type.bundle.info');
+    return Drupal::service('entity_type.bundle.info');
   }
 
   /**
@@ -88,7 +89,7 @@ abstract class EntityBase implements EntityInterface {
    * @return \Drupal\Core\Language\LanguageManagerInterface
    */
   protected function languageManager() {
-    return \Drupal::languageManager();
+    return Drupal::languageManager();
   }
 
   /**
@@ -97,7 +98,7 @@ abstract class EntityBase implements EntityInterface {
    * @return \Drupal\Component\Uuid\UuidInterface
    */
   protected function uuidGenerator() {
-    return \Drupal::service('uuid');
+    return Drupal::service('uuid');
   }
 
   /**
@@ -271,7 +272,7 @@ abstract class EntityBase implements EntityInterface {
       $parameter_name = $this->getEntityType()->getBundleEntityType() ?: $this->getEntityType()->getKey('bundle');
       $uri_route_parameters[$parameter_name] = $this->bundle();
     }
-    if ($rel === 'revision' && $this instanceof RevisionableInterface) {
+    if ($this instanceof RevisionableInterface && strpos($rel, 'revision') === 0) {
       $uri_route_parameters[$this->getEntityTypeId() . '_revision'] = $this->getRevisionId();
     }
 
@@ -482,9 +483,9 @@ abstract class EntityBase implements EntityInterface {
    * {@inheritdoc}
    */
   public static function load($id) {
-    $entity_type_repository = \Drupal::service('entity_type.repository');
-    $entity_type_manager = \Drupal::entityTypeManager();
-    $storage = $entity_type_manager->getStorage($entity_type_repository->getEntityTypeFromClass(get_called_class()));
+    $entity_type_repository = Drupal::service('entity_type.repository');
+    $entity_type_manager = Drupal::entityTypeManager();
+    $storage = $entity_type_manager->getStorage($entity_type_repository->getEntityTypeFromClass(static::class));
     return $storage->load($id);
   }
 
@@ -492,9 +493,9 @@ abstract class EntityBase implements EntityInterface {
    * {@inheritdoc}
    */
   public static function loadMultiple(array $ids = NULL) {
-    $entity_type_repository = \Drupal::service('entity_type.repository');
-    $entity_type_manager = \Drupal::entityTypeManager();
-    $storage = $entity_type_manager->getStorage($entity_type_repository->getEntityTypeFromClass(get_called_class()));
+    $entity_type_repository = Drupal::service('entity_type.repository');
+    $entity_type_manager = Drupal::entityTypeManager();
+    $storage = $entity_type_manager->getStorage($entity_type_repository->getEntityTypeFromClass(static::class));
     return $storage->loadMultiple($ids);
   }
 
@@ -502,9 +503,9 @@ abstract class EntityBase implements EntityInterface {
    * {@inheritdoc}
    */
   public static function create(array $values = []) {
-    $entity_type_repository = \Drupal::service('entity_type.repository');
-    $entity_type_manager = \Drupal::entityTypeManager();
-    $storage = $entity_type_manager->getStorage($entity_type_repository->getEntityTypeFromClass(get_called_class()));
+    $entity_type_repository = Drupal::service('entity_type.repository');
+    $entity_type_manager = Drupal::entityTypeManager();
+    $storage = $entity_type_manager->getStorage($entity_type_repository->getEntityTypeFromClass(static::class));
     return $storage->create($values);
   }
 
@@ -587,7 +588,7 @@ abstract class EntityBase implements EntityInterface {
    */
   public function getTypedData() {
     if (!isset($this->typedData)) {
-      $class = \Drupal::typedDataManager()->getDefinition('entity')['class'];
+      $class = Drupal::typedDataManager()->getDefinition('entity')['class'];
       $this->typedData = $class::createFromEntity($this);
     }
     return $this->typedData;

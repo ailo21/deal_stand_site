@@ -2,10 +2,12 @@
 
 namespace Drupal\jsonapi\Controller;
 
+use Drupal;
 use Drupal\Component\Assertion\Inspector;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Cache\CacheableResponseInterface;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
@@ -26,6 +28,7 @@ use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\jsonapi\Access\EntityAccessChecker;
+use Drupal\jsonapi\CacheableResourceResponse;
 use Drupal\jsonapi\Context\FieldResolver;
 use Drupal\jsonapi\Entity\EntityValidationTrait;
 use Drupal\jsonapi\Access\TemporaryQueryGuard;
@@ -50,6 +53,7 @@ use Drupal\jsonapi\ResourceType\ResourceType;
 use Drupal\jsonapi\ResourceType\ResourceTypeField;
 use Drupal\jsonapi\ResourceType\ResourceTypeRepositoryInterface;
 use Drupal\jsonapi\Revisions\ResourceVersionRouteEnhancer;
+use LogicException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Drupal\Core\Http\Exception\CacheableBadRequestHttpException;
@@ -150,7 +154,7 @@ class EntityResource {
   protected $user;
 
   /**
-   * Instantiates a EntityResource object.
+   * Instantiates an EntityResource object.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
@@ -279,7 +283,6 @@ class EntityResource {
     // we should send "Location" header to the frontend.
     if ($resource_type->isLocatable()) {
       $url = $resource_object->toUrl()->setAbsolute()->toString(TRUE);
-      $response->addCacheableDependency($url);
       $response->headers->set('Location', $url->getGeneratedUrl());
     }
 
@@ -405,7 +408,7 @@ class EntityResource {
         $query_cacheability
       );
     }
-    catch (\LogicException $e) {
+    catch (LogicException $e) {
       // Ensure good DX when an entity query involves a config entity type.
       // For example: getting users with a particular role, which is a config
       // entity type: https://www.drupal.org/project/drupal/issues/2959445.
@@ -536,7 +539,9 @@ class EntityResource {
 
     // $response does not contain the entity list cache tag. We add the
     // cacheable metadata for the finite list of entities in the relationship.
-    $response->addCacheableDependency($entity);
+    if ($response instanceof CacheableResponseInterface) {
+      $response->addCacheableDependency($entity);
+    }
 
     return $response;
   }
@@ -567,7 +572,9 @@ class EntityResource {
     $relationship = Relationship::createFromEntityReferenceField($resource_object, $field_list);
     $response = $this->buildWrappedResponse($relationship, $request, $this->getIncludes($request, $resource_object), $response_code);
     // Add the host entity as a cacheable dependency.
-    $response->addCacheableDependency($entity);
+    if ($response instanceof CacheableResponseInterface) {
+      $response->addCacheableDependency($entity);
+    }
     return $response;
   }
 
@@ -870,7 +877,7 @@ class EntityResource {
     if (isset($params[Filter::KEY_NAME]) && $filter = $params[Filter::KEY_NAME]) {
       $query->condition($filter->queryCondition($query));
       TemporaryQueryGuard::setFieldManager($this->fieldManager);
-      TemporaryQueryGuard::setModuleHandler(\Drupal::moduleHandler());
+      TemporaryQueryGuard::setModuleHandler(Drupal::moduleHandler());
       TemporaryQueryGuard::applyAccessControls($filter, $query, $query_cacheability);
     }
 
@@ -994,7 +1001,11 @@ class EntityResource {
       $self_link = new Link(new CacheableMetadata(), self::getRequestLink($request), 'self');
       $links = $links->withLink('self', $self_link);
     }
-    $response = new ResourceResponse(new JsonApiDocumentTopLevel($data, $includes, $links, $meta), $response_code, $headers);
+    $document = new JsonApiDocumentTopLevel($data, $includes, $links, $meta);
+    if (!$request->isMethodCacheable()) {
+      return new ResourceResponse($document, $response_code, $headers);
+    }
+    $response = new CacheableResourceResponse($document, $response_code, $headers);
     $cacheability = (new CacheableMetadata())->addCacheContexts([
       // Make sure that different sparse fieldsets are cached differently.
       'url.query_args:fields',
@@ -1254,7 +1265,7 @@ class EntityResource {
    *   An associative array with extra data to build the links.
    *
    * @return \Drupal\jsonapi\JsonApiResource\LinkCollection
-   *   An LinkCollection, with:
+   *   A LinkCollection, with:
    *   - a 'next' key if it is not the last page;
    *   - 'prev' and 'first' keys if it's not the first page.
    */

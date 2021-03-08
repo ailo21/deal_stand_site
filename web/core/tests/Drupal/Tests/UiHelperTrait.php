@@ -3,6 +3,7 @@
 namespace Drupal\Tests;
 
 use Behat\Mink\Driver\GoutteDriver;
+use Drupal;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\UrlHelper;
@@ -17,7 +18,6 @@ use Drupal\Core\Url;
 trait UiHelperTrait {
 
   use BrowserHtmlDebugTrait;
-  use AssertHelperTrait;
   use RefreshVariablesTrait;
 
   /**
@@ -138,7 +138,7 @@ trait UiHelperTrait {
    *
    *   // Second step in form.
    *   $edit = array(...);
-   *   $this->drupalPostForm(NULL, $edit, 'Save');
+   *   $this->submitForm($edit, 'Save');
    *   @endcode
    * @param array $edit
    *   Field data in an associative array. Changes the current input fields
@@ -164,8 +164,6 @@ trait UiHelperTrait {
    *   $edit = array();
    *   $edit['name[]'] = array('value1', 'value2');
    *   @endcode
-   *   @todo change $edit to disallow NULL as a value for Drupal 9.
-   *     https://www.drupal.org/node/2802401
    * @param string $submit
    *   The id, name, label or value of the submit button which is to be clicked.
    *   For example, 'Save'. The first element matched by
@@ -189,17 +187,24 @@ trait UiHelperTrait {
    *   just use the webAssert object for your assertions.
    *
    * @see \Drupal\Tests\WebAssert::buttonExists()
+   *
+   * @deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Use
+   *   $this->submitForm() instead.
+   *
+   * @see https://www.drupal.org/node/3168858
    */
   protected function drupalPostForm($path, $edit, $submit, array $options = [], $form_html_id = NULL) {
+    @trigger_error('UiHelperTrait::drupalPostForm() is deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Use $this->submitForm() instead. See https://www.drupal.org/node/3168858', E_USER_DEPRECATED);
     if (is_object($submit)) {
       // Cast MarkupInterface objects to string.
       $submit = (string) $submit;
     }
     if ($edit === NULL) {
+      @trigger_error('Calling ' . __METHOD__ . '() with $edit set to NULL is deprecated in drupal:9.1.0 and the method is removed in drupal:10.0.0. Use $this->submitForm() instead. See https://www.drupal.org/node/3168858', E_USER_DEPRECATED);
       $edit = [];
     }
-    if (is_array($edit)) {
-      $edit = $this->castSafeStrings($edit);
+    if ($path === NULL) {
+      @trigger_error('Calling ' . __METHOD__ . '() with $path set to NULL is deprecated in drupal:9.2.0 and the method is removed in drupal:10.0.0. Use $this->submitForm() instead. See https://www.drupal.org/node/3168858', E_USER_DEPRECATED);
     }
 
     if (isset($path)) {
@@ -250,7 +255,7 @@ trait UiHelperTrait {
     ], t('Log in'));
 
     // @see ::drupalUserIsLoggedIn()
-    $account->sessionId = $this->getSession()->getCookie(\Drupal::service('session_configuration')->getOptions(\Drupal::request())['name']);
+    $account->sessionId = $this->getSession()->getCookie(Drupal::service('session_configuration')->getOptions(Drupal::request())['name']);
     $this->assertTrue($this->drupalUserIsLoggedIn($account), new FormattableMarkup('User %name successfully logged in.', ['%name' => $account->getAccountName()]));
 
     $this->loggedInUser = $account;
@@ -275,7 +280,7 @@ trait UiHelperTrait {
     // @see BrowserTestBase::drupalUserIsLoggedIn()
     unset($this->loggedInUser->sessionId);
     $this->loggedInUser = FALSE;
-    \Drupal::currentUser()->setAccount(new AnonymousUserSession());
+    Drupal::currentUser()->setAccount(new AnonymousUserSession());
   }
 
   /**
@@ -351,7 +356,7 @@ trait UiHelperTrait {
   }
 
   /**
-   * Builds an a absolute URL from a system path or a URL object.
+   * Builds an absolute URL from a system path or a URL object.
    *
    * @param string|\Drupal\Core\Url $path
    *   A system path or a URL.
@@ -370,7 +375,7 @@ trait UiHelperTrait {
     }
     // The URL generator service is not necessarily available yet; e.g., in
     // interactive installer tests.
-    elseif (\Drupal::hasService('url_generator')) {
+    elseif (Drupal::hasService('url_generator')) {
       $force_internal = isset($options['external']) && $options['external'] == FALSE;
       if (!$force_internal && UrlHelper::isExternal($path)) {
         return Url::fromUri($path, $options)->toString();
@@ -447,7 +452,7 @@ trait UiHelperTrait {
     $logged_in = FALSE;
 
     if (isset($account->sessionId)) {
-      $session_handler = \Drupal::service('session_handler.storage');
+      $session_handler = Drupal::service('session_handler.storage');
       $logged_in = (bool) $session_handler->read($account->sessionId);
     }
 

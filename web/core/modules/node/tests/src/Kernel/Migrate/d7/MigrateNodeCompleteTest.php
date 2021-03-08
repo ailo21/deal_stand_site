@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\node\Kernel\Migrate\d7;
 
+use Drupal;
 use Drupal\migrate\MigrateExecutable;
 use Drupal\migrate_drupal\NodeMigrateType;
 use Drupal\node\NodeInterface;
@@ -9,6 +10,7 @@ use Drupal\Tests\file\Kernel\Migrate\d7\FileMigrationSetupTrait;
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
 use Drupal\Tests\migrate_drupal\Traits\CreateTestContentEntitiesTrait;
 use Drupal\Tests\migrate_drupal\Traits\NodeMigrateTypeTestTrait;
+use PDO;
 
 /**
  * Test class for a complete node migration for Drupal 7.
@@ -103,22 +105,22 @@ class MigrateNodeCompleteTest extends MigrateDrupal7TestBase {
     // that only the complete migration ran.
     $results = $this->nodeMigrateMapTableCount('7');
     $this->assertSame(0, $results['node']);
-    $this->assertSame(7, $results['node_complete']);
+    $this->assertSame(8, $results['node_complete']);
 
-    $db = \Drupal::database();
+    $db = Drupal::database();
     $this->assertEquals($this->expectedNodeFieldRevisionTable(), $db->select('node_field_revision', 'nr')
       ->fields('nr')
       ->orderBy('vid')
       ->orderBy('langcode')
       ->execute()
-      ->fetchAll(\PDO::FETCH_ASSOC));
+      ->fetchAll(PDO::FETCH_ASSOC));
     $this->assertEquals($this->expectedNodeFieldDataTable(), $db->select('node_field_data', 'nr')
       ->fields('nr')
       ->orderBy('nid')
       ->orderBy('vid')
       ->orderBy('langcode')
       ->execute()
-      ->fetchAll(\PDO::FETCH_ASSOC));
+      ->fetchAll(PDO::FETCH_ASSOC));
 
     // Load and test each revision.
     $data = $this->expectedRevisionEntityData()[0];
@@ -131,7 +133,7 @@ class MigrateNodeCompleteTest extends MigrateDrupal7TestBase {
    * Tests rollback of the complete node migration.
    */
   public function testRollbackNodeComplete() {
-    $db = \Drupal::database();
+    $db = Drupal::database();
     $node_types = [
       'article',
       'blog',

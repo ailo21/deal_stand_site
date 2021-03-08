@@ -2,6 +2,7 @@
 
 namespace Drupal\Core\Render\Element;
 
+use Drupal;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 
@@ -29,7 +30,7 @@ use Drupal\Core\Render\Element;
 class Email extends FormElement {
 
   /**
-   * Defines the max length for an email address
+   * Defines the max length for an email address.
    *
    * The maximum length of an email address is 254 characters. RFC 3696
    * specifies a total length of 320 characters, but mentions that
@@ -44,7 +45,7 @@ class Email extends FormElement {
    * {@inheritdoc}
    */
   public function getInfo() {
-    $class = get_class($this);
+    $class = static::class;
     return [
       '#input' => TRUE,
       '#size' => 60,
@@ -75,7 +76,7 @@ class Email extends FormElement {
     $value = trim($element['#value']);
     $form_state->setValueForElement($element, $value);
 
-    if ($value !== '' && !\Drupal::service('email.validator')->isValid($value)) {
+    if ($value !== '' && !Drupal::service('email.validator')->isValid($value)) {
       $form_state->setError($element, t('The email address %mail is not valid.', ['%mail' => $value]));
     }
   }

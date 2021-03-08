@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\comment\Kernel\Views;
 
+use Drupal;
 use Drupal\comment\Entity\Comment;
 use Drupal\Core\Session\AnonymousUserSession;
 use Drupal\entity_test\Entity\EntityTest;
@@ -12,7 +13,7 @@ use Drupal\views\Entity\View;
 use Drupal\views\Views;
 
 /**
- * Tests comment user name field
+ * Tests comment user name field.
  *
  * @group comment
  */
@@ -42,7 +43,7 @@ class CommentUserNameTest extends ViewsKernelTestBase {
     $this->installConfig(['user']);
 
     // Create an anonymous user.
-    $storage = \Drupal::entityTypeManager()->getStorage('user');
+    $storage = Drupal::entityTypeManager()->getStorage('user');
     // Insert a row for the anonymous user.
     $storage
       ->create([
@@ -140,10 +141,10 @@ class CommentUserNameTest extends ViewsKernelTestBase {
     $view->save();
 
     /* @var \Drupal\Core\Session\AccountSwitcherInterface $account_switcher */
-    $account_switcher = \Drupal::service('account_switcher');
+    $account_switcher = Drupal::service('account_switcher');
 
     /* @var \Drupal\Core\Render\RendererInterface $renderer */
-    $renderer = \Drupal::service('renderer');
+    $renderer = Drupal::service('renderer');
 
     $account_switcher->switchTo($this->adminUser);
     $executable = Views::getView($view_id);

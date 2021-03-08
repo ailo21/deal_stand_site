@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\language\Functional;
 
+use Drupal;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Tests\BrowserTestBase;
 
@@ -35,13 +36,13 @@ class LanguageConfigOverrideImportTest extends BrowserTestBase {
   public function testConfigOverrideImport() {
     ConfigurableLanguage::createFromLangcode('fr')->save();
     /* @var \Drupal\Core\Config\StorageInterface $sync */
-    $sync = \Drupal::service('config.storage.sync');
-    $this->copyConfig(\Drupal::service('config.storage'), $sync);
+    $sync = Drupal::service('config.storage.sync');
+    $this->copyConfig(Drupal::service('config.storage'), $sync);
 
     // Uninstall the language module and its dependencies so we can test
     // enabling the language module and creating overrides at the same time
     // during a configuration synchronization.
-    \Drupal::service('module_installer')->uninstall(['language']);
+    Drupal::service('module_installer')->uninstall(['language']);
     // Ensure that the current site has no overrides registered to the
     // ConfigFactory.
     $this->rebuildContainer();
@@ -54,9 +55,8 @@ class LanguageConfigOverrideImportTest extends BrowserTestBase {
 
     $this->configImporter()->import();
     $this->rebuildContainer();
-    \Drupal::service('router.builder')->rebuild();
 
-    $override = \Drupal::languageManager()->getLanguageConfigOverride('fr', 'system.site');
+    $override = Drupal::languageManager()->getLanguageConfigOverride('fr', 'system.site');
     $this->assertEqual('FR default site name', $override->get('name'));
     $this->drupalGet('fr');
     $this->assertText('FR default site name');
@@ -71,28 +71,27 @@ class LanguageConfigOverrideImportTest extends BrowserTestBase {
    */
   public function testConfigOverrideImportEvents() {
     // Enable the config_events_test module so we can record events occurring.
-    \Drupal::service('module_installer')->install(['config_events_test']);
+    Drupal::service('module_installer')->install(['config_events_test']);
     $this->rebuildContainer();
 
     ConfigurableLanguage::createFromLangcode('fr')->save();
 
     /* @var \Drupal\Core\Config\StorageInterface $sync */
-    $sync = \Drupal::service('config.storage.sync');
-    $this->copyConfig(\Drupal::service('config.storage'), $sync);
+    $sync = Drupal::service('config.storage.sync');
+    $this->copyConfig(Drupal::service('config.storage'), $sync);
 
     /* @var \Drupal\Core\Config\StorageInterface $override_sync */
     $override_sync = $sync->createCollection('language.fr');
     // Create some overrides in sync.
     $override_sync->write('system.site', ['name' => 'FR default site name']);
-    \Drupal::state()->set('config_events_test.event', FALSE);
+    Drupal::state()->set('config_events_test.event', FALSE);
 
     $this->configImporter()->import();
     $this->rebuildContainer();
-    \Drupal::service('router.builder')->rebuild();
 
     // Test that no config save event has been fired during the import because
     // language configuration overrides do not fire events.
-    $event_recorder = \Drupal::state()->get('config_events_test.event', FALSE);
+    $event_recorder = Drupal::state()->get('config_events_test.event', FALSE);
     $this->assertFalse($event_recorder);
 
     $this->drupalGet('fr');

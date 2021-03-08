@@ -7,15 +7,20 @@
 
 namespace Drupal\Core\ProxyClass\Config {
 
-    /**
+  use Drupal\Core\Config\ConfigInstallerInterface;
+  use Drupal\Core\Config\StorageInterface;
+  use Drupal\Core\DependencyInjection\DependencySerializationTrait;
+  use Symfony\Component\DependencyInjection\ContainerInterface;
+
+  /**
      * Provides a proxy class for \Drupal\Core\Config\ConfigInstaller.
      *
      * @see \Drupal\Component\ProxyBuilder
      */
-    class ConfigInstaller implements \Drupal\Core\Config\ConfigInstallerInterface
+    class ConfigInstaller implements ConfigInstallerInterface
     {
 
-        use \Drupal\Core\DependencyInjection\DependencySerializationTrait;
+        use DependencySerializationTrait;
 
         /**
          * The id of the original proxied service.
@@ -46,7 +51,7 @@ namespace Drupal\Core\ProxyClass\Config {
          * @param string $drupal_proxy_original_service_id
          *   The service ID of the original service.
          */
-        public function __construct(\Symfony\Component\DependencyInjection\ContainerInterface $container, $drupal_proxy_original_service_id)
+        public function __construct(ContainerInterface $container, $drupal_proxy_original_service_id)
         {
             $this->container = $container;
             $this->drupalProxyOriginalServiceId = $drupal_proxy_original_service_id;
@@ -78,7 +83,7 @@ namespace Drupal\Core\ProxyClass\Config {
         /**
          * {@inheritdoc}
          */
-        public function installOptionalConfig(\Drupal\Core\Config\StorageInterface $storage = NULL, $dependency = array (
+        public function installOptionalConfig(?StorageInterface $storage = NULL, $dependency = array (
         ))
         {
             return $this->lazyLoadItself()->installOptionalConfig($storage, $dependency);
@@ -95,7 +100,7 @@ namespace Drupal\Core\ProxyClass\Config {
         /**
          * {@inheritdoc}
          */
-        public function setSourceStorage(\Drupal\Core\Config\StorageInterface $storage)
+        public function setSourceStorage(StorageInterface $storage)
         {
             return $this->lazyLoadItself()->setSourceStorage($storage);
         }

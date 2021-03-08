@@ -6,13 +6,15 @@ use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Utility\Error;
+use Exception;
+use SessionHandlerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\Storage\Proxy\AbstractProxy;
 
 /**
  * Default session handler.
  */
-class SessionHandler extends AbstractProxy implements \SessionHandlerInterface {
+class SessionHandler extends AbstractProxy implements SessionHandlerInterface {
 
   use DependencySerializationTrait;
 
@@ -58,7 +60,7 @@ class SessionHandler extends AbstractProxy implements \SessionHandlerInterface {
     if (!empty($sid)) {
       // Read the session data from the database.
       $query = $this->connection
-        ->queryRange('SELECT session FROM {sessions} WHERE sid = :sid', 0, 1, [':sid' => Crypt::hashBase64($sid)]);
+        ->queryRange('SELECT [session] FROM {sessions} WHERE [sid] = :sid', 0, 1, [':sid' => Crypt::hashBase64($sid)]);
       $data = (string) $query->fetchField();
     }
     return $data;
@@ -84,7 +86,7 @@ class SessionHandler extends AbstractProxy implements \SessionHandlerInterface {
         ->execute();
       return TRUE;
     }
-    catch (\Exception $exception) {
+    catch (Exception $exception) {
       require_once DRUPAL_ROOT . '/core/includes/errors.inc';
       // If we are displaying errors, then do so with no possibility of a
       // further uncaught exception being thrown.

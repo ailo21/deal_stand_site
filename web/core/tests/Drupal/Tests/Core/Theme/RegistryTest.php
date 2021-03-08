@@ -5,6 +5,7 @@ namespace Drupal\Tests\Core\Theme;
 use Drupal\Core\Theme\ActiveTheme;
 use Drupal\Core\Theme\Registry;
 use Drupal\Tests\UnitTestCase;
+use ReflectionClass;
 
 /**
  * @coversDefaultClass \Drupal\Core\Theme\Registry
@@ -185,12 +186,12 @@ class RegistryTest extends UnitTestCase {
       ->method('getModuleList')
       ->willReturn([]);
 
-    $class = new \ReflectionClass(Registry::class);
+    $class = new ReflectionClass(Registry::class);
     $reflection_method = $class->getMethod('postProcessExtension');
     $reflection_method->setAccessible(TRUE);
     $reflection_method->invokeArgs($this->registry, [&$hooks, $theme->reveal()]);
 
-    $this->assertArrayEquals($expected, $hooks);
+    $this->assertEquals($expected, $hooks);
   }
 
   /**

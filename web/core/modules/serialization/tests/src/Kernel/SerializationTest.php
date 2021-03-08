@@ -3,6 +3,7 @@
 namespace Drupal\Tests\serialization\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
+use stdClass;
 use Symfony\Component\Serializer\Exception\UnexpectedValueException;
 
 /**
@@ -35,12 +36,12 @@ class SerializationTest extends KernelTestBase {
    * Confirms that modules can register normalizers and encoders.
    */
   public function testSerializerComponentRegistration() {
-    $object = new \stdClass();
+    $object = new stdClass();
     $format = 'serialization_test';
     $expected = 'Normalized by SerializationTestNormalizer, Encoded by SerializationTestEncoder';
 
     // Ensure the serialization invokes the expected normalizer and encoder.
-    $this->assertIdentical($this->serializer->serialize($object, $format), $expected);
+    $this->assertSame($expected, $this->serializer->serialize($object, $format));
 
     // Ensure the serialization fails for an unsupported format.
     try {

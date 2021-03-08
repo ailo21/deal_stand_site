@@ -2,9 +2,11 @@
 
 namespace Drupal\Tests\filter\Kernel;
 
+use Drupal;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\filter\Entity\FilterFormat;
 use Drupal\KernelTests\KernelTestBase;
+use LogicException;
 
 /**
  * Tests creation, loading, updating, deleting of text formats and filters.
@@ -81,8 +83,8 @@ class FilterCrudTest extends KernelTestBase {
       FilterFormat::load('plain_text')->disable();
       $this->fail($message);
     }
-    catch (\LogicException $e) {
-      $this->assertIdentical($e->getMessage(), "The fallback text format 'plain_text' cannot be disabled.", $message);
+    catch (LogicException $e) {
+      $this->assertSame("The fallback text format 'plain_text' cannot be disabled.", $e->getMessage(), $message);
     }
   }
 
@@ -91,15 +93,15 @@ class FilterCrudTest extends KernelTestBase {
    */
   public function verifyTextFormat($format) {
     $t_args = ['%format' => $format->label()];
-    $default_langcode = \Drupal::languageManager()->getDefaultLanguage()->getId();
+    $default_langcode = Drupal::languageManager()->getDefaultLanguage()->getId();
 
     // Verify the loaded filter has all properties.
     $filter_format = FilterFormat::load($format->id());
-    $this->assertEqual($filter_format->id(), $format->id(), new FormattableMarkup('filter_format_load: Proper format id for text format %format.', $t_args));
-    $this->assertEqual($filter_format->label(), $format->label(), new FormattableMarkup('filter_format_load: Proper title for text format %format.', $t_args));
-    $this->assertEqual($filter_format->get('weight'), $format->get('weight'), new FormattableMarkup('filter_format_load: Proper weight for text format %format.', $t_args));
+    $this->assertEqual($format->id(), $filter_format->id(), new FormattableMarkup('filter_format_load: Proper format id for text format %format.', $t_args));
+    $this->assertEqual($format->label(), $filter_format->label(), new FormattableMarkup('filter_format_load: Proper title for text format %format.', $t_args));
+    $this->assertEqual($format->get('weight'), $filter_format->get('weight'), new FormattableMarkup('filter_format_load: Proper weight for text format %format.', $t_args));
     // Check that the filter was created in site default language.
-    $this->assertEqual($format->language()->getId(), $default_langcode, new FormattableMarkup('filter_format_load: Proper language code for text format %format.', $t_args));
+    $this->assertEqual($default_langcode, $format->language()->getId(), new FormattableMarkup('filter_format_load: Proper language code for text format %format.', $t_args));
   }
 
 }

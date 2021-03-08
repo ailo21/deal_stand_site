@@ -2,6 +2,9 @@
 
 namespace Drupal\Component\Utility;
 
+use RuntimeException;
+use stdClass;
+
 /**
  * Defines a utility class for creating random data.
  *
@@ -61,7 +64,7 @@ class Random {
     // random string this loop must be carried out at least once.
     do {
       if ($counter == static::MAXIMUM_TRIES) {
-        throw new \RuntimeException('Unable to generate a unique random name');
+        throw new RuntimeException('Unable to generate a unique random name');
       }
       $str = '';
       for ($i = 0; $i < $length; $i++) {
@@ -114,7 +117,7 @@ class Random {
 
     do {
       if ($counter == static::MAXIMUM_TRIES) {
-        throw new \RuntimeException('Unable to generate a unique random name');
+        throw new RuntimeException('Unable to generate a unique random name');
       }
       $str = chr(mt_rand(97, 122));
       for ($i = 1; $i < $length; $i++) {
@@ -169,7 +172,7 @@ class Random {
    *   has a random string value.
    */
   public function object($size = 4) {
-    $object = new \stdClass();
+    $object = new stdClass();
     for ($i = 0; $i < $size; $i++) {
       $random_key = $this->name();
       $random_value = $this->string();
@@ -192,6 +195,7 @@ class Random {
    *   Nonsense latin words which form sentence(s).
    */
   public function sentences($min_word_count, $capitalize = FALSE) {
+    // cSpell:disable
     $dictionary = ["abbas", "abdo", "abico", "abigo", "abluo", "accumsan",
       "acsi", "ad", "adipiscing", "aliquam", "aliquip", "amet", "antehabeo",
       "appellatio", "aptent", "at", "augue", "autem", "bene", "blandit",
@@ -223,6 +227,7 @@ class Random {
       "virtus", "voco", "volutpat", "vulpes", "vulputate", "wisi", "ymo",
       "zelus",
     ];
+    // cSpell:enable
     $dictionary_flipped = array_flip($dictionary);
     $greeking = '';
 

@@ -7,6 +7,7 @@
 
 namespace Drupal\Tests\config_translation\Unit;
 
+use Drupal;
 use Drupal\config_translation\ConfigNamesMapper;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
@@ -14,6 +15,7 @@ use Drupal\Core\Language\Language;
 use Drupal\Core\Routing\RouteMatch;
 use Drupal\Core\Url;
 use Drupal\Tests\UnitTestCase;
+use RuntimeException;
 use Symfony\Component\Routing\Route;
 
 /**
@@ -117,7 +119,7 @@ class ConfigNamesMapperTest extends UnitTestCase {
     $this->urlGenerator = $this->createMock('Drupal\Core\Routing\UrlGeneratorInterface');
     $container = new ContainerBuilder();
     $container->set('url_generator', $this->urlGenerator);
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
 
     $this->baseRoute = new Route('/admin/config/system/site-information');
 
@@ -450,7 +452,7 @@ class ConfigNamesMapperTest extends UnitTestCase {
       $this->configNamesMapper->getLangcode();
       $this->fail();
     }
-    catch (\RuntimeException $e) {
+    catch (RuntimeException $e) {
     }
   }
 
@@ -611,7 +613,7 @@ class ConfigNamesMapperTest extends UnitTestCase {
   }
 
   /**
-   * Provides data for for ConfigNamesMapperTest::testHasTranslation().
+   * Provides data for ConfigNamesMapperTest::testHasTranslation().
    *
    * @return array
    *   An array of arrays, where each inner array has an array of values that

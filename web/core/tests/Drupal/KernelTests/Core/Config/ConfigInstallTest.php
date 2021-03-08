@@ -2,6 +2,7 @@
 
 namespace Drupal\KernelTests\Core\Config;
 
+use Drupal;
 use Drupal\Core\Config\InstallStorage;
 use Drupal\Core\Config\PreExistingConfigException;
 use Drupal\Core\Config\UnmetDependenciesException;
@@ -47,14 +48,14 @@ class ConfigInstallTest extends KernelTestBase {
 
     // Ensure that schema provided by modules that are not installed is not
     // available.
-    $this->assertFalse(\Drupal::service('config.typed')->hasConfigSchema('config_schema_test.someschema'), 'Configuration schema for config_schema_test.someschema does not exist.');
+    $this->assertFalse(Drupal::service('config.typed')->hasConfigSchema('config_schema_test.someschema'), 'Configuration schema for config_schema_test.someschema does not exist.');
 
     // Install the test module.
     $this->installModules(['config_test']);
 
     // Verify that default module config exists.
-    \Drupal::configFactory()->reset($default_config);
-    \Drupal::configFactory()->reset($default_configuration_entity);
+    Drupal::configFactory()->reset($default_config);
+    Drupal::configFactory()->reset($default_configuration_entity);
     $config = $this->config($default_config);
     $this->assertFalse($config->isNew());
     $config = $this->config($default_configuration_entity);
@@ -74,12 +75,12 @@ class ConfigInstallTest extends KernelTestBase {
     $this->installConfig(['config_schema_test']);
 
     // After module installation the new schema should exist.
-    $this->assertTrue(\Drupal::service('config.typed')->hasConfigSchema('config_schema_test.someschema'), 'Configuration schema for config_schema_test.someschema exists.');
+    $this->assertTrue(Drupal::service('config.typed')->hasConfigSchema('config_schema_test.someschema'), 'Configuration schema for config_schema_test.someschema exists.');
 
     // Test that uninstalling configuration removes configuration schema.
     $this->config('core.extension')->set('module', [])->save();
-    \Drupal::service('config.manager')->uninstall('module', 'config_test');
-    $this->assertFalse(\Drupal::service('config.typed')->hasConfigSchema('config_schema_test.someschema'), 'Configuration schema for config_schema_test.someschema does not exist.');
+    Drupal::service('config.manager')->uninstall('module', 'config_test');
+    $this->assertFalse(Drupal::service('config.typed')->hasConfigSchema('config_schema_test.someschema'), 'Configuration schema for config_schema_test.someschema does not exist.');
   }
 
   /**
@@ -90,7 +91,7 @@ class ConfigInstallTest extends KernelTestBase {
     $this->enableModules(['config_collection_install_test']);
     $this->installConfig(['config_collection_install_test']);
     /** @var \Drupal\Core\Config\StorageInterface $active_storage */
-    $active_storage = \Drupal::service('config.storage');
+    $active_storage = Drupal::service('config.storage');
     $this->assertEqual([], $active_storage->getAllCollectionNames());
   }
 
@@ -105,12 +106,12 @@ class ConfigInstallTest extends KernelTestBase {
     ];
     // Set the event listener to return three possible collections.
     // @see \Drupal\config_collection_install_test\EventSubscriber
-    \Drupal::state()->set('config_collection_install_test.collection_names', $collections);
+    Drupal::state()->set('config_collection_install_test.collection_names', $collections);
     // Install the test module.
     $this->enableModules(['config_collection_install_test']);
     $this->installConfig(['config_collection_install_test']);
     /** @var \Drupal\Core\Config\StorageInterface $active_storage */
-    $active_storage = \Drupal::service('config.storage');
+    $active_storage = Drupal::service('config.storage');
     $this->assertEqual($collections, $active_storage->getAllCollectionNames());
     foreach ($collections as $collection) {
       $collection_storage = $active_storage->createCollection($collection);
@@ -120,29 +121,25 @@ class ConfigInstallTest extends KernelTestBase {
 
     // Tests that clashing configuration in collections is detected.
     try {
-      \Drupal::service('module_installer')->install(['config_collection_clash_install_test']);
+      Drupal::service('module_installer')->install(['config_collection_clash_install_test']);
       $this->fail('Expected PreExistingConfigException not thrown.');
     }
     catch (PreExistingConfigException $e) {
-      $this->assertEqual($e->getExtension(), 'config_collection_clash_install_test');
-      $this->assertEqual($e->getConfigObjects(), [
-        'another_collection' => ['config_collection_install_test.test'],
-        'collection.test1' => ['config_collection_install_test.test'],
-        'collection.test2' => ['config_collection_install_test.test'],
-      ]);
-      $this->assertEqual($e->getMessage(), 'Configuration objects (another_collection/config_collection_install_test.test, collection/test1/config_collection_install_test.test, collection/test2/config_collection_install_test.test) provided by config_collection_clash_install_test already exist in active configuration');
+      $this->assertEqual('config_collection_clash_install_test', $e->getExtension());
+      $this->assertEqual(['another_collection' => ['config_collection_install_test.test'], 'collection.test1' => ['config_collection_install_test.test'], 'collection.test2' => ['config_collection_install_test.test']], $e->getConfigObjects());
+      $this->assertEqual('Configuration objects (another_collection/config_collection_install_test.test, collection/test1/config_collection_install_test.test, collection/test2/config_collection_install_test.test) provided by config_collection_clash_install_test already exist in active configuration', $e->getMessage());
     }
 
     // Test that the we can use the config installer to install all the
     // available default configuration in a particular collection for enabled
     // extensions.
-    \Drupal::service('config.installer')->installCollectionDefaultConfig('entity');
+    Drupal::service('config.installer')->installCollectionDefaultConfig('entity');
     // The 'entity' collection will not exist because the 'config_test' module
     // is not enabled.
     $this->assertEqual($collections, $active_storage->getAllCollectionNames());
     // Enable the 'config_test' module and try again.
     $this->enableModules(['config_test']);
-    \Drupal::service('config.installer')->installCollectionDefaultConfig('entity');
+    Drupal::service('config.installer')->installCollectionDefaultConfig('entity');
     $collections[] = 'entity';
     $this->assertEqual($collections, $active_storage->getAllCollectionNames());
     $collection_storage = $active_storage->createCollection('entity');
@@ -151,9 +148,9 @@ class ConfigInstallTest extends KernelTestBase {
 
     // Test that the config manager uninstalls configuration from collections
     // as expected.
-    \Drupal::service('config.manager')->uninstall('module', 'config_collection_install_test');
+    Drupal::service('config.manager')->uninstall('module', 'config_collection_install_test');
     $this->assertEqual(['entity'], $active_storage->getAllCollectionNames());
-    \Drupal::service('config.manager')->uninstall('module', 'config_test');
+    Drupal::service('config.manager')->uninstall('module', 'config_test');
     $this->assertEqual([], $active_storage->getAllCollectionNames());
   }
 
@@ -169,11 +166,11 @@ class ConfigInstallTest extends KernelTestBase {
     $collections = [
       'entity',
     ];
-    \Drupal::state()->set('config_collection_install_test.collection_names', $collections);
+    Drupal::state()->set('config_collection_install_test.collection_names', $collections);
     // Install the test module.
     $this->installModules(['config_test', 'config_collection_install_test']);
     /** @var \Drupal\Core\Config\StorageInterface $active_storage */
-    $active_storage = \Drupal::service('config.storage');
+    $active_storage = Drupal::service('config.storage');
     $this->assertEqual($collections, $active_storage->getAllCollectionNames());
     $collection_storage = $active_storage->createCollection('entity');
 
@@ -199,9 +196,9 @@ class ConfigInstallTest extends KernelTestBase {
       $this->fail('Expected UnmetDependenciesException not thrown.');
     }
     catch (UnmetDependenciesException $e) {
-      $this->assertEqual($e->getExtension(), 'config_install_dependency_test');
-      $this->assertEqual($e->getConfigObjects(), ['config_test.dynamic.other_module_test_with_dependency' => ['config_other_module_config_test', 'config_test.dynamic.dotted.english']]);
-      $this->assertEqual($e->getMessage(), 'Configuration objects provided by <em class="placeholder">config_install_dependency_test</em> have unmet dependencies: <em class="placeholder">config_test.dynamic.other_module_test_with_dependency (config_other_module_config_test, config_test.dynamic.dotted.english)</em>');
+      $this->assertEqual('config_install_dependency_test', $e->getExtension());
+      $this->assertEqual(['config_test.dynamic.other_module_test_with_dependency' => ['config_other_module_config_test', 'config_test.dynamic.dotted.english']], $e->getConfigObjects());
+      $this->assertEqual('Configuration objects provided by <em class="placeholder">config_install_dependency_test</em> have unmet dependencies: <em class="placeholder">config_test.dynamic.other_module_test_with_dependency (config_other_module_config_test, config_test.dynamic.dotted.english)</em>', $e->getMessage());
     }
     try {
       $this->installModules(['config_install_double_dependency_test']);
@@ -218,13 +215,13 @@ class ConfigInstallTest extends KernelTestBase {
       $this->fail('Expected UnmetDependenciesException not thrown.');
     }
     catch (UnmetDependenciesException $e) {
-      $this->assertEqual($e->getExtension(), 'config_install_dependency_test');
-      $this->assertEqual($e->getConfigObjects(), ['config_test.dynamic.other_module_test_with_dependency' => ['config_other_module_config_test']]);
-      $this->assertEqual($e->getMessage(), 'Configuration objects provided by <em class="placeholder">config_install_dependency_test</em> have unmet dependencies: <em class="placeholder">config_test.dynamic.other_module_test_with_dependency (config_other_module_config_test)</em>');
+      $this->assertEqual('config_install_dependency_test', $e->getExtension());
+      $this->assertEqual(['config_test.dynamic.other_module_test_with_dependency' => ['config_other_module_config_test']], $e->getConfigObjects());
+      $this->assertEqual('Configuration objects provided by <em class="placeholder">config_install_dependency_test</em> have unmet dependencies: <em class="placeholder">config_test.dynamic.other_module_test_with_dependency (config_other_module_config_test)</em>', $e->getMessage());
     }
     $this->installModules(['config_other_module_config_test']);
     $this->installModules(['config_install_dependency_test']);
-    $entity = \Drupal::entityTypeManager()->getStorage('config_test')->load('other_module_test_with_dependency');
+    $entity = Drupal::entityTypeManager()->getStorage('config_test')->load('other_module_test_with_dependency');
     $this->assertNotEmpty($entity, 'The config_test.dynamic.other_module_test_with_dependency configuration has been created during install.');
     // Ensure that dependencies can be added during module installation by
     // hooks.
@@ -240,18 +237,12 @@ class ConfigInstallTest extends KernelTestBase {
     $storage = new InstallStorage();
     $data = $storage->read('config_test.dynamic.dotted.english');
     $this->assertTrue(!isset($data['langcode']));
-    $this->assertEqual(
-      $this->config('config_test.dynamic.dotted.english')->get('langcode'),
-      'en'
-    );
+    $this->assertEqual('en', $this->config('config_test.dynamic.dotted.english')->get('langcode'));
 
     // Test imported configuration with explicit language code.
     $data = $storage->read('config_test.dynamic.dotted.french');
-    $this->assertEqual($data['langcode'], 'fr');
-    $this->assertEqual(
-      $this->config('config_test.dynamic.dotted.french')->get('langcode'),
-      'fr'
-    );
+    $this->assertEqual('fr', $data['langcode']);
+    $this->assertEqual('fr', $this->config('config_test.dynamic.dotted.french')->get('langcode'));
   }
 
   /**
@@ -271,7 +262,7 @@ class ConfigInstallTest extends KernelTestBase {
    */
   protected function installModules(array $modules) {
     $this->container->get('module_installer')->install($modules);
-    $this->container = \Drupal::getContainer();
+    $this->container = Drupal::getContainer();
   }
 
 }

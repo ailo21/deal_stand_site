@@ -2,10 +2,12 @@
 
 namespace Drupal\locale;
 
+use Drupal;
 use Drupal\Component\Gettext\PoHeader;
 use Drupal\Component\Gettext\PoItem;
 use Drupal\Component\Gettext\PoReaderInterface;
 use Drupal\Component\Gettext\PoWriterInterface;
+use Exception;
 
 /**
  * Gettext PO writer working with the locale module database.
@@ -158,27 +160,27 @@ class PoDatabaseWriter implements PoWriterInterface {
    */
   public function setHeader(PoHeader $header) {
     $this->header = $header;
-    $locale_plurals = \Drupal::state()->get('locale.translation.plurals') ?: [];
+    $locale_plurals = Drupal::state()->get('locale.translation.plurals', []);
 
     // Check for options.
     $options = $this->getOptions();
     if (empty($options)) {
-      throw new \Exception('Options should be set before assigning a PoHeader.');
+      throw new Exception('Options should be set before assigning a PoHeader.');
     }
     $overwrite_options = $options['overwrite_options'];
 
     // Check for langcode.
     $langcode = $this->langcode;
     if (empty($langcode)) {
-      throw new \Exception('Langcode should be set before assigning a PoHeader.');
+      throw new Exception('Langcode should be set before assigning a PoHeader.');
     }
 
     if (array_sum($overwrite_options) || empty($locale_plurals[$langcode]['plurals'])) {
       // Get and store the plural formula if available.
       $plural = $header->getPluralForms();
       if (isset($plural) && $p = $header->parsePluralForms($plural)) {
-        list($nplurals, $formula) = $p;
-        \Drupal::service('locale.plural.formula')->setPluralFormula($langcode, $nplurals, $formula);
+        [$nplurals, $formula] = $p;
+        Drupal::service('locale.plural.formula')->setPluralFormula($langcode, $nplurals, $formula);
       }
     }
   }
@@ -227,7 +229,7 @@ class PoDatabaseWriter implements PoWriterInterface {
     $translation = $item->getTranslation();
 
     // Look up the source string and any existing translation.
-    $strings = \Drupal::service('locale.storage')->getTranslations([
+    $strings = Drupal::service('locale.storage')->getTranslations([
       'language' => $this->langcode,
       'source' => $source,
       'context' => $context,
@@ -237,7 +239,7 @@ class PoDatabaseWriter implements PoWriterInterface {
     if (!empty($translation)) {
       // Skip this string unless it passes a check for dangerous code.
       if (!locale_string_is_safe($translation)) {
-        \Drupal::logger('locale')->error('Import of string "%string" was skipped because of disallowed or malformed HTML.', ['%string' => $translation]);
+        Drupal::logger('locale')->error('Import of string "%string" was skipped because of disallowed or malformed HTML.', ['%string' => $translation]);
         $this->report['skips']++;
         return 0;
       }
@@ -263,9 +265,9 @@ class PoDatabaseWriter implements PoWriterInterface {
       }
       else {
         // No such source string in the database yet.
-        $string = \Drupal::service('locale.storage')->createString(['source' => $source, 'context' => $context])
+        $string = Drupal::service('locale.storage')->createString(['source' => $source, 'context' => $context])
           ->save();
-        \Drupal::service('locale.storage')->createTranslation([
+        Drupal::service('locale.storage')->createTranslation([
           'lid' => $string->getId(),
           'language' => $this->langcode,
           'translation' => $translation,

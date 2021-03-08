@@ -4,6 +4,7 @@ namespace Drupal\Core\Cache;
 
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\DatabaseException;
+use Exception;
 
 /**
  * Cache tags invalidations checksum implementation that uses the database.
@@ -42,7 +43,7 @@ class DatabaseCacheTagsChecksum implements CacheTagsChecksumInterface, CacheTags
           ->execute();
       }
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       // Create the cache table, which will be empty. This fixes cases during
       // core install where cache tags are invalidated before the table is
       // created.
@@ -57,10 +58,10 @@ class DatabaseCacheTagsChecksum implements CacheTagsChecksumInterface, CacheTags
    */
   protected function getTagInvalidationCounts(array $tags) {
     try {
-      return $this->connection->query('SELECT tag, invalidations FROM {cachetags} WHERE tag IN ( :tags[] )', [':tags[]' => $tags])
+      return $this->connection->query('SELECT [tag], [invalidations] FROM {cachetags} WHERE [tag] IN ( :tags[] )', [':tags[]' => $tags])
         ->fetchAllKeyed();
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       // If the table does not exist yet, create.
       if (!$this->ensureTableExists()) {
         $this->catchException($e);
@@ -132,7 +133,7 @@ class DatabaseCacheTagsChecksum implements CacheTagsChecksumInterface, CacheTags
    *
    * @throws \Exception
    */
-  protected function catchException(\Exception $e) {
+  protected function catchException(Exception $e) {
     if ($this->connection->schema()->tableExists('cachetags')) {
       throw $e;
     }

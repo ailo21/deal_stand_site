@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\block\Kernel;
 
+use Drupal;
 use Drupal\block\Entity\Block;
 use Drupal\Tests\SchemaCheckTestTrait;
 use Drupal\KernelTests\KernelTestBase;
@@ -54,8 +55,8 @@ class BlockConfigSchemaTest extends KernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    $this->typedConfig = \Drupal::service('config.typed');
-    $this->blockManager = \Drupal::service('plugin.manager.block');
+    $this->typedConfig = Drupal::service('config.typed');
+    $this->blockManager = Drupal::service('plugin.manager.block');
     $this->installEntitySchema('block_content');
     $this->installEntitySchema('taxonomy_term');
     $this->installEntitySchema('node');
@@ -85,7 +86,7 @@ class BlockConfigSchemaTest extends KernelTestBase {
       $block->save();
 
       $config = $this->config("block.block.$id");
-      $this->assertEqual($config->get('id'), $id);
+      $this->assertEqual($id, $config->get('id'));
       $this->assertConfigSchema($this->typedConfig, $config->getName(), $config->get());
     }
   }

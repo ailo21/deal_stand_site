@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\user\Functional\Views;
 
+use Drupal;
 use Drupal\Core\Render\RenderContext;
 use Drupal\views\Views;
 
@@ -27,7 +28,7 @@ class HandlerFieldUserNameTest extends UserTestBase {
 
   public function testUserName() {
     /** @var \Drupal\Core\Render\RendererInterface $renderer */
-    $renderer = \Drupal::service('renderer');
+    $renderer = Drupal::service('renderer');
 
     $new_user = $this->drupalCreateUser(['access user profiles']);
     $this->drupalLogin($new_user);
@@ -60,7 +61,7 @@ class HandlerFieldUserNameTest extends UserTestBase {
     $render = $renderer->executeInRenderContext(new RenderContext(), function () use ($view, $new_user) {
       return $view->field['name']->advancedRender($view->result[$new_user->id()]);
     });
-    $this->assertEqual($render, $new_user->getDisplayName(), 'If the user is not linked the username should be printed out for a normal user.');
+    $this->assertEqual($new_user->getDisplayName(), $render, 'If the user is not linked the username should be printed out for a normal user.');
 
   }
 
@@ -69,7 +70,7 @@ class HandlerFieldUserNameTest extends UserTestBase {
    */
   public function testNoAdditionalFields() {
     /** @var \Drupal\Core\Render\RendererInterface $renderer */
-    $renderer = \Drupal::service('renderer');
+    $renderer = Drupal::service('renderer');
 
     $view = Views::getView('test_views_handler_field_user_name');
     $this->executeView($view);

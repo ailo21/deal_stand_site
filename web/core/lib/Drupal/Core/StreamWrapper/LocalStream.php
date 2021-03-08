@@ -2,6 +2,8 @@
 
 namespace Drupal\Core\StreamWrapper;
 
+use Drupal;
+
 /**
  * Defines a Drupal stream wrapper base class for local files.
  *
@@ -89,7 +91,7 @@ abstract class LocalStream implements StreamWrapperInterface {
       $uri = $this->uri;
     }
 
-    list(, $target) = explode('://', $uri, 2);
+    [, $target] = explode('://', $uri, 2);
 
     // Remove erroneous leading or trailing, forward-slashes and backslashes.
     return trim($target, '\/');
@@ -134,7 +136,7 @@ abstract class LocalStream implements StreamWrapperInterface {
     $realpath = realpath($path);
     if (!$realpath) {
       // This file does not yet exist.
-      $realpath = realpath(dirname($path)) . '/' . \Drupal::service('file_system')->basename($path);
+      $realpath = realpath(dirname($path)) . '/' . Drupal::service('file_system')->basename($path);
     }
     $directory = realpath($this->getDirectoryPath());
     if (!$realpath || !$directory || strpos($realpath, $directory) !== 0) {
@@ -163,6 +165,12 @@ abstract class LocalStream implements StreamWrapperInterface {
   public function stream_open($uri, $mode, $options, &$opened_path) {
     $this->uri = $uri;
     $path = $this->getLocalPath();
+    if ($path === FALSE) {
+      if ($options & STREAM_REPORT_ERRORS) {
+        trigger_error('stream_open() filename cannot be empty', E_USER_WARNING);
+      }
+      return FALSE;
+    }
     $this->handle = ($options & STREAM_REPORT_ERRORS) ? fopen($path, $mode) : @fopen($path, $mode);
 
     if ((bool) $this->handle && $options & STREAM_USE_PATH) {
@@ -410,7 +418,7 @@ abstract class LocalStream implements StreamWrapperInterface {
    * @see \Drupal\Core\File\FileSystemInterface::dirname()
    */
   public function dirname($uri = NULL) {
-    list($scheme) = explode('://', $uri, 2);
+    [$scheme] = explode('://', $uri, 2);
     $target = $this->getTarget($uri);
     $dirname = dirname($target);
 
@@ -448,7 +456,7 @@ abstract class LocalStream implements StreamWrapperInterface {
       $localpath = $this->getLocalPath($uri);
     }
     /** @var \Drupal\Core\File\FileSystemInterface $file_system */
-    $file_system = \Drupal::service('file_system');
+    $file_system = Drupal::service('file_system');
     if ($options & STREAM_REPORT_ERRORS) {
       return $file_system->mkdir($localpath, $mode, $recursive);
     }
@@ -473,7 +481,7 @@ abstract class LocalStream implements StreamWrapperInterface {
   public function rmdir($uri, $options) {
     $this->uri = $uri;
     /** @var \Drupal\Core\File\FileSystemInterface $file_system */
-    $file_system = \Drupal::service('file_system');
+    $file_system = Drupal::service('file_system');
     if ($options & STREAM_REPORT_ERRORS) {
       return $file_system->rmdir($this->getLocalPath());
     }
@@ -579,7 +587,7 @@ abstract class LocalStream implements StreamWrapperInterface {
    *   The file system service.
    */
   private function getFileSystem() {
-    return \Drupal::service('file_system');
+    return Drupal::service('file_system');
   }
 
 }

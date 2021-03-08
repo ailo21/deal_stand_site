@@ -2,13 +2,14 @@
 
 namespace Drupal\jsonapi\Routing;
 
+use Drupal;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\jsonapi\Access\RelationshipFieldAccess;
 use Drupal\jsonapi\Controller\EntryPoint;
 use Drupal\jsonapi\ParamConverter\ResourceTypeConverter;
 use Drupal\jsonapi\ResourceType\ResourceType;
 use Drupal\jsonapi\ResourceType\ResourceTypeRepositoryInterface;
-use Symfony\Cmf\Component\Routing\RouteObjectInterface;
+use Drupal\Core\Routing\RouteObjectInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
@@ -473,8 +474,8 @@ class Routes implements ContainerInjectionInterface {
    * Invalidates any JSON:API resource type dependent responses and routes.
    */
   public static function rebuild() {
-    \Drupal::service('cache_tags.invalidator')->invalidateTags(['jsonapi_resource_types']);
-    \Drupal::service('router.builder')->setRebuildNeeded();
+    Drupal::service('cache_tags.invalidator')->invalidateTags(['jsonapi_resource_types']);
+    Drupal::service('router.builder')->setRebuildNeeded();
   }
 
 }

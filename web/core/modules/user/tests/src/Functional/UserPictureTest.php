@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\user\Functional;
 
+use Drupal;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\Core\StreamWrapper\StreamWrapperManager;
@@ -72,12 +73,12 @@ class UserPictureTest extends BrowserTestBase {
 
     // Verify that the image is displayed on the user account page.
     $this->drupalGet('user');
-    $this->assertRaw(StreamWrapperManager::getTarget($file->getFileUri()), 'User picture found on user account page.');
+    $this->assertRaw(StreamWrapperManager::getTarget($file->getFileUri()));
 
     // Delete the picture.
     $edit = [];
-    $this->drupalPostForm('user/' . $this->webUser->id() . '/edit', $edit, t('Remove'));
-    $this->drupalPostForm(NULL, [], t('Save'));
+    $this->drupalPostForm('user/' . $this->webUser->id() . '/edit', $edit, 'Remove');
+    $this->submitForm([], 'Save');
 
     // Call file_cron() to clean up the file. Make sure the timestamp
     // of the file is older than the system.file.temporary_maximum_age
@@ -89,7 +90,7 @@ class UserPictureTest extends BrowserTestBase {
       ])
       ->condition('fid', $file->id())
       ->execute();
-    \Drupal::service('cron')->run();
+    Drupal::service('cron')->run();
 
     // Verify that the image has been deleted.
     $this->assertNull(File::load($file->id()), 'File was removed from the database.');
@@ -132,7 +133,7 @@ class UserPictureTest extends BrowserTestBase {
     $edit = [
       'comment_body[0][value]' => $this->randomString(),
     ];
-    $this->drupalPostForm('comment/reply/node/' . $node->id() . '/comment', $edit, t('Save'));
+    $this->drupalPostForm('comment/reply/node/' . $node->id() . '/comment', $edit, 'Save');
     $elements = $this->cssSelect('.comment__meta .field--name-user-picture img[alt="' . $alt_text . '"][src="' . $image_url . '"]');
     $this->assertCount(1, $elements, 'User picture with alt text found on the comment.');
 
@@ -143,15 +144,15 @@ class UserPictureTest extends BrowserTestBase {
       ->save();
 
     $this->drupalGet('node/' . $node->id());
-    $this->assertNoRaw(StreamWrapperManager::getTarget($file->getFileUri()), 'User picture not found on node and comment.');
+    $this->assertNoRaw(StreamWrapperManager::getTarget($file->getFileUri()));
   }
 
   /**
    * Edits the user picture for the test user.
    */
   public function saveUserPicture($image) {
-    $edit = ['files[user_picture_0]' => \Drupal::service('file_system')->realpath($image->uri)];
-    $this->drupalPostForm('user/' . $this->webUser->id() . '/edit', $edit, t('Save'));
+    $edit = ['files[user_picture_0]' => Drupal::service('file_system')->realpath($image->uri)];
+    $this->drupalPostForm('user/' . $this->webUser->id() . '/edit', $edit, 'Save');
 
     // Load actual user data from database.
     $user_storage = $this->container->get('entity_type.manager')->getStorage('user');
@@ -166,7 +167,7 @@ class UserPictureTest extends BrowserTestBase {
    * @see user_user_view_alter()
    */
   public function testUserViewAlter() {
-    \Drupal::service('module_installer')->install(['image_module_test']);
+    Drupal::service('module_installer')->install(['image_module_test']);
     // Set dummy_image_formatter to the default view mode of user entity.
     EntityViewDisplay::load('user.user.default')->setComponent('user_picture', [
       'region' => 'content',

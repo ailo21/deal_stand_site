@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\Core\Template;
 
+use ArrayObject;
 use Drupal\Core\GeneratedLink;
 use Drupal\Core\Render\RenderableInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
@@ -75,7 +76,7 @@ class TwigExtensionTest extends UnitTestCase {
   }
 
   /**
-   * Tests the escaping
+   * Tests the escaping.
    *
    * @dataProvider providerTestEscaping
    */
@@ -98,7 +99,7 @@ class TwigExtensionTest extends UnitTestCase {
   }
 
   /**
-   * Provides tests data for testEscaping
+   * Provides tests data for testEscaping.
    *
    * @return array
    *   An array of test data each containing of a twig template string and
@@ -238,7 +239,7 @@ class TwigExtensionTest extends UnitTestCase {
     $this->assertEquals('&lt;em&gt;will be escaped&lt;/em&gt;<br/><em>will be markup</em><br/><strong>will be rendered</strong>', $result);
 
     // Ensure safe_join Twig filter supports Traversable variables.
-    $items = new \ArrayObject([
+    $items = new ArrayObject([
       '<em>will be escaped</em>',
       $markup,
       ['#markup' => '<strong>will be rendered</strong>'],

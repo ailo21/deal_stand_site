@@ -5,6 +5,7 @@ namespace Drupal\KernelTests\Component\Render;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Url;
 use Drupal\KernelTests\KernelTestBase;
+use InvalidArgumentException;
 
 /**
  * Provides a test covering integration of FormattableMarkup with other systems.
@@ -17,15 +18,6 @@ class FormattableMarkupKernelTest extends KernelTestBase {
    * {@inheritdoc}
    */
   protected static $modules = ['system'];
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function setUp(): void {
-    parent::setUp();
-
-    $this->container->get('router.builder')->rebuild();
-  }
 
   /**
    * Gets arguments for FormattableMarkup based on Url::fromUri() parameters.
@@ -112,7 +104,7 @@ class FormattableMarkupKernelTest extends KernelTestBase {
    */
   public function testFormattableMarkupUriWithExceptionUri($string, $uri) {
     // Should throw an \InvalidArgumentException, due to Uri::toString().
-    $this->expectException(\InvalidArgumentException::class);
+    $this->expectException(InvalidArgumentException::class);
     $args = self::getFormattableMarkupUriArgs($uri);
 
     new FormattableMarkup($string, $args);

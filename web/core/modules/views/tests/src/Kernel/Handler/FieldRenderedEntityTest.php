@@ -2,10 +2,12 @@
 
 namespace Drupal\Tests\views\Kernel\Handler;
 
+use Drupal;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
 use Drupal\views\Entity\View;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
@@ -48,6 +50,11 @@ class FieldRenderedEntityTest extends ViewsKernelTestBase {
     $this->installEntitySchema('entity_test');
     $this->installConfig(['entity_test']);
 
+    // Create user 1 so that the user created later in the test has a different
+    // user ID.
+    // @todo Remove in https://www.drupal.org/node/540008.
+    User::create(['uid' => 1, 'name' => 'user1'])->save();
+
     EntityViewMode::create([
       'id' => 'entity_test.foobar',
       'targetEntityType' => 'entity_test',
@@ -87,8 +94,15 @@ class FieldRenderedEntityTest extends ViewsKernelTestBase {
       ])->save();
     }
 
+    Role::create([
+      'id' => 'test_role',
+      'label' => 'Can view test entities',
+      'permissions' => ['view test entity'],
+    ])->save();
+
     $this->user = User::create([
       'name' => 'test user',
+      'roles' => ['test_role'],
     ]);
     $this->user->save();
 
@@ -99,7 +113,7 @@ class FieldRenderedEntityTest extends ViewsKernelTestBase {
    * Tests the default rendered entity output.
    */
   public function testRenderedEntityWithoutField() {
-    \Drupal::currentUser()->setAccount($this->user);
+    Drupal::currentUser()->setAccount($this->user);
 
     EntityViewDisplay::load('entity_test.entity_test.foobar')
       ->removeComponent('test_field')
@@ -112,7 +126,7 @@ class FieldRenderedEntityTest extends ViewsKernelTestBase {
       '#view' => $view,
       '#display_id' => 'default',
     ];
-    $renderer = \Drupal::service('renderer');
+    $renderer = Drupal::service('renderer');
     $renderer->renderPlain($build);
     for ($i = 1; $i <= 3; $i++) {
       $view_field = $view->style_plugin->getField($i - 1, 'rendered_entity');
@@ -167,7 +181,7 @@ class FieldRenderedEntityTest extends ViewsKernelTestBase {
    * Tests the rendered entity output with the test field configured to show.
    */
   public function testRenderedEntityWithField() {
-    \Drupal::currentUser()->setAccount($this->user);
+    Drupal::currentUser()->setAccount($this->user);
 
     // Show the test_field on the entity_test.entity_test.foobar view display.
     EntityViewDisplay::load('entity_test.entity_test.foobar')->setComponent('test_field', ['type' => 'string', 'label' => 'above'])->save();
@@ -180,7 +194,7 @@ class FieldRenderedEntityTest extends ViewsKernelTestBase {
       '#display_id' => 'default',
     ];
 
-    $renderer = \Drupal::service('renderer');
+    $renderer = Drupal::service('renderer');
     $renderer->renderPlain($build);
     for ($i = 1; $i <= 3; $i++) {
       $view_field = $view->style_plugin->getField($i - 1, 'rendered_entity');

@@ -4,6 +4,7 @@ namespace Drupal\Tests\Core\Test\RunTests;
 
 use Drupal\Core\Test\RunTests\TestFileParser;
 use Drupal\Tests\UnitTestCase;
+use ReflectionMethod;
 
 /**
  * @coversDefaultClass \Drupal\Core\Test\RunTests\TestFileParser
@@ -70,7 +71,7 @@ COMPOUND
   public function testParseContents($expected, $contents) {
     $parser = new TestFileParser();
 
-    $ref_parse = new \ReflectionMethod($parser, 'parseContents');
+    $ref_parse = new ReflectionMethod($parser, 'parseContents');
     $ref_parse->setAccessible(TRUE);
 
     $this->assertSame($expected, $ref_parse->invoke($parser, $contents));
@@ -81,11 +82,11 @@ COMPOUND
    */
   public function testGetTestListFromFile() {
     $parser = new TestFileParser();
-    $this->assertArrayEquals(
+    $this->assertEquals(
       ['Drupal\Tests\Core\Test\RunTests\TestFileParserTest'],
       $parser->getTestListFromFile(__FILE__)
     );
-    $this->assertArrayEquals(
+    $this->assertEquals(
       ['Drupal\KernelTests\Core\Datetime\Element\TimezoneTest'],
       $parser->getTestListFromFile(__DIR__ . '/../../../../KernelTests/Core/Datetime/Element/TimezoneTest.php')
     );

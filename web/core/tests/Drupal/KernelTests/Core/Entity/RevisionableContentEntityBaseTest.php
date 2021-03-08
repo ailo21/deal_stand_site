@@ -2,6 +2,7 @@
 
 namespace Drupal\KernelTests\Core\Entity;
 
+use Drupal;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
@@ -38,7 +39,7 @@ class RevisionableContentEntityBaseTest extends EntityKernelTestBase {
    */
   public function testRevisionableContentEntity() {
     $entity_type = 'entity_test_mul_revlog';
-    $definition = \Drupal::entityTypeManager()->getDefinition($entity_type);
+    $definition = Drupal::entityTypeManager()->getDefinition($entity_type);
     $user = User::create(['name' => 'test name']);
     $user->save();
     /** @var \Drupal\entity_test_revlog\Entity\EntityTestMulWithRevisionLog $entity */
@@ -59,7 +60,7 @@ class RevisionableContentEntityBaseTest extends EntityKernelTestBase {
     $revision_id = $entity->getRevisionId();
     $revision_ids[] = $revision_id;
 
-    $storage = \Drupal::entityTypeManager()->getStorage('entity_test_mul_revlog');
+    $storage = Drupal::entityTypeManager()->getStorage('entity_test_mul_revlog');
     $entity = $storage->loadRevision($revision_id);
     $this->assertEquals($random_timestamp, $entity->getRevisionCreationTime());
     $this->assertEquals($user->id(), $entity->getRevisionUserId());
@@ -169,10 +170,11 @@ class RevisionableContentEntityBaseTest extends EntityKernelTestBase {
    */
   protected function assertItemsTableCount($count, EntityTypeInterface $definition) {
     $connection = Database::getConnection();
-    $this->assertEqual(1, $connection->query('SELECT COUNT(*) FROM {' . $definition->getBaseTable() . '}')->fetchField());
-    $this->assertEqual(1, $connection->query('SELECT COUNT(*) FROM {' . $definition->getDataTable() . '}')->fetchField());
-    $this->assertEqual($count, $connection->query('SELECT COUNT(*) FROM {' . $definition->getRevisionTable() . '}')->fetchField());
-    $this->assertEqual($count, $connection->query('SELECT COUNT(*) FROM {' . $definition->getRevisionDataTable() . '}')->fetchField());
+    $this->assertEqual(1, (int) $connection->select($definition->getBaseTable())->countQuery()->execute()->fetchField());
+    $this->assertEqual(1, (int) $connection->select($definition->getDataTable())->countQuery()->execute()->fetchField());
+    $this->assertEqual($count, (int) $connection->select($definition->getRevisionTable())->countQuery()->execute()->fetchField());
+    $this->assertEqual($count, (int) $connection->select($definition->getRevisionDataTable())->countQuery()->execute()->fetchField());
+
   }
 
   /**

@@ -2,6 +2,7 @@
 
 namespace Drupal\editor\Form;
 
+use Drupal;
 use Drupal\Component\Utility\Bytes;
 use Drupal\Component\Utility\Environment;
 use Drupal\Core\Form\FormBase;
@@ -92,8 +93,8 @@ class EditorImageDialog extends FormBase {
     else {
       $max_dimensions = 0;
     }
-    $max_filesize = min(Bytes::toInt($image_upload['max_size']), Environment::getUploadMaxSize());
-    $existing_file = isset($image_element['data-entity-uuid']) ? \Drupal::service('entity.repository')->loadEntityByUuid('file', $image_element['data-entity-uuid']) : NULL;
+    $max_filesize = min(Bytes::toNumber($image_upload['max_size']), Environment::getUploadMaxSize());
+    $existing_file = isset($image_element['data-entity-uuid']) ? Drupal::service('entity.repository')->loadEntityByUuid('file', $image_element['data-entity-uuid']) : NULL;
     $fid = $existing_file ? $existing_file->id() : NULL;
 
     $form['fid'] = [

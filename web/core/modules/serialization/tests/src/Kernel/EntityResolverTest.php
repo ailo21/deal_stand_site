@@ -31,8 +31,6 @@ class EntityResolverTest extends NormalizerTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    \Drupal::service('router.builder')->rebuild();
-
     // Create the test field storage.
     FieldStorageConfig::create([
       'entity_type' => 'entity_test_mulrev',
@@ -92,7 +90,7 @@ class EntityResolverTest extends NormalizerTestBase {
 
     $denormalized = $this->container->get('serializer')->denormalize($data, 'Drupal\entity_test\Entity\EntityTestMulRev', $this->format);
     $field_value = $denormalized->get('field_test_entity_reference')->getValue();
-    $this->assertEqual($field_value[0]['target_id'], 1, 'Entity reference resolved using UUID.');
+    $this->assertEqual(1, $field_value[0]['target_id'], 'Entity reference resolved using UUID.');
   }
 
 }

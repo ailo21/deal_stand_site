@@ -6,6 +6,7 @@ use Drupal\Component\Utility\NestedArray;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\GeneratedUrl;
 use Drupal\Core\PathProcessor\OutboundPathProcessorInterface;
+use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -62,7 +63,7 @@ class UnroutedUrlAssembler implements UnroutedUrlAssemblerInterface {
       // UrlHelper::isExternal() only returns true for safe protocols.
       return $this->buildExternalUrl($uri, $options, $collect_bubbleable_metadata);
     }
-    throw new \InvalidArgumentException("The URI '$uri' is invalid. You must use a valid URI scheme. Use base: for a path, e.g., to a Drupal file that needs the base path. Do not use this for internal paths controlled by Drupal.");
+    throw new InvalidArgumentException("The URI '$uri' is invalid. You must use a valid URI scheme. Use base: for a path, e.g., to a Drupal file that needs the base path. Do not use this for internal paths controlled by Drupal.");
   }
 
   /**
@@ -162,7 +163,7 @@ class UnroutedUrlAssembler implements UnroutedUrlAssemblerInterface {
   }
 
   /**
-   * Merges in default defaults
+   * Merges in default defaults.
    *
    * @param array $options
    *   The options to merge in the defaults.

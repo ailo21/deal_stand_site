@@ -2,10 +2,13 @@
 
 namespace Drupal\Tests\block\Functional;
 
+use Drupal;
 use Drupal\Component\Utility\Html;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Plugin\LanguageNegotiation\LanguageNegotiationUrl;
 use Drupal\Tests\BrowserTestBase;
+
+// cspell:ignore scriptalertxsssubjectscript
 
 /**
  * Tests that the block configuration UI exists and stores data correctly.
@@ -95,12 +98,12 @@ class BlockUiTest extends BrowserTestBase {
     $this->assertTrue(!empty($elements), 'Block demo regions are shown.');
 
     // Ensure that other themes can use the block demo page.
-    \Drupal::service('theme_installer')->install(['test_theme']);
+    Drupal::service('theme_installer')->install(['test_theme']);
     $this->drupalGet('admin/structure/block/demo/test_theme');
-    $this->assertEscaped('<strong>Test theme</strong>');
+    $this->assertSession()->assertEscaped('<strong>Test theme</strong>');
 
     // Ensure that a hidden theme cannot use the block demo page.
-    \Drupal::service('theme_installer')->install(['stable']);
+    Drupal::service('theme_installer')->install(['stable']);
     $this->drupalGet('admin/structure/block/demo/stable');
     $this->assertSession()->statusCodeEquals(404);
   }
@@ -121,27 +124,19 @@ class BlockUiTest extends BrowserTestBase {
       $element = $this->xpath('//*[@id="blocks"]/tbody/tr[' . $values['tr'] . ']/td[1]/text()');
       $this->assertEquals($element[0]->getText(), $label, 'The "' . $label . '" block title is set inside the ' . $values['settings']['region'] . ' region.');
       // Look for a test block region select form element.
-      $this->assertField('blocks[' . $values['settings']['id'] . '][region]', 'The block "' . $values['label'] . '" has a region assignment field.');
+      $this->assertSession()->fieldExists('blocks[' . $values['settings']['id'] . '][region]');
       // Move the test block to the header region.
       $edit['blocks[' . $values['settings']['id'] . '][region]'] = 'header';
       // Look for a test block weight select form element.
-      $this->assertField('blocks[' . $values['settings']['id'] . '][weight]', 'The block "' . $values['label'] . '" has a weight assignment field.');
+      $this->assertSession()->fieldExists('blocks[' . $values['settings']['id'] . '][weight]');
       // Change the test block's weight.
       $edit['blocks[' . $values['settings']['id'] . '][weight]'] = $values['test_weight'];
     }
-    $this->drupalPostForm('admin/structure/block', $edit, t('Save blocks'));
+    $this->drupalPostForm('admin/structure/block', $edit, 'Save blocks');
     foreach ($this->blockValues as $values) {
       // Check if the region and weight settings changes have persisted.
-      $this->assertOptionSelected(
-        'edit-blocks-' . $values['settings']['id'] . '-region',
-        'header',
-        'The block "' . $label . '" has the correct region assignment (header).'
-      );
-      $this->assertOptionSelected(
-        'edit-blocks-' . $values['settings']['id'] . '-weight',
-        $values['test_weight'],
-        'The block "' . $label . '" has the correct weight assignment (' . $values['test_weight'] . ').'
-      );
+      $this->assertTrue($this->assertSession()->optionExists('edit-blocks-' . $values['settings']['id'] . '-region', 'header')->isSelected());
+      $this->assertTrue($this->assertSession()->optionExists('edit-blocks-' . $values['settings']['id'] . '-weight', $values['test_weight'])->isSelected());
     }
 
     // Add a block with a machine name the same as a region name.
@@ -152,11 +147,11 @@ class BlockUiTest extends BrowserTestBase {
 
     // Ensure hidden themes do not appear in the UI. Enable another non base
     // theme and place the local tasks block.
-    $this->assertTrue(\Drupal::service('theme_handler')->themeExists('classy'), 'The classy base theme is enabled');
+    $this->assertTrue(Drupal::service('theme_handler')->themeExists('classy'), 'The classy base theme is enabled');
     $this->drupalPlaceBlock('local_tasks_block', ['region' => 'header']);
-    \Drupal::service('theme_installer')->install(['stable', 'stark']);
+    Drupal::service('theme_installer')->install(['stable', 'stark']);
     $this->drupalGet('admin/structure/block');
-    $theme_handler = \Drupal::service('theme_handler');
+    $theme_handler = Drupal::service('theme_handler');
     $this->assertSession()->linkExists($theme_handler->getName('classy'));
     $this->assertSession()->linkExists($theme_handler->getName('stark'));
     $this->assertSession()->linkNotExists($theme_handler->getName('stable'));
@@ -167,8 +162,8 @@ class BlockUiTest extends BrowserTestBase {
 
     // Ensure that a hidden theme set as the admin theme can use the block demo
     // page.
-    \Drupal::configFactory()->getEditable('system.theme')->set('admin', 'stable')->save();
-    \Drupal::service('router.builder')->rebuildIfNeeded();
+    Drupal::configFactory()->getEditable('system.theme')->set('admin', 'stable')->save();
+    Drupal::service('router.builder')->rebuildIfNeeded();
     $this->drupalPlaceBlock('local_tasks_block', ['region' => 'header', 'theme' => 'stable']);
     $this->drupalGet('admin/structure/block');
     $this->assertSession()->linkExists($theme_handler->getName('stable'));
@@ -218,7 +213,7 @@ class BlockUiTest extends BrowserTestBase {
     $elements = $this->xpath('//tr[.//td/div[text()=:text] and .//td[text()=:category] and .//td//a[contains(@href, :href)]]', $arguments);
     $this->assertTrue(empty($elements), 'The context-aware test block does not appear.');
 
-    $definition = \Drupal::service('plugin.manager.block')->getDefinition('test_context_aware_unsatisfied');
+    $definition = Drupal::service('plugin.manager.block')->getDefinition('test_context_aware_unsatisfied');
     $this->assertTrue(!empty($definition), 'The context-aware test block does not exist.');
   }
 
@@ -226,7 +221,7 @@ class BlockUiTest extends BrowserTestBase {
    * Tests the behavior of context-aware blocks.
    */
   public function testContextAwareBlocks() {
-    $expected_text = '<div id="test_context_aware--username">' . \Drupal::currentUser()->getAccountName() . '</div>';
+    $expected_text = '<div id="test_context_aware--username">' . Drupal::currentUser()->getAccountName() . '</div>';
     $this->drupalGet('');
     $this->assertNoText('Test context-aware block');
     $this->assertNoRaw($expected_text);
@@ -243,7 +238,7 @@ class BlockUiTest extends BrowserTestBase {
     $this->clickLink('Place block');
     $elements = $this->xpath($pattern, $arguments);
     $this->assertTrue(!empty($elements), 'The context-aware test block appears.');
-    $definition = \Drupal::service('plugin.manager.block')->getDefinition('test_context_aware');
+    $definition = Drupal::service('plugin.manager.block')->getDefinition('test_context_aware');
     $this->assertTrue(!empty($definition), 'The context-aware test block exists.');
     $edit = [
       'region' => 'content',
@@ -268,7 +263,7 @@ class BlockUiTest extends BrowserTestBase {
     $edit = [
       'settings[context_mapping][user]' => '',
     ];
-    $this->drupalPostForm(NULL, $edit, 'Save block');
+    $this->submitForm($edit, 'Save block');
     $this->drupalGet('');
     $this->assertText('No context mapping selected.');
     $this->assertNoText('User context found.');
@@ -276,29 +271,31 @@ class BlockUiTest extends BrowserTestBase {
     // Tests that conditions with missing context are not displayed.
     $this->drupalGet('admin/structure/block/manage/testcontextawareblock');
     $this->assertNoRaw('No existing type');
-    $this->assertNoFieldByXPath('//*[@name="visibility[condition_test_no_existing_type][negate]"]');
+    $this->assertSession()->elementNotExists('xpath', '//*[@name="visibility[condition_test_no_existing_type][negate]"]');
   }
 
   /**
    * Tests that the BlockForm populates machine name correctly.
    */
   public function testMachineNameSuggestion() {
+    // Check the form uses the raw machine name suggestion when no instance
+    // already exists.
     $url = 'admin/structure/block/add/test_block_instantiation/classy';
     $this->drupalGet($url);
-    $this->assertFieldByName('id', 'displaymessage', 'Block form uses raw machine name suggestion when no instance already exists.');
+    $this->assertSession()->fieldValueEquals('id', 'displaymessage');
     $edit = ['region' => 'content'];
     $this->drupalPostForm($url, $edit, 'Save block');
     $this->assertText('The block configuration has been saved.');
 
     // Now, check to make sure the form starts by autoincrementing correctly.
     $this->drupalGet($url);
-    $this->assertFieldByName('id', 'displaymessage_2', 'Block form appends _2 to plugin-suggested machine name when an instance already exists.');
+    $this->assertSession()->fieldValueEquals('id', 'displaymessage_2');
     $this->drupalPostForm($url, $edit, 'Save block');
     $this->assertText('The block configuration has been saved.');
 
     // And verify that it continues working beyond just the first two.
     $this->drupalGet($url);
-    $this->assertFieldByName('id', 'displaymessage_3', 'Block form appends _3 to plugin-suggested machine name when two instances already exist.');
+    $this->assertSession()->fieldValueEquals('id', 'displaymessage_3');
   }
 
   /**
@@ -307,8 +304,8 @@ class BlockUiTest extends BrowserTestBase {
   public function testBlockPlacementIndicator() {
     // Test the block placement indicator with using the domain as URL language
     // indicator. This causes destination query parameters to be absolute URLs.
-    \Drupal::service('module_installer')->install(['language', 'locale']);
-    $this->container = \Drupal::getContainer();
+    Drupal::service('module_installer')->install(['language', 'locale']);
+    $this->container = Drupal::getContainer();
     ConfigurableLanguage::createFromLangcode('it')->save();
     $config = $this->config('language.types');
     $config->set('negotiation.language_interface.enabled', [
@@ -318,7 +315,7 @@ class BlockUiTest extends BrowserTestBase {
     $config = $this->config('language.negotiation');
     $config->set('url.source', LanguageNegotiationUrl::CONFIG_DOMAIN);
     $config->set('url.domains', [
-      'en' => \Drupal::request()->getHost(),
+      'en' => Drupal::request()->getHost(),
       'it' => 'it.example.com',
     ]);
     $config->save();
@@ -330,24 +327,23 @@ class BlockUiTest extends BrowserTestBase {
     $block['region'] = 'content';
 
     // After adding a block, it will indicate which block was just added.
-    $this->drupalPostForm('admin/structure/block/add/system_powered_by_block', $block, t('Save block'));
+    $this->drupalPostForm('admin/structure/block/add/system_powered_by_block', $block, 'Save block');
     $this->assertSession()->addressEquals('admin/structure/block/list/classy?block-placement=' . Html::getClass($block['id']));
 
     // Resaving the block page will remove the block placement indicator.
-    $this->drupalPostForm(NULL, [], t('Save blocks'));
+    $this->submitForm([], 'Save blocks');
     $this->assertSession()->addressEquals('admin/structure/block/list/classy');
 
     // Place another block and test the remove functionality works with the
     // block placement indicator. Click the first 'Place block' link to bring up
     // the list of blocks to place in the first available region.
     $this->clickLink('Place block');
-    // Select the first available block.
+    // Select the first available block, which is the 'test_xss_title' plugin,
+    // with a default machine name 'scriptalertxsssubjectscript' that is used
+    // for the 'block-placement' querystring parameter.
     $this->clickLink('Place block');
-    $block = [];
-    $block['id'] = strtolower($this->randomMachineName());
-    $block['theme'] = 'classy';
     $this->submitForm([], 'Save block');
-    $this->assertSession()->addressEquals('admin/structure/block/list/classy?block-placement=' . Html::getClass($block['id']));
+    $this->assertSession()->addressEquals('admin/structure/block/list/classy?block-placement=scriptalertxsssubjectscript');
 
     // Removing a block will remove the block placement indicator.
     $this->clickLink('Remove');
@@ -361,7 +357,7 @@ class BlockUiTest extends BrowserTestBase {
    * Tests if validation errors are passed plugin form to the parent form.
    */
   public function testBlockValidateErrors() {
-    $this->drupalPostForm('admin/structure/block/add/test_settings_validation/classy', ['region' => 'content', 'settings[digits]' => 'abc'], t('Save block'));
+    $this->drupalPostForm('admin/structure/block/add/test_settings_validation/classy', ['region' => 'content', 'settings[digits]' => 'abc'], 'Save block');
 
     $arguments = [':message' => 'Only digits are allowed'];
     $pattern = '//div[contains(@class,"messages messages--error")]/div[contains(text()[2],:message)]';
@@ -385,6 +381,37 @@ class BlockUiTest extends BrowserTestBase {
     $this->assertSession()->statusCodeEquals(403);
     $this->drupalGet('admin/structure/block/manage/' . $block->id() . '/enable');
     $this->assertSession()->statusCodeEquals(403);
+  }
+
+  /**
+   * Tests that users without permission are not able to view broken blocks.
+   */
+  public function testBrokenBlockVisibility() {
+    $assert_session = $this->assertSession();
+
+    $this->drupalPlaceBlock('broken');
+
+    // Login as an admin user to the site.
+    $this->drupalLogin($this->adminUser);
+    $this->drupalGet('');
+    $assert_session->statusCodeEquals(200);
+    // Check that this user can view the Broken Block message.
+    $assert_session->pageTextContains('This block is broken or missing. You may be missing content or you might need to enable the original module.');
+    $this->drupalLogout();
+
+    // Visit the same page as anonymous.
+    $this->drupalGet('');
+    $assert_session->statusCodeEquals(200);
+    // Check that this user cannot view the Broken Block message.
+    $assert_session->pageTextNotContains('This block is broken or missing. You may be missing content or you might need to enable the original module.');
+
+    // Visit same page as an authorized user that does not have access to
+    // administer blocks.
+    $this->drupalLogin($this->drupalCreateUser(['access administration pages']));
+    $this->drupalGet('');
+    $assert_session->statusCodeEquals(200);
+    // Check that this user cannot view the Broken Block message.
+    $assert_session->pageTextNotContains('This block is broken or missing. You may be missing content or you might need to enable the original module.');
   }
 
 }

@@ -4,6 +4,8 @@ namespace Drupal\migrate;
 
 use Drupal\Component\Utility\NestedArray;
 use Drupal\migrate\Plugin\MigrateIdMapInterface;
+use Exception;
+use InvalidArgumentException;
 
 /**
  * Stores a row.
@@ -104,7 +106,7 @@ class Row {
     $this->isStub = $is_stub;
     foreach (array_keys($source_ids) as $id) {
       if (!$this->hasSourceProperty($id)) {
-        throw new \InvalidArgumentException("$id is defined as a source ID but has no value.");
+        throw new InvalidArgumentException("'$id' is defined as a source ID but has no value.");
       }
     }
   }
@@ -180,7 +182,7 @@ class Row {
    */
   public function setSourceProperty($property, $data) {
     if ($this->frozen) {
-      throw new \Exception("The source is frozen and can't be changed any more");
+      throw new Exception("The source is frozen and can't be changed any more");
     }
     else {
       NestedArray::setValue($this->source, explode(static::PROPERTY_SEPARATOR, $property), $data, TRUE);

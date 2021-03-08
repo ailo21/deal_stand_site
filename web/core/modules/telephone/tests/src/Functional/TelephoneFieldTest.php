@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\telephone\Functional;
 
+use Drupal;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\field\Entity\FieldStorageConfig;
@@ -63,7 +64,7 @@ class TelephoneFieldTest extends BrowserTestBase {
     ])->save();
 
     /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $display_repository */
-    $display_repository = \Drupal::service('entity_display.repository');
+    $display_repository = Drupal::service('entity_display.repository');
     $display_repository->getFormDisplay('node', 'article')
       ->setComponent('field_telephone', [
         'type' => 'telephone_default',
@@ -88,7 +89,7 @@ class TelephoneFieldTest extends BrowserTestBase {
    */
   public function testTelephoneWidget() {
     $this->drupalGet('node/add/article');
-    $this->assertFieldByName("field_telephone[0][value]", '', 'Widget found.');
+    $this->assertSession()->fieldValueEquals("field_telephone[0][value]", '');
     $this->assertRaw('placeholder="123-456-7890"');
   }
 
@@ -106,7 +107,7 @@ class TelephoneFieldTest extends BrowserTestBase {
       'field_telephone[0][value]' => $input,
     ];
 
-    $this->drupalPostForm('node/add/article', $edit, t('Save'));
+    $this->drupalPostForm('node/add/article', $edit, 'Save');
     $this->assertRaw('<a href="tel:' . $expected . '">');
   }
 

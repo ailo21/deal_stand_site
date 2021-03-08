@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\system\Functional\Module;
 
+use Drupal;
 use Drupal\module_autoload_test\SomeClass;
 use Drupal\Tests\BrowserTestBase;
 
@@ -36,13 +37,13 @@ class ClassLoaderTest extends BrowserTestBase {
    */
   public function testClassLoading() {
     // Enable the module_test and module_autoload_test modules.
-    \Drupal::service('module_installer')->install(['module_test', 'module_autoload_test'], FALSE);
+    Drupal::service('module_installer')->install(['module_test', 'module_autoload_test'], FALSE);
     $this->resetAll();
     // Check twice to test an unprimed and primed system_list() cache.
     for ($i = 0; $i < 2; $i++) {
       $this->drupalGet('module-test/class-loading');
       $this->assertSession()->statusCodeEquals(200);
-      $this->assertText($this->expected, 'Autoloader loads classes from an enabled module.');
+      $this->assertText($this->expected);
     }
   }
 
@@ -53,13 +54,13 @@ class ClassLoaderTest extends BrowserTestBase {
    */
   public function testClassLoadingNotInstalledModules() {
     // Enable the module_test module.
-    \Drupal::service('module_installer')->install(['module_test'], FALSE);
+    Drupal::service('module_installer')->install(['module_test'], FALSE);
     $this->resetAll();
     // Check twice to test an unprimed and primed system_list() cache.
     for ($i = 0; $i < 2; $i++) {
       $this->drupalGet('module-test/class-loading');
       $this->assertSession()->statusCodeEquals(200);
-      $this->assertNoText($this->expected, 'Autoloader does not load classes from a disabled module.');
+      $this->assertNoText($this->expected);
     }
   }
 
@@ -70,7 +71,7 @@ class ClassLoaderTest extends BrowserTestBase {
    */
   public function testClassLoadingDisabledModules() {
     // Enable the module_test and module_autoload_test modules.
-    \Drupal::service('module_installer')->install(['module_test', 'module_autoload_test'], FALSE);
+    Drupal::service('module_installer')->install(['module_test', 'module_autoload_test'], FALSE);
     $this->resetAll();
     // Ensure that module_autoload_test is disabled.
     $this->container->get('module_installer')->uninstall(['module_autoload_test'], FALSE);
@@ -79,7 +80,7 @@ class ClassLoaderTest extends BrowserTestBase {
     for ($i = 0; $i < 2; $i++) {
       $this->drupalGet('module-test/class-loading');
       $this->assertSession()->statusCodeEquals(200);
-      $this->assertNoText($this->expected, 'Autoloader does not load classes from a disabled module.');
+      $this->assertNoText($this->expected);
     }
   }
 
@@ -92,9 +93,9 @@ class ClassLoaderTest extends BrowserTestBase {
       "modules[module_install_class_loader_test1][enable]" => TRUE,
       "modules[module_install_class_loader_test2][enable]" => TRUE,
     ];
-    $this->drupalPostForm('admin/modules', $edit, t('Install'));
+    $this->drupalPostForm('admin/modules', $edit, 'Install');
     $this->rebuildContainer();
-    $this->assertTrue(\Drupal::moduleHandler()->moduleExists('module_install_class_loader_test2'), 'The module_install_class_loader_test2 module has been installed.');
+    $this->assertTrue(Drupal::moduleHandler()->moduleExists('module_install_class_loader_test2'), 'The module_install_class_loader_test2 module has been installed.');
   }
 
   /**
@@ -106,7 +107,7 @@ class ClassLoaderTest extends BrowserTestBase {
     $edit = [
       "modules[module_autoload_test][enable]" => TRUE,
     ];
-    $this->drupalPostForm('admin/modules', $edit, t('Install'));
+    $this->drupalPostForm('admin/modules', $edit, 'Install');
     $this->assertSession()->statusCodeEquals(200);
     $this->resetAll();
     $this->assertSame(SomeClass::TEST, MODULE_AUTOLOAD_TEST_CONSTANT);

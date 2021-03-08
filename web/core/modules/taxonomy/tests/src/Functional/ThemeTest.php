@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\taxonomy\Functional;
 
+use Drupal;
+
 /**
  * Verifies that various taxonomy pages use the expected theme.
  *
@@ -19,7 +21,7 @@ class ThemeTest extends TaxonomyTestBase {
 
     // Make sure we are using distinct default and administrative themes for
     // the duration of these tests.
-    \Drupal::service('theme_installer')->install(['bartik', 'seven']);
+    Drupal::service('theme_installer')->install(['bartik', 'seven']);
     $this->config('system.theme')
       ->set('default', 'bartik')
       ->set('admin', 'seven')
@@ -42,16 +44,22 @@ class ThemeTest extends TaxonomyTestBase {
     // should use the administrative theme.
     $vocabulary = $this->createVocabulary();
     $this->drupalGet('admin/structure/taxonomy/manage/' . $vocabulary->id() . '/add');
-    $this->assertRaw('seven/css/base/elements.css', t("The administrative theme's CSS appears on the page for adding a taxonomy term."));
+    // Check that the administrative theme's CSS appears on the page for adding
+    // a taxonomy term.
+    $this->assertRaw('seven/css/base/elements.css');
 
     // Viewing a taxonomy term should use the default theme.
     $term = $this->createTerm($vocabulary);
     $this->drupalGet('taxonomy/term/' . $term->id());
-    $this->assertRaw('bartik/css/base/elements.css', t("The default theme's CSS appears on the page for viewing a taxonomy term."));
+    // Check that the default theme's CSS appears on the page for viewing
+    // a taxonomy term.
+    $this->assertRaw('bartik/css/base/elements.css');
 
     // Editing a taxonomy term should use the same theme as adding one.
     $this->drupalGet('taxonomy/term/' . $term->id() . '/edit');
-    $this->assertRaw('seven/css/base/elements.css', t("The administrative theme's CSS appears on the page for editing a taxonomy term."));
+    // Check that the administrative theme's CSS appears on the page for editing
+    // a taxonomy term.
+    $this->assertRaw('seven/css/base/elements.css');
   }
 
 }

@@ -2,7 +2,9 @@
 
 namespace Drupal\Core\Session;
 
+use Drupal;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
+use LogicException;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -62,7 +64,7 @@ class AccountProxy implements AccountProxyInterface {
     }
     $this->account = $account;
     $this->id = $account->id();
-    $this->eventDispatcher->dispatch(AccountEvents::SET_USER, new AccountSetEvent($account));
+    $this->eventDispatcher->dispatch(new AccountSetEvent($account), AccountEvents::SET_USER);
   }
 
   /**
@@ -173,7 +175,7 @@ class AccountProxy implements AccountProxyInterface {
    */
   public function setInitialAccountId($account_id) {
     if (isset($this->account)) {
-      throw new \LogicException('AccountProxyInterface::setInitialAccountId() cannot be called after an account was set on the AccountProxy');
+      throw new LogicException('AccountProxyInterface::setInitialAccountId() cannot be called after an account was set on the AccountProxy');
     }
 
     $this->id = $account_id;
@@ -199,7 +201,7 @@ class AccountProxy implements AccountProxyInterface {
    *   An account or NULL if none is found.
    */
   protected function loadUserEntity($account_id) {
-    return \Drupal::entityTypeManager()->getStorage('user')->load($account_id);
+    return Drupal::entityTypeManager()->getStorage('user')->load($account_id);
   }
 
 }

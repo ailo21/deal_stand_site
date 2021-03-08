@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\file\Functional\Rest;
 
+use DateTime;
+use DateTimeZone;
 use Drupal\file\Entity\File;
 use Drupal\Tests\rest\Functional\EntityResource\EntityResourceTestBase;
 use Drupal\user\Entity\User;
@@ -60,18 +62,6 @@ abstract class FileResourceTestBase extends EntityResourceTestBase {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  protected function grantPermissionsToTestedRole(array $permissions) {
-    // testPatch() and testDelete() test the 'bc_entity_resource_permissions' BC
-    // layer; also call makeCurrentUserFileOwner() then.
-    if ($permissions === ['restful patch entity:file'] || $permissions === ['restful delete entity:file']) {
-      $this->makeCurrentUserFileOwner();
-    }
-    parent::grantPermissionsToTestedRole($permissions);
-  }
-
-  /**
    * Makes the current user the file owner.
    */
   protected function makeCurrentUserFileOwner() {
@@ -107,14 +97,14 @@ abstract class FileResourceTestBase extends EntityResourceTestBase {
     return [
       'changed' => [
         [
-          'value' => (new \DateTime())->setTimestamp($this->entity->getChangedTime())->setTimezone(new \DateTimeZone('UTC'))->format(\DateTime::RFC3339),
-          'format' => \DateTime::RFC3339,
+          'value' => (new DateTime())->setTimestamp($this->entity->getChangedTime())->setTimezone(new DateTimeZone('UTC'))->format(DateTime::RFC3339),
+          'format' => DateTime::RFC3339,
         ],
       ],
       'created' => [
         [
-          'value' => (new \DateTime())->setTimestamp((int) $this->entity->getCreatedTime())->setTimezone(new \DateTimeZone('UTC'))->format(\DateTime::RFC3339),
-          'format' => \DateTime::RFC3339,
+          'value' => (new DateTime())->setTimestamp((int) $this->entity->getCreatedTime())->setTimezone(new DateTimeZone('UTC'))->format(DateTime::RFC3339),
+          'format' => DateTime::RFC3339,
         ],
       ],
       'fid' => [

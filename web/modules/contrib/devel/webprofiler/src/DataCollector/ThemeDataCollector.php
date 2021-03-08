@@ -8,10 +8,13 @@ use Drupal\webprofiler\DrupalDataCollectorInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\webprofiler\Theme\ThemeNegotiatorWrapper;
 use Drupal\webprofiler\Twig\Dumper\HtmlDumper;
+use Exception;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\DataCollector\DataCollector;
 use Symfony\Component\HttpKernel\DataCollector\LateDataCollectorInterface;
+use Twig_Markup;
+use Twig_Profiler_Profile;
 
 /**
  * Class ThemeDataCollector.
@@ -45,7 +48,7 @@ class ThemeDataCollector extends DataCollector implements DrupalDataCollectorInt
    * @param \Drupal\Core\Theme\ThemeNegotiatorInterface $themeNegotiator
    * @param \Twig_Profiler_Profile $profile
    */
-  public function __construct(ThemeManagerInterface $themeManager, ThemeNegotiatorInterface $themeNegotiator, \Twig_Profiler_Profile $profile) {
+  public function __construct(ThemeManagerInterface $themeManager, ThemeNegotiatorInterface $themeNegotiator, Twig_Profiler_Profile $profile) {
     $this->themeManager = $themeManager;
     $this->themeNegotiator = $themeNegotiator;
     $this->profile = $profile;
@@ -54,7 +57,7 @@ class ThemeDataCollector extends DataCollector implements DrupalDataCollectorInt
   /**
    * {@inheritdoc}
    */
-  public function collect(Request $request, Response $response, \Exception $exception = NULL) {
+  public function collect(Request $request, Response $response, Exception $exception = NULL) {
     $activeTheme = $this->themeManager->getActiveTheme();
 
     $this->data['activeTheme'] = [
@@ -64,7 +67,7 @@ class ThemeDataCollector extends DataCollector implements DrupalDataCollectorInt
       'owner' => $activeTheme->getOwner(),
       'baseThemes' => $activeTheme->getBaseThemeExtensions(),
       'extension' => $activeTheme->getExtension(),
-      'styleSheetsRemove' => $activeTheme->styleSheetsRemove(),
+      'styleSheetsRemove' => $activeTheme->getStyleSheetsRemove(),
       'libraries' => $activeTheme->getLibraries(),
       'regions' => $activeTheme->getRegions(),
     ];
@@ -139,7 +142,7 @@ class ThemeDataCollector extends DataCollector implements DrupalDataCollectorInt
   public function getHtmlCallGraph() {
     $dumper = new HtmlDumper();
 
-    return new \Twig_Markup($dumper->dump($this->getProfile()), 'UTF-8');
+    return new Twig_Markup($dumper->dump($this->getProfile()), 'UTF-8');
   }
 
   /**
@@ -217,7 +220,7 @@ class ThemeDataCollector extends DataCollector implements DrupalDataCollectorInt
    *
    * @return array
    */
-  private function computeData(\Twig_Profiler_Profile $profile) {
+  private function computeData(Twig_Profiler_Profile $profile) {
     $data = [
       'template_count' => 0,
       'block_count' => 0,

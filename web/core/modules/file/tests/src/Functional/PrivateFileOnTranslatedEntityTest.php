@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\file\Functional;
 
+use Drupal;
 use Drupal\file\Entity\File;
 use Drupal\node\Entity\Node;
 
@@ -59,7 +60,7 @@ class PrivateFileOnTranslatedEntityTest extends FileFieldTestBase {
     // Add a second language.
     $edit = [];
     $edit['predefined_langcode'] = 'fr';
-    $this->drupalPostForm('admin/config/regional/language/add', $edit, t('Add language'));
+    $this->drupalPostForm('admin/config/regional/language/add', $edit, 'Add language');
 
     // Enable translation for "Basic page" nodes.
     $edit = [
@@ -67,7 +68,7 @@ class PrivateFileOnTranslatedEntityTest extends FileFieldTestBase {
       'settings[node][page][translatable]' => 1,
       "settings[node][page][fields][$this->fieldName]" => 1,
     ];
-    $this->drupalPostForm('admin/config/regional/content-language', $edit, t('Save configuration'));
+    $this->drupalPostForm('admin/config/regional/content-language', $edit, 'Save configuration');
   }
 
   /**
@@ -75,7 +76,7 @@ class PrivateFileOnTranslatedEntityTest extends FileFieldTestBase {
    */
   public function testPrivateLanguageFile() {
     // Verify that the file field on the "Basic page" node type is translatable.
-    $definitions = \Drupal::service('entity_field.manager')->getFieldDefinitions('node', 'page');
+    $definitions = Drupal::service('entity_field.manager')->getFieldDefinitions('node', 'page');
     $this->assertTrue($definitions[$this->fieldName]->isTranslatable(), 'Node file field is translatable.');
 
     // Create a default language node.
@@ -84,15 +85,15 @@ class PrivateFileOnTranslatedEntityTest extends FileFieldTestBase {
     // Edit the node to upload a file.
     $edit = [];
     $name = 'files[' . $this->fieldName . '_0]';
-    $edit[$name] = \Drupal::service('file_system')->realpath($this->drupalGetTestFiles('text')[0]->uri);
-    $this->drupalPostForm('node/' . $default_language_node->id() . '/edit', $edit, t('Save'));
+    $edit[$name] = Drupal::service('file_system')->realpath($this->drupalGetTestFiles('text')[0]->uri);
+    $this->drupalPostForm('node/' . $default_language_node->id() . '/edit', $edit, 'Save');
     $last_fid_prior = $this->getLastFileId();
 
     // Languages are cached on many levels, and we need to clear those caches.
     $this->rebuildContainer();
 
     // Ensure the file can be downloaded.
-    \Drupal::entityTypeManager()->getStorage('node')->resetCache([$default_language_node->id()]);
+    Drupal::entityTypeManager()->getStorage('node')->resetCache([$default_language_node->id()]);
     $node = Node::load($default_language_node->id());
     $node_file = File::load($node->{$this->fieldName}->target_id);
     $this->drupalGet(file_create_url($node_file->getFileUri()));
@@ -103,21 +104,22 @@ class PrivateFileOnTranslatedEntityTest extends FileFieldTestBase {
     $this->clickLink(t('Add'));
 
     // Remove the existing file.
-    $this->drupalPostForm(NULL, [], t('Remove'));
+    $this->submitForm([], 'Remove');
 
     // Upload a different file.
     $edit = [];
     $edit['title[0][value]'] = $this->randomMachineName();
     $name = 'files[' . $this->fieldName . '_0]';
-    $edit[$name] = \Drupal::service('file_system')->realpath($this->drupalGetTestFiles('text')[1]->uri);
-    $this->drupalPostForm(NULL, $edit, t('Save (this translation)'));
+    $edit[$name] = Drupal::service('file_system')->realpath($this->drupalGetTestFiles('text')[1]->uri);
+    $this->submitForm($edit, 'Save (this translation)');
     $last_fid = $this->getLastFileId();
 
     // Verify the translation was created.
-    \Drupal::entityTypeManager()->getStorage('node')->resetCache([$default_language_node->id()]);
+    Drupal::entityTypeManager()->getStorage('node')->resetCache([$default_language_node->id()]);
     $default_language_node = Node::load($default_language_node->id());
     $this->assertTrue($default_language_node->hasTranslation('fr'), 'Node found in database.');
-    $this->assertTrue($last_fid > $last_fid_prior, 'New file got saved.');
+    // Verify that the new file got saved.
+    $this->assertGreaterThan($last_fid_prior, $last_fid);
 
     // Ensure the file attached to the translated node can be downloaded.
     $french_node = $default_language_node->getTranslation('fr');

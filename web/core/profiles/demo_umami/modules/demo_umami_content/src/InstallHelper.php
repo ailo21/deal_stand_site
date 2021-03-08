@@ -2,6 +2,7 @@
 
 namespace Drupal\demo_umami_content;
 
+use Drupal;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -119,7 +120,7 @@ class InstallHelper implements ContainerInjectionInterface {
     $this->termIdMap = [];
     $this->mediaImageIdMap = [];
     $this->nodeIdMap = [];
-    $this->enabledLanguages = array_keys(\Drupal::languageManager()->getLanguages());
+    $this->enabledLanguages = array_keys(Drupal::languageManager()->getLanguages());
   }
 
   /**
@@ -197,7 +198,7 @@ class InstallHelper implements ContainerInjectionInterface {
       }
       else {
         // Language directory exists, but the file in this language was not found,
-        // remove that language from list list of languages to be translated.
+        // remove that language from list of languages to be translated.
         $key = array_search($language, $translated_languages);
         unset($translated_languages[$key]);
       }
@@ -737,7 +738,7 @@ class InstallHelper implements ContainerInjectionInterface {
     $filename = $entity_type . '/' . $bundle_machine_name . '.csv';
 
     // Read all multilingual content from the file.
-    list($all_content, $translated_languages) = $this->readMultilingualContent($filename);
+    [$all_content, $translated_languages] = $this->readMultilingualContent($filename);
 
     // English is no longer needed in the list of languages to translate.
     $key = array_search('en', $translated_languages);

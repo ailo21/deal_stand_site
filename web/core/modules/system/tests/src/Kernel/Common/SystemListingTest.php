@@ -5,6 +5,7 @@ namespace Drupal\Tests\system\Kernel\Common;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Extension\ExtensionDiscovery;
 use Drupal\KernelTests\KernelTestBase;
+use ReflectionClass;
 
 /**
  * Tests scanning system directories in drupal_system_listing().
@@ -46,15 +47,12 @@ class SystemListingTest extends KernelTestBase {
     foreach ($expected_directories as $module => $directories) {
       $expected_directory = array_shift($directories);
       $expected_uri = "$expected_directory/$module/$module.info.yml";
-      $this->assertEqual($files[$module]->getPathname(), $expected_uri, new FormattableMarkup('Module @actual was found at @expected.', [
-        '@actual' => $files[$module]->getPathname(),
-        '@expected' => $expected_uri,
-      ]));
+      $this->assertEqual($expected_uri, $files[$module]->getPathname(), new FormattableMarkup('Module @actual was found at @expected.', ['@actual' => $files[$module]->getPathname(), '@expected' => $expected_uri]));
     }
   }
 
   /**
-   * Tests that directories matching file_scan_ignore_directories are ignored
+   * Tests that directories matching file_scan_ignore_directories are ignored.
    */
   public function testFileScanIgnoreDirectory() {
     $listing = new ExtensionDiscovery($this->root, FALSE);
@@ -63,7 +61,7 @@ class SystemListingTest extends KernelTestBase {
     $this->assertArrayHasKey('drupal_system_listing_compatible_test', $files);
 
     // Reset the static to force a rescan of the directories.
-    $reflected_class = new \ReflectionClass(ExtensionDiscovery::class);
+    $reflected_class = new ReflectionClass(ExtensionDiscovery::class);
     $reflected_property = $reflected_class->getProperty('files');
     $reflected_property->setAccessible(TRUE);
     $reflected_property->setValue($reflected_class, []);

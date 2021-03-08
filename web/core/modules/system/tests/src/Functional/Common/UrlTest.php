@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\system\Functional\Common;
 
+use Drupal;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Cache\Cache;
@@ -62,7 +63,7 @@ class UrlTest extends BrowserTestBase {
     ];
 
     foreach ($cases as $case) {
-      list($title, $uri, $options, $expected_cacheability, $expected_attachments) = $case;
+      [$title, $uri, $options, $expected_cacheability, $expected_attachments] = $case;
       $expected_cacheability['contexts'] = Cache::mergeContexts($expected_cacheability['contexts'], ['languages:language_interface', 'theme', 'user.permissions']);
       $link = [
         '#type' => 'link',
@@ -70,7 +71,7 @@ class UrlTest extends BrowserTestBase {
         '#options' => $options,
         '#url' => Url::fromUri($uri),
       ];
-      \Drupal::service('renderer')->renderRoot($link);
+      Drupal::service('renderer')->renderRoot($link);
       $this->assertEqual($expected_cacheability, $link['#cache']);
       $this->assertEqual($expected_attachments, $link['#attached']);
     }
@@ -178,8 +179,8 @@ class UrlTest extends BrowserTestBase {
     // Test a renderable array passed to the link generator.
     $renderer->executeInRenderContext(new RenderContext(), function () use ($renderer, $l) {
       $renderable_text = ['#markup' => 'foo'];
-      $l_renderable_text = \Drupal::service('link_generator')->generate($renderable_text, Url::fromUri('https://www.drupal.org'));
-      $this->assertEqual($l_renderable_text, $l);
+      $l_renderable_text = Drupal::service('link_generator')->generate($renderable_text, Url::fromUri('https://www.drupal.org'));
+      $this->assertEqual($l, $l_renderable_text);
     });
 
     // Test a themed link with plain text 'text'.
@@ -189,7 +190,7 @@ class UrlTest extends BrowserTestBase {
       '#url' => Url::fromUri('https://www.drupal.org'),
     ];
     $type_link_plain = $renderer->renderRoot($type_link_plain_array);
-    $this->assertEqual($type_link_plain, $l);
+    $this->assertEqual($l, $type_link_plain);
 
     // Build a themed link with renderable 'text'.
     $type_link_nested_array = [
@@ -198,7 +199,7 @@ class UrlTest extends BrowserTestBase {
       '#url' => Url::fromUri('https://www.drupal.org'),
     ];
     $type_link_nested = $renderer->renderRoot($type_link_nested_array);
-    $this->assertEqual($type_link_nested, $l);
+    $this->assertEqual($l, $type_link_nested);
   }
 
   /**
@@ -267,7 +268,7 @@ class UrlTest extends BrowserTestBase {
             'query' => ['foo' => 'bar', 'bar' => 'baz', 'baz' => ''],
             'fragment' => 'foo',
           ];
-          $this->assertEqual(UrlHelper::parse($url), $expected, 'URL parsed correctly.');
+          $this->assertEqual($expected, UrlHelper::parse($url), 'URL parsed correctly.');
         }
       }
     }
@@ -279,7 +280,7 @@ class UrlTest extends BrowserTestBase {
       'query' => [],
       'fragment' => '',
     ];
-    $this->assertEqual(UrlHelper::parse($url), $result, 'Relative URL parsed correctly.');
+    $this->assertEqual($result, UrlHelper::parse($url), 'Relative URL parsed correctly.');
 
     // Test that drupal can recognize an absolute URL. Used to prevent attack vectors.
     $url = 'https://www.drupal.org/foo/bar?foo=bar&bar=baz&baz#foo';

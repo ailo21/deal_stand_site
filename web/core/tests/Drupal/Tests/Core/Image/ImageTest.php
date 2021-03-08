@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\Core\Image;
 
+use Drupal;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Image\Image;
 use Drupal\Core\ImageToolkit\ImageToolkitInterface;
@@ -159,7 +160,7 @@ class ImageTest extends UnitTestCase {
   }
 
   /**
-   * Tests \Drupal\Core\Image\Image::getFileSize
+   * Tests \Drupal\Core\Image\Image::getFileSize.
    */
   public function testGetFileSize() {
     $this->getTestImage(FALSE);
@@ -226,7 +227,7 @@ class ImageTest extends UnitTestCase {
       ->method('get')
       ->with('file_system')
       ->willReturn($file_system->reveal());
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
 
     $image->save();
   }
@@ -271,7 +272,7 @@ class ImageTest extends UnitTestCase {
       ->method('get')
       ->with('file_system')
       ->willReturn($file_system->reveal());
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
 
     $this->assertFalse($image->save());
   }

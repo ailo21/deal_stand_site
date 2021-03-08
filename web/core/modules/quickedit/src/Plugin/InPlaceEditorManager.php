@@ -5,6 +5,7 @@ namespace Drupal\quickedit\Plugin;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
+use Traversable;
 
 /**
  * Provides an in-place editor manager.
@@ -19,7 +20,7 @@ use Drupal\Core\Plugin\DefaultPluginManager;
 class InPlaceEditorManager extends DefaultPluginManager {
 
   /**
-   * Constructs a InPlaceEditorManager object.
+   * Constructs an InPlaceEditorManager object.
    *
    * @param \Traversable $namespaces
    *   An object that implements \Traversable which contains the root paths
@@ -29,7 +30,7 @@ class InPlaceEditorManager extends DefaultPluginManager {
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler to invoke the alter hook with.
    */
-  public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
+  public function __construct(Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
     parent::__construct('Plugin/InPlaceEditor', $namespaces, $module_handler, 'Drupal\quickedit\Plugin\InPlaceEditorInterface', 'Drupal\quickedit\Annotation\InPlaceEditor');
     $this->alterInfo('quickedit_editor');
     $this->setCacheBackend($cache_backend, 'quickedit:editor');

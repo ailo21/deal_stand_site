@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\options\Kernel\Views;
 
+use Drupal;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 
@@ -60,12 +61,12 @@ class ViewsDataTest extends OptionsTestBase {
    * Tests the option module's implementation of hook_field_views_data().
    */
   public function testOptionsFieldViewsData() {
-    $field_data = \Drupal::service('views.views_data')->get('entity_test__test_options');
+    $field_data = Drupal::service('views.views_data')->get('entity_test__test_options');
 
     // Check that the options module has properly overridden default views data.
     $test_options_field = $field_data['test_options_value'];
-    $this->assertEqual($test_options_field['argument']['id'], 'string_list_field', 'Argument handler is properly set for fields with allowed value callbacks.');
-    $this->assertEqual($test_options_field['filter']['id'], 'list_field', 'Filter handler is properly set for fields with allowed value callbacks.');
+    $this->assertEqual('string_list_field', $test_options_field['argument']['id'], 'Argument handler is properly set for fields with allowed value callbacks.');
+    $this->assertEqual('list_field', $test_options_field['filter']['id'], 'Filter handler is properly set for fields with allowed value callbacks.');
   }
 
 }

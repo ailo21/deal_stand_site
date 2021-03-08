@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\taxonomy\Functional\Views;
 
+use Drupal;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
@@ -60,7 +61,7 @@ abstract class TaxonomyTestBase extends ViewTestBase {
     $this->mockStandardInstall();
 
     if ($import_test_views) {
-      ViewTestData::createTestViews(get_class($this), ['taxonomy_test_views']);
+      ViewTestData::createTestViews(static::class, ['taxonomy_test_views']);
     }
 
     $this->term1 = $this->createTerm();
@@ -100,7 +101,7 @@ abstract class TaxonomyTestBase extends ViewTestBase {
     $this->createEntityReferenceField('node', 'article', $field_name, 'Tags', 'taxonomy_term', 'default', $handler_settings, FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
 
     /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $display_repository */
-    $display_repository = \Drupal::service('entity_display.repository');
+    $display_repository = Drupal::service('entity_display.repository');
     $display_repository->getFormDisplay('node', 'article')
       ->setComponent($field_name, [
         'type' => 'entity_reference_autocomplete_tags',

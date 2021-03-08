@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\Core\Entity;
 
+use Drupal;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Field\FieldDefinition;
@@ -9,6 +10,7 @@ use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Field\FieldTypePluginManagerInterface;
 use Drupal\Core\TypedData\TypedDataManager;
 use Drupal\Tests\UnitTestCase;
+use InvalidArgumentException;
 
 /**
  * Unit test for the FieldDefinition class.
@@ -91,7 +93,7 @@ class FieldDefinitionTest extends UnitTestCase {
     $container->set('plugin.manager.field.field_type', $field_type_manager->reveal());
     $container->set('entity_field.manager', $entity_field_manager->reveal());
     $container->set('typed_data_manager', $typed_data_manager->reveal());
-    \Drupal::setContainer($container);
+    Drupal::setContainer($container);
   }
 
   /**
@@ -270,7 +272,7 @@ class FieldDefinitionTest extends UnitTestCase {
    */
   public function testDefaultValueCallback($factory_name) {
     $definition = $this->initializeFieldUsingFactory($factory_name);
-    $callback = get_class($this) . '::mockDefaultValueCallback';
+    $callback = static::class . '::mockDefaultValueCallback';
     // setDefaultValueCallback returns $this.
     $this->assertSame($definition, $definition->setDefaultValueCallback($callback));
     $this->assertSame($callback, $definition->getDefaultValueCallback());
@@ -285,8 +287,8 @@ class FieldDefinitionTest extends UnitTestCase {
   public function testInvalidDefaultValueCallback($factory_name) {
     $definition = $this->initializeFieldUsingFactory($factory_name);
     // setDefaultValueCallback returns $this.
-    $this->expectException(\InvalidArgumentException::class);
-    $definition->setDefaultValueCallback([get_class($this), 'mockDefaultValueCallback']);
+    $this->expectException(InvalidArgumentException::class);
+    $definition->setDefaultValueCallback([static::class, 'mockDefaultValueCallback']);
   }
 
   /**

@@ -11,6 +11,8 @@ use Drupal\Composer\Plugin\Scaffold\Interpolator;
 use Drupal\Composer\Plugin\Scaffold\Operations\AppendOp;
 use Drupal\Composer\Plugin\Scaffold\Operations\ReplaceOp;
 use Drupal\Composer\Plugin\Scaffold\ScaffoldFilePath;
+use Exception;
+use RuntimeException;
 use Symfony\Component\Console\Input\StringInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 
@@ -118,7 +120,7 @@ class Fixtures {
   public function projectFixtureDir($project_name) {
     $dir = $this->allFixturesDir() . '/' . $project_name;
     if (!is_dir($dir)) {
-      throw new \RuntimeException("Requested fixture project {$project_name} that does not exist.");
+      throw new RuntimeException("Requested fixture project {$project_name} that does not exist.");
     }
     return $dir;
   }
@@ -135,7 +137,7 @@ class Fixtures {
   public function binFixtureDir($bin_name) {
     $dir = $this->allFixturesDir() . '/scripts/' . $bin_name;
     if (!is_dir($dir)) {
-      throw new \RuntimeException("Requested fixture bin dir {$bin_name} that does not exist.");
+      throw new RuntimeException("Requested fixture bin dir {$bin_name} that does not exist.");
     }
     return $dir;
   }
@@ -291,7 +293,7 @@ class Fixtures {
   }
 
   /**
-   * Create an isolated cache directory for Composer
+   * Create an isolated cache directory for Composer.
    */
   public function createIsolatedComposerCacheDir() {
     $cacheDir = $this->mkTmpDir('composer-cache');
@@ -390,7 +392,7 @@ class Fixtures {
     $exitCode = $application->run($input, $output);
     $output = $output->fetch();
     if ($exitCode != 0) {
-      throw new \Exception("Fixtures::runComposer failed to set up fixtures.\n\nCommand: '{$cmd}'\nExit code: {$exitCode}\nOutput: \n\n$output");
+      throw new Exception("Fixtures::runComposer failed to set up fixtures.\n\nCommand: '{$cmd}'\nExit code: {$exitCode}\nOutput: \n\n$output");
     }
     return $output;
   }

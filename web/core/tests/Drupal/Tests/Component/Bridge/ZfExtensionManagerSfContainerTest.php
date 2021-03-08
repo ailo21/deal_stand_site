@@ -4,6 +4,8 @@ namespace Drupal\Tests\Component\Bridge;
 
 use Drupal\Component\Bridge\ZfExtensionManagerSfContainer;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
+use stdClass;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 use Laminas\Feed\Reader\Extension\Atom\Entry;
@@ -21,8 +23,8 @@ class ZfExtensionManagerSfContainerTest extends TestCase {
    * @covers ::get
    */
   public function testGet() {
-    $service = new \stdClass();
-    $service->value = 'myvalue';
+    $service = new stdClass();
+    $service->value = 'my_value';
     $container = new ContainerBuilder();
     $container->set('foo', $service);
     $bridge = new ZfExtensionManagerSfContainer();
@@ -41,8 +43,8 @@ class ZfExtensionManagerSfContainerTest extends TestCase {
    * @covers ::has
    */
   public function testHas() {
-    $service = new \stdClass();
-    $service->value = 'myvalue';
+    $service = new stdClass();
+    $service->value = 'my_value';
     $container = new ContainerBuilder();
     $container->set('foo', $service);
     $bridge = new ZfExtensionManagerSfContainer();
@@ -58,7 +60,7 @@ class ZfExtensionManagerSfContainerTest extends TestCase {
    * @covers ::setStandalone
    */
   public function testSetStandaloneException() {
-    $this->expectException(\RuntimeException::class);
+    $this->expectException(RuntimeException::class);
     $this->expectExceptionMessage('Drupal\Tests\Component\Bridge\ZfExtensionManagerSfContainerTest must implement Laminas\Feed\Reader\ExtensionManagerInterface or Laminas\Feed\Writer\ExtensionManagerInterface');
     $bridge = new ZfExtensionManagerSfContainer();
     $bridge->setStandalone(static::class);
@@ -83,8 +85,8 @@ class ZfExtensionManagerSfContainerTest extends TestCase {
    * @covers ::get
    */
   public function testPrefix() {
-    $service = new \stdClass();
-    $service->value = 'myvalue';
+    $service = new stdClass();
+    $service->value = 'my_value';
     $container = new ContainerBuilder();
     $container->set('foo.bar', $service);
     $bridge = new ZfExtensionManagerSfContainer('foo.');
@@ -99,8 +101,8 @@ class ZfExtensionManagerSfContainerTest extends TestCase {
    * @dataProvider canonicalizeNameProvider
    */
   public function testCanonicalizeName($name, $canonical_name) {
-    $service = new \stdClass();
-    $service->value = 'myvalue';
+    $service = new stdClass();
+    $service->value = 'my_value';
     $container = new ContainerBuilder();
     $container->set($canonical_name, $service);
     $bridge = new ZfExtensionManagerSfContainer();

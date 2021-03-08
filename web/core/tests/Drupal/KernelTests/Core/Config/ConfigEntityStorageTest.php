@@ -2,6 +2,7 @@
 
 namespace Drupal\KernelTests\Core\Config;
 
+use Drupal;
 use Drupal\Core\Config\ConfigDuplicateUUIDException;
 use Drupal\KernelTests\KernelTestBase;
 
@@ -48,7 +49,7 @@ class ConfigEntityStorageTest extends KernelTestBase {
 
     // Ensure that the config entity was not corrupted.
     $entity = $storage->loadUnchanged($entity->id());
-    $this->assertIdentical($entity->toArray(), $original_properties);
+    $this->assertSame($original_properties, $entity->toArray());
   }
 
   /**
@@ -57,7 +58,7 @@ class ConfigEntityStorageTest extends KernelTestBase {
    * @covers \Drupal\Core\Config\Entity\ConfigEntityStorage::hasData
    */
   public function testHasData() {
-    $storage = \Drupal::entityTypeManager()->getStorage('config_test');
+    $storage = Drupal::entityTypeManager()->getStorage('config_test');
     $this->assertFalse($storage->hasData());
 
     // Add a test config entity and check again.

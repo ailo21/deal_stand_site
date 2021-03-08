@@ -2,7 +2,8 @@
 
 namespace Drupal\Core\ParamConverter;
 
-use Symfony\Cmf\Component\Routing\RouteObjectInterface;
+use Drupal\Core\Routing\RouteObjectInterface;
+use InvalidArgumentException;
 use Symfony\Component\Routing\RouteCollection;
 
 /**
@@ -36,7 +37,7 @@ class ParamConverterManager implements ParamConverterManagerInterface {
       return $this->converters[$converter];
     }
     else {
-      throw new \InvalidArgumentException(sprintf('No converter has been registered for %s', $converter));
+      throw new InvalidArgumentException(sprintf('No converter has been registered for %s', $converter));
     }
   }
 

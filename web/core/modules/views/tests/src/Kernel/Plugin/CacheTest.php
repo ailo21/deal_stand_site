@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\views\Kernel\Plugin;
 
+use Drupal;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Render\RenderContext;
 use Drupal\node\Entity\Node;
@@ -42,7 +43,7 @@ class CacheTest extends ViewsKernelTestBase {
     $this->installEntitySchema('user');
 
     // Setup the current time properly.
-    \Drupal::request()->server->set('REQUEST_TIME', time());
+    Drupal::request()->server->set('REQUEST_TIME', time());
   }
 
   /**
@@ -166,7 +167,7 @@ class CacheTest extends ViewsKernelTestBase {
 
     // Get the cache item.
     $cid2 = $view->display_handler->getPlugin('cache')->generateResultsKey();
-    $this->assertNotEqual($cid1, $cid2, "Results keys are different.");
+    $this->assertNotEquals($cid1, $cid2, "Results keys are different.");
 
     // Build the expected result.
     $dataset = [['name' => 'Ringo']];
@@ -277,7 +278,7 @@ class CacheTest extends ViewsKernelTestBase {
 
     $output = $view->buildRenderable();
     /** @var \Drupal\Core\Render\RendererInterface $renderer */
-    $renderer = \Drupal::service('renderer');
+    $renderer = Drupal::service('renderer');
     $renderer->executeInRenderContext(new RenderContext(), function () use (&$output, $renderer) {
       return $renderer->render($output);
     });
@@ -309,7 +310,7 @@ class CacheTest extends ViewsKernelTestBase {
     $this->executeView($view);
     // Request for the cache.
     $cid = 'views_relationship_groupwise_max:test_groupwise_term_ui:default:tid_representative';
-    $cache = \Drupal::cache('data')->get($cid);
+    $cache = Drupal::cache('data')->get($cid);
     $this->assertEqual($cid, $cache->cid, 'Subquery String cached as expected.');
   }
 
@@ -337,7 +338,7 @@ class CacheTest extends ViewsKernelTestBase {
 
     // Get the cache item.
     $cid = $view->display_handler->getPlugin('cache')->generateResultsKey();
-    $cache = \Drupal::cache('data')->get($cid);
+    $cache = Drupal::cache('data')->get($cid);
 
     // Assert there are results, empty results would mean this test case would
     // pass otherwise.
@@ -346,8 +347,8 @@ class CacheTest extends ViewsKernelTestBase {
     // Assert each row doesn't contain '_entity' or '_relationship_entities'
     // items.
     foreach ($cache->data['result'] as $row) {
-      $this->assertIdentical($row->_entity, NULL, 'Cached row "_entity" property is NULL');
-      $this->assertIdentical($row->_relationship_entities, [], 'Cached row "_relationship_entities" property is empty');
+      $this->assertNull($row->_entity, 'Cached row "_entity" property is NULL');
+      $this->assertSame([], $row->_relationship_entities, 'Cached row "_relationship_entities" property is empty');
     }
   }
 
@@ -357,14 +358,14 @@ class CacheTest extends ViewsKernelTestBase {
   public function testCacheContextIntegration() {
     $view = Views::getView('test_cache');
     $view->setDisplay('page_2');
-    \Drupal::state()->set('views_test_cache_context', 'George');
+    Drupal::state()->set('views_test_cache_context', 'George');
     $this->executeView($view);
 
     $map = ['views_test_data_name' => 'name'];
     $this->assertIdenticalResultset($view, [['name' => 'George']], $map);
 
     // Update the entry in the DB to ensure that result caching works.
-    \Drupal::database()->update('views_test_data')
+    Drupal::database()->update('views_test_data')
       ->condition('name', 'George')
       ->fields(['name' => 'egroeG'])
       ->execute();
@@ -377,7 +378,7 @@ class CacheTest extends ViewsKernelTestBase {
     // Now change the cache context value, a different query should be executed.
     $view = Views::getView('test_cache');
     $view->setDisplay('page_2');
-    \Drupal::state()->set('views_test_cache_context', 'Paul');
+    Drupal::state()->set('views_test_cache_context', 'Paul');
     $this->executeView($view);
 
     $this->assertIdenticalResultset($view, [['name' => 'Paul']], $map);
@@ -403,7 +404,7 @@ class CacheTest extends ViewsKernelTestBase {
     $output = $view->preview();
 
     /** @var \Drupal\Core\Render\RendererInterface $renderer */
-    $renderer = \Drupal::service('renderer');
+    $renderer = Drupal::service('renderer');
 
     $renderer->renderPlain($output);
     $this->assertEquals(['config:views.view.test_view', 'example_tag'], $output['#cache']['tags']);

@@ -2,6 +2,8 @@
 
 namespace Drupal\Core\Database;
 
+use Iterator;
+
 /**
  * Empty implementation of a database statement.
  *
@@ -13,7 +15,7 @@ namespace Drupal\Core\Database;
  *
  * @see \Drupal\search\SearchQuery
  */
-class StatementEmpty implements \Iterator, StatementInterface {
+class StatementEmpty implements Iterator, StatementInterface {
 
   /**
    * Is rowCount() execution allowed.
@@ -49,9 +51,7 @@ class StatementEmpty implements \Iterator, StatementInterface {
   /**
    * {@inheritdoc}
    */
-  public function setFetchMode($mode, $a1 = NULL, $a2 = []) {
-    return;
-  }
+  public function setFetchMode($mode, $a1 = NULL, $a2 = []) {}
 
   /**
    * {@inheritdoc}

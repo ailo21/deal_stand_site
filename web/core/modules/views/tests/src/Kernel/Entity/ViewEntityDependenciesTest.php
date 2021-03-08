@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\views\Kernel\Entity;
 
+use Drupal;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\node\Entity\NodeType;
@@ -83,7 +84,7 @@ class ViewEntityDependenciesTest extends ViewsKernelTestBase {
       'settings' => ['display_summary' => TRUE],
     ])->save();
 
-    ViewTestData::createTestViews(get_class($this), ['views_test_config']);
+    ViewTestData::createTestViews(static::class, ['views_test_config']);
   }
 
   /**
@@ -142,7 +143,7 @@ class ViewEntityDependenciesTest extends ViewsKernelTestBase {
       $dependencies = $view->getDependencies();
       $this->assertEqual($expected[$view_id], $dependencies);
       $config = $this->config('views.view.' . $view_id);
-      \Drupal::service('config.storage.sync')->write($view_id, $config->get());
+      Drupal::service('config.storage.sync')->write($view_id, $config->get());
     }
 
     // Ensure that dependencies are calculated on the display level.

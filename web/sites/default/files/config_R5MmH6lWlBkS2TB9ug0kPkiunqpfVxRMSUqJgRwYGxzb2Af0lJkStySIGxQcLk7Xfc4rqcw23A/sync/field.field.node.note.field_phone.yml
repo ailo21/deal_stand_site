@@ -1,0 +1,19 @@
+uuid: 9ec96fcf-f733-4880-a1bd-bb5aa80e96ef
+langcode: ru
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_phone
+    - node.type.note
+id: node.note.field_phone
+field_name: field_phone
+entity_type: node
+bundle: note
+label: Телефон
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

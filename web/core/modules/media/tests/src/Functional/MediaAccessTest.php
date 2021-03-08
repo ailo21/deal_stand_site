@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\media\Functional;
 
+use Drupal;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\media\Entity\Media;
@@ -47,7 +48,7 @@ class MediaAccessTest extends MediaFunctionalTestBase {
     $assert_session = $this->assertSession();
     $media_type = $this->createMediaType('test');
 
-    \Drupal::configFactory()
+    Drupal::configFactory()
       ->getEditable('media.settings')
       ->set('standalone_url', TRUE)
       ->save(TRUE);
@@ -199,7 +200,7 @@ class MediaAccessTest extends MediaFunctionalTestBase {
     $media_type = $this->createMediaType('test');
     $assert_session = $this->assertSession();
 
-    \Drupal::configFactory()
+    Drupal::configFactory()
       ->getEditable('media.settings')
       ->set('standalone_url', TRUE)
       ->save(TRUE);
@@ -240,7 +241,7 @@ class MediaAccessTest extends MediaFunctionalTestBase {
    * Tests unpublished media access.
    */
   public function testUnpublishedMediaUserAccess() {
-    \Drupal::configFactory()
+    Drupal::configFactory()
       ->getEditable('media.settings')
       ->set('standalone_url', TRUE)
       ->save(TRUE);
@@ -282,7 +283,7 @@ class MediaAccessTest extends MediaFunctionalTestBase {
    * Tests media access of anonymous user.
    */
   public function testMediaAnonymousUserAccess() {
-    \Drupal::configFactory()
+    Drupal::configFactory()
       ->getEditable('media.settings')
       ->set('standalone_url', TRUE)
       ->save(TRUE);
@@ -321,14 +322,14 @@ class MediaAccessTest extends MediaFunctionalTestBase {
    * Tests access for embedded medias.
    */
   public function testReferencedRendering() {
-    \Drupal::configFactory()
+    Drupal::configFactory()
       ->getEditable('media.settings')
       ->set('standalone_url', TRUE)
       ->save(TRUE);
 
     $this->container->get('router.builder')->rebuild();
 
-    // Create a media type and a entity reference to itself.
+    // Create a media type and an entity reference to itself.
     $media_type = $this->createMediaType('test');
 
     FieldStorageConfig::create([
@@ -371,7 +372,7 @@ class MediaAccessTest extends MediaFunctionalTestBase {
     ]);
     $media_parent->save();
 
-    \Drupal::service('entity_display.repository')->getViewDisplay('media', $media_type->id(), 'full')
+    Drupal::service('entity_display.repository')->getViewDisplay('media', $media_type->id(), 'full')
       ->set('content', [])
       ->setComponent('title', ['type' => 'string'])
       ->setComponent('field_reference', [

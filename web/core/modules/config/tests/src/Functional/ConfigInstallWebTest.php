@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\config\Functional;
 
+use Drupal;
 use Drupal\config_test\Entity\ConfigTest;
 use Drupal\Core\Config\PreExistingConfigException;
 use Drupal\Core\Config\StorageInterface;
@@ -53,7 +54,7 @@ class ConfigInstallWebTest extends BrowserTestBase {
     $default_configuration_entity = 'config_test.dynamic.config_integration_test';
 
     // Install the config_test module we're integrating with.
-    \Drupal::service('module_installer')->install(['config_test']);
+    Drupal::service('module_installer')->install(['config_test']);
 
     // Verify the configuration does not exist prior to installation.
     $config_static = $this->config($default_config);
@@ -62,18 +63,18 @@ class ConfigInstallWebTest extends BrowserTestBase {
     $this->assertTrue($config_entity->isNew());
 
     // Install the integration module.
-    \Drupal::service('module_installer')->install(['config_integration_test']);
+    Drupal::service('module_installer')->install(['config_integration_test']);
     $this->resetAll();
 
     // Verify that default module config exists.
-    \Drupal::configFactory()->reset($default_config);
-    \Drupal::configFactory()->reset($default_configuration_entity);
+    Drupal::configFactory()->reset($default_config);
+    Drupal::configFactory()->reset($default_configuration_entity);
     $config_static = $this->config($default_config);
     $this->assertFalse($config_static->isNew());
-    $this->assertIdentical($config_static->get('foo'), 'default setting');
+    $this->assertSame('default setting', $config_static->get('foo'));
     $config_entity = $this->config($default_configuration_entity);
     $this->assertFalse($config_entity->isNew());
-    $this->assertIdentical($config_entity->get('label'), 'Default integration config label');
+    $this->assertSame('Default integration config label', $config_entity->get('label'));
 
     // Customize both configuration objects.
     $config_static->set('foo', 'customized setting')->save();
@@ -95,11 +96,11 @@ class ConfigInstallWebTest extends BrowserTestBase {
     // Verify the integration config still exists.
     $config_entity = $this->config($default_configuration_entity);
     $this->assertFalse($config_entity->isNew());
-    $this->assertIdentical($config_entity->get('label'), 'Customized integration config label');
+    $this->assertSame('Customized integration config label', $config_entity->get('label'));
 
     // Reinstall the integration module.
     try {
-      \Drupal::service('module_installer')->install(['config_integration_test']);
+      Drupal::service('module_installer')->install(['config_integration_test']);
       $this->fail('Expected PreExistingConfigException not thrown.');
     }
     catch (PreExistingConfigException $e) {
@@ -110,19 +111,19 @@ class ConfigInstallWebTest extends BrowserTestBase {
 
     // Delete the configuration entity so that the install will work.
     $config_entity->delete();
-    \Drupal::service('module_installer')->install(['config_integration_test']);
+    Drupal::service('module_installer')->install(['config_integration_test']);
 
     // Verify the integration module's config was re-installed.
-    \Drupal::configFactory()->reset($default_config);
-    \Drupal::configFactory()->reset($default_configuration_entity);
+    Drupal::configFactory()->reset($default_config);
+    Drupal::configFactory()->reset($default_configuration_entity);
     $config_static = $this->config($default_config);
     $this->assertFalse($config_static->isNew());
-    $this->assertIdentical($config_static->get('foo'), 'default setting');
+    $this->assertSame('default setting', $config_static->get('foo'));
 
     // Verify the integration config is using the default.
-    $config_entity = \Drupal::config($default_configuration_entity);
+    $config_entity = Drupal::config($default_configuration_entity);
     $this->assertFalse($config_entity->isNew());
-    $this->assertIdentical($config_entity->get('label'), 'Default integration config label');
+    $this->assertSame('Default integration config label', $config_entity->get('label'));
   }
 
   /**
@@ -135,32 +136,32 @@ class ConfigInstallWebTest extends BrowserTestBase {
     // will install the config_test module first because it is a dependency of
     // config_install_fail_test.
     // @see \Drupal\system\Form\ModulesListForm::submitForm()
-    $this->drupalPostForm('admin/modules', ['modules[config_test][enable]' => TRUE, 'modules[config_install_fail_test][enable]' => TRUE], t('Install'));
+    $this->drupalPostForm('admin/modules', ['modules[config_test][enable]' => TRUE, 'modules[config_install_fail_test][enable]' => TRUE], 'Install');
     $this->assertRaw('Unable to install Configuration install fail test, <em class="placeholder">config_test.dynamic.dotted.default</em> already exists in active configuration.');
 
     // Uninstall the config_test module to test the confirm form.
-    $this->drupalPostForm('admin/modules/uninstall', ['uninstall[config_test]' => TRUE], t('Uninstall'));
-    $this->drupalPostForm(NULL, [], t('Uninstall'));
+    $this->drupalPostForm('admin/modules/uninstall', ['uninstall[config_test]' => TRUE], 'Uninstall');
+    $this->submitForm([], 'Uninstall');
 
     // Try to install config_install_fail_test without selecting config_test.
     // The user is shown a confirm form because the config_test module is a
     // dependency.
     // @see \Drupal\system\Form\ModulesListConfirmForm::submitForm()
-    $this->drupalPostForm('admin/modules', ['modules[config_install_fail_test][enable]' => TRUE], t('Install'));
-    $this->drupalPostForm(NULL, [], t('Continue'));
+    $this->drupalPostForm('admin/modules', ['modules[config_install_fail_test][enable]' => TRUE], 'Install');
+    $this->submitForm([], 'Continue');
     $this->assertRaw('Unable to install Configuration install fail test, <em class="placeholder">config_test.dynamic.dotted.default</em> already exists in active configuration.');
 
     // Test that collection configuration clashes during a module install are
     // reported correctly.
-    \Drupal::service('module_installer')->install(['language']);
+    Drupal::service('module_installer')->install(['language']);
     $this->rebuildContainer();
     ConfigurableLanguage::createFromLangcode('fr')->save();
-    \Drupal::languageManager()
+    Drupal::languageManager()
       ->getLanguageConfigOverride('fr', 'config_test.dynamic.dotted.default')
       ->set('label', 'Je suis Charlie')
       ->save();
 
-    $this->drupalPostForm('admin/modules', ['modules[config_install_fail_test][enable]' => TRUE], t('Install'));
+    $this->drupalPostForm('admin/modules', ['modules[config_install_fail_test][enable]' => TRUE], 'Install');
     $this->assertRaw('Unable to install Configuration install fail test, <em class="placeholder">config_test.dynamic.dotted.default, language/fr/config_test.dynamic.dotted.default</em> already exist in active configuration.');
 
     // Test installing a theme through the UI that has existing configuration.
@@ -174,7 +175,7 @@ class ConfigInstallWebTest extends BrowserTestBase {
 
     // Test installing a theme through the API that has existing configuration.
     try {
-      \Drupal::service('theme_installer')->install(['config_clash_test_theme']);
+      Drupal::service('theme_installer')->install(['config_clash_test_theme']);
       $this->fail('Expected PreExistingConfigException not thrown.');
     }
     catch (PreExistingConfigException $e) {
@@ -191,18 +192,18 @@ class ConfigInstallWebTest extends BrowserTestBase {
     $this->drupalLogin($this->adminUser);
     // We need to install separately since config_install_dependency_test does
     // not depend on config_test and order is important.
-    $this->drupalPostForm('admin/modules', ['modules[config_test][enable]' => TRUE], t('Install'));
-    $this->drupalPostForm('admin/modules', ['modules[config_install_dependency_test][enable]' => TRUE], t('Install'));
+    $this->drupalPostForm('admin/modules', ['modules[config_test][enable]' => TRUE], 'Install');
+    $this->drupalPostForm('admin/modules', ['modules[config_install_dependency_test][enable]' => TRUE], 'Install');
     $this->assertRaw('Unable to install <em class="placeholder">Config install dependency test</em> due to unmet dependencies: <em class="placeholder">config_test.dynamic.other_module_test_with_dependency (config_other_module_config_test, config_test.dynamic.dotted.english)</em>');
 
-    $this->drupalPostForm('admin/modules', ['modules[config_test_language][enable]' => TRUE], t('Install'));
-    $this->drupalPostForm('admin/modules', ['modules[config_install_dependency_test][enable]' => TRUE], t('Install'));
+    $this->drupalPostForm('admin/modules', ['modules[config_test_language][enable]' => TRUE], 'Install');
+    $this->drupalPostForm('admin/modules', ['modules[config_install_dependency_test][enable]' => TRUE], 'Install');
     $this->assertRaw('Unable to install <em class="placeholder">Config install dependency test</em> due to unmet dependencies: <em class="placeholder">config_test.dynamic.other_module_test_with_dependency (config_other_module_config_test)</em>');
 
-    $this->drupalPostForm('admin/modules', ['modules[config_other_module_config_test][enable]' => TRUE], t('Install'));
-    $this->drupalPostForm('admin/modules', ['modules[config_install_dependency_test][enable]' => TRUE], t('Install'));
+    $this->drupalPostForm('admin/modules', ['modules[config_other_module_config_test][enable]' => TRUE], 'Install');
+    $this->drupalPostForm('admin/modules', ['modules[config_install_dependency_test][enable]' => TRUE], 'Install');
     $this->rebuildContainer();
-    $this->assertInstanceOf(ConfigTest::class, \Drupal::entityTypeManager()->getStorage('config_test')->load('other_module_test_with_dependency'));
+    $this->assertInstanceOf(ConfigTest::class, Drupal::entityTypeManager()->getStorage('config_test')->load('other_module_test_with_dependency'));
   }
 
   /**
@@ -210,11 +211,11 @@ class ConfigInstallWebTest extends BrowserTestBase {
    */
   public function testConfigModuleRequirements() {
     $this->drupalLogin($this->adminUser);
-    $this->drupalPostForm('admin/modules', ['modules[config][enable]' => TRUE], t('Install'));
+    $this->drupalPostForm('admin/modules', ['modules[config][enable]' => TRUE], 'Install');
 
     $directory = Settings::get('config_sync_directory');
     try {
-      \Drupal::service('file_system')->deleteRecursive($directory);
+      Drupal::service('file_system')->deleteRecursive($directory);
     }
     catch (FileException $e) {
       // Ignore failed deletes.

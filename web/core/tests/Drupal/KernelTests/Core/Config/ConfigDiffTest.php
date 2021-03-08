@@ -2,6 +2,7 @@
 
 namespace Drupal\KernelTests\Core\Config;
 
+use Drupal;
 use Drupal\KernelTests\KernelTestBase;
 
 /**
@@ -33,7 +34,7 @@ class ConfigDiffTest extends KernelTestBase {
 
     // Install the default config.
     $this->installConfig(['config_test']);
-    $original_data = \Drupal::config($config_name)->get();
+    $original_data = Drupal::config($config_name)->get();
 
     // Change a configuration value in sync.
     $sync_data = $original_data;
@@ -42,7 +43,7 @@ class ConfigDiffTest extends KernelTestBase {
     $sync->write($config_name, $sync_data);
 
     // Verify that the diff reflects a change.
-    $diff = \Drupal::service('config.manager')->diff($active, $sync, $config_name);
+    $diff = Drupal::service('config.manager')->diff($active, $sync, $config_name);
     $edits = $diff->getEdits();
     $this->assertYamlEdit($edits, $change_key, 'change',
       [$change_key . ': ' . $original_data[$change_key]],
@@ -54,7 +55,7 @@ class ConfigDiffTest extends KernelTestBase {
     $sync->write($config_name, $sync_data);
 
     // Verify that the diff reflects a removed key.
-    $diff = \Drupal::service('config.manager')->diff($active, $sync, $config_name);
+    $diff = Drupal::service('config.manager')->diff($active, $sync, $config_name);
     $edits = $diff->getEdits();
     $this->assertYamlEdit($edits, $change_key, 'copy');
     $this->assertYamlEdit($edits, $remove_key, 'delete',
@@ -68,14 +69,14 @@ class ConfigDiffTest extends KernelTestBase {
     $sync->write($config_name, $sync_data);
 
     // Verify that the diff reflects an added key.
-    $diff = \Drupal::service('config.manager')->diff($active, $sync, $config_name);
+    $diff = Drupal::service('config.manager')->diff($active, $sync, $config_name);
     $edits = $diff->getEdits();
     $this->assertYamlEdit($edits, $change_key, 'copy');
     $this->assertYamlEdit($edits, $add_key, 'add', FALSE, [$add_key . ': ' . $add_data]);
 
     // Test diffing a renamed config entity.
     $test_entity_id = $this->randomMachineName();
-    $test_entity = \Drupal::entityTypeManager()->getStorage('config_test')->create([
+    $test_entity = Drupal::entityTypeManager()->getStorage('config_test')->create([
       'id' => $test_entity_id,
       'label' => $this->randomMachineName(),
     ]);
@@ -83,10 +84,10 @@ class ConfigDiffTest extends KernelTestBase {
     $data = $active->read('config_test.dynamic.' . $test_entity_id);
     $sync->write('config_test.dynamic.' . $test_entity_id, $data);
     $config_name = 'config_test.dynamic.' . $test_entity_id;
-    $diff = \Drupal::service('config.manager')->diff($active, $sync, $config_name, $config_name);
+    $diff = Drupal::service('config.manager')->diff($active, $sync, $config_name, $config_name);
     // Prove the fields match.
     $edits = $diff->getEdits();
-    $this->assertEqual($edits[0]->type, 'copy', 'The first item in the diff is a copy.');
+    $this->assertEqual('copy', $edits[0]->type, 'The first item in the diff is a copy.');
     $this->assertCount(1, $edits, 'There is one item in the diff');
 
     // Rename the entity.
@@ -94,14 +95,14 @@ class ConfigDiffTest extends KernelTestBase {
     $test_entity->set('id', $new_test_entity_id);
     $test_entity->save();
 
-    $diff = \Drupal::service('config.manager')->diff($active, $sync, 'config_test.dynamic.' . $new_test_entity_id, $config_name);
+    $diff = Drupal::service('config.manager')->diff($active, $sync, 'config_test.dynamic.' . $new_test_entity_id, $config_name);
     $edits = $diff->getEdits();
     $this->assertYamlEdit($edits, 'uuid', 'copy');
     $this->assertYamlEdit($edits, 'id', 'change',
       ['id: ' . $new_test_entity_id],
       ['id: ' . $test_entity_id]);
     $this->assertYamlEdit($edits, 'label', 'copy');
-    $this->assertEqual($edits[2]->type, 'copy', 'The third item in the diff is a copy.');
+    $this->assertEqual('copy', $edits[2]->type, 'The third item in the diff is a copy.');
     $this->assertCount(3, $edits, 'There are three items in the diff.');
   }
 
@@ -125,13 +126,13 @@ class ConfigDiffTest extends KernelTestBase {
     $sync_test_collection->write($config_name, ['foo' => 'baz']);
 
     // Test the fields match in the default collection diff.
-    $diff = \Drupal::service('config.manager')->diff($active, $sync, $config_name);
+    $diff = Drupal::service('config.manager')->diff($active, $sync, $config_name);
     $edits = $diff->getEdits();
-    $this->assertEqual($edits[0]->type, 'copy', 'The first item in the diff is a copy.');
+    $this->assertEqual('copy', $edits[0]->type, 'The first item in the diff is a copy.');
     $this->assertCount(1, $edits, 'There is one item in the diff');
 
     // Test that the differences are detected when diffing the collection.
-    $diff = \Drupal::service('config.manager')->diff($active, $sync, $config_name, NULL, 'test');
+    $diff = Drupal::service('config.manager')->diff($active, $sync, $config_name, NULL, 'test');
     $edits = $diff->getEdits();
     $this->assertYamlEdit($edits, 'foo', 'change', ['foo: bar'], ['foo: baz']);
   }
@@ -163,14 +164,14 @@ class ConfigDiffTest extends KernelTestBase {
           if (strpos($item, $field . ':') === 0) {
             $match = TRUE;
             // Assert that the edit is of the type specified.
-            $this->assertEqual($edit->type, $type, "The $field item in the diff is a $type");
+            $this->assertEqual($type, $edit->type, "The {$field} item in the diff is a {$type}");
             // If an original value was given, assert that it matches.
             if (isset($orig)) {
-              $this->assertIdentical($edit->orig, $orig, "The original value for key '$field' is correct.");
+              $this->assertSame($orig, $edit->orig, "The original value for key '{$field}' is correct.");
             }
             // If a closing value was given, assert that it matches.
             if (isset($closing)) {
-              $this->assertIdentical($edit->closing, $closing, "The closing value for key '$field' is correct.");
+              $this->assertSame($closing, $edit->closing, "The closing value for key '{$field}' is correct.");
             }
             // Break out of the search entirely.
             break 2;

@@ -2,6 +2,7 @@
 
 namespace Drupal\workflows\Form;
 
+use Drupal;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -11,7 +12,7 @@ use Drupal\workflows\StateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Class WorkflowStateAddForm.
+ * Entity form variant for adding workflow states.
  *
  * @internal
  */
@@ -99,12 +100,12 @@ class WorkflowStateAddForm extends EntityForm {
    */
   public function exists($state_id) {
     /** @var \Drupal\workflows\WorkflowInterface $original_workflow */
-    $original_workflow = \Drupal::entityTypeManager()->getStorage('workflow')->loadUnchanged($this->getEntity()->id());
+    $original_workflow = Drupal::entityTypeManager()->getStorage('workflow')->loadUnchanged($this->getEntity()->id());
     return $original_workflow->getTypePlugin()->hasState($state_id);
   }
 
   /**
-   * Copies top-level form values to entity properties
+   * Copies top-level form values to entity properties.
    *
    * This form can only change values for a state, which is part of workflow.
    *

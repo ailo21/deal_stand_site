@@ -5,6 +5,7 @@ namespace Drupal\TestSite\Commands;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Test\TestDatabase;
 use Drupal\Tests\BrowserTestBase;
+use InvalidArgumentException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -43,7 +44,7 @@ class TestSiteTearDownCommand extends Command {
     try {
       $test_database = new TestDatabase($db_prefix);
     }
-    catch (\InvalidArgumentException $e) {
+    catch (InvalidArgumentException $e) {
       $io = new SymfonyStyle($input, $output);
       $io->getErrorStyle()->error("Invalid database prefix: $db_prefix\n\nValid database prefixes match the regular expression '/test(\d+)$/'. For example, 'test12345678'.");
       // Display the synopsis of the command like Composer does.
@@ -100,7 +101,7 @@ class TestSiteTearDownCommand extends Command {
    * test site can be torn down even if something in the test site is broken.
    *
    * @param string $path
-   *   A string containing either an URI or a file or directory path.
+   *   A string containing either a URI or a file or directory path.
    * @param callable $callback
    *   (optional) Callback function to run on each file prior to deleting it and
    *   on each directory prior to traversing it. For example, can be used to

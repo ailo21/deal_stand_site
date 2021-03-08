@@ -2,6 +2,7 @@
 
 namespace Drupal\Core\Field;
 
+use Drupal;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
@@ -132,7 +133,7 @@ abstract class FieldConfigBase extends ConfigEntityBase implements FieldConfigIn
    *
    * This property is overlooked if the $default_value_callback is non-empty.
    *
-   * Example for a integer field:
+   * Example for an integer field:
    * @code
    * array(
    *   array('value' => 1),
@@ -235,7 +236,7 @@ abstract class FieldConfigBase extends ConfigEntityBase implements FieldConfigIn
     // self::calculatePluginDependencies() because instantiation of a field item
     // plugin requires a parent entity.
     /** @var $field_type_manager \Drupal\Core\Field\FieldTypePluginManagerInterface */
-    $field_type_manager = \Drupal::service('plugin.manager.field.field_type');
+    $field_type_manager = Drupal::service('plugin.manager.field.field_type');
     $definition = $field_type_manager->getDefinition($this->getType());
     $this->addDependency('module', $definition['provider']);
     // Plugins can declare additional dependencies in their definition.
@@ -258,7 +259,7 @@ abstract class FieldConfigBase extends ConfigEntityBase implements FieldConfigIn
    */
   public function onDependencyRemoval(array $dependencies) {
     $changed = parent::onDependencyRemoval($dependencies);
-    $field_type_manager = \Drupal::service('plugin.manager.field.field_type');
+    $field_type_manager = Drupal::service('plugin.manager.field.field_type');
     $definition = $field_type_manager->getDefinition($this->getType());
     if ($definition['class']::onDependencyRemoval($this, $dependencies)) {
       $changed = TRUE;
@@ -284,7 +285,7 @@ abstract class FieldConfigBase extends ConfigEntityBase implements FieldConfigIn
    */
   public function postSave(EntityStorageInterface $storage, $update = TRUE) {
     // Clear the cache.
-    \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
+    Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
 
     // Invalidate the render cache for all affected entities.
     $entity_type = $this->getFieldStorageDefinition()->getTargetEntityTypeId();
@@ -488,7 +489,7 @@ abstract class FieldConfigBase extends ConfigEntityBase implements FieldConfigIn
    */
   public function getClass() {
     // Derive list class from the field type.
-    $type_definition = \Drupal::service('plugin.manager.field.field_type')
+    $type_definition = Drupal::service('plugin.manager.field.field_type')
       ->getDefinition($this->getType());
     return $type_definition['list_class'];
   }
@@ -497,7 +498,7 @@ abstract class FieldConfigBase extends ConfigEntityBase implements FieldConfigIn
    * {@inheritdoc}
    */
   public function getConstraints() {
-    return \Drupal::typedDataManager()->getDefaultConstraints($this) + $this->constraints;
+    return Drupal::typedDataManager()->getDefaultConstraints($this) + $this->constraints;
   }
 
   /**

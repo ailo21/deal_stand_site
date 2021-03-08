@@ -2,6 +2,7 @@
 
 namespace Drupal\migrate\Plugin;
 
+use Drupal;
 use Drupal\Component\Graph\Graph;
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\Core\Cache\CacheBackendInterface;
@@ -126,7 +127,7 @@ class MigrationPluginManager extends DefaultPluginManager implements MigrationPl
     $migrations = array_filter($this->getDefinitions(), function ($migration) use ($tag) {
       return !empty($migration['migration_tags']) && in_array($tag, $migration['migration_tags']);
     });
-    return $this->createInstances(array_keys($migrations));
+    return $migrations ? $this->createInstances(array_keys($migrations)) : [];
   }
 
   /**
@@ -238,7 +239,7 @@ class MigrationPluginManager extends DefaultPluginManager implements MigrationPl
    */
   public function createStubMigration(array $definition) {
     $id = isset($definition['id']) ? $definition['id'] : uniqid();
-    return Migration::create(\Drupal::getContainer(), [], $id, $definition);
+    return Migration::create(Drupal::getContainer(), [], $id, $definition);
   }
 
   /**

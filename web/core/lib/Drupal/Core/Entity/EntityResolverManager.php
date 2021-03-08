@@ -2,7 +2,10 @@
 
 namespace Drupal\Core\Entity;
 
+use Drupal\Component\Utility\Reflection;
 use Drupal\Core\DependencyInjection\ClassResolverInterface;
+use ReflectionFunction;
+use ReflectionMethod;
 use Symfony\Component\Routing\Route;
 
 /**
@@ -74,6 +77,10 @@ class EntityResolverManager {
       }
     }
 
+    if ($controller === NULL) {
+      return NULL;
+    }
+
     if (strpos($controller, ':') === FALSE) {
       if (method_exists($controller, '__invoke')) {
         return [$controller, '__invoke'];
@@ -90,7 +97,7 @@ class EntityResolverManager {
       // service. This is dangerous as the controller could depend on services
       // that could not exist at this point. There is however no other way to
       // do it, as the container does not allow static introspection.
-      list($class_or_service, $method) = explode(':', $controller, 2);
+      [$class_or_service, $method] = explode(':', $controller, 2);
       return [$this->classResolver->getInstanceFromDefinition($class_or_service), $method];
     }
     elseif (strpos($controller, '::') !== FALSE) {
@@ -119,11 +126,11 @@ class EntityResolverManager {
     $result = FALSE;
 
     if (is_array($controller)) {
-      list($instance, $method) = $controller;
-      $reflection = new \ReflectionMethod($instance, $method);
+      [$instance, $method] = $controller;
+      $reflection = new ReflectionMethod($instance, $method);
     }
     else {
-      $reflection = new \ReflectionFunction($controller);
+      $reflection = new ReflectionFunction($controller);
     }
 
     $parameters = $reflection->getParameters();
@@ -135,7 +142,8 @@ class EntityResolverManager {
       if (isset($entity_types[$parameter_name])) {
         $entity_type = $entity_types[$parameter_name];
         $entity_class = $entity_type->getClass();
-        if (($reflection_class = $parameter->getClass()) && (is_subclass_of($entity_class, $reflection_class->name) || $entity_class == $reflection_class->name)) {
+        $reflection_class = Reflection::getParameterClassName($parameter);
+        if ($reflection_class && (is_subclass_of($entity_class, $reflection_class) || $entity_class == $reflection_class)) {
           $parameter_definitions += [$parameter_name => []];
           $parameter_definitions[$parameter_name] += [
             'type' => 'entity:' . $parameter_name,
@@ -160,10 +168,10 @@ class EntityResolverManager {
    */
   protected function setParametersFromEntityInformation(Route $route) {
     if ($entity_view = $route->getDefault('_entity_view')) {
-      list($entity_type) = explode('.', $entity_view, 2);
+      [$entity_type] = explode('.', $entity_view, 2);
     }
     elseif ($entity_form = $route->getDefault('_entity_form')) {
-      list($entity_type) = explode('.', $entity_form, 2);
+      [$entity_type] = explode('.', $entity_form, 2);
     }
 
     // Do not add parameter information if the route does not declare a
@@ -177,7 +185,7 @@ class EntityResolverManager {
       foreach ($parameter_definitions as $info) {
         if (isset($info['type']) && (strpos($info['type'], 'entity:') === 0)) {
           // The parameter types are in the form 'entity:$entity_type'.
-          list(, $parameter_entity_type) = explode(':', $info['type'], 2);
+          [, $parameter_entity_type] = explode(':', $info['type'], 2);
           if ($parameter_entity_type == $entity_type) {
             return;
           }

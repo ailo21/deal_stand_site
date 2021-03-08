@@ -4,8 +4,10 @@ namespace Drupal\FunctionalJavascriptTests;
 
 use Behat\Mink\Driver\Selenium2Driver;
 use Behat\Mink\Exception\DriverException;
+use Exception;
 use WebDriver\Exception\UnknownError;
 use WebDriver\ServiceFactory;
+use ZipArchive;
 
 /**
  * Provides a driver for Selenium testing.
@@ -44,6 +46,32 @@ class DrupalSelenium2Driver extends Selenium2Driver {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function attachFile($xpath, $path) {
+    $element = $this->getWebDriverSession()->element('xpath', $xpath);
+
+    if ('input' !== strtolower($element->name()) || 'file' !== strtolower($element->attribute('type'))) {
+      $message = 'Impossible to %s the element with XPath "%s" as it is not a %s input';
+
+      throw new DriverException(sprintf($message, 'attach a file on', $xpath, 'file'));
+    }
+
+    // Upload the file to Selenium and use the remote path. This will
+    // ensure that Selenium always has access to the file, even if it runs
+    // as a remote instance.
+    try {
+      $remotePath = $this->uploadFileAndGetRemoteFilePath($path);
+    }
+    catch (Exception $e) {
+      // File could not be uploaded to remote instance. Use the local path.
+      $remotePath = $path;
+    }
+
+    $element->postValue(['value' => [$remotePath]]);
+  }
+
+  /**
    * Uploads a file to the Selenium instance and returns the remote path.
    *
    * \Behat\Mink\Driver\Selenium2Driver::uploadFile() is a private method so
@@ -76,8 +104,8 @@ class DrupalSelenium2Driver extends Selenium2Driver {
     // Selenium only accepts uploads that are compressed as a Zip archive.
     $tempFilename = tempnam('', 'WebDriverZip');
 
-    $archive = new \ZipArchive();
-    $result = $archive->open($tempFilename, \ZipArchive::CREATE);
+    $archive = new ZipArchive();
+    $result = $archive->open($tempFilename, ZipArchive::OVERWRITE);
     if (!$result) {
       throw new DriverException('Zip archive could not be created. Error ' . $result);
     }
@@ -98,7 +126,7 @@ class DrupalSelenium2Driver extends Selenium2Driver {
         throw new UnknownError();
       }
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       throw $e;
     }
     finally {

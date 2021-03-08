@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\node\Functional;
 
+use Drupal;
 use Drupal\language\Entity\ConfigurableLanguage;
 
 /**
@@ -43,7 +44,7 @@ class NodeAccessLanguageFallbackTest extends NodeTestBase {
     ConfigurableLanguage::createFromLangcode('af')->save();
 
     // Enable content translation for the current entity type.
-    \Drupal::service('content_translation.manager')->setEnabled('node', 'page', TRUE);
+    Drupal::service('content_translation.manager')->setEnabled('node', 'page', TRUE);
   }
 
   /**
@@ -78,7 +79,7 @@ class NodeAccessLanguageFallbackTest extends NodeTestBase {
     $this->assertSession()->statusCodeEquals(200);
 
     // Create a Catalan translation through the UI.
-    $url_options = ['language' => \Drupal::languageManager()->getLanguage('ca')];
+    $url_options = ['language' => Drupal::languageManager()->getLanguage('ca')];
     $this->drupalGet('node/' . $node->id() . '/translations/add/hu/ca', $url_options);
     $this->assertSession()->statusCodeEquals(200);
     // Save the form.
@@ -90,7 +91,7 @@ class NodeAccessLanguageFallbackTest extends NodeTestBase {
 
     // Programmatically create a translation. This process lets us check that
     // both forms and code behave in the same way.
-    $storage = \Drupal::entityTypeManager()->getStorage('node');
+    $storage = Drupal::entityTypeManager()->getStorage('node');
     // Reload the node.
     $node = $storage->load(1);
     // Create an Afrikaans translation.
@@ -122,14 +123,14 @@ class NodeAccessLanguageFallbackTest extends NodeTestBase {
    *   The expected language code set as the fallback property.
    */
   public function checkRecords($count, $langcode = 'hu') {
-    $select = \Drupal::database()
+    $select = Drupal::database()
       ->select('node_access', 'na')
       ->fields('na', ['nid', 'fallback', 'langcode', 'grant_view'])
       ->condition('na.realm', 'node_access_test', '=')
       ->condition('na.gid', 8888, '=');
     $records = $select->execute()->fetchAll();
     // Check that the expected record count is returned.
-    $this->assertEquals(count($records), $count);
+    $this->assertCount($count, $records);
     // The fallback value is 'hu' and should be set to 1. For other languages,
     // it should be set to 0. Casting to boolean lets us run that comparison.
     foreach ($records as $record) {

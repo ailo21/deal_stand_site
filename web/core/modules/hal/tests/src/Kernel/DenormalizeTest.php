@@ -5,6 +5,7 @@ namespace Drupal\Tests\hal\Kernel;
 use Drupal\Core\Url;
 use Drupal\entity_test\Entity\EntitySerializedField;
 use Drupal\field\Entity\FieldConfig;
+use LogicException;
 use Symfony\Component\Serializer\Exception\UnexpectedValueException;
 
 /**
@@ -27,7 +28,7 @@ class DenormalizeTest extends NormalizerTestBase {
       ],
     ];
     $denormalized = $this->serializer->denormalize($data_with_valid_type, $this->entityClass, $this->format);
-    $this->assertEqual(get_class($denormalized), $this->entityClass, 'Request with valid type results in creation of correct bundle.');
+    $this->assertEqual($this->entityClass, get_class($denormalized), 'Request with valid type results in creation of correct bundle.');
 
     // Multiple types.
     $data_with_multiple_types = [
@@ -43,7 +44,7 @@ class DenormalizeTest extends NormalizerTestBase {
       ],
     ];
     $denormalized = $this->serializer->denormalize($data_with_multiple_types, $this->entityClass, $this->format);
-    $this->assertEqual(get_class($denormalized), $this->entityClass, 'Request with multiple types results in creation of correct bundle.');
+    $this->assertEqual($this->entityClass, get_class($denormalized), 'Request with multiple types results in creation of correct bundle.');
 
     // Invalid type.
     $data_with_invalid_type = [
@@ -123,8 +124,8 @@ class DenormalizeTest extends NormalizerTestBase {
       ],
     ];
     $entity = $this->serializer->denormalize($data, $this->entityClass, $this->format);
-    $this->assertEqual($entity->field_test_text->count(), 1);
-    $this->assertEqual($entity->field_test_text->value, 'Llama');
+    $this->assertEqual(1, $entity->field_test_text->count());
+    $this->assertEqual('Llama', $entity->field_test_text->value);
 
     // Denormalize data that contains an empty entry for the field, and check
     // that the field is empty in the resulting entity.
@@ -137,7 +138,7 @@ class DenormalizeTest extends NormalizerTestBase {
       'field_test_text' => [],
     ];
     $entity = $this->serializer->denormalize($data, get_class($entity), $this->format, ['target_instance' => $entity]);
-    $this->assertEqual($entity->field_test_text->count(), 0);
+    $this->assertEqual(0, $entity->field_test_text->count());
   }
 
   /**
@@ -146,7 +147,7 @@ class DenormalizeTest extends NormalizerTestBase {
   public function testDenormalizeSerializedItem() {
     $entity = EntitySerializedField::create(['serialized' => 'boo']);
     $normalized = $this->serializer->normalize($entity, $this->format);
-    $this->expectException(\LogicException::class);
+    $this->expectException(LogicException::class);
     $this->expectExceptionMessage('The generic FieldItemNormalizer cannot denormalize string values for "value" properties of the "serialized" field (field item class: Drupal\entity_test\Plugin\Field\FieldType\SerializedItem).');
     $this->serializer->denormalize($normalized, EntitySerializedField::class, $this->format);
   }
@@ -160,7 +161,7 @@ class DenormalizeTest extends NormalizerTestBase {
     $this->assertEquals($normalized['serialized_long'][0]['value'], ['Hello world!']);
 
     $normalized['serialized_long'][0]['value'] = 'boo';
-    $this->expectException(\LogicException::class);
+    $this->expectException(LogicException::class);
     $this->expectExceptionMessage('The generic FieldItemNormalizer cannot denormalize string values for "value" properties of the "serialized_long" field (field item class: Drupal\Core\Field\Plugin\Field\FieldType\StringLongItem).');
     $this->serializer->denormalize($normalized, EntitySerializedField::class);
   }

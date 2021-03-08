@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\block\Functional;
 
+use Drupal;
 use Drupal\Tests\BrowserTestBase;
 
 /**
@@ -29,8 +30,8 @@ class BlockHtmlTest extends BrowserTestBase {
     $this->drupalLogin($this->rootUser);
 
     // Enable the test_html block, to test HTML ID and attributes.
-    \Drupal::state()->set('block_test.attributes', ['data-custom-attribute' => 'foo']);
-    \Drupal::state()->set('block_test.content', $this->randomMachineName());
+    Drupal::state()->set('block_test.attributes', ['data-custom-attribute' => 'foo']);
+    Drupal::state()->set('block_test.content', $this->randomMachineName());
     $this->drupalPlaceBlock('test_html', ['id' => 'test_html_block']);
 
     // Enable a menu block, to test more complicated HTML.
@@ -45,7 +46,7 @@ class BlockHtmlTest extends BrowserTestBase {
 
     // Ensure that a block's ID is converted to an HTML valid ID, and that
     // block-specific attributes are added to the same DOM element.
-    $this->assertFieldByXPath('//div[@id="block-test-html-block" and @data-custom-attribute="foo"]', NULL, 'HTML ID and attributes for test block are valid and on the same DOM element.');
+    $this->assertSession()->elementExists('xpath', '//div[@id="block-test-html-block" and @data-custom-attribute="foo"]');
 
     // Ensure expected markup for a menu block.
     $elements = $this->xpath('//nav[contains(@class, :nav-class)]/ul[contains(@class, :ul-class)]/li', [':nav-class' => 'block-menu', ':ul-class' => 'menu']);

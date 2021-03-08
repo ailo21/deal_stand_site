@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\menu_link_content\Kernel;
 
+use Drupal;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Menu\MenuTreeParameters;
 use Drupal\menu_link_content\Entity\MenuLinkContent;
@@ -60,8 +61,6 @@ class PathAliasMenuLinkContentTest extends KernelTestBase {
    * Tests the path aliasing changing.
    */
   public function testPathAliasChange() {
-    \Drupal::service('router.builder')->rebuild();
-
     $path_alias = $this->createPathAlias('/test-page', '/my-blog');
     $menu_link_content = MenuLinkContent::create([
       'title' => 'Menu title',
@@ -70,7 +69,7 @@ class PathAliasMenuLinkContentTest extends KernelTestBase {
     ]);
     $menu_link_content->save();
 
-    $tree = \Drupal::menuTree()->load('tools', new MenuTreeParameters());
+    $tree = Drupal::menuTree()->load('tools', new MenuTreeParameters());
     $this->assertEqual('test_page_test.test_page', $tree[$menu_link_content->getPluginId()]->link->getPluginDefinition()['route_name']);
 
     // Saving an alias should clear the alias manager cache.
@@ -78,12 +77,12 @@ class PathAliasMenuLinkContentTest extends KernelTestBase {
     $path_alias->setAlias('/my-blog');
     $path_alias->save();
 
-    $tree = \Drupal::menuTree()->load('tools', new MenuTreeParameters());
+    $tree = Drupal::menuTree()->load('tools', new MenuTreeParameters());
     $this->assertEqual('test_page_test.render_title', $tree[$menu_link_content->getPluginId()]->link->getPluginDefinition()['route_name']);
 
     // Delete the alias.
     $path_alias->delete();
-    $tree = \Drupal::menuTree()->load('tools', new MenuTreeParameters());
+    $tree = Drupal::menuTree()->load('tools', new MenuTreeParameters());
     $this->assertTrue(isset($tree[$menu_link_content->getPluginId()]));
     $this->assertEqual('', $tree[$menu_link_content->getPluginId()]->link->getRouteName());
     // Verify the plugin now references a path that does not match any route.

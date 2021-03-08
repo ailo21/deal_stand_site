@@ -2,6 +2,8 @@
 
 namespace Drupal\Core\Datetime;
 
+use Drupal;
+
 /**
  * Defines Gregorian Calendar date values.
  *
@@ -100,7 +102,7 @@ class DateHelper {
   }
 
   /**
-   * Constructs a translated array of month name abbreviations
+   * Constructs a translated array of month name abbreviations.
    *
    * @param bool $required
    *   (optional) If FALSE, the returned array will include a blank value.
@@ -256,7 +258,7 @@ class DateHelper {
    *   set to be Monday, the array keys will be [1, 2, 3, 4, 5, 6, 0].
    */
   public static function weekDaysOrdered($weekdays) {
-    $first_day = \Drupal::config('system.date')->get('first_day');
+    $first_day = Drupal::config('system.date')->get('first_day');
     if ($first_day > 0) {
       for ($i = 1; $i <= $first_day; $i++) {
         // Reset the array to the first element.

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\statistics\Functional\Views;
 
+use Drupal;
 use Drupal\Tests\views\Functional\ViewTestBase;
 use Drupal\views\Tests\ViewTestData;
 
@@ -50,7 +51,7 @@ class IntegrationTest extends ViewTestBase {
   protected function setUp($import_test_views = TRUE): void {
     parent::setUp($import_test_views);
 
-    ViewTestData::createTestViews(get_class($this), ['statistics_test_views']);
+    ViewTestData::createTestViews(static::class, ['statistics_test_views']);
 
     // Create a new user for viewing nodes and statistics.
     $this->webUser = $this->drupalCreateUser([
@@ -87,7 +88,7 @@ class IntegrationTest extends ViewTestBase {
     $this->drupalGet('test_statistics_integration');
 
     /** @var \Drupal\statistics\StatisticsViewsResult $statistics */
-    $statistics = \Drupal::service('statistics.storage.node')->fetchView($this->node->id());
+    $statistics = Drupal::service('statistics.storage.node')->fetchView($this->node->id());
     $this->assertSession()->pageTextContains('Total views: 1');
     $this->assertSession()->pageTextContains('Views today: 1');
     $this->assertSession()->pageTextContains('Most recent view: ' . date('Y', $statistics->getTimestamp()));

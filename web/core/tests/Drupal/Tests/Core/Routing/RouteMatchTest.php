@@ -3,7 +3,8 @@
 namespace Drupal\Tests\Core\Routing;
 
 use Drupal\Core\Routing\RouteMatch;
-use Symfony\Cmf\Component\Routing\RouteObjectInterface;
+use Drupal\Core\Routing\RouteObjectInterface;
+use stdClass;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Route;
@@ -49,7 +50,7 @@ class RouteMatchTest extends RouteMatchTestBase {
     $this->assertSame([], $route_match->getRawParameters()->all());
 
     // A routed request with parameter upcasting.
-    $foo = new \stdClass();
+    $foo = new stdClass();
     $foo->value = 1;
     $request->attributes->set('foo', $foo);
     $request->attributes->set('_raw_variables', new ParameterBag(['foo' => '1']));

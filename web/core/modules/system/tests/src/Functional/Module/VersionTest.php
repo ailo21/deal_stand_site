@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\system\Functional\Module;
 
+use Drupal;
+
 /**
  * Tests module version dependencies.
  *
@@ -49,12 +51,12 @@ class VersionTest extends ModuleTestBase {
       // Testing extra version. Incompatible.
       'common_test (>2.4-rc0)',
     ];
-    \Drupal::state()->set('system_test.dependencies', $dependencies);
+    Drupal::state()->set('system_test.dependencies', $dependencies);
     $n = count($dependencies);
     for ($i = 0; $i < $n; $i++) {
       $this->drupalGet('admin/modules');
       $checkbox = $this->xpath('//input[@id="edit-modules-module-test-enable"]');
-      $this->assertEqual(!empty($checkbox[0]->getAttribute('disabled')), $i % 2, $dependencies[$i]);
+      $this->assertEqual($i % 2, !empty($checkbox[0]->getAttribute('disabled')), $dependencies[$i]);
     }
   }
 

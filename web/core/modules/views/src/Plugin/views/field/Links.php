@@ -2,12 +2,13 @@
 
 namespace Drupal\views\Plugin\views\field;
 
+use Drupal;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url as UrlObject;
 
 /**
- * A abstract handler which provides a collection of links.
+ * An abstract handler which provides a collection of links.
  *
  * @ingroup views_field_handlers
  */
@@ -84,7 +85,7 @@ abstract class Links extends FieldPluginBase {
         'title' => $title,
       ];
       if (!empty($this->options['destination'])) {
-        $links[$field]['query'] = \Drupal::destination()->getAsArray();
+        $links[$field]['query'] = Drupal::destination()->getAsArray();
       }
     }
 

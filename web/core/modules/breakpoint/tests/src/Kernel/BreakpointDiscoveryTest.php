@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\breakpoint\Kernel;
 
+use Drupal;
 use Drupal\KernelTests\KernelTestBase;
 
 /**
@@ -24,7 +25,7 @@ class BreakpointDiscoveryTest extends KernelTestBase {
 
   protected function setUp(): void {
     parent::setUp();
-    \Drupal::service('theme_installer')->install(['breakpoint_theme_test']);
+    Drupal::service('theme_installer')->install(['breakpoint_theme_test']);
   }
 
   /**
@@ -83,13 +84,13 @@ class BreakpointDiscoveryTest extends KernelTestBase {
       ],
     ];
 
-    $breakpoints = \Drupal::service('breakpoint.manager')->getBreakpointsByGroup('breakpoint_theme_test');
+    $breakpoints = Drupal::service('breakpoint.manager')->getBreakpointsByGroup('breakpoint_theme_test');
     foreach ($expected_breakpoints as $id => $expected_breakpoint) {
       $this->assertEqual($expected_breakpoint, $breakpoints[$id]->getPluginDefinition());
     }
 
     // Test that the order is as expected.
-    $this->assertIdentical(array_keys($expected_breakpoints), array_keys($breakpoints));
+    $this->assertSame(array_keys($expected_breakpoints), array_keys($breakpoints));
   }
 
   /**
@@ -138,7 +139,7 @@ class BreakpointDiscoveryTest extends KernelTestBase {
       ],
     ];
 
-    $breakpoints = \Drupal::service('breakpoint.manager')->getBreakpointsByGroup('breakpoint_theme_test.group2');
+    $breakpoints = Drupal::service('breakpoint.manager')->getBreakpointsByGroup('breakpoint_theme_test.group2');
     foreach ($expected_breakpoints as $id => $expected_breakpoint) {
       $this->assertEqual($expected_breakpoint, $breakpoints[$id]->getPluginDefinition());
     }
@@ -176,7 +177,7 @@ class BreakpointDiscoveryTest extends KernelTestBase {
       ],
     ];
 
-    $breakpoints = \Drupal::service('breakpoint.manager')->getBreakpointsByGroup('breakpoint_module_test');
+    $breakpoints = Drupal::service('breakpoint.manager')->getBreakpointsByGroup('breakpoint_module_test');
     $this->assertEqual(array_keys($expected_breakpoints), array_keys($breakpoints));
   }
 
@@ -190,15 +191,15 @@ class BreakpointDiscoveryTest extends KernelTestBase {
       'breakpoint_theme_test' => 'Breakpoint test theme',
       'breakpoint_theme_test.group2' => 'breakpoint_theme_test.group2',
     ];
-    $breakpoint_groups = \Drupal::service('breakpoint.manager')->getGroups();
+    $breakpoint_groups = Drupal::service('breakpoint.manager')->getGroups();
     // Ensure the order is as expected. Should be sorted by label.
-    $this->assertIdentical($expected, $this->castSafeStrings($breakpoint_groups));
+    $this->assertEquals($expected, $breakpoint_groups);
 
     $expected = [
       'breakpoint_theme_test' => 'theme',
       'breakpoint_module_test' => 'module',
     ];
-    $breakpoint_group_providers = \Drupal::service('breakpoint.manager')->getGroupProviders('breakpoint_theme_test.group2');
+    $breakpoint_group_providers = Drupal::service('breakpoint.manager')->getGroupProviders('breakpoint_theme_test.group2');
     $this->assertEqual($expected, $breakpoint_group_providers);
   }
 

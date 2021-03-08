@@ -2,14 +2,13 @@
 
 namespace Drupal\Tests\entity_test\Functional\Rest;
 
+use DateTime;
+use DateTimeZone;
 use Drupal\entity_test\Entity\EntityTestMapField;
 use Drupal\Tests\rest\Functional\EntityResource\EntityResourceTestBase;
-use Drupal\Tests\Traits\ExpectDeprecationTrait;
 use Drupal\user\Entity\User;
 
 abstract class EntityTestMapFieldResourceTestBase extends EntityResourceTestBase {
-
-  use ExpectDeprecationTrait;
 
   /**
    * {@inheritdoc}
@@ -32,7 +31,7 @@ abstract class EntityTestMapFieldResourceTestBase extends EntityResourceTestBase
   protected $entity;
 
   /**
-   * The complex nested value to assign to a @FieldType=map field.
+   * The complex nested value to assign to a map field.
    *
    * @var array
    */
@@ -98,8 +97,8 @@ abstract class EntityTestMapFieldResourceTestBase extends EntityResourceTestBase
       ],
       'created' => [
         [
-          'value' => (new \DateTime())->setTimestamp((int) $this->entity->get('created')->value)->setTimezone(new \DateTimeZone('UTC'))->format(\DateTime::RFC3339),
-          'format' => \DateTime::RFC3339,
+          'value' => (new DateTime())->setTimestamp((int) $this->entity->get('created')->value)->setTimezone(new DateTimeZone('UTC'))->format(DateTime::RFC3339),
+          'format' => DateTime::RFC3339,
         ],
       ],
       'user_id' => [
@@ -136,10 +135,6 @@ abstract class EntityTestMapFieldResourceTestBase extends EntityResourceTestBase
    * {@inheritdoc}
    */
   protected function getExpectedUnauthorizedAccessMessage($method) {
-    if ($this->config('rest.settings')->get('bc_entity_resource_permissions')) {
-      return parent::getExpectedUnauthorizedAccessMessage($method);
-    }
-
     return "The 'administer entity_test content' permission is required.";
   }
 

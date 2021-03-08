@@ -2,12 +2,15 @@
 
 namespace Drupal\views;
 
+use Drupal;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Tags;
 use Drupal\Core\Routing\RouteProviderInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\views\Plugin\views\display\DisplayRouterInterface;
+use InvalidArgumentException;
+use ReflectionClass;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
@@ -689,7 +692,7 @@ class ViewExecutable {
       // Ensure that we can call the method at any point in time.
       $this->initDisplay();
 
-      $this->exposed_input = \Drupal::request()->query->all();
+      $this->exposed_input = Drupal::request()->query->all();
       // unset items that are definitely not our input:
       foreach (['page', 'q'] as $key) {
         if (isset($this->exposed_input[$key])) {
@@ -990,7 +993,7 @@ class ViewExecutable {
       $views_data = $this->viewsData->get($view_base_table);
       if (!empty($views_data['table']['entity type'])) {
         $entity_type_id = $views_data['table']['entity type'];
-        $this->baseEntityType = \Drupal::entityTypeManager()->getDefinition($entity_type_id);
+        $this->baseEntityType = Drupal::entityTypeManager()->getDefinition($entity_type_id);
       }
       else {
         $this->baseEntityType = FALSE;
@@ -1205,7 +1208,7 @@ class ViewExecutable {
     }
 
     // Let modules modify the view just prior to building it.
-    $module_handler = \Drupal::moduleHandler();
+    $module_handler = Drupal::moduleHandler();
     $module_handler->invokeAll('views_pre_build', [$this]);
 
     // Attempt to load from cache.
@@ -1308,7 +1311,7 @@ class ViewExecutable {
       $exposed_form->query();
     }
 
-    if (\Drupal::config('views.settings')->get('sql_signature')) {
+    if (Drupal::config('views.settings')->get('sql_signature')) {
       $this->query->addSignature($this);
     }
 
@@ -1404,7 +1407,7 @@ class ViewExecutable {
     }
 
     // Let modules modify the view just prior to executing it.
-    $module_handler = \Drupal::moduleHandler();
+    $module_handler = Drupal::moduleHandler();
     $module_handler->invokeAll('views_pre_execute', [$this]);
 
     // Check for already-cached results.
@@ -1465,11 +1468,11 @@ class ViewExecutable {
     $exposed_form = $this->display_handler->getPlugin('exposed_form');
     $exposed_form->preRender($this->result);
 
-    $module_handler = \Drupal::moduleHandler();
+    $module_handler = Drupal::moduleHandler();
 
     // @TODO In the longrun, it would be great to execute a view without
     //   the theme system at all. See https://www.drupal.org/node/2322623.
-    $active_theme = \Drupal::theme()->getActiveTheme();
+    $active_theme = Drupal::theme()->getActiveTheme();
     $themes = array_keys($active_theme->getBaseThemeExtensions());
     $themes[] = $active_theme->getName();
 
@@ -1683,7 +1686,7 @@ class ViewExecutable {
     }
 
     // Let modules modify the view just prior to executing it.
-    \Drupal::moduleHandler()->invokeAll('views_pre_view', [$this, $display_id, &$this->args]);
+    Drupal::moduleHandler()->invokeAll('views_pre_view', [$this, $display_id, &$this->args]);
 
     // Allow hook_views_pre_view() to set the dom_id, then ensure it is set.
     $this->dom_id = !empty($this->dom_id) ? $this->dom_id : hash('sha256', $this->storage->id() . REQUEST_TIME . mt_rand());
@@ -1722,8 +1725,8 @@ class ViewExecutable {
     // Find out which other displays attach to the current one.
     foreach ($this->display_handler->getAttachedDisplays() as $id) {
       $display_handler = $this->displayHandlers->get($id);
-      // Only attach enabled attachments.
-      if ($display_handler->isEnabled()) {
+      // Only attach enabled attachments that the user has access to.
+      if ($display_handler->isEnabled() && $display_handler->access()) {
         $cloned_view = Views::executableFactory()->get($this->storage);
         $display_handler->attachTo($cloned_view, $this->current_display, $this->element);
       }
@@ -1902,7 +1905,7 @@ class ViewExecutable {
     // Look up the route name to make sure it exists.  The name may exist, but
     // not be available yet in some instances when editing a view and doing
     // a live preview.
-    $provider = \Drupal::service('router.route_provider');
+    $provider = Drupal::service('router.route_provider');
     try {
       $provider->getRouteByName($display_handler->getRouteName());
     }
@@ -1936,7 +1939,7 @@ class ViewExecutable {
 
     $display_handler = $this->displayHandlers->get($display_id ?: $this->current_display)->getRoutedDisplay();
     if (!$display_handler instanceof DisplayRouterInterface) {
-      throw new \InvalidArgumentException('You cannot create a URL to a display without routes.');
+      throw new InvalidArgumentException('You cannot create a URL to a display without routes.');
     }
 
     if (!isset($args)) {
@@ -2010,7 +2013,7 @@ class ViewExecutable {
   public function getUrlInfo($display_id = '') {
     $this->initDisplay();
     if (!$this->display_handler instanceof DisplayRouterInterface) {
-      throw new \InvalidArgumentException("You cannot generate a URL for the display '$display_id'");
+      throw new InvalidArgumentException("You cannot generate a URL for the display '$display_id'");
     }
     return $this->display_handler->getUrlInfo();
   }
@@ -2073,7 +2076,7 @@ class ViewExecutable {
       $this->style_plugin->destroy();
     }
 
-    $reflection = new \ReflectionClass($this);
+    $reflection = new ReflectionClass($this);
     $defaults = $reflection->getDefaultProperties();
     // The external dependencies should not be reset. This is not generated by
     // the execution of a view.
@@ -2210,7 +2213,7 @@ class ViewExecutable {
   }
 
   /**
-   * Generates a unique ID for an handler instance.
+   * Generates a unique ID for a handler instance.
    *
    * These handler instances are typically fields, filters, sort criteria, or
    * arguments.
@@ -2510,19 +2513,19 @@ class ViewExecutable {
   public function __wakeup() {
     // There are cases, like in testing where we don't have a container
     // available.
-    if (\Drupal::hasContainer() && !empty($this->serializationData)) {
+    if (Drupal::hasContainer() && !empty($this->serializationData)) {
       // Load and reference the storage.
-      $this->storage = \Drupal::entityTypeManager()->getStorage('view')
+      $this->storage = Drupal::entityTypeManager()->getStorage('view')
         ->load($this->serializationData['storage']);
       $this->storage->set('executable', $this);
 
       // Attach all necessary services.
-      $this->user = \Drupal::currentUser();
-      $this->viewsData = \Drupal::service($this->serializationData['views_data']);
-      $this->routeProvider = \Drupal::service($this->serializationData['route_provider']);
+      $this->user = Drupal::currentUser();
+      $this->viewsData = Drupal::service($this->serializationData['views_data']);
+      $this->routeProvider = Drupal::service($this->serializationData['route_provider']);
 
       // Restore the state of this executable.
-      if ($request = \Drupal::request()) {
+      if ($request = Drupal::request()) {
         $this->setRequest($request);
       }
       $this->setDisplay($this->serializationData['current_display']);

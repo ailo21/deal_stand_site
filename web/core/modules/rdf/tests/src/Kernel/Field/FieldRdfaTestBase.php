@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\rdf\Kernel\Field;
 
+use DOMDocument;
+use Drupal;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\Tests\field\Kernel\FieldKernelTestBase;
 use Drupal\field\Entity\FieldStorageConfig;
@@ -59,15 +61,6 @@ abstract class FieldRdfaTestBase extends FieldKernelTestBase {
   protected $testValue;
 
   /**
-   * {@inheritdoc}
-   */
-  protected function setUp() {
-    parent::setUp();
-
-    \Drupal::service('router.builder')->rebuild();
-  }
-
-  /**
    * Helper function to test the formatter's RDFa.
    *
    * @param array $formatter
@@ -90,14 +83,14 @@ abstract class FieldRdfaTestBase extends FieldKernelTestBase {
 
     // The field formatter will be rendered inside the entity. Set the field
     // formatter in the entity display options before rendering the entity.
-    \Drupal::service('entity_display.repository')
+    Drupal::service('entity_display.repository')
       ->getViewDisplay('entity_test', 'entity_test')
       ->setComponent($this->fieldName, $formatter)
       ->save();
-    $build = \Drupal::entityTypeManager()
+    $build = Drupal::entityTypeManager()
       ->getViewBuilder($this->entity->getEntityTypeId())
       ->view($this->entity, 'default');
-    $output = \Drupal::service('renderer')->renderRoot($build);
+    $output = Drupal::service('renderer')->renderRoot($build);
     $this->setRawContent($output);
     $this->assertTrue($this->hasRdfProperty($output, $this->uri, $this->uri, $property, $expected_rdf_value), "Formatter {$formatter['type']} exposes data correctly for {$this->fieldType} fields.");
   }
@@ -145,7 +138,7 @@ abstract class FieldRdfaTestBase extends FieldKernelTestBase {
    *   An array containing simplexml objects.
    */
   protected function parseContent($content) {
-    $htmlDom = new \DOMDocument();
+    $htmlDom = new DOMDocument();
     @$htmlDom->loadHTML('<?xml encoding="UTF-8">' . $content);
     $elements = simplexml_import_dom($htmlDom);
 

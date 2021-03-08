@@ -2,6 +2,7 @@
 
 namespace Drupal\user;
 
+use Drupal;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
@@ -71,11 +72,11 @@ class RegisterForm extends AccountForm {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $admin = $form_state->getValue('administer_users');
 
-    if (!\Drupal::config('user.settings')->get('verify_mail') || $admin) {
+    if (!Drupal::config('user.settings')->get('verify_mail') || $admin) {
       $pass = $form_state->getValue('pass');
     }
     else {
-      $pass = user_password();
+      $pass = Drupal::service('password_generator')->generate();
     }
 
     // Remove unneeded values.
@@ -113,7 +114,7 @@ class RegisterForm extends AccountForm {
       $this->messenger()->addStatus($this->t('Created a new user account for <a href=":url">%name</a>. No email has been sent.', [':url' => $account->toUrl()->toString(), '%name' => $account->getAccountName()]));
     }
     // No email verification required; log in user immediately.
-    elseif (!$admin && !\Drupal::config('user.settings')->get('verify_mail') && $account->isActive()) {
+    elseif (!$admin && !Drupal::config('user.settings')->get('verify_mail') && $account->isActive()) {
       _user_mail_notify('register_no_approval_required', $account);
       user_login_finalize($account);
       $this->messenger()->addStatus($this->t('Registration successful. You are now logged in.'));
