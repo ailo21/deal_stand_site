@@ -1,0 +1,17 @@
+<?php
+
+/**
+ * @file
+ * Primary module hooks for ds_user module.
+ *
+ * @DCG
+ * This file is no longer required in Drupal 8.
+ * @see https://www.drupal.org/node/2217931
+ */
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ */
+function ds_user_form_BASE_FORM_ID_alter(&$form, FormStateInterface $form_state, $form_id) {
+
+}

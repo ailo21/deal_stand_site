@@ -1,0 +1,6 @@
+ds_user.settings_form:
+  title: ds_user
+  description: Configure ds_user.
+  parent: system.admin_config_system
+  route_name: ds_user.settings_form
+  weight: 10

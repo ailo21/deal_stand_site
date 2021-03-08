@@ -6,6 +6,7 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
+    'lsolesen\\pel\\' => array($vendorDir . '/lsolesen/pel/src'),
     'cweagans\\Composer\\' => array($vendorDir . '/cweagans/composer-patches/src'),
     'XdgBaseDir\\' => array($vendorDir . '/dnoegel/php-xdg-base-dir/src'),
     'Webmozart\\PathUtil\\' => array($vendorDir . '/webmozart/path-util/src'),
@@ -66,6 +67,7 @@ return array(
     'GuzzleHttp\\' => array($vendorDir . '/guzzlehttp/guzzle/src'),
     'Grasmash\\YamlExpander\\' => array($vendorDir . '/grasmash/yaml-expander/src'),
     'Grasmash\\Expander\\' => array($vendorDir . '/grasmash/expander/src'),
+    'FontLib\\' => array($vendorDir . '/phenx/php-font-lib/src/FontLib'),
     'Enlightn\\SecurityChecker\\' => array($vendorDir . '/enlightn/security-checker/src'),
     'Egulias\\EmailValidator\\' => array($vendorDir . '/egulias/email-validator/src'),
     'Drush\\Internal\\' => array($vendorDir . '/drush/drush/src/internal-forks'),

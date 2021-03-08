@@ -1,0 +1,45 @@
+# Main theme library.
+global:
+  js:
+    js/deal.js: {}
+  css:
+    base:
+      css/base/elements.css: {}
+      css/base/main.css: {}
+    component:
+      css/components/block.css: {}
+      css/components/breadcrumb.css: {}
+      css/components/field.css: {}
+      css/components/form.css: {}
+      css/components/header.css: {}
+      css/components/menu.css: {}
+      css/components/messages.css: {}
+      css/components/node.css: {}
+      css/components/sidebar.css: {}
+      css/components/table.css: {}
+      css/components/tabs.css: {}
+      css/components/buttons.css: {}
+    layout:
+      css/layouts/layout.css: {}
+    theme:
+      css/theme/print.css: { media: print }
+
+
+swiper:
+  css:
+    theme:
+      plugin/swiper/swiper-bundle.min.css: {}
+  js:
+    plugin/swiper/swiper-bundle.min.js: {}
+    js/swiper.js: {}
+
+swipebox:
+  css:
+    theme:
+      plugin/swipebox/css/swipebox.min.css: {}
+  js:
+    plugin/swipebox/js/jquery.swipebox.min.js: {}
+    plugin/swipebox/js/swipebox.js: {}
+  dependencies:
+    - core/jquery
+

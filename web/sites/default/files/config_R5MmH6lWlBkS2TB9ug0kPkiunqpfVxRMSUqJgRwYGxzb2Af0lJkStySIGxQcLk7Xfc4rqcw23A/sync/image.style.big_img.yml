@@ -1,0 +1,23 @@
+uuid: 80cab095-4720-4976-852f-5381d9f2d728
+langcode: ru
+status: true
+dependencies:
+  module:
+    - image_effects
+name: big_img
+label: Big-img
+effects:
+  48814894-07ab-427b-bc5d-d41a1d6733fd:
+    uuid: 48814894-07ab-427b-bc5d-d41a1d6733fd
+    id: image_effects_auto_orient
+    weight: 1
+    data:
+      scan_exif: true
+  a053e0eb-757f-459a-abec-a6cf8627f070:
+    uuid: a053e0eb-757f-459a-abec-a6cf8627f070
+    id: image_scale
+    weight: 3
+    data:
+      width: 1020
+      height: 649
+      upscale: false
