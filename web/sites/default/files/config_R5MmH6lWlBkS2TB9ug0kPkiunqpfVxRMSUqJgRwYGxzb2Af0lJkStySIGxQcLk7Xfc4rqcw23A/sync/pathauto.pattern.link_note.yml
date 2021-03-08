@@ -1,0 +1,22 @@
+uuid: 3300a6d8-e107-47f6-9c04-e73de5b9c517
+langcode: ru
+status: true
+dependencies:
+  module:
+    - node
+id: link_note
+label: 'Красивая ссылка для объявлений'
+type: 'canonical_entities:node'
+pattern: '[node:field_category:entity:name]/[node:title]-[node:nid]'
+selection_criteria:
+  7244b89d-c1cb-4635-8393-361538080faf:
+    id: node_type
+    bundles:
+      note: note
+    negate: false
+    context_mapping:
+      node: node
+    uuid: 7244b89d-c1cb-4635-8393-361538080faf
+selection_logic: and
+weight: -5
+relationships: {  }

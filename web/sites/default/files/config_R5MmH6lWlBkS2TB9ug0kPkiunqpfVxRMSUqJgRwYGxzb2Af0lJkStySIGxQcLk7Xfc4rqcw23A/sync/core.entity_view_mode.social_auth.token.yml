@@ -1,0 +1,10 @@
+uuid: 27251954-1414-49ca-b720-6ae0886067a5
+langcode: ru
+status: true
+dependencies:
+  module:
+    - social_auth
+id: social_auth.token
+label: Токен
+targetEntityType: social_auth
+cache: true

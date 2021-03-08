@@ -1,0 +1,10 @@
+uuid: af1443d5-f328-4a7f-993c-c4bc2e0fd717
+langcode: ru
+status: true
+dependencies:
+  module:
+    - block
+id: block.token
+label: Токен
+targetEntityType: block
+cache: true
